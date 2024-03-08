@@ -1,7 +1,16 @@
-# IDE configuration
+# IDE Configs
 /.vscode
 
-# Build files
-/**/*.exe
-/**/*.a
+#Build files
 /**/*.o
+/**/*.a
+/**/*.dll
+/**/*.exe
+
+#Media files
+/**/*.png
+/**/*.jpg
+/**/*.fbx
+/**/*.obj
+/**/*.mtl
+/**/*.txt
