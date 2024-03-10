@@ -11,7 +11,7 @@ extern constexpr int gWindowHeight {600};
 int main(int argc, char* argv[]) {
     std::cout << "This program is running" << std::endl;
 
-    WindowContextManager::getInstance();
+    WindowContextManager::getInstance(800, 600);
 
     // keep the window open for 4 seconds
     Sleep(4000);

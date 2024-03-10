@@ -22,11 +22,10 @@ class WindowContextManager {
     GLuint mWindowHeight;
 
 public:
-
     /* Deletes SDL and GL contexts */
     ~WindowContextManager();
 
-    static WindowContextManager& getInstance();
+    static WindowContextManager& getInstance(GLuint width=800, GLuint height=600);
 
     //Removes default constructor
     WindowContextManager() = delete;

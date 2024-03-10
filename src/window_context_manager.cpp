@@ -10,22 +10,37 @@ WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeig
 {
     SDL_Init(SDL_INIT_VIDEO);
 
-    mSDLWindow = SDL_CreateWindow("Game of Ur", 100, 100, mWindowWidth, mWindowHeight, 0);
+    mSDLWindow = SDL_CreateWindow("Game of Ur", 100, 100, mWindowWidth, mWindowHeight, SDL_WINDOW_OPENGL);
     if(mSDLWindow == nullptr){
         std::cout << "Window could not be created" << std::endl;
     }
     std::cout << "Window successfully created!" << std::endl;
-    // mGLContext = SDL_GL_CreateContext(mSDLWindow);
+
+    //Specify that we want a forward compatible OpenGL 4.5 context
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+    SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8); // creating a stencil buffer
+
+    mGLContext = SDL_GL_CreateContext(mSDLWindow);
+    if(mGLContext == nullptr) {
+        std::cout << "OpenGL context could not be initialized" << std::endl;
+    }
+
+    glewExperimental = GL_TRUE;
+    glewInit();
+
+    std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
 }
 
 WindowContextManager::~WindowContextManager() {
     std::cout << "Time to say goodbye" << std::endl;
 
-    // SDL_GL_DeleteContext(mGLContext);
+    SDL_GL_DeleteContext(mGLContext);
     SDL_Quit();
 }
 
-WindowContextManager& WindowContextManager::getInstance() {
-    static WindowContextManager instance {800, 600};
+WindowContextManager& WindowContextManager::getInstance(GLuint width, GLuint height) {
+    static WindowContextManager instance { width, height };
     return instance;
 }
