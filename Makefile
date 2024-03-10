@@ -14,7 +14,7 @@ RM := rm -rf
 CP := cp -f
 endif
 
-SRCS := src/main.cpp
+SRCS := src/main.cpp src/shader_program.cpp src/light.cpp src/window_context_manager.cpp
 
 CC := g++
 
