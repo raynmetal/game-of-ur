@@ -27,15 +27,18 @@ WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeig
         std::cout << "OpenGL context could not be initialized" << std::endl;
     }
 
+    // Initialize GLEW
     glewExperimental = GL_TRUE;
     glewInit();
+
+    //Set up viewport
+    glViewport(0, 0, 800, 600);
 
     std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
 }
 
 WindowContextManager::~WindowContextManager() {
     std::cout << "Time to say goodbye" << std::endl;
-
     SDL_GL_DeleteContext(mGLContext);
     SDL_Quit();
 }
@@ -43,4 +46,12 @@ WindowContextManager::~WindowContextManager() {
 WindowContextManager& WindowContextManager::getInstance(GLuint width, GLuint height) {
     static WindowContextManager instance { width, height };
     return instance;
+}
+
+SDL_GLContext WindowContextManager::getGLContext() const {
+    return mGLContext;
+}
+
+SDL_Window* WindowContextManager::getSDLWindow() const {
+    return mSDLWindow;
 }

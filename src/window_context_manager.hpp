@@ -35,9 +35,9 @@ public:
     WindowContextManager& operator=(const WindowContextManager&& other) = delete;
 
     /*Accessor for the OpenGL context pointer*/
-    const SDL_GLContext getGLContext() const;
+    SDL_GLContext getGLContext() const;
     /*Accessor for the SDL Window pointer*/
-    const SDL_Window* getSDLWindow() const;
+    SDL_Window* getSDLWindow() const;
 };
 
 #endif
