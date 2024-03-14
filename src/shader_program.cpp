@@ -218,10 +218,18 @@ void ShaderProgram::enableAttribArray(const std::string& name) const {
     if(loc<0) return;
     glEnableVertexAttribArray(loc);
 }
+void ShaderProgram::enableAttribArray(GLint locationAttrib) const {
+    if(locationAttrib<0) return;
+    glEnableVertexAttribArray(locationAttrib);
+}
 void ShaderProgram::disableAttribArray(const std::string& name) const {
     GLint loc {getLocationAttribArray(name)};
     if(loc<0) return;
     glDisableVertexAttribArray(loc);
+}
+void ShaderProgram::disableAttribArray(GLint locationAttrib) const {
+    if(locationAttrib<0) return;
+    glEnableVertexAttribArray(locationAttrib);
 }
 
 void ShaderProgram::setUBool(const std::string& name, bool value) const {

@@ -43,7 +43,9 @@ public:
     //utility attrib array functions
     GLint getLocationAttribArray(const std::string& name) const;
     void enableAttribArray(const std::string& name) const;
+    void enableAttribArray(GLint locationAttrib) const;
     void disableAttribArray(const std::string& name) const;
+    void disableAttribArray(GLint locationAttrib) const;
 
     //utility uniform functions
     GLint getLocationUniform(const std::string& name) const;
