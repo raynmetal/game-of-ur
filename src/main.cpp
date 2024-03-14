@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "fly_camera.hpp"
 #include "window_context_manager.hpp"
 #include "shader_program.hpp"
 
@@ -14,6 +15,7 @@ extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
 
 void init();
+void handleInput(const SDL_Event& event);
 
 int main(int argc, char* argv[]) {
     init();
@@ -136,7 +138,11 @@ int main(int argc, char* argv[]) {
     //Create 1 model and 1 normal matrix for this pyramid
     std::vector<glm::mat4> pyramidMatrices {
         {
-            glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -2.f)),
+            glm::rotate(
+                glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, -2.f)),
+                glm::radians(45.f),
+                glm::vec3(0.f, 1.f, 0.f)
+            )
         },
         {
             glm::mat4(1.f)
@@ -275,22 +281,9 @@ int main(int argc, char* argv[]) {
             glVertexAttribDivisor(locationNormalMatrix+i, 1);
         }
     glBindVertexArray(0);
-
-    // Initialize shared matrices
-    glm::mat4 projectionMatrix {
-        glm::perspective(
-            glm::radians(100.f),
-            static_cast<float>(gWindowHeight)/gWindowWidth,
-            .5f,
-            40.f
-        )
-    };
-    glm::mat4 viewMatrix {
-        glm::lookAt(
-            glm::vec3{0.f},
-            glm::vec3{0.f, 0.f, -1.f},
-            glm::vec3{0.f, 1.f, 0.f}
-        )
+    
+    FlyCamera camera {
+        glm::vec3(0.f), 0.f, 0.f, 0.f
     };
 
     // Send shared matrices to the uniform buffer
@@ -299,19 +292,21 @@ int main(int argc, char* argv[]) {
             GL_UNIFORM_BUFFER,
             0,
             sizeof(glm::mat4),
-            glm::value_ptr(projectionMatrix)
+            glm::value_ptr(camera.getProjectionMatrix())
         );
         glBufferSubData(
             GL_UNIFORM_BUFFER,
             sizeof(glm::mat4),
             sizeof(glm::mat4),
-            glm::value_ptr(viewMatrix)
+            glm::value_ptr(camera.getViewMatrix())
         );
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
 
     //Main event loop
     glClearColor(0.f, 0.f, 0.f, 1.f);
     SDL_Event event;
+    GLuint previousTicks { SDL_GetTicks() };
     bool quit {false};
     while(true) {
         //Handle events before anything else
@@ -325,8 +320,35 @@ int main(int argc, char* argv[]) {
                 quit = true;
                 break;
             }
+            camera.processInput(event);
         }
         if(quit) break;
+
+        // update time related variables
+        GLuint currentTicks { SDL_GetTicks() };
+        float deltaTime {
+            (currentTicks - previousTicks)/1000.f
+        };
+        previousTicks = currentTicks;
+
+        // update objects according to calculated delta
+        camera.update(deltaTime);
+
+        // Send shared matrices to the uniform buffer
+        glBindBuffer(GL_UNIFORM_BUFFER, uboSharedMatrices);
+            glBufferSubData(
+                GL_UNIFORM_BUFFER,
+                0,
+                sizeof(glm::mat4),
+                glm::value_ptr(camera.getProjectionMatrix())
+            );
+            glBufferSubData(
+                GL_UNIFORM_BUFFER,
+                sizeof(glm::mat4),
+                sizeof(glm::mat4),
+                glm::value_ptr(camera.getViewMatrix())
+            );
+        glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Render geometry to our geometry framebuffer
         glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);
@@ -350,7 +372,7 @@ int main(int argc, char* argv[]) {
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, geometryBuffers[0]);
+            glBindTexture(GL_TEXTURE_2D, geometryBuffers[2]);
         glActiveTexture(GL_TEXTURE0);
         basicShader.use();
         basicShader.setUInt("uRenderTexture", 0);
