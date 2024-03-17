@@ -10,6 +10,7 @@
 #include "fly_camera.hpp"
 #include "window_context_manager.hpp"
 #include "shader_program.hpp"
+#include "texture.hpp"
 
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
@@ -30,6 +31,8 @@ int main(int argc, char* argv[]) {
         std::cout << "Could not compile basic shader!" << std::endl;
         return 1;
     }
+
+    Texture textureRock {"data/textures/pixel_rock_moss.png", Texture::Type::TextureAlbedo };
 
     // Create a framebuffer for storing geometrical information
     GLuint geometryFBO;
@@ -116,15 +119,20 @@ int main(int argc, char* argv[]) {
     };
     std::vector<glm::vec4> pyramidVertices {
         {0.f, .5f, 0.f, 1.f}, // top
-            {1.f, 0.f, 0.f, 1.f}, // red
+            glm::vec4(1.f), // white
+            {.5f, 0.f, 0.f, 0.f}, // texture top middle
         {-.25f, -.5f, .25f, 1.f}, // bottom left front
-            {0.f, 1.f, 0.f, 1.f}, // green
+            glm::vec4(1.f),
+            {0.f, 0.f, 0.f, 0.f}, // texture top left
         {.25f, -.5f, .25f, 1.f}, // bottom right front
-            {0.f, 0.f, 1.f, 1.f}, // blue
+            glm::vec4(1.f),
+            {0.f, 1.f, 0.f, 0.f}, // texture bottom left 
         {.25f, -.5f, -.25f, 1.f}, // bottom right back
-            {1.f, 1.f, 0.f, 1.f}, // yellow
+            glm::vec4(1.f),
+            {1.f, 1.f, 0.f, 0.f}, // texture bottom right
         {-.25f, -.5f, -.25f, 1.f}, // bottom left back
-            {0.f, 1.f, 1.f, 1.f} // cyan
+            glm::vec4(1.f),
+            {1.f, 0.f, 0.f, 0.f} // texture top right
     };
     std::vector<GLuint> pyramidElements {
         {0}, {1}, {2}, // front
@@ -217,69 +225,78 @@ int main(int argc, char* argv[]) {
     glBindVertexArray(pyramidVAO);
         glBindBuffer(GL_ARRAY_BUFFER, pyramidVertexBuffer);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pyramidElementBuffer);
-        glBufferData(
-            GL_ARRAY_BUFFER,
-            pyramidVertices.size() * sizeof(glm::vec4),
-            pyramidVertices.data(),
-            GL_STATIC_DRAW
-        );
-        glBufferData(
-            GL_ELEMENT_ARRAY_BUFFER,
-            pyramidElements.size() * sizeof(GLuint),
-            pyramidElements.data(),
-            GL_STATIC_DRAW
-        );
-        geometryShader.enableAttribArray("attrPosition");
-        glVertexAttribPointer(
-            geometryShader.getLocationAttribArray("attrPosition"),
-            4,
-            GL_FLOAT,
-            GL_FALSE,
-            2*sizeof(glm::vec4),
-            reinterpret_cast<void*>(0)
-        );
-        geometryShader.enableAttribArray("attrColor");
-        glVertexAttribPointer(
-            geometryShader.getLocationAttribArray("attrColor"),
-            4,
-            GL_FLOAT,
-            GL_FALSE,
-            2*sizeof(glm::vec4),
-            reinterpret_cast<void*>(sizeof(glm::vec4))
-        );
+            glBufferData(
+                GL_ARRAY_BUFFER,
+                pyramidVertices.size() * sizeof(glm::vec4),
+                pyramidVertices.data(),
+                GL_STATIC_DRAW
+            );
+            glBufferData(
+                GL_ELEMENT_ARRAY_BUFFER,
+                pyramidElements.size() * sizeof(GLuint),
+                pyramidElements.data(),
+                GL_STATIC_DRAW
+            );
+            geometryShader.enableAttribArray("attrPosition");
+            glVertexAttribPointer(
+                geometryShader.getLocationAttribArray("attrPosition"),
+                4,
+                GL_FLOAT,
+                GL_FALSE,
+                3*sizeof(glm::vec4),
+                reinterpret_cast<void*>(0)
+            );
+            geometryShader.enableAttribArray("attrColor");
+            glVertexAttribPointer(
+                geometryShader.getLocationAttribArray("attrColor"),
+                4,
+                GL_FLOAT,
+                GL_FALSE,
+                3*sizeof(glm::vec4),
+                reinterpret_cast<void*>(sizeof(glm::vec4))
+            );
+            geometryShader.enableAttribArray("attrTextureCoordinates");
+            glVertexAttribPointer(
+                geometryShader.getLocationAttribArray("attrTextureCoordinates"),
+                2,
+                GL_FLOAT,
+                GL_FALSE,
+                3*sizeof(glm::vec4),
+                reinterpret_cast<void*>(2 * sizeof(glm::vec4))
+            );
         //Send instanced matrix data to the GPU
         glBindBuffer(GL_ARRAY_BUFFER, pyramidMatrixBuffer);
-        glBufferData(
-            GL_ARRAY_BUFFER,
-            pyramidMatrices.size() * sizeof(glm::mat4),
-            pyramidMatrices.data(),
-            GL_STATIC_DRAW
-        );
-        //Enable model and normal matrix arrays, set their pointers
-        GLint locationModelMatrix {geometryShader.getLocationAttribArray("attrModelMatrix")};
-        GLint locationNormalMatrix {geometryShader.getLocationAttribArray("attrNormalMatrix")};
-        for(int i{0}; i < 4; ++i) {
-            geometryShader.enableAttribArray(locationModelMatrix+i);
-            geometryShader.enableAttribArray(locationNormalMatrix+i);
-            glVertexAttribPointer(
-                locationModelMatrix+i,
-                4,
-                GL_FLOAT,
-                GL_FALSE,
-                2*sizeof(glm::mat4),
-                reinterpret_cast<void*>(0 + i*sizeof(glm::vec4))
+            glBufferData(
+                GL_ARRAY_BUFFER,
+                pyramidMatrices.size() * sizeof(glm::mat4),
+                pyramidMatrices.data(),
+                GL_STATIC_DRAW
             );
-            glVertexAttribDivisor(locationModelMatrix+i, 1);
-            glVertexAttribPointer(
-                locationNormalMatrix+i,
-                4,
-                GL_FLOAT,
-                GL_FALSE,
-                2*sizeof(glm::mat4),
-                reinterpret_cast<void*>(sizeof(glm::mat4) + i*sizeof(glm::vec4))
-            );
-            glVertexAttribDivisor(locationNormalMatrix+i, 1);
-        }
+            //Enable model and normal matrix arrays, set their pointers
+            GLint locationModelMatrix {geometryShader.getLocationAttribArray("attrModelMatrix")};
+            GLint locationNormalMatrix {geometryShader.getLocationAttribArray("attrNormalMatrix")};
+            for(int i{0}; i < 4; ++i) {
+                geometryShader.enableAttribArray(locationModelMatrix+i);
+                geometryShader.enableAttribArray(locationNormalMatrix+i);
+                glVertexAttribPointer(
+                    locationModelMatrix+i,
+                    4,
+                    GL_FLOAT,
+                    GL_FALSE,
+                    2*sizeof(glm::mat4),
+                    reinterpret_cast<void*>(0 + i*sizeof(glm::vec4))
+                );
+                glVertexAttribDivisor(locationModelMatrix+i, 1);
+                glVertexAttribPointer(
+                    locationNormalMatrix+i,
+                    4,
+                    GL_FLOAT,
+                    GL_FALSE,
+                    2*sizeof(glm::mat4),
+                    reinterpret_cast<void*>(sizeof(glm::mat4) + i*sizeof(glm::vec4))
+                );
+                glVertexAttribDivisor(locationNormalMatrix+i, 1);
+            }
     glBindVertexArray(0);
     
     FlyCamera camera {
@@ -354,10 +371,13 @@ int main(int argc, char* argv[]) {
         glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureRock.getTextureID());
             geometryShader.use();
             geometryShader.setUBool("uUsingNormalMap", false);
             geometryShader.setUBool("uUsingSpecularMap", false);
-            geometryShader.setUBool("uUsingAlbedoMap", false);
+            geometryShader.setUBool("uUsingAlbedoMap", true);
+            geometryShader.setUInt("uMaterial.textureAlbedo", 0);
             glBindVertexArray(pyramidVAO);
                 glDrawElementsInstanced(
                     GL_TRIANGLES,

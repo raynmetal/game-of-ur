@@ -1,5 +1,6 @@
 #include <iostream>
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_image.h>
 #include <GL/glew.h>
 
 #include "window_context_manager.hpp"
@@ -9,6 +10,7 @@ WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeig
     mWindowHeight {windowHeight}
 {
     SDL_Init(SDL_INIT_VIDEO);
+    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 
     mSDLWindow = SDL_CreateWindow("Game of Ur", 100, 100, mWindowWidth, mWindowHeight, SDL_WINDOW_OPENGL);
     if(mSDLWindow == nullptr){
@@ -31,8 +33,12 @@ WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeig
     glewExperimental = GL_TRUE;
     glewInit();
 
-    //Set up viewport
+    // Set up viewport
     glViewport(0, 0, 800, 600);
+
+    // Apply color correction, converting SRGB values to linear space values
+    // when in the shader context
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
     std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
 }
