@@ -8,9 +8,9 @@
 
 #include "texture.hpp"
 
-Texture::Texture(const std::string& filepath, const Type type) : mID{0}, mFilepath{filepath}, mType{type} {
+Texture::Texture(const std::string& filepath, const Usage type) : mID{0}, mFilepath{filepath}, mUsage{type} {
     bool success {
-        loadTextureFromFile(filepath)
+        loadFromFile(filepath)
     };
     if(!success) {
         std::cout << "Could not load texture from " << filepath
@@ -18,14 +18,14 @@ Texture::Texture(const std::string& filepath, const Type type) : mID{0}, mFilepa
     } else std::cout << "Texture at " << filepath << " loaded successfully!"
         << std::endl;
 }
-Texture::Texture(GLuint textureID, const Type type):mID{textureID}, mFilepath{""}, mType{type}
+Texture::Texture(GLuint textureID, const Usage type):mID{textureID}, mFilepath{""}, mUsage{type}
 {}
-Texture::Texture(): mID{0}, mFilepath{""}, mType{Type::TextureNA} 
+Texture::Texture(): mID{0}, mFilepath{""}, mUsage{Usage::NA} 
 {}
 
-Texture::Texture(const Texture& other): mID{other.mID}, mFilepath{other.mFilepath}, mType{other.mType}
+Texture::Texture(const Texture& other): mID{other.mID}, mFilepath{other.mFilepath}, mUsage{other.mUsage}
 {}
-Texture::Texture(Texture&& other) noexcept: mID{other.mID}, mFilepath{other.mFilepath}, mType{other.mType} {
+Texture::Texture(Texture&& other) noexcept: mID{other.mID}, mFilepath{other.mFilepath}, mUsage{other.mUsage} {
     //Prevent other from destroying this texture when its
     //deconstructor is called
     other.mID = 0;
@@ -35,23 +35,23 @@ Texture& Texture::operator=(const Texture& other) {
     if(&other == this) return *this;
 
     // free currently held resource
-    freeTexture();
+    free();
 
     // copy the other's resource
     mID = other.mID;
     mFilepath = other.mFilepath;
-    mType = other.mType;
+    mUsage = other.mUsage;
 
     return *this;
 }
 Texture& Texture::operator=(Texture&& other) noexcept {
     if(&other == this) return *this;
 
-    freeTexture();
+    free();
 
     mID = other.mID;
     mFilepath = other.mFilepath;
-    mType = other.mType;
+    mUsage = other.mUsage;
 
     // Prevent the destruction of the texture we now own
     // when other's deconstructor is called
@@ -61,12 +61,12 @@ Texture& Texture::operator=(Texture&& other) noexcept {
 }
 
 Texture::~Texture() {
-    freeTexture();
+    free();
 }
 
 
-bool Texture::loadTextureFromFile(const std::string& filename) {
-    freeTexture();
+bool Texture::loadFromFile(const std::string& filename) {
+    free();
 
     // Load image from file into a convenient SDL surface, per the image
     SDL_Surface* textureImage { IMG_Load(filename.c_str()) };
@@ -93,7 +93,7 @@ bool Texture::loadTextureFromFile(const std::string& filename) {
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0,
         //assume linear space if not an albedo texture
-        mType == Type::TextureAlbedo? GL_SRGB_ALPHA: GL_RGBA,
+        mUsage == Usage::Albedo? GL_SRGB_ALPHA: GL_RGBA,
         pretexture->w, pretexture->h,
         0, GL_RGBA, GL_UNSIGNED_BYTE,
         reinterpret_cast<void*>(pretexture->pixels)
@@ -121,21 +121,21 @@ bool Texture::loadTextureFromFile(const std::string& filename) {
     return true;
 }
 
-void Texture::freeTexture() {
+void Texture::free() {
     if(!mID) return;
 
     std::cout << "Texture " << mID << " is being freed" << std::endl;
     glDeleteTextures(1, &mID);
     mID = 0;
-    mType = Type::TextureNA;
+    mUsage = Usage::NA;
     mFilepath = "";
 }
 
 
-void Texture::bindTexture() const {
+void Texture::bind() const {
     if(!mID) return;
     glBindTexture(GL_TEXTURE_2D, mID);
 }
 
 GLuint Texture::getTextureID() const { return mID; }
-Texture::Type Texture::getType() const { return mType; }
+Texture::Usage Texture::getUsage() const { return mUsage; }

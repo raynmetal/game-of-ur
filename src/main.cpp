@@ -7,10 +7,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "vertex.hpp"
+#include "texture.hpp"
 #include "fly_camera.hpp"
 #include "window_context_manager.hpp"
 #include "shader_program.hpp"
-#include "texture.hpp"
 
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
@@ -32,7 +33,7 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    Texture textureRock {"data/textures/pixel_rock_moss.png", Texture::Type::TextureAlbedo };
+    Texture textureRock {"data/textures/pixel_rock_moss.png", Texture::Usage::Albedo };
 
     // Create a framebuffer for storing geometrical information
     GLuint geometryFBO;
@@ -99,40 +100,76 @@ int main(int argc, char* argv[]) {
         2*sizeof(glm::mat4)
     );
 
-    std::vector<glm::vec4> screenVertices {
-        {-1.f, -1.f, 0.f, 1.f}, // bottom left
-            {glm::vec4(1.f)}, // color multiplier
-            {0.f, 0.f, 0.f, 0.f}, // bottom left UV
-        {1.f, -1.f, 0.f, 1.f}, // bottom right
-            {glm::vec4(1.f)},
-            {1.f, 0.f, 0.f, 0.f},// bottom right UV
-        {1.f, 1.f, 0.f, 1.f}, // top right
-            {glm::vec4(1.f)},
-            {1.f, 1.f, 0.f, 0.f},
-        {-1.f, 1.f, 0.f, 1.f}, // top left
-            {glm::vec4(1.f)}, 
-            {0.f, 1.f, 0.f, 0.f}
+    std::vector<Vertex> screenVertices {
+        {
+            {-1.f, -1.f, 0.f, 1.f}, // bottom left
+            {0.f, 0.f, 1.f, 0.f}, // facing +Z
+            glm::vec4(0.f),
+            glm::vec4(1.f), // color multiplier
+            {0.f, 0.f}, // bottom left UV
+        },
+        { 
+            {1.f, -1.f, 0.f, 1.f}, // bottom right
+            {0.f, 0.f, 1.f, 0.f}, // facing +Z
+            glm::vec4(0.f),
+            glm::vec4(1.f),
+            {1.f, 0.f},// bottom right UV
+        },
+        {
+            {1.f, 1.f, 0.f, 1.f}, // top right
+            {0.f, 0.f, 1.f, 0.f}, // facing +Z
+            glm::vec4(0.f),
+            glm::vec4(1.f),
+            {1.f, 1.f}
+        },
+        {
+            {-1.f, 1.f, 0.f, 1.f}, // top left
+            {0.f, 0.f, 1.f, 0.f}, // facing +Z
+            glm::vec4(0.f),
+            glm::vec4(1.f), 
+            {0.f, 1.f}
+        }
     };
     std::vector<GLuint> screenElements {
         {0}, {1}, {2},
         {0}, {2}, {3}
     };
-    std::vector<glm::vec4> pyramidVertices {
-        {0.f, .5f, 0.f, 1.f}, // top
+    std::vector<Vertex> pyramidVertices {
+        {
+            {0.f, .5f, 0.f, 1.f}, // top
+            {0.f, 1.f, 0.f, 0.f},
+            glm::vec4(0.f),
             glm::vec4(1.f), // white
-            {.5f, 0.f, 0.f, 0.f}, // texture top middle
-        {-.25f, -.5f, .25f, 1.f}, // bottom left front
+            {.5f, 0.f} // texture top middle
+        },
+        {
+            {-.25f, -.5f, .25f, 1.f}, // bottom left front
+            {-.25f, -.25f, -.25f, 0.f},
+            glm::vec4(0.f),
             glm::vec4(1.f),
-            {0.f, 0.f, 0.f, 0.f}, // texture top left
-        {.25f, -.5f, .25f, 1.f}, // bottom right front
+            {0.f, 0.f} // texture top left
+        },
+        {
+            {.25f, -.5f, .25f, 1.f}, // bottom right front
+            {.25f, -.25f, .25f, 0.f},
+            glm::vec4(0.f),
             glm::vec4(1.f),
-            {0.f, 1.f, 0.f, 0.f}, // texture bottom left 
-        {.25f, -.5f, -.25f, 1.f}, // bottom right back
+            {0.f, 1.f} // texture bottom left 
+        },
+        {
+            {.25f, -.5f, -.25f, 1.f}, // bottom right back
+            {.25f, -.25f, -.25f, 0.f},
+            glm::vec4(0.f),
             glm::vec4(1.f),
-            {1.f, 1.f, 0.f, 0.f}, // texture bottom right
-        {-.25f, -.5f, -.25f, 1.f}, // bottom left back
+            {1.f, 1.f} // texture bottom right
+        },
+        {
+            {-.25f, -.5f, -.25f, 1.f}, // bottom left back
+            {-.25, -.25f, -.25f, 0.f},
+            glm::vec4(0.f),
             glm::vec4(1.f),
-            {1.f, 0.f, 0.f, 0.f} // texture top right
+            {1.f, 0.f} // texture top right
+        }
     };
     std::vector<GLuint> pyramidElements {
         {0}, {1}, {2}, // front
@@ -171,7 +208,7 @@ int main(int argc, char* argv[]) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screenElementBuffer);
         glBufferData(
             GL_ARRAY_BUFFER,
-            screenVertices.size() * sizeof(glm::vec4),
+            screenVertices.size() * sizeof(Vertex),
             screenVertices.data(),
             GL_STATIC_DRAW
         );
@@ -181,32 +218,32 @@ int main(int argc, char* argv[]) {
             screenElements.data(),
             GL_STATIC_DRAW
         );
-        basicShader.enableAttribArray(basicShader.getLocationAttribArray("attrPosition"));
-        basicShader.enableAttribArray(basicShader.getLocationAttribArray("attrColor"));
-        basicShader.enableAttribArray(basicShader.getLocationAttribArray("attrTextureCoordinates"));
+        basicShader.enableAttribArray("attrPosition");
+        basicShader.enableAttribArray("attrColor");
+        basicShader.enableAttribArray("attrTextureCoordinates");
         glVertexAttribPointer(
             basicShader.getLocationAttribArray("attrPosition"),
             4,
             GL_FLOAT,
             GL_FALSE,
-            3 * sizeof(glm::vec4),
-            reinterpret_cast<void*>(0)
+            sizeof(Vertex),
+            reinterpret_cast<void*>(offsetof(Vertex, mPosition))
         );
         glVertexAttribPointer(
             basicShader.getLocationAttribArray("attrColor"),
             4,
             GL_FLOAT,
             GL_FALSE,
-            3*sizeof(glm::vec4),
-            reinterpret_cast<void*>(sizeof(glm::vec4))
+            sizeof(Vertex),
+            reinterpret_cast<void*>(offsetof(Vertex, mColor))
         );
         glVertexAttribPointer(
             basicShader.getLocationAttribArray("attrTextureCoordinates"),
             2,
             GL_FLOAT,
             GL_FALSE,
-            3*sizeof(glm::vec4),
-            reinterpret_cast<void*>(2*sizeof(glm::vec4))
+            sizeof(Vertex),
+            reinterpret_cast<void*>(offsetof(Vertex, mTextureCoordinates))
         );
     glBindVertexArray(0);
 
@@ -227,7 +264,7 @@ int main(int argc, char* argv[]) {
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, pyramidElementBuffer);
             glBufferData(
                 GL_ARRAY_BUFFER,
-                pyramidVertices.size() * sizeof(glm::vec4),
+                pyramidVertices.size() * sizeof(Vertex),
                 pyramidVertices.data(),
                 GL_STATIC_DRAW
             );
@@ -243,8 +280,8 @@ int main(int argc, char* argv[]) {
                 4,
                 GL_FLOAT,
                 GL_FALSE,
-                3*sizeof(glm::vec4),
-                reinterpret_cast<void*>(0)
+                sizeof(Vertex),
+                reinterpret_cast<void*>(offsetof(Vertex, mPosition))
             );
             geometryShader.enableAttribArray("attrColor");
             glVertexAttribPointer(
@@ -252,8 +289,8 @@ int main(int argc, char* argv[]) {
                 4,
                 GL_FLOAT,
                 GL_FALSE,
-                3*sizeof(glm::vec4),
-                reinterpret_cast<void*>(sizeof(glm::vec4))
+                sizeof(Vertex),
+                reinterpret_cast<void*>(offsetof(Vertex, mColor))
             );
             geometryShader.enableAttribArray("attrTextureCoordinates");
             glVertexAttribPointer(
@@ -261,8 +298,8 @@ int main(int argc, char* argv[]) {
                 2,
                 GL_FLOAT,
                 GL_FALSE,
-                3*sizeof(glm::vec4),
-                reinterpret_cast<void*>(2 * sizeof(glm::vec4))
+                sizeof(Vertex),
+                reinterpret_cast<void*>(offsetof(Vertex, mTextureCoordinates))
             );
         //Send instanced matrix data to the GPU
         glBindBuffer(GL_ARRAY_BUFFER, pyramidMatrixBuffer);

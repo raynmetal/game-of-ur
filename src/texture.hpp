@@ -7,17 +7,17 @@
 
 class Texture {
 public:
-    enum Type {
-        TextureNA,
-        TextureAlbedo,
-        TextureNormal,
-        TextureSpecular
+    enum Usage {
+        NA,
+        Albedo,
+        Normal,
+        Specular
     };
     /* Load texture directly from file */
-    Texture(const std::string& filepath, const Type type=TextureNA);
+    Texture(const std::string& filepath, const Usage usage=NA);
     /* Assume texture was manually loaded elsewhere, and store its 
     properties here */
-    Texture(GLuint textureID, const Type type);
+    Texture(GLuint textureID, const Usage usage);
     /* Load an empty texture object, with an mID of 0 indicating
     that there is no texture here */
     Texture();
@@ -36,17 +36,17 @@ public:
     virtual ~Texture();
 
     /* basic load and allocate function */
-    bool loadTextureFromFile(const std::string& filepath);
-    /* basid deallocate function */
-    void freeTexture();
+    bool loadFromFile(const std::string& filepath);
+    /* basic deallocate function */
+    virtual void free();
 
     /* Bind/unbind texture */
-    virtual void bindTexture() const;
+    void bind() const;
 
     /* texture ID getter */
     GLuint getTextureID() const;
-    /* texture type getter */
-    Type getType() const;
+    /* texture usage getter */
+    Usage getUsage() const;
 
 protected:
     /* This texture's name, as referenced by OpenGL */
@@ -54,7 +54,7 @@ protected:
     /* The path this texture was loaded from, if any */
     std::string mFilepath;
     /* This texture's type, essentially indicating its usage */
-    Type mType;
+    Usage mUsage;
 };
 
 #endif
