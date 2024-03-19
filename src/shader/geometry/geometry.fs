@@ -44,7 +44,7 @@ void main() {
 
     geometryAlbedoSpec = fragAttr.color;
     if(uUsingAlbedoMap) {
-        geometryAlbedoSpec = vec4(texture(uMaterial.textureAlbedo, fragAttr.textureCoordinates).rgb, 1.f);
+        geometryAlbedoSpec = vec4(texture(uMaterial.textureAlbedo, fragAttr.textureCoordinates).rgb, .5f);
     }
     if(uUsingSpecularMap) {
         geometryAlbedoSpec.a = texture(uMaterial.textureSpecular, fragAttr.textureCoordinates).r;
