@@ -31,7 +31,7 @@ I decided against making an original game because I wanted to focus on the techn
 
 ## LICENSE
 
-raynmetal/game-of-ur is distributed under the terms of GNU General Public License, version 3 as published by the Free Software Foundation
+raynmetal/game-of-ur is distributed under the terms of the MIT License.
 
 This program makes extensive use of the following libraries: 
 
