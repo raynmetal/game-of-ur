@@ -25,9 +25,7 @@ public:
     Mesh(
         const std::vector<Vertex>& vertices, 
         const std::vector<GLuint>& elements,
-        Texture* textureAlbedo=nullptr,
-        Texture* textureNormal=nullptr,
-        Texture* textureSpecular=nullptr
+        const std::vector<Texture*>& textures
     );
 
     /*
@@ -62,9 +60,7 @@ private:
 
     std::vector<Vertex> mVertices;
     std::vector<GLuint> mElements;
-    Texture* mTextureAlbedo;
-    Texture* mTextureNormal;
-    Texture* mTextureSpecular;
+    std::vector<Texture*> mpTextures;
 
     GLuint mVertexBuffer;
     GLuint mMatrixBuffer;

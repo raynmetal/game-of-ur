@@ -145,7 +145,7 @@ int main(int argc, char* argv[]) {
         },
         {
             {-.25f, -.5f, .25f, 1.f}, // bottom left front
-            {-.25f, -.25f, -.25f, 0.f},
+            {-.25f, -.25f, .25f, 0.f},
             glm::vec4(0.f),
             glm::vec4(1.f),
             {0.f, 0.f} // texture top left
@@ -233,7 +233,7 @@ int main(int argc, char* argv[]) {
         );
     glBindVertexArray(0);
 
-    Mesh pyramidMesh { pyramidVertices,  pyramidElements, &textureRock };
+    Mesh pyramidMesh { pyramidVertices,  pyramidElements, std::vector<Texture*> {{&textureRock}} };
     pyramidMesh.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
 
     FlyCamera camera {
@@ -256,11 +256,15 @@ int main(int argc, char* argv[]) {
         );
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+    //Timing related variables
+    GLuint previousTicks { SDL_GetTicks() };
+    float framerate {0};
+    const float frameratePoll {1.f};
+    float framerateCounter {0.f};
 
     //Main event loop
     glClearColor(0.f, 0.f, 0.f, 1.f);
     SDL_Event event;
-    GLuint previousTicks { SDL_GetTicks() };
     bool quit {false};
     while(true) {
         //Handle events before anything else
@@ -284,6 +288,12 @@ int main(int argc, char* argv[]) {
             (currentTicks - previousTicks)/1000.f
         };
         previousTicks = currentTicks;
+        framerate = framerate * .8f + .2f/deltaTime;
+        framerateCounter += deltaTime;
+        if(framerateCounter > frameratePoll) {
+            std::cout << "Framerate: " << framerate << " fps\n";
+            framerateCounter -= frameratePoll;
+        }
 
         // update objects according to calculated delta
         camera.update(deltaTime);

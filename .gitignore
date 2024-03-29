@@ -14,3 +14,7 @@
 /**/*.obj
 /**/*.mtl
 /**/*.txt
+/**/*.aseprite
+/**/*.dae
+/**/*.gltf 
+/**/*.blend

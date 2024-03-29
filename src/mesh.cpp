@@ -19,28 +19,34 @@ void Mesh::Draw(ShaderProgram& shaderProgram) {
     associateShaderProgram(shaderProgram);
     shaderProgram.use();
 
-    // Set uniforms
-    if(mTextureAlbedo) {
-        glActiveTexture(GL_TEXTURE0);
-            mTextureAlbedo->bind();
-        glActiveTexture(GL_TEXTURE0);
-        shaderProgram.setUBool("uUsingAlbedoMap", true);
-        shaderProgram.setUInt("uMaterial.textureAlbedo", 0);
-    } else shaderProgram.setUBool("uUsingAlbedoMap", false);
-    if(mTextureNormal){
-        glActiveTexture(GL_TEXTURE1);
-            mTextureNormal->bind();
-        glActiveTexture(GL_TEXTURE0);
-        shaderProgram.setUBool("uUsingNormalMap", true);
-        shaderProgram.setUInt("uMaterial.textureNormal", 1);
-    } else shaderProgram.setUBool("uUsingNormalMap", false);;
-    if(mTextureSpecular) {
-        glActiveTexture(GL_TEXTURE2);
-            mTextureSpecular->bind();
-        glActiveTexture(GL_TEXTURE0);
-        shaderProgram.setUBool("uUsingSpecularMap", true);
-        shaderProgram.setUInt("uMaterial.textureSpecular", 2);
-    } else shaderProgram.setUBool("uUsingSpecularMap", false);
+    //Set mesh-related uniforms
+    bool usingAlbedoMap {false};
+    bool usingNormalMap {false};
+    bool usingSpecularMap {false};
+    GLuint textureUnit {0};
+    for(Texture* pTexture : mpTextures) {
+        glActiveTexture(GL_TEXTURE0 + textureUnit);
+        glBindTexture(GL_TEXTURE_2D, pTexture->getTextureID());
+        switch(pTexture->getUsage()) {
+            case Texture::Albedo:
+                usingAlbedoMap = true;
+                shaderProgram.setUInt("uMaterial.textureAlbedo", textureUnit);
+            break;
+            case Texture::Normal:
+                usingNormalMap = true;
+                shaderProgram.setUInt("uMaterial.textureNormal", textureUnit);
+            break;
+            case Texture::Specular:
+                usingSpecularMap = true;
+                shaderProgram.setUInt("uMaterial.textureSpecular", textureUnit);
+            break;
+        }
+        ++textureUnit;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    shaderProgram.setUBool("uUsingAlbedoMap", usingAlbedoMap);
+    shaderProgram.setUBool("uUsingNormalMap", usingNormalMap);
+    shaderProgram.setUBool("uUsingSpecularMap", usingSpecularMap);
 
     glBindVertexArray(mShaderVAOMap[shaderProgram.getProgramID()]);
         glDrawElementsInstanced(
@@ -56,15 +62,11 @@ void Mesh::Draw(ShaderProgram& shaderProgram) {
 Mesh::Mesh(
     const std::vector<Vertex>& vertices,
     const std::vector<GLuint>& elements,
-    Texture* textureAlbedo,
-    Texture* textureNormal,
-    Texture* textureSpecular
+    const std::vector<Texture*>& pTextures
 ) : 
     mVertices{vertices},
     mElements{elements},
-    mTextureAlbedo{textureAlbedo},
-    mTextureNormal{textureNormal},
-    mTextureSpecular{textureSpecular}
+    mpTextures{pTextures}
 {
     glGenBuffers(1, &mVertexBuffer);
     glGenBuffers(1, &mMatrixBuffer);
