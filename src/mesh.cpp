@@ -5,18 +5,13 @@
 #include <GL/glew.h>
 
 #include <glm/glm.hpp>
-#include <glm/gtc/quaternion.hpp>
 
 #include "texture.hpp"
 #include "vertex.hpp"
 
 #include "mesh.hpp"
 
-glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 scale);
-
-void Mesh::Draw(ShaderProgram& shaderProgram) {
-    updateMatrixBuffer();
-    associateShaderProgram(shaderProgram);
+void Mesh::draw(ShaderProgram& shaderProgram, GLuint instanceCount) {
     shaderProgram.use();
 
     //Set mesh-related uniforms
@@ -27,6 +22,7 @@ void Mesh::Draw(ShaderProgram& shaderProgram) {
     for(Texture* pTexture : mpTextures) {
         glActiveTexture(GL_TEXTURE0 + textureUnit);
         glBindTexture(GL_TEXTURE_2D, pTexture->getTextureID());
+        //TODO: allow multiple materials to make up a single mesh
         switch(pTexture->getUsage()) {
             case Texture::Albedo:
                 usingAlbedoMap = true;
@@ -40,6 +36,7 @@ void Mesh::Draw(ShaderProgram& shaderProgram) {
                 usingSpecularMap = true;
                 shaderProgram.setUInt("uMaterial.textureSpecular", textureUnit);
             break;
+            default: break;
         }
         ++textureUnit;
     }
@@ -54,7 +51,7 @@ void Mesh::Draw(ShaderProgram& shaderProgram) {
             mElements.size(),
             GL_UNSIGNED_INT,
             0,
-            mInstanceModelMatrixMap.size()
+            instanceCount
         );
     glBindVertexArray(0);
 }
@@ -66,84 +63,124 @@ Mesh::Mesh(
 ) : 
     mVertices{vertices},
     mElements{elements},
-    mpTextures{pTextures}
+    mpTextures{pTextures},
+    mVertexBuffer{0},
+    mElementBuffer{0}
 {
-    glGenBuffers(1, &mVertexBuffer);
-    glGenBuffers(1, &mMatrixBuffer);
-    glGenBuffers(1, &mElementBuffer);
-
-    glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-        glBufferData(GL_ARRAY_BUFFER, mVertices.size() * sizeof(Vertex), mVertices.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, mMatrixBuffer);
-        glBufferData(
-            GL_ARRAY_BUFFER, mInstanceCapacity * sizeof(glm::mat4), NULL, GL_DYNAMIC_DRAW
-        );
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mElements.size() * sizeof(GLuint),
-            mElements.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    allocateBuffers();
 }
 
 Mesh::~Mesh() {
-    glDeleteBuffers(1, &mVertexBuffer);
-    glDeleteBuffers(1, &mElementBuffer);
-    glDeleteBuffers(1, &mMatrixBuffer);
-    for(std::pair shaderVAO : mShaderVAOMap) {
-        glDeleteBuffers(1, &shaderVAO.second);
-    }
+    free();
 }
 
-void Mesh::associateShaderProgram(const ShaderProgram& shaderProgram) {
-    GLuint programID { shaderProgram.getProgramID() };
+Mesh::Mesh(Mesh&& other):
+    mVertices {other.mVertices},
+    mElements {other.mElements},
+    mpTextures {other.mpTextures},
+    mVertexBuffer {other.mVertexBuffer},
+    mElementBuffer {other.mElementBuffer},
+    mShaderVAOMap {other.mShaderVAOMap},
+    mDirty {other.mDirty}
+{
+    // prevent other from removing our resources when its deconstructor is called
+    other.releaseResources();
+}
 
+Mesh::Mesh(const Mesh& other):
+    mVertices{other.mVertices},
+    mElements{other.mElements},
+    mpTextures{other.mpTextures},
+    mVertexBuffer{0},
+    mElementBuffer{0}
+{
+    allocateBuffers();
+}
+
+Mesh& Mesh::operator=(Mesh&& other) {
+    if(&other == this) 
+        return *this;
+
+    free();
+
+    mVertices = other.mVertices;
+    mElements = other.mElements;
+    mpTextures = other.mpTextures;
+    mShaderVAOMap = other.mShaderVAOMap;
+    mDirty = other.mDirty;
+    mVertexBuffer = other.mVertexBuffer;
+    mElementBuffer = other.mElementBuffer;
+
+    other.releaseResources();
+
+    return *this;
+}
+
+Mesh& Mesh::operator=(const Mesh& other) {
+    if(&other == this) 
+        return *this;
+    
+    free();
+
+    mVertices = other.mVertices;
+    mElements = other.mElements;
+    mpTextures = other.mpTextures;
+    mVertexBuffer = 0;
+    mElementBuffer = 0;
+    allocateBuffers();
+
+    return *this;
+}
+
+void Mesh::associateShaderProgram(const ShaderProgram& shaderProgram, GLuint matrixBuffer) {
+    GLuint programID { shaderProgram.getProgramID() };
+    associateShaderProgram(programID, matrixBuffer);
+}
+
+void Mesh::associateShaderProgram(GLuint programID, GLuint matrixBuffer){
     //Ensure duplicate calls to this function don't create duplicate VAOs
     if(mShaderVAOMap.find(programID) != mShaderVAOMap.end()) return;
     GLuint shaderVAO;
     glGenVertexArrays(1, &shaderVAO);
-    shaderProgram.use();
+    glUseProgram(programID);
     glBindVertexArray(shaderVAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
 
         //Enable and set vertex pointers
         glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-        GLint attrPosition { shaderProgram.getLocationAttribArray("attrPosition") };
-        GLint attrNormal { shaderProgram.getLocationAttribArray("attrNormal") };
-        GLint attrTangent { shaderProgram.getLocationAttribArray("attrTangent") };
-        GLint attrColor { shaderProgram.getLocationAttribArray("attrColor") };
-        GLint attrTextureCoordinates { shaderProgram.getLocationAttribArray("attrTextureCoordinates") };
+        GLint attrPosition { glGetAttribLocation(programID, "attrPosition") };
+        GLint attrNormal { glGetAttribLocation(programID, "attrNormal") };
+        GLint attrTangent { glGetAttribLocation(programID, "attrTangent") };
+        GLint attrColor { glGetAttribLocation(programID, "attrColor") };
+        GLint attrTextureCoordinates { glGetAttribLocation(programID, "attrTextureCoordinates") };
         if(attrPosition >= 0) {
-            shaderProgram.enableAttribArray(attrPosition);
+            glEnableVertexAttribArray(attrPosition);
             glVertexAttribPointer(attrPosition, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mPosition)));
         }
         if(attrNormal >= 0) {
-            shaderProgram.enableAttribArray(attrNormal);
+            glEnableVertexAttribArray(attrNormal);
             glVertexAttribPointer(attrNormal, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mNormal)));
         }
         if(attrTangent >= 0) {
-            shaderProgram.enableAttribArray(attrTangent);
+            glEnableVertexAttribArray(attrTangent);
             glVertexAttribPointer(attrTangent, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mTangent)));
         }
         if(attrColor >= 0) {
-            shaderProgram.enableAttribArray(attrColor);
+            glEnableVertexAttribArray(attrColor);
             glVertexAttribPointer(attrColor, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mColor)));
         }
         if(attrTextureCoordinates >= 0) {
-            shaderProgram.enableAttribArray(attrTextureCoordinates);
+            glEnableVertexAttribArray(attrTextureCoordinates);
             glVertexAttribPointer(attrTextureCoordinates, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mTextureCoordinates)));
         }
 
-
         // Enable and set matrix pointers
-        glBindBuffer(GL_ARRAY_BUFFER, mMatrixBuffer);
-        GLint attrModelMatrix { shaderProgram.getLocationAttribArray("attrModelMatrix") };
-        GLint attrNormalMatrix { shaderProgram.getLocationAttribArray("attrNormalMatrix") };
+        glBindBuffer(GL_ARRAY_BUFFER, matrixBuffer);
+        GLint attrModelMatrix { glGetAttribLocation(programID, "attrModelMatrix") };
+        GLint attrNormalMatrix { glGetAttribLocation(programID, "attrNormalMatrix") };
         if(attrModelMatrix >= 0) {
             for(int i {0}; i < 4; ++i) {
-                shaderProgram.enableAttribArray(attrModelMatrix+i);
+                glEnableVertexAttribArray(attrModelMatrix+i);
                 glVertexAttribPointer(attrModelMatrix+i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), reinterpret_cast<void*>(i*sizeof(glm::vec4)));
                 glVertexAttribDivisor(attrModelMatrix+i, 1);
             }
@@ -152,87 +189,55 @@ void Mesh::associateShaderProgram(const ShaderProgram& shaderProgram) {
             // TODO: both model and normal matrices are presently the same. Add proper normal matrix allocation
             // an option in this class, in case accuracy is desired later
             for(int i{0}; i < 4; ++i) {
-                shaderProgram.enableAttribArray(attrNormalMatrix+i);
+                glEnableVertexAttribArray(attrNormalMatrix+i);
                 glVertexAttribPointer(attrNormalMatrix+i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), reinterpret_cast<void*>(i*sizeof(glm::vec4)));
                 glVertexAttribDivisor(attrNormalMatrix+i, 1);
             }
         }
     glBindVertexArray(0);
-
     mShaderVAOMap[programID] = shaderVAO;
 }
 
 void Mesh::disassociateShaderProgram(const ShaderProgram& shaderProgram) {
     GLuint programID {shaderProgram.getProgramID()};
     if(mShaderVAOMap.find(programID) == mShaderVAOMap.end()) return;
-
     glDeleteVertexArrays(1, &mShaderVAOMap[programID]);
     mShaderVAOMap.erase(programID);
 }
 
-GLuint Mesh::addInstance(glm::mat4 modelMatrix) {
-    // Determine the name of the newly added instance
-    GLuint newInstanceID;
-    if(!mDeletedInstanceIDs.empty()){
-        newInstanceID = mDeletedInstanceIDs.front();
-        mDeletedInstanceIDs.pop();
-    } else newInstanceID = mNextInstanceID++;
 
-    mInstanceModelMatrixMap[newInstanceID] = modelMatrix;
-    mDirty = true;
-
-    return newInstanceID;
+void Mesh::free() {
+    glDeleteBuffers(1, &mVertexBuffer);
+    glDeleteBuffers(1, &mElementBuffer);
+    for(std::pair shaderVAO : mShaderVAOMap) {
+        glDeleteVertexArrays(1, &shaderVAO.second);
+    }
+    mShaderVAOMap.clear();
+}
+void Mesh::releaseResources() {
+    mVertexBuffer = 0;
+    mElementBuffer = 0;
+    mShaderVAOMap.clear();
 }
 
-GLuint Mesh::addInstance(glm::vec3 position, glm::quat orientation, glm::vec3 scale) {
-    return addInstance(buildModelMatrix(position, orientation, scale));
-}
-
-void Mesh::updateInstance(GLuint instanceID, glm::mat4 modelMatrix) {
-    if(mInstanceModelMatrixMap.find(instanceID) == mInstanceModelMatrixMap.end()) return;
-
-    mInstanceModelMatrixMap[instanceID] = modelMatrix;
-    mDirty = true;
-}
-
-void Mesh::updateInstance(GLuint instanceID, glm::vec3 position, glm::quat orientation, glm::vec3 scale) {
-    updateInstance(instanceID, buildModelMatrix(position, orientation, scale));
-}
-
-void Mesh::removeInstance(GLuint instanceID) {
-    if(mInstanceModelMatrixMap.find(instanceID) == mInstanceModelMatrixMap.end()) return;
-
-    mDeletedInstanceIDs.push(instanceID);
-    mInstanceModelMatrixMap.erase(instanceID);
-    mDirty = true;
-}
-
-void Mesh::updateMatrixBuffer() {
-    if(!mDirty) return;
-
-    // Double the matrix buffer capacity if we already have more instances than space
-    if(mInstanceModelMatrixMap.size() > mInstanceCapacity) mInstanceCapacity *= 2;
-
-    // Build a list out of the currently instanced model matrices
-    std::vector<glm::mat4> modelMatrices { mInstanceModelMatrixMap.size() };
-    int currIndex {0};
-    for(std::pair<GLuint, glm::mat4> matrix : mInstanceModelMatrixMap) {
-        modelMatrices[currIndex ++] = matrix.second;
+void Mesh::allocateBuffers() {
+    if(!mElementBuffer) {
+        glGenBuffers(1, &mElementBuffer);
+    }
+    if(!mVertexBuffer) {
+        glGenBuffers(1, &mVertexBuffer);
     }
 
-    // Move everything in the list to our matrix buffer
-    glBindBuffer(GL_ARRAY_BUFFER, mMatrixBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * mInstanceCapacity, modelMatrices.data(), GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
+        glBufferData(
+            GL_ARRAY_BUFFER, sizeof(Vertex) * mVertices.size(),
+            mVertices.data(), GL_STATIC_DRAW
+        );
+        glBufferData(
+            GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * mElements.size(),
+            mElements.data(), GL_STATIC_DRAW
+        );
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-    // Reset the dirty bool
-    mDirty = false;
-}
-
-glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 scale) {
-    glm::mat4 rotateMatrix { glm::normalize(orientation) };
-    glm::mat4 translateMatrix { glm::translate(glm::mat4(1.f), position) };
-    glm::mat4 scaleMatrix { glm::scale(glm::mat4(1.f), scale) };
-
-    return translateMatrix * rotateMatrix * scaleMatrix;
 }

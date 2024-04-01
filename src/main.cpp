@@ -9,6 +9,7 @@
 
 #include "vertex.hpp"
 #include "mesh.hpp"
+#include "model.hpp"
 #include "texture.hpp"
 #include "fly_camera.hpp"
 #include "window_context_manager.hpp"
@@ -233,8 +234,8 @@ int main(int argc, char* argv[]) {
         );
     glBindVertexArray(0);
 
-    Mesh pyramidMesh { pyramidVertices,  pyramidElements, std::vector<Texture*> {{&textureRock}} };
-    pyramidMesh.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
+    Model pyramidModel { pyramidVertices,  pyramidElements, std::move(std::vector<Texture> {{textureRock}}) };
+    pyramidModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
 
     FlyCamera camera {
         glm::vec3(0.f), 0.f, 0.f, 0.f
@@ -258,9 +259,10 @@ int main(int argc, char* argv[]) {
 
     //Timing related variables
     GLuint previousTicks { SDL_GetTicks() };
-    float framerate {0};
+    float framerate {0.f};
     const float frameratePoll {1.f};
     float framerateCounter {0.f};
+
 
     //Main event loop
     glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -288,7 +290,7 @@ int main(int argc, char* argv[]) {
             (currentTicks - previousTicks)/1000.f
         };
         previousTicks = currentTicks;
-        framerate = framerate * .8f + .2f/deltaTime;
+        framerate = framerate * .8f + .2f/(deltaTime > .0001f? deltaTime: .0001f);
         framerateCounter += deltaTime;
         if(framerateCounter > frameratePoll) {
             std::cout << "Framerate: " << framerate << " fps\n";
@@ -315,12 +317,14 @@ int main(int argc, char* argv[]) {
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Render geometry to our geometry framebuffer
+        glViewport(0, 0, gWindowWidth, gWindowHeight);
         glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            pyramidMesh.Draw(geometryShader);
+            pyramidModel.draw(geometryShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        glViewport(0, 0, gWindowWidth, gWindowHeight);
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);

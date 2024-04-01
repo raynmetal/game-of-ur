@@ -40,15 +40,19 @@ public:
     /* basic deallocate function */
     virtual void free();
 
-    /* Bind/unbind texture */
-    void bind() const;
-
     /* texture ID getter */
     GLuint getTextureID() const;
     /* texture usage getter */
     Usage getUsage() const;
 
+    /* get texture width */
+    GLint getWidth() const;
+    /* get texture height */
+    GLint getHeight() const;
+
 protected:
+    void copyImage(const Texture& other);
+
     /* This texture's name, as referenced by OpenGL */
     GLuint mID;
     /* The path this texture was loaded from, if any */

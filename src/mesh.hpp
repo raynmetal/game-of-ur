@@ -33,44 +33,49 @@ public:
     */
     ~Mesh();
 
+    /* move constructor */
+    Mesh(Mesh&& other);
+    /* copy constructor */
+    Mesh(const Mesh& other);
+
+    /* move assignment */
+    Mesh& operator=(Mesh&& other);
+    /* copy assignment */
+    Mesh& operator=(const Mesh& other);
+
     /* Sets up a VAO for a given shader program, setting vertex pointers as necessary */
-    void associateShaderProgram(const ShaderProgram& shaderProgram);
+    void associateShaderProgram(const ShaderProgram& shaderProgram, GLuint matrixBuffer);
+    void associateShaderProgram(GLuint programID, GLuint matrixBuffer);
     /* Removes VAO for a given shader program */
     void disassociateShaderProgram(const ShaderProgram& shaderProgram);
 
-    /* Adds an instance based on model matrix provided as input */
-    GLuint addInstance(glm::mat4 modelMatrix);
-    /* Adds an instance based on position and scale vectors, and orientation quaternion */
-    GLuint addInstance(glm::vec3 position, glm::quat orientation, glm::vec3 scale);
 
-    /* Replaces the transform associated with this instance with transform in input */
-    void updateInstance(GLuint instanceID, glm::mat4 transform);
-    /* Replaces the transform associated with this instance based on model matrix computed from input */
-    void updateInstance(GLuint instanceID, glm::vec3 position, glm::quat orientation, glm::vec3 scale);
-
-    /* Removes instance associated with instanceID (returned by the instance add function earlier)*/
-    void removeInstance(GLuint instanceID);
-
-    /* Uses the shader program to render this mesh, setting uniform attributes
-    as required */
-    void Draw(ShaderProgram& shaderProgram);
+    /* 
+    Uses the shader program to render this mesh, setting uniform attributes. Assumes 
+    instance related attributes are already set, requiring only the number of them to render
+    */
+    void draw(ShaderProgram& shaderProgram, GLuint instanceCount);
 
 private:
-    void updateMatrixBuffer();
+    /* 
+    Destroys resources used by this object
+    */
+    void free();
+    /*
+    Removes references to allocated resources without destroying the
+    resources themselves
+    */
+    void releaseResources();
+    void allocateBuffers();
 
     std::vector<Vertex> mVertices;
     std::vector<GLuint> mElements;
     std::vector<Texture*> mpTextures;
 
     GLuint mVertexBuffer;
-    GLuint mMatrixBuffer;
     GLuint mElementBuffer;
-    GLuint mNextInstanceID {0};
-    GLuint mInstanceCapacity { kInitialInstanceCapacity };
 
     std::map<GLuint, GLuint> mShaderVAOMap {};
-    std::map<GLuint, glm::mat4> mInstanceModelMatrixMap{};
-    std::queue<GLuint> mDeletedInstanceIDs {};
 
     bool mDirty {true};
 };
