@@ -136,51 +136,6 @@ int main(int argc, char* argv[]) {
         {0}, {1}, {2},
         {0}, {2}, {3}
     };
-    std::vector<Vertex> pyramidVertices {
-        {
-            {0.f, .5f, 0.f, 1.f}, // top
-            {0.f, 1.f, 0.f, 0.f},
-            glm::vec4(0.f),
-            glm::vec4(1.f), // white
-            {.5f, 0.f} // texture top middle
-        },
-        {
-            {-.25f, -.5f, .25f, 1.f}, // bottom left front
-            {-.25f, -.25f, .25f, 0.f},
-            glm::vec4(0.f),
-            glm::vec4(1.f),
-            {0.f, 0.f} // texture top left
-        },
-        {
-            {.25f, -.5f, .25f, 1.f}, // bottom right front
-            {.25f, -.25f, .25f, 0.f},
-            glm::vec4(0.f),
-            glm::vec4(1.f),
-            {0.f, 1.f} // texture bottom left 
-        },
-        {
-            {.25f, -.5f, -.25f, 1.f}, // bottom right back
-            {.25f, -.25f, -.25f, 0.f},
-            glm::vec4(0.f),
-            glm::vec4(1.f),
-            {1.f, 1.f} // texture bottom right
-        },
-        {
-            {-.25f, -.5f, -.25f, 1.f}, // bottom left back
-            {-.25, -.25f, -.25f, 0.f},
-            glm::vec4(0.f),
-            glm::vec4(1.f),
-            {1.f, 0.f} // texture top right
-        }
-    };
-    std::vector<GLuint> pyramidElements {
-        {0}, {1}, {2}, // front
-        {0}, {2}, {3}, // right
-        {0}, {3}, {4}, // back
-        {0}, {4}, {1}, // left
-        {1}, {3}, {2}, // base triangle 1
-        {1}, {4}, {3} // base triangle 2
-    };
 
     // Generate a VAO for rendering to the default framebuffer
     GLuint screenVAO;
@@ -234,8 +189,8 @@ int main(int argc, char* argv[]) {
         );
     glBindVertexArray(0);
 
-    Model pyramidModel { pyramidVertices,  pyramidElements, std::move(std::vector<Texture> {{textureRock}}) };
-    pyramidModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
+    Model boardPieceModel { "data/models/Generic Board Piece.dae" };
+    boardPieceModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
 
     FlyCamera camera {
         glm::vec3(0.f), 0.f, 0.f, 0.f
@@ -321,7 +276,7 @@ int main(int argc, char* argv[]) {
         glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            pyramidModel.draw(geometryShader);
+            boardPieceModel.draw(geometryShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glViewport(0, 0, gWindowWidth, gWindowHeight);

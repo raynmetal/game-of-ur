@@ -1,7 +1,9 @@
 #include <iostream>
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <GL/glew.h>
+#include <assimp/Importer.hpp>
 
 #include "window_context_manager.hpp"
 
@@ -12,8 +14,8 @@ WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeig
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 
-    mSDLWindow = SDL_CreateWindow("Game of Ur", 100, 100, mWindowWidth, mWindowHeight, SDL_WINDOW_OPENGL);
-    if(mSDLWindow == nullptr){
+    mpSDLWindow = SDL_CreateWindow("Game of Ur", 100, 100, mWindowWidth, mWindowHeight, SDL_WINDOW_OPENGL);
+    if(mpSDLWindow == nullptr){
         std::cout << "Window could not be created" << std::endl;
     }
     std::cout << "Window successfully created!" << std::endl;
@@ -24,8 +26,8 @@ WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeig
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8); // creating a stencil buffer
 
-    mGLContext = SDL_GL_CreateContext(mSDLWindow);
-    if(mGLContext == nullptr) {
+    mpGLContext = SDL_GL_CreateContext(mpSDLWindow);
+    if(mpGLContext == nullptr) {
         std::cout << "OpenGL context could not be initialized" << std::endl;
     }
 
@@ -41,12 +43,15 @@ WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeig
     glEnable(GL_FRAMEBUFFER_SRGB);
 
     std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
+
+    mpAssetImporter = new Assimp::Importer();
 }
 
 WindowContextManager::~WindowContextManager() {
     std::cout << "Time to say goodbye" << std::endl;
-    SDL_GL_DeleteContext(mGLContext);
+    SDL_GL_DeleteContext(mpGLContext);
     SDL_Quit();
+    delete mpAssetImporter;
 }
 
 WindowContextManager& WindowContextManager::getInstance(GLuint width, GLuint height) {
@@ -55,9 +60,13 @@ WindowContextManager& WindowContextManager::getInstance(GLuint width, GLuint hei
 }
 
 SDL_GLContext WindowContextManager::getGLContext() const {
-    return mGLContext;
+    return mpGLContext;
 }
 
 SDL_Window* WindowContextManager::getSDLWindow() const {
-    return mSDLWindow;
+    return mpSDLWindow;
+}
+
+Assimp::Importer* WindowContextManager::getAssetImporter() const {
+    return mpAssetImporter;
 }

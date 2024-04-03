@@ -3,21 +3,31 @@
 
 #include <vector>
 #include <string>
+#include <map>
+#include <unordered_set>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/material.h>
 
 #include "vertex.hpp"
 #include "texture.hpp"
 #include "mesh.hpp"
 
-struct ModelNode {
-};
-
 class Model {
 public:
-    // /* load a model from the specified file path */
-    // Model(const std::string& filepath);
+    struct TreeNode {
+        std::vector<GLint> mMeshIndices {};
+
+        TreeNode* mpParent {nullptr};
+        std::vector<TreeNode*> mpChildren {};
+    };
+
+    /* load a model from the specified file path */
+    Model(const std::string& filepath);
     /* create a mesh out of a list of textures and vertices, store them in this model */
     Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, std::vector<Texture>&& textures);
 
@@ -50,23 +60,68 @@ public:
 
     void draw(ShaderProgram& shaderProgram);
 
-    std::vector<Texture> mTextures {};
 private:
     Model();
 
+    /* 
+    utility method for destroying resources associated with
+    this model
+    */
     void free();
+    /*
+    utility method for taking resources from another instance of
+    this class 
+    */
     void stealResources(Model& other);
+    /*
+    utility method for deeply replicating resources from another 
+    instance of this class
+    */
     void copyResources(const Model& other);
+    /*
+    utility method for allocating buffers
+    */
     void allocateBuffers();
 
-    std::vector<Mesh> mMeshes {};
+    void deleteTree(Model::TreeNode* pRootNode);
+    TreeNode* copyTree(const TreeNode* pRootNode, Model::TreeNode* pParentNode=nullptr);
 
+    TreeNode* processAssimpNode(TreeNode* pParentNode, aiNode* pAiNode, const aiScene* pAiScene);
+    Mesh processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene);
+
+    std::vector<Texture*> loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage);
+
+    /*
+    Textures used by meshes belonging to this model
+    */
+    std::vector<Texture> mTextures {};
+    /*
+    pointers to this model's textures, indexed by their names
+    */
+    std::map<const std::string, Texture*> mLoadedTextures {};
+    /*
+    Meshes that make up this model
+    */
+    std::vector<Mesh> mMeshes {};
+    /*
+    root node leading to full hierarchy (of meshes)
+    */
+    TreeNode* mpHierarchyRoot {nullptr};
+    /*
+    string containing path to the model file
+    */
+    std::string mModelpath {""};
+
+    /*
+    ID of the matrix buffer managed by this object
+    */
     GLuint mMatrixBuffer;
     std::map<GLuint, glm::mat4> mInstanceModelMatrixMap {};
     std::queue<GLuint> mDeletedInstanceIDs {};
     GLuint mNextInstanceID {0};
     GLuint mInstanceCapacity {128};
     bool mDirty {true};
+
 };
 
 #endif

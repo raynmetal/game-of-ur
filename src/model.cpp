@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 #include <utility>
 
@@ -5,6 +6,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include <assimp/Importer.hpp>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+
+#include "window_context_manager.hpp"
 #include "vertex.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
@@ -29,12 +35,45 @@ Model::Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& ele
 {
     std::swap(mTextures, textures);
     std::vector<Texture*> pTextures(mTextures.size());
-    for(auto i{0}; i < mTextures.size(); ++i) {
+    for(std::size_t i{0}; i < mTextures.size(); ++i) {
         pTextures[i] = &mTextures[i];
     }
+    mpHierarchyRoot = new Model::TreeNode {};
+    mpHierarchyRoot->mMeshIndices.push_back(mMeshes.size());
     mMeshes.push_back(
-        Mesh{vertices, elements, pTextures}
+        Mesh{ vertices, elements, pTextures }
     );
+}
+
+Model::Model(const std::string& filepath): Model() {
+    Assimp::Importer* pImporter { WindowContextManager::getInstance().getAssetImporter() };
+    const aiScene* pAiScene {
+        pImporter->ReadFile(
+            filepath,
+            aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace
+        )
+    };
+
+    if(
+        !pAiScene 
+        || (pAiScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
+        || !(pAiScene->mRootNode)
+    ) {
+        std::cout << "ERROR::ASSIMP:: " << pImporter->GetErrorString() << std::endl;
+        return;
+    }
+
+    mModelpath = filepath;
+    //TODO: pointers to textures in this list are easily broken
+    std::size_t nTextures {0};
+    for(std::size_t i{0}; i < pAiScene->mNumMaterials; ++i) {
+        nTextures += pAiScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE);
+        nTextures += pAiScene->mMaterials[i]->GetTextureCount(aiTextureType_NORMALS);
+        nTextures += pAiScene->mMaterials[i]->GetTextureCount(aiTextureType_SPECULAR);
+    }
+
+    mTextures.reserve(nTextures); // avoids pointer invalidation from future resizing
+    mpHierarchyRoot = processAssimpNode(nullptr, pAiScene->mRootNode, pAiScene);
 }
 
 Model::~Model() {
@@ -139,6 +178,7 @@ void Model::free() {
     mMatrixBuffer = 0;
     mTextures.clear();
     mMeshes.clear();
+    deleteTree(mpHierarchyRoot);
 }
 
 void Model::stealResources(Model& other) {
@@ -150,12 +190,15 @@ void Model::stealResources(Model& other) {
     mDeletedInstanceIDs = other.mDeletedInstanceIDs;
     mNextInstanceID = other.mNextInstanceID;
     mInstanceCapacity = other.mInstanceCapacity;
+    mpHierarchyRoot = other.mpHierarchyRoot;
     mDirty = other.mDirty;
 
     // Prevent other from destroying our resources when its
     // destructor is called
     other.mMatrixBuffer = 0;
+    other.mpHierarchyRoot = nullptr;
 }
+
 void Model::copyResources(const Model& other) {
     mMeshes = other.mMeshes;
     mTextures = other.mTextures;
@@ -166,6 +209,7 @@ void Model::copyResources(const Model& other) {
     mInstanceCapacity = other.mInstanceCapacity;
     mDirty = true;
 
+    mpHierarchyRoot = copyTree(other.mpHierarchyRoot);
     allocateBuffers();
 }
 
@@ -181,4 +225,155 @@ void Model::allocateBuffers() {
             NULL, GL_STATIC_DRAW
         );
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+}
+
+void Model::deleteTree(Model::TreeNode* pRootNode) {
+    if(!pRootNode) return;
+
+    for(Model::TreeNode* pChild : pRootNode->mpChildren) {
+        deleteTree(pChild);
+    }
+
+    delete pRootNode;
+}
+
+Model::TreeNode* Model::copyTree(const Model::TreeNode* pRootNode, Model::TreeNode* pParentNode) {
+    if(!pRootNode) return nullptr;
+    Model::TreeNode* pNewRootNode {
+        new Model::TreeNode {
+            pRootNode->mMeshIndices,
+            pParentNode
+        }
+    };
+    for(Model::TreeNode* pChild : pRootNode->mpChildren) {
+        pNewRootNode->mpChildren.push_back(
+            copyTree(pChild, pNewRootNode)
+        );
+    }
+    return pNewRootNode;
+}
+
+Model::TreeNode* Model::processAssimpNode(Model::TreeNode* pParentNode, aiNode* pAiNode, const aiScene* pAiScene) {
+    Model::TreeNode* pNewNode {
+        new Model::TreeNode {
+            {},
+            pParentNode
+        }
+    };
+    for(std::size_t  i{0}; i < pAiNode->mNumMeshes; ++i) {
+        aiMesh* pAiMesh {
+            pAiScene->mMeshes[pAiNode->mMeshes[i]]
+        };
+        int meshIndex { static_cast<int>(mMeshes.size()) };
+        mMeshes.push_back(processAssimpMesh(pAiMesh, pAiScene));
+        pNewNode->mMeshIndices.push_back(meshIndex);
+    }
+    for(std::size_t i{0}; i < pAiNode->mNumChildren; ++i) {
+        pNewNode->mpChildren.push_back(
+            processAssimpNode(pNewNode, pAiNode->mChildren[i], pAiScene)
+        );
+    }
+    return pNewNode;
+}
+
+Mesh Model::processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene) {
+    std::vector<Vertex> vertices;
+    std::vector<GLuint> elements;
+    std::vector<Texture*> pTextures;
+
+    // Load vertex data
+    for(std::size_t i{0}; i < pAiMesh->mNumVertices; ++i) {
+        vertices.push_back({
+            {
+                pAiMesh->mVertices[i].x,
+                pAiMesh->mVertices[i].y,
+                pAiMesh->mVertices[i].z,
+                1.f
+            },
+            {
+                pAiMesh->mNormals[i].x,
+                pAiMesh->mNormals[i].y,
+                pAiMesh->mNormals[i].z,
+                0.f
+            },
+            {
+                pAiMesh->mTangents[i].x,
+                pAiMesh->mTangents[i].y,
+                pAiMesh->mTangents[i].z,
+                0.f
+            },
+            { 1.f, 1.f, 1.f, 1.f },
+            {
+                pAiMesh->mTextureCoords[0][i].x,
+                pAiMesh->mTextureCoords[0][i].y
+            }
+        });
+    }
+
+    // Load element array
+    for(std::size_t i{0}; i < pAiMesh->mNumFaces; ++i) {
+        aiFace face = pAiMesh->mFaces[i];
+        for(std::size_t elementIndex{0}; elementIndex < face.mNumIndices; ++elementIndex) {
+            elements.push_back(face.mIndices[elementIndex]);
+        }
+    }
+
+    // Load textures
+    if(pAiMesh->mMaterialIndex >= 0) {
+        aiMaterial* pAiMaterial {
+            pAiScene->mMaterials[pAiMesh->mMaterialIndex]
+        };
+
+        std::vector<Texture*> pMapsAlbedo {
+            loadAssimpTextures(pAiMaterial, Texture::Albedo)
+        };
+        std::vector<Texture*> pMapsNormal {
+            loadAssimpTextures(pAiMaterial, Texture::Normal)
+        };
+        std::vector<Texture*> pMapsSpecular {
+            loadAssimpTextures(pAiMaterial, Texture::Specular)
+        };
+
+        pTextures.insert(pTextures.end(), pMapsAlbedo.begin(), pMapsAlbedo.end());
+        pTextures.insert(pTextures.end(), pMapsNormal.begin(), pMapsNormal.end());
+        pTextures.insert(pTextures.end(), pMapsSpecular.begin(), pMapsSpecular.end());
+    }
+
+    return {
+        vertices, elements, pTextures
+    };
+}
+
+std::vector<Texture*> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage) {
+    // Determine assimp's representation of type of textures being loaded
+    std::map<Texture::Usage, aiTextureType> kUsageTypeMap {
+        { Texture::Albedo, aiTextureType_DIFFUSE },
+        { Texture::Normal, aiTextureType_NORMALS},
+        { Texture::Specular, aiTextureType_SPECULAR}
+    };
+    aiTextureType type { kUsageTypeMap[usage] };
+
+    // build up a list of texture pointers, adding textures
+    // to this model if it isn't already present
+    std::vector<Texture*> pTextures {};
+    std::size_t textureCount {
+        pAiMaterial->GetTextureCount(
+            kUsageTypeMap[usage]
+        )
+    };
+    for(std::size_t i{0}; i < textureCount; ++i) {
+        aiString aiTextureName;
+        pAiMaterial->GetTexture(type, i, &aiTextureName);
+        std::string textureName { aiTextureName.C_Str() };
+
+        if(mLoadedTextures.find(textureName) == mLoadedTextures.end()) {
+            std::string texturePath { textureName };
+            mTextures.push_back({ texturePath, usage });
+            mLoadedTextures[textureName] = std::addressof(mTextures.back());
+        } 
+
+        pTextures.push_back(mLoadedTextures[textureName]);
+    }
+
+    return pTextures;
 }

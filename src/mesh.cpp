@@ -209,9 +209,14 @@ void Mesh::disassociateShaderProgram(const ShaderProgram& shaderProgram) {
 void Mesh::free() {
     glDeleteBuffers(1, &mVertexBuffer);
     glDeleteBuffers(1, &mElementBuffer);
+
+    std::vector<GLuint> shaderVAOs(mShaderVAOMap.size());
+    std::size_t count{0};
     for(std::pair shaderVAO : mShaderVAOMap) {
-        glDeleteVertexArrays(1, &shaderVAO.second);
+        shaderVAOs[count ++] = shaderVAO.second;
     }
+    glDeleteVertexArrays(count, shaderVAOs.data());
+
     mShaderVAOMap.clear();
 }
 void Mesh::releaseResources() {
