@@ -13,38 +13,7 @@
 
 void Mesh::draw(ShaderProgram& shaderProgram, GLuint instanceCount) {
     shaderProgram.use();
-
-    //Set mesh-related uniforms
-    bool usingAlbedoMap {false};
-    bool usingNormalMap {false};
-    bool usingSpecularMap {false};
-    GLuint textureUnit {0};
-    for(Texture* pTexture : mpTextures) {
-        glActiveTexture(GL_TEXTURE0 + textureUnit);
-        glBindTexture(GL_TEXTURE_2D, pTexture->getTextureID());
-        //TODO: allow multiple materials to make up a single mesh
-        switch(pTexture->getUsage()) {
-            case Texture::Albedo:
-                usingAlbedoMap = true;
-                shaderProgram.setUInt("uMaterial.textureAlbedo", textureUnit);
-            break;
-            case Texture::Normal:
-                usingNormalMap = true;
-                shaderProgram.setUInt("uMaterial.textureNormal", textureUnit);
-            break;
-            case Texture::Specular:
-                usingSpecularMap = true;
-                shaderProgram.setUInt("uMaterial.textureSpecular", textureUnit);
-            break;
-            default: break;
-        }
-        ++textureUnit;
-    }
-    glActiveTexture(GL_TEXTURE0);
-    shaderProgram.setUBool("uUsingAlbedoMap", usingAlbedoMap);
-    shaderProgram.setUBool("uUsingNormalMap", usingNormalMap);
-    shaderProgram.setUBool("uUsingSpecularMap", usingSpecularMap);
-
+    bindMaterial(shaderProgram);
     glBindVertexArray(mShaderVAOMap[shaderProgram.getProgramID()]);
         glDrawElementsInstanced(
             GL_TRIANGLES,
@@ -54,6 +23,42 @@ void Mesh::draw(ShaderProgram& shaderProgram, GLuint instanceCount) {
             instanceCount
         );
     glBindVertexArray(0);
+}
+
+void Mesh::bindMaterial(ShaderProgram& shaderProgram) {
+    //Set texture-related uniforms
+    bool usingAlbedoMap {false};
+    bool usingNormalMap {false};
+    bool usingSpecularMap {false};
+
+    GLuint textureUnit {0};
+    for(Texture* pTexture : mpTextures) {
+        glActiveTexture(GL_TEXTURE0 + textureUnit);
+        glBindTexture(GL_TEXTURE_2D, pTexture->getTextureID());
+        //TODO: allow multiple materials to make up a single mesh
+        switch(pTexture->getUsage()) {
+            case Texture::Albedo:
+                usingAlbedoMap = true;
+                shaderProgram.setUInt("uMaterial.mTextureAlbedo", textureUnit);
+            break;
+            case Texture::Normal:
+                usingNormalMap = true;
+                shaderProgram.setUInt("uMaterial.mTextureNormal", textureUnit);
+            break;
+            case Texture::Specular:
+                usingSpecularMap = true;
+                shaderProgram.setUInt("uMaterial.mTextureSpecular", textureUnit);
+            break;
+            default: break;
+        }
+        ++textureUnit;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    shaderProgram.setUBool("uMaterial.mUsingAlbedoMap", usingAlbedoMap);
+    shaderProgram.setUBool("uMaterial.mUsingNormalMap", usingNormalMap);
+    shaderProgram.setUBool("uMaterial.mUsingSpecularMap", usingSpecularMap);
+
+    shaderProgram.setUFloat("uMaterial.mSpecularExponent", mSpecularExponent);
 }
 
 Mesh::Mesh(
@@ -78,9 +83,9 @@ Mesh::Mesh(Mesh&& other):
     mVertices {other.mVertices},
     mElements {other.mElements},
     mpTextures {other.mpTextures},
+    mShaderVAOMap {other.mShaderVAOMap},
     mVertexBuffer {other.mVertexBuffer},
     mElementBuffer {other.mElementBuffer},
-    mShaderVAOMap {other.mShaderVAOMap},
     mDirty {other.mDirty}
 {
     // prevent other from removing our resources when its deconstructor is called

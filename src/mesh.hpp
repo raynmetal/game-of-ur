@@ -66,16 +66,22 @@ private:
     resources themselves
     */
     void releaseResources();
+    /*
+    Sends vertex and element data to the GPU
+    */
     void allocateBuffers();
+
+    void bindMaterial(ShaderProgram& shaderProgram);
 
     std::vector<Vertex> mVertices;
     std::vector<GLuint> mElements;
     std::vector<Texture*> mpTextures;
+    std::map<GLuint, GLuint> mShaderVAOMap {};
 
     GLuint mVertexBuffer;
     GLuint mElementBuffer;
 
-    std::map<GLuint, GLuint> mShaderVAOMap {};
+    GLfloat mSpecularExponent {64.f};
 
     bool mDirty {true};
 };

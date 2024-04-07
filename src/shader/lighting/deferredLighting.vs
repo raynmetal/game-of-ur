@@ -1,8 +1,6 @@
 /*
 Include:
-    - common/versionHeader.glsl
-    - common/fragmentAttributes.vs
-    - common/vertexAttributes.vs
+    -common/versionHeader.glsl
 */
 
 void main() {
@@ -10,5 +8,6 @@ void main() {
     fragAttr.color = attrColor;
     fragAttr.textureCoordinates = attrTextureCoordinates;
 
+    //incoming coordinates are already in NDC
     gl_Position = fragAttr.position;
 }

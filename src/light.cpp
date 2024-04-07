@@ -3,7 +3,6 @@
 
 #include "light.hpp"
 
-
 float Light::calculateRadius(float intensityCutoff) {
     float intensityMax = mDiffuse.r;
     if(mDiffuse.g > intensityMax) intensityMax = mDiffuse.g;
@@ -12,7 +11,7 @@ float Light::calculateRadius(float intensityCutoff) {
     float radiusCutoff {
         std::min(
             (
-                -mLinear 
+                -mLinear
                 + std::sqrt(
                     mLinear*mLinear - 4 * mQuadratic * (mConstant - intensityMax / intensityCutoff)
                 )

@@ -24,12 +24,39 @@ void handleInput(const SDL_Event& event);
 int main(int argc, char* argv[]) {
     init();
 
-    ShaderProgram basicShader { "src/shader/basic/basic.vs", "src/shader/basic/basic.fs" };
+    std::vector<std::string> basicVsSrc {
+        {"src/shader/common/versionHeader.glsl"},
+        {"src/shader/common/fragmentAttributes.vs"},
+        {"src/shader/common/vertexAttributes.vs"},
+        {"src/shader/basic/basic.vs"}
+    };
+    std::vector<std::string> basicFsSrc {
+        {"src/shader/common/versionHeader.glsl"},
+        {"src/shader/common/fragmentAttributes.fs"},
+        {"src/shader/basic/basic.fs"}
+    };
+    ShaderProgram basicShader { basicVsSrc, basicFsSrc };
     if(!basicShader.getBuildSuccess()) {
         std::cout << "Could not compile basic shader!" << std::endl;
         return 1;
     }
-    ShaderProgram geometryShader { "src/shader/geometry/geometry.vs", "src/shader/geometry/geometry.fs" };
+
+    std::vector<std::string> geometryVsSrc {
+        {"src/shader/common/versionHeader.glsl"},
+        {"src/shader/common/vertexAttributes.vs"},
+        {"src/shader/common/projectionViewMatrices.vs"},
+        {"src/shader/common/modelNormalMatrices.vs"},
+        {"src/shader/common/fragmentAttributes.vs"},
+        {"src/shader/geometry/geometry.vs"}
+    };
+    std::vector<std::string> geometryFsSrc {
+        {"src/shader/common/versionHeader.glsl"},
+        {"src/shader/common/fragmentAttributes.fs"},
+        {"src/shader/common/material.fs"},
+        {"src/shader/geometry/geometry.fs"}
+    };
+    // load our geometry shader
+    ShaderProgram geometryShader { geometryVsSrc, geometryFsSrc };
     if(!geometryShader.getBuildSuccess()) {
         std::cout << "Could not compile basic shader!" << std::endl;
         return 1;
@@ -189,7 +216,7 @@ int main(int argc, char* argv[]) {
         );
     glBindVertexArray(0);
 
-    Model boardPieceModel { "data/models/Generic Board Piece.dae" };
+    Model boardPieceModel { "data/models/Generic Board Piece.obj" };
     boardPieceModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
 
     FlyCamera camera {

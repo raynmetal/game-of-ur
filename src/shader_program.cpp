@@ -1,4 +1,5 @@
 #include <string>
+#include <vector>
 #include <sstream>
 #include <fstream>
 #include <iostream>
@@ -11,15 +12,15 @@
 
 #include "shader_program.hpp"
 
-GLint loadAndCompileShader(const char* shaderPath, GLuint& shaderID, GLuint shaderType);
+GLint loadAndCompileShader(const std::vector<std::string>& shaderPaths, GLuint& shaderID, GLuint shaderType);
 void freeProgram(GLuint programID);
 
-ShaderProgram::ShaderProgram(const char* vertexPath, const char* fragmentPath) :mBuildState{false} {
-    GLuint vertexShader {};
-    GLuint fragmentShader {};
+ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths) :mBuildState{false} {
+    GLuint vertexShader;
+    GLuint fragmentShader;
 
-    if(loadAndCompileShader(vertexPath, vertexShader, GL_VERTEX_SHADER) != GL_TRUE) return;
-    if(loadAndCompileShader(fragmentPath, fragmentShader, GL_FRAGMENT_SHADER) != GL_TRUE){
+    if(loadAndCompileShader(vertexPaths, vertexShader, GL_VERTEX_SHADER) != GL_TRUE) return;
+    if(loadAndCompileShader(fragmentPaths, fragmentShader, GL_FRAGMENT_SHADER) != GL_TRUE){
         glDeleteShader(vertexShader);
         return;
     }
@@ -52,17 +53,17 @@ ShaderProgram::ShaderProgram(const char* vertexPath, const char* fragmentPath) :
     return;
 }
 
-ShaderProgram::ShaderProgram(const char* vertexPath, const char* fragmentPath, const char* geometryPath) :mBuildState{false} {
+ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) :mBuildState{false} {
     GLuint vertexShader {};
     GLuint fragmentShader {};
     GLuint geometryShader {};
 
-    if(loadAndCompileShader(vertexPath, vertexShader, GL_VERTEX_SHADER) != GL_TRUE) return;
-    if(loadAndCompileShader(fragmentPath, fragmentShader, GL_FRAGMENT_SHADER) != GL_TRUE) {
+    if(loadAndCompileShader(vertexPaths, vertexShader, GL_VERTEX_SHADER) != GL_TRUE) return;
+    if(loadAndCompileShader(fragmentPaths, fragmentShader, GL_FRAGMENT_SHADER) != GL_TRUE) {
         glDeleteShader(vertexShader);
         return;
     }
-    if(loadAndCompileShader(geometryPath, geometryShader, GL_GEOMETRY_SHADER) != GL_TRUE) {
+    if(loadAndCompileShader(geometryPaths, geometryShader, GL_GEOMETRY_SHADER) != GL_TRUE) {
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
         return;
@@ -98,28 +99,38 @@ ShaderProgram::ShaderProgram(const char* vertexPath, const char* fragmentPath, c
     return;
 }
 
-GLint loadAndCompileShader(const char* shaderPath, GLuint& shaderID, GLuint shaderType) {
+GLint loadAndCompileShader(const std::vector<std::string>& shaderPaths, GLuint& shaderID, GLuint shaderType) {
     //Read shader text
-    std::string shaderCode {};
-    std::ifstream shaderFile;
-    //enable file operation exceptions
-    shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
-    bool readSuccess {true};
-    try {
-        shaderFile.open(shaderPath);
-        // Read file buffer's contents into string stream
-        std::stringstream shaderStream;
-        shaderStream << shaderFile.rdbuf();
-        //Close file handles
-        shaderFile.close();
-        //Convert stream into string
-        shaderCode = shaderStream.str();
-    } catch(std::ifstream::failure& e) {
-        std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << shaderPath << std::endl;
-        readSuccess = false;
+    const char** shaderSource { new const char* [shaderPaths.size()] };
+    std::vector<std::string> shaderStrings(shaderPaths.size());
+    for(std::size_t i{0}; i < shaderPaths.size(); ++i) {
+        //enable file operation exceptions
+        std::ifstream shaderFile;
+        shaderFile.exceptions(std::ifstream::failbit | std::ifstream::badbit);
+        bool readSuccess {true};
+        try {
+            shaderFile.open(shaderPaths[i]);
+            // Read file buffer's contents into string stream
+            std::stringstream shaderStream {};
+            shaderStream << shaderFile.rdbuf();
+            //Close file handles
+            shaderFile.close();
+            //Convert stream into string
+            shaderStrings[i] = shaderStream.str();
+            shaderSource[i] = shaderStrings[i].c_str();
+        } catch(std::ifstream::failure& e) {
+            std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << shaderPaths[i] << std::endl;
+            readSuccess = false;
+        }
+        if(!readSuccess) { 
+            delete[] shaderSource;
+            return GL_FALSE;
+        }
     }
-    if(!readSuccess) return GL_FALSE;
-    const char* shaderSource = shaderCode.c_str();
+
+    for(std::size_t i{0}; i < shaderPaths.size(); ++i) {
+        std::cout << i << ": " << shaderSource[i] << std::endl;
+    }
 
     //Variables for storing compilation success
     GLint success;
@@ -128,13 +139,15 @@ GLint loadAndCompileShader(const char* shaderPath, GLuint& shaderID, GLuint shad
     //create vertex shader
     shaderID = glCreateShader(shaderType);
     glShaderSource(
-        shaderID, 
-        1, 
-        &shaderSource,
+        shaderID,
+        shaderPaths.size(),
+        shaderSource,
         NULL
     );
     glCompileShader(shaderID);
     glGetShaderiv(shaderID, GL_COMPILE_STATUS, &success);
+    //Source no longer required, so remove it
+    delete[] shaderSource;
     if(success != GL_TRUE) {
         glGetShaderInfoLog(shaderID, 512, NULL, infoLog);
         std::string typeString {};

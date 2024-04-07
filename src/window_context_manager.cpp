@@ -20,10 +20,10 @@ WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeig
     }
     std::cout << "Window successfully created!" << std::endl;
 
-    //Specify that we want a forward compatible OpenGL 4.5 context
+    //Specify that we want a forward compatible OpenGL 3.3 context
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 5);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
     SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8); // creating a stencil buffer
 
     mpGLContext = SDL_GL_CreateContext(mpSDLWindow);

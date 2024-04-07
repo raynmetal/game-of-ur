@@ -13,12 +13,12 @@ public:
     A constructor that reads and compiles a shader program 
     from vertex and fragment shader files
     */
-    ShaderProgram(const char* vertexPath, const char* fragmentPath);
+    ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths);
     /*
     A constructor that reads and compiles a shader program
     from vertex, geometry, and fragment shader files
     */
-    ShaderProgram(const char* vertexPath, const char* fragmentPath, const char* geometryPath);
+    ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths);
     /*
     Shader destructor; deletes shader from memory
     */
