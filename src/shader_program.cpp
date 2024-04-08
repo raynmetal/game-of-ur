@@ -128,10 +128,6 @@ GLint loadAndCompileShader(const std::vector<std::string>& shaderPaths, GLuint& 
         }
     }
 
-    for(std::size_t i{0}; i < shaderPaths.size(); ++i) {
-        std::cout << i << ": " << shaderSource[i] << std::endl;
-    }
-
     //Variables for storing compilation success
     GLint success;
     char infoLog[512];

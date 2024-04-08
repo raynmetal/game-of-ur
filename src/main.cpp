@@ -8,12 +8,11 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "vertex.hpp"
-#include "mesh.hpp"
 #include "model.hpp"
-#include "texture.hpp"
 #include "fly_camera.hpp"
 #include "window_context_manager.hpp"
 #include "shader_program.hpp"
+#include "shapegen.hpp"
 
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
@@ -61,8 +60,6 @@ int main(int argc, char* argv[]) {
         std::cout << "Could not compile basic shader!" << std::endl;
         return 1;
     }
-
-    Texture textureRock {"data/textures/pixel_rock_moss.png", Texture::Usage::Albedo };
 
     // Create a framebuffer for storing geometrical information
     GLuint geometryFBO;
@@ -218,6 +215,8 @@ int main(int argc, char* argv[]) {
 
     Model boardPieceModel { "data/models/Generic Board Piece.obj" };
     boardPieceModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
+    Model sphereModel { generateSphere(2, 2) };
+    sphereModel.addInstance(glm::vec3(0.f, 2.f, -2.f), glm::quat(glm::vec3(0.f)), glm::vec3(1.f));
 
     FlyCamera camera {
         glm::vec3(0.f), 0.f, 0.f, 0.f
@@ -304,6 +303,7 @@ int main(int argc, char* argv[]) {
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             boardPieceModel.draw(geometryShader);
+            sphereModel.draw(geometryShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glViewport(0, 0, gWindowWidth, gWindowHeight);
