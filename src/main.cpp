@@ -218,6 +218,10 @@ int main(int argc, char* argv[]) {
     Model sphereModel { generateSphere(2, 2) };
     sphereModel.addInstance(glm::vec3(0.f, 2.f, -2.f), glm::quat(glm::vec3(0.f)), glm::vec3(1.f));
 
+    geometryShader.use();
+    boardPieceModel.associateShaderProgram(geometryShader.getProgramID());
+    sphereModel.associateShaderProgram(geometryShader.getProgramID());
+
     FlyCamera camera {
         glm::vec3(0.f), 0.f, 0.f, 0.f
     };
@@ -299,6 +303,7 @@ int main(int argc, char* argv[]) {
 
         //Render geometry to our geometry framebuffer
         glViewport(0, 0, gWindowWidth, gWindowHeight);
+        geometryShader.use();
         glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);

@@ -1,5 +1,6 @@
 #include <vector>
 #include <map>
+#include <iostream>
 
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
@@ -137,14 +138,9 @@ Mesh& Mesh::operator=(const Mesh& other) {
     return *this;
 }
 
-void Mesh::associateShaderProgram(const ShaderProgram& shaderProgram, GLuint matrixBuffer) {
-    GLuint programID { shaderProgram.getProgramID() };
-    associateShaderProgram(programID, matrixBuffer);
-}
-
-void Mesh::associateShaderProgram(GLuint programID, GLuint matrixBuffer){
+void Mesh::associateShaderProgram(GLuint programID){
     //Ensure duplicate calls to this function don't create duplicate VAOs
-    if(mShaderVAOMap.find(programID) != mShaderVAOMap.end()) return;
+    if(getShaderVAO(programID)) return;
     GLuint shaderVAO;
     glGenVertexArrays(1, &shaderVAO);
     glUseProgram(programID);
@@ -178,38 +174,25 @@ void Mesh::associateShaderProgram(GLuint programID, GLuint matrixBuffer){
             glEnableVertexAttribArray(attrTextureCoordinates);
             glVertexAttribPointer(attrTextureCoordinates, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mTextureCoordinates)));
         }
-
-        // Enable and set matrix pointers
-        glBindBuffer(GL_ARRAY_BUFFER, matrixBuffer);
-        GLint attrModelMatrix { glGetAttribLocation(programID, "attrModelMatrix") };
-        GLint attrNormalMatrix { glGetAttribLocation(programID, "attrNormalMatrix") };
-        if(attrModelMatrix >= 0) {
-            for(int i {0}; i < 4; ++i) {
-                glEnableVertexAttribArray(attrModelMatrix+i);
-                glVertexAttribPointer(attrModelMatrix+i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), reinterpret_cast<void*>(i*sizeof(glm::vec4)));
-                glVertexAttribDivisor(attrModelMatrix+i, 1);
-            }
-        }
-        if(attrNormalMatrix >= 0) {
-            // TODO: both model and normal matrices are presently the same. Add proper normal matrix allocation
-            // an option in this class, in case accuracy is desired later
-            for(int i{0}; i < 4; ++i) {
-                glEnableVertexAttribArray(attrNormalMatrix+i);
-                glVertexAttribPointer(attrNormalMatrix+i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), reinterpret_cast<void*>(i*sizeof(glm::vec4)));
-                glVertexAttribDivisor(attrNormalMatrix+i, 1);
-            }
-        }
     glBindVertexArray(0);
+
+    GLuint error { glGetError() };
+    std::cout << "Error in mesh association: " << glewGetErrorString(error) << " (error #" << error << ")\n";
+
     mShaderVAOMap[programID] = shaderVAO;
 }
 
-void Mesh::disassociateShaderProgram(const ShaderProgram& shaderProgram) {
-    GLuint programID {shaderProgram.getProgramID()};
-    if(mShaderVAOMap.find(programID) == mShaderVAOMap.end()) return;
+void Mesh::disassociateShaderProgram(GLuint programID) {
+    if(!getShaderVAO(programID)) return;
     glDeleteVertexArrays(1, &mShaderVAOMap[programID]);
     mShaderVAOMap.erase(programID);
 }
 
+GLuint Mesh::getShaderVAO(const GLuint programID) const {
+    auto resultIterator { mShaderVAOMap.find(programID) };
+    if(resultIterator == mShaderVAOMap.end()) return 0;
+    return resultIterator->second;
+}
 
 void Mesh::free() {
     glDeleteBuffers(1, &mVertexBuffer);

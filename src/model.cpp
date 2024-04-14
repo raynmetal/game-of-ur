@@ -21,7 +21,6 @@ void Model::draw(ShaderProgram& shaderProgram) {
     updateMatrixBuffer();
 
     for(Mesh& mesh : mMeshes) {
-        mesh.associateShaderProgram(shaderProgram, mMatrixBuffer);
         mesh.draw(shaderProgram, mInstanceModelMatrixMap.size());
     }
 }
@@ -376,4 +375,45 @@ std::vector<Texture*> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Texture
     }
 
     return pTextures;
+}
+
+void Model::associateShaderProgram(GLuint programID) {
+    for(Mesh& mesh: mMeshes) {
+        // TODO: This needs to be more robust somehow
+        // Its okay to assume for now that since this model owns these meshes, our meshes won't
+        // be associated with a shader until this model associates them
+        GLuint shaderVAO = mesh.getShaderVAO(programID);
+        if(shaderVAO) continue;
+
+        mesh.associateShaderProgram(programID);
+        shaderVAO = mesh.getShaderVAO(programID);
+        glBindVertexArray(shaderVAO);
+            // Enable and set matrix pointers
+            glBindBuffer(GL_ARRAY_BUFFER, mMatrixBuffer);
+            GLint attrModelMatrix { glGetAttribLocation(programID, "attrModelMatrix") };
+            GLint attrNormalMatrix { glGetAttribLocation(programID, "attrNormalMatrix") };
+            if(attrModelMatrix >= 0) {
+                for(int i {0}; i < 4; ++i) {
+                    glEnableVertexAttribArray(attrModelMatrix+i);
+                    glVertexAttribPointer(attrModelMatrix+i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), reinterpret_cast<void*>(i*sizeof(glm::vec4)));
+                    glVertexAttribDivisor(attrModelMatrix+i, 1);
+                }
+            }
+            if(attrNormalMatrix >= 0) {
+                // TODO: both model and normal matrices are presently the same. Add proper normal matrix allocation
+                // an option in this class, in case accuracy is desired later
+                for(int i{0}; i < 4; ++i) {
+                    glEnableVertexAttribArray(attrNormalMatrix+i);
+                    glVertexAttribPointer(attrNormalMatrix+i, 4, GL_FLOAT, GL_FALSE, sizeof(glm::mat4), reinterpret_cast<void*>(i*sizeof(glm::vec4)));
+                    glVertexAttribDivisor(attrNormalMatrix+i, 1);
+                }
+            }
+        glBindVertexArray(0);
+    }
+}
+
+void Model::disassociateShaderProgram(GLuint programID) {
+    for(Mesh& mesh: mMeshes) {
+        mesh.disassociateShaderProgram(programID);
+    }
 }

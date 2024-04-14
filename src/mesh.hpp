@@ -44,11 +44,11 @@ public:
     Mesh& operator=(const Mesh& other);
 
     /* Sets up a VAO for a given shader program, setting vertex pointers as necessary */
-    void associateShaderProgram(const ShaderProgram& shaderProgram, GLuint matrixBuffer);
-    void associateShaderProgram(GLuint programID, GLuint matrixBuffer);
+    void associateShaderProgram(GLuint programID);
     /* Removes VAO for a given shader program */
-    void disassociateShaderProgram(const ShaderProgram& shaderProgram);
-
+    void disassociateShaderProgram(GLuint programID);
+    /* Returns the ID of the VAO associated with this shader program */
+    GLuint getShaderVAO(const GLuint programID) const;
 
     /* 
     Uses the shader program to render this mesh, setting uniform attributes. Assumes 

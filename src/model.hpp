@@ -56,6 +56,11 @@ public:
     /* Removes instance associated with instanceID (returned by the instance add function earlier)*/
     void removeInstance(GLuint instanceID);
 
+    /* Sets up a VAO for a given shader program, setting pointers as necessary */
+    void associateShaderProgram(GLuint programID);
+    /* Removes VAO for a given shader program */
+    void disassociateShaderProgram(GLuint programID);
+
     void updateMatrixBuffer();
 
     void draw(ShaderProgram& shaderProgram);
