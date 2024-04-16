@@ -176,9 +176,6 @@ void Mesh::associateShaderProgram(GLuint programID){
         }
     glBindVertexArray(0);
 
-    GLuint error { glGetError() };
-    std::cout << "Error in mesh association: " << glewGetErrorString(error) << " (error #" << error << ")\n";
-
     mShaderVAOMap[programID] = shaderVAO;
 }
 

@@ -14,7 +14,7 @@ RM := rm -rf
 CP := cp -f
 endif
 
-SRCS := src/main.cpp src/shader_program.cpp src/light.cpp src/window_context_manager.cpp src/fly_camera.cpp src/texture.cpp src/mesh.cpp src/model.cpp
+SRCS := src/main.cpp src/shader_program.cpp src/light.cpp src/window_context_manager.cpp src/fly_camera.cpp src/texture.cpp src/mesh.cpp src/model.cpp src/shapegen.cpp 
 
 CC := g++
 

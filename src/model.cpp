@@ -18,14 +18,14 @@
 glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 scale);
 
 void Model::draw(ShaderProgram& shaderProgram) {
-    updateMatrixBuffer();
+    updateBuffers();
 
     for(Mesh& mesh : mMeshes) {
         mesh.draw(shaderProgram, mInstanceModelMatrixMap.size());
     }
 }
 
-Model::Model(): mMatrixBuffer{0} {
+Model::Model() {
     allocateBuffers();
 }
 
@@ -38,9 +38,17 @@ Model::Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& ele
         pTextures[i] = &mTextures[i];
     }
     mpHierarchyRoot = new Model::TreeNode {};
-    mpHierarchyRoot->mMeshIndices.push_back(mMeshes.size());
+    mpHierarchyRoot->mMeshIndices.push_back(0);
     mMeshes.push_back(
         Mesh{ vertices, elements, pTextures }
+    );
+}
+
+Model::Model(const Mesh& mesh) : Model() {
+    mpHierarchyRoot = new Model::TreeNode {};
+    mpHierarchyRoot->mMeshIndices.push_back(0);
+    mMeshes.push_back(
+        mesh
     );
 }
 
@@ -142,22 +150,25 @@ void Model::removeInstance(GLuint instanceID) {
     mDirty = true;
 }
 
-void Model::updateMatrixBuffer() {
+void Model::updateBuffers() {
     if(!mDirty) return;
 
     // Double the matrix buffer capacity if we already have more instances than space
-    if(mInstanceModelMatrixMap.size() > mInstanceCapacity) mInstanceCapacity *= 2;
+    if(mInstanceModelMatrixMap.size() > mInstanceCapacity){
+        mInstanceCapacity *= 2;
+        allocateBuffers();
+    }
 
     // Build a list out of the currently instanced model matrices
     std::vector<glm::mat4> modelMatrices { mInstanceModelMatrixMap.size() };
     int currIndex {0};
-    for(std::pair<GLuint, glm::mat4> matrix : mInstanceModelMatrixMap) {
+    for(const std::pair<const GLuint, glm::mat4>& matrix : mInstanceModelMatrixMap) {
         modelMatrices[currIndex ++] = matrix.second;
     }
 
     // Move everything in the list to our matrix buffer
     glBindBuffer(GL_ARRAY_BUFFER, mMatrixBuffer);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * mInstanceCapacity, modelMatrices.data(), GL_DYNAMIC_DRAW);
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::mat4) * mInstanceCapacity, modelMatrices.data());
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Reset the dirty bool
@@ -221,7 +232,7 @@ void Model::allocateBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, mMatrixBuffer);
         glBufferData(
             GL_ARRAY_BUFFER, sizeof(glm::mat4) * mInstanceCapacity,
-            NULL, GL_STATIC_DRAW
+            NULL, GL_DYNAMIC_DRAW
         );
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

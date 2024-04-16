@@ -30,6 +30,8 @@ public:
     Model(const std::string& filepath);
     /* create a mesh out of a list of textures and vertices, store them in this model */
     Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, std::vector<Texture>&& textures);
+    /* create a model with a single mesh */
+    Model(const Mesh& mesh);
 
     /* Model destructor */
     ~Model();
@@ -48,7 +50,8 @@ public:
     GLuint addInstance(glm::mat4 modelMatrix);
     /* Adds an instance based on position and scale vectors, and orientation quaternion */
     GLuint addInstance(glm::vec3 position, glm::quat orientation, glm::vec3 scale);
-
+    /* Gets matrix transform for this instance*/
+    glm::mat4 getInstance(GLuint instanceID);
     /* Replaces the transform associated with this instance with transform in input */
     void updateInstance(GLuint instanceID, glm::mat4 transform);
     /* Replaces the transform associated with this instance based on model matrix computed from input */
@@ -61,12 +64,14 @@ public:
     /* Removes VAO for a given shader program */
     void disassociateShaderProgram(GLuint programID);
 
-    void updateMatrixBuffer();
 
     void draw(ShaderProgram& shaderProgram);
 
 private:
     Model();
+
+    /* updates buffers stored in GPU */
+    void updateBuffers();
 
     /* 
     utility method for destroying resources associated with
@@ -120,7 +125,7 @@ private:
     /*
     ID of the matrix buffer managed by this object
     */
-    GLuint mMatrixBuffer;
+    GLuint mMatrixBuffer {0};
     std::map<GLuint, glm::mat4> mInstanceModelMatrixMap {};
     std::queue<GLuint> mDeletedInstanceIDs {};
     GLuint mNextInstanceID {0};

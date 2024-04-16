@@ -215,7 +215,7 @@ int main(int argc, char* argv[]) {
 
     Model boardPieceModel { "data/models/Generic Board Piece.obj" };
     boardPieceModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
-    Model sphereModel { generateSphere(2, 2) };
+    Model sphereModel { generateSphereModel(2, 2) };
     sphereModel.addInstance(glm::vec3(0.f, 2.f, -2.f), glm::quat(glm::vec3(0.f)), glm::vec3(1.f));
 
     geometryShader.use();
