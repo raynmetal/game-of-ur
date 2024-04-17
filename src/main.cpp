@@ -74,6 +74,7 @@ int main(int argc, char* argv[]) {
         {"src/shader/common/versionHeader.glsl"},
         {"src/shader/common/lightStruct.glsl"},
         {"src/shader/common/fragmentAttributes.fs"},
+        {"src/shader/common/geometrySampler.fs"},
         {"src/shader/lighting/deferredLighting.fs"}
     };
     ShaderProgram lightingShader { lightingVsSrc, lightingFsSrc };
@@ -311,6 +312,15 @@ int main(int argc, char* argv[]) {
         );
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+    // Debug: list of screen textures that may be rendered
+    const GLuint nScreenTextures {5};
+    GLuint currScreenTexture {3};
+    const GLuint screenTextures[5] { 
+        geometryBuffers[0], geometryBuffers[1], geometryBuffers[2],
+        lightingBuffers[0], lightingBuffers[1]
+    };
+
+
     //Timing related variables
     GLuint previousTicks { SDL_GetTicks() };
     float framerate {0.f};
@@ -333,6 +343,11 @@ int main(int argc, char* argv[]) {
             ) {
                 quit = true;
                 break;
+            }
+            if(
+                event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_TAB
+            ) {
+                currScreenTexture = (currScreenTexture + 1) % nScreenTextures;
             }
             camera.processInput(event);
         }
@@ -371,7 +386,6 @@ int main(int argc, char* argv[]) {
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Render geometry to our geometry framebuffer
-        glViewport(0, 0, gWindowWidth, gWindowHeight);
         geometryShader.use();
         glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);
             glEnable(GL_DEPTH_TEST);
@@ -380,19 +394,29 @@ int main(int argc, char* argv[]) {
             sphereModel.draw(geometryShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glViewport(0, 0, gWindowWidth, gWindowHeight);
+        glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, geometryBuffers[0]);
+        glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, geometryBuffers[1]);
+        glActiveTexture(GL_TEXTURE2);
+            glBindTexture(GL_TEXTURE_2D, geometryBuffers[2]);
+        glActiveTexture(GL_TEXTURE0);
         lightingShader.use();
+        lightingShader.setUInt("uGeometryPositionMap", 0);
+        lightingShader.setUInt("uGeometryNormalMap", 1);
+        lightingShader.setUInt("uGeometryAlbedoSpecMap", 2);
+        lightingShader.setUInt("uScreenWidth", gWindowWidth);
+        lightingShader.setUInt("uScreenHeight", gWindowHeight);
         glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
-            glDisable(GL_DEPTH_TEST);
-            glClear(GL_COLOR_BUFFER_BIT);
+            glEnable(GL_DEPTH_TEST);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             sceneLights.draw(lightingShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glViewport(0, 0, gWindowWidth, gWindowHeight);
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, lightingBuffers[0]);
+            glBindTexture(GL_TEXTURE_2D, screenTextures[currScreenTexture]);
         glActiveTexture(GL_TEXTURE0);
         basicShader.use();
         basicShader.setUInt("uRenderTexture", 0);
