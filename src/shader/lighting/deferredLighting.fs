@@ -1,4 +1,3 @@
-
 /*
 Include: 
     -common/versionHeader.glsl
@@ -6,9 +5,13 @@ Include:
     -common/fragmentAttributes.fs
 */
 
-flat in Light fragAttrLight;
+in LightPlacement fragAttrLightPlacement;
+flat in LightEmission fragAttrLightEmission;
+
+layout (location=0) out vec4 outColor;
+layout (location=1) out vec4 brightColor;
 
 void main() {
-    outColor = fragAttr.color * texture(uRenderTexture, fragAttr.textureCoordinates);
+    // outColor = fragAttrLightEmission.mDiffuseColor;
+    outColor = vec4(1.f);
 }
-

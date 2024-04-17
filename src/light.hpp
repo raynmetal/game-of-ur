@@ -27,16 +27,15 @@ struct Light {
 
     //Basic light attributes
     LightType mType;
-    glm::vec3 mPosition;
-    glm::vec3 mDirection;
-    glm::vec3 mDiffuse;
-    glm::vec3 mSpecular;
-    glm::vec3 mAmbient;
+    glm::vec4 mPosition;
+    glm::vec4 mDirection;
+    glm::vec4 mDiffuseColor;
+    glm::vec4 mSpecularColor;
+    glm::vec4 mAmbientColor;
 
     //Attenuation attributes
-    GLfloat mConstant;
-    GLfloat mLinear;
-    GLfloat mQuadratic;
+    GLfloat mDecayLinear;
+    GLfloat mDecayQuadratic;
 
     //Spotlight attributes
     GLfloat mCosCutoffInner;
@@ -58,12 +57,12 @@ public:
     /* copy assignment operator */
     LightCollection& operator=(const LightCollection& other);
 
-    void draw(const ShaderProgram& shaderProgram);
+    void draw(ShaderProgram& shaderProgram);
 
     /* associates a shader program with this collection's light volume mesh */
-    void associateShader(GLuint programID);
+    void associateShaderProgram(GLuint programID);
     /* disassociates a shader program from this collection's light volume mesh */
-    void disassociateShader(GLuint programID);
+    void disassociateShaderProgram(GLuint programID);
 
     GLuint addLight(const Light& light);
     Light getLight(GLuint instanceID) const;

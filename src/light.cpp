@@ -1,3 +1,4 @@
+#include <iostream>
 #include <cmath>
 #include <glm/glm.hpp>
 
@@ -29,12 +30,99 @@ LightCollection& LightCollection::operator=(const LightCollection& other) {
     return *this;
 }
 
-void LightCollection::associateShader(GLuint programID) {
-    //TODO: set light and matrix instance pointers for this shader+mesh's
-    //  VAO
-    mLightVolume.associateShaderProgram(programID);
+void LightCollection::draw(ShaderProgram& shaderProgram) {
+    updateBuffers();
+
+    shaderProgram.use();
+    mLightVolume.draw(shaderProgram, mInstanceLightMap.size());
 }
-void LightCollection::disassociateShader(GLuint programID) {
+
+void LightCollection::associateShaderProgram(GLuint programID) {
+    glUseProgram(programID);
+    //TODO: set light and matrix instance pointers for this shader+mesh's
+    mLightVolume.associateShaderProgram(programID);
+
+    GLuint shaderVAO { mLightVolume.getShaderVAO(programID) };
+    glBindVertexArray(shaderVAO);
+        glBindBuffer(GL_ARRAY_BUFFER, mModelMatrixBuffer);
+            GLint attrModelMatrix { glGetAttribLocation(programID, "attrModelMatrix") };
+            for(int i{0}; i < 4; ++i) {
+                glEnableVertexAttribArray(attrModelMatrix+i);
+                glVertexAttribPointer(
+                    attrModelMatrix+i,
+                    4,
+                    GL_FLOAT,
+                    GL_FALSE,
+                    sizeof(glm::mat4),
+                    reinterpret_cast<void*>(i * sizeof(glm::vec4))
+                );
+                glVertexAttribDivisor(attrModelMatrix+i, 1);
+            }
+        glBindBuffer(GL_ARRAY_BUFFER, mLightBuffer);
+            GLint attrLightPlacementPosition { glGetAttribLocation(programID, "attrLightPlacement.mPosition") };
+            GLint attrLightPlacementDirection { glGetAttribLocation(programID, "attrLightPlacement.mDirection") };
+            GLint attrLightEmissionDiffuseColor { glGetAttribLocation(programID, "attrLightEmission.mDiffuseColor") };
+            GLint attrLightEmissionSpecularColor { glGetAttribLocation(programID, "attrLightEmission.mSpecularColor") };
+            GLint attrLightEmissionAmbientColor { glGetAttribLocation(programID, "attrLightEmission.mAmbientColor") };
+            GLint attrLightEmissionType { glGetAttribLocation(programID, "attrLightEmission.mType") };
+            GLint attrLightEmissionDecayLinear { glGetAttribLocation(programID, "attrLightEmission.mDecayLinear") };
+            GLint attrLightEmissionDecayQuadratic { glGetAttribLocation(programID, "attrLightEmission.mDecayQuadratic") };
+            GLint attrLightEmissionCosCutoffInner { glGetAttribLocation(programID, "attrLightEmission.mCosCutoffInner") };
+            GLint attrLightEmissionCosCutoffOuter { glGetAttribLocation(programID, "attrLightEmission.mCosCutoffOuter") };
+
+            if(attrLightPlacementPosition >= 0) {
+                glEnableVertexAttribArray(attrLightPlacementPosition);
+                glVertexAttribPointer(attrLightPlacementPosition, 4, GL_FLOAT, GL_FALSE, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mPosition)));
+                glVertexAttribDivisor(attrLightPlacementPosition, 1);
+            }
+            if(attrLightPlacementDirection >= 0) {
+                glEnableVertexAttribArray(attrLightPlacementDirection);
+                glVertexAttribPointer(attrLightPlacementDirection, 4, GL_FLOAT, GL_FALSE, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mDirection)));
+                glVertexAttribDivisor(attrLightPlacementDirection, 1);
+            }
+            if(attrLightEmissionDiffuseColor >= 0) {
+                glEnableVertexAttribArray(attrLightEmissionDiffuseColor);
+                glVertexAttribPointer(attrLightEmissionDiffuseColor, 4, GL_FLOAT, GL_FALSE, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mDiffuseColor)));
+                glVertexAttribDivisor(attrLightEmissionDiffuseColor, 1);
+            }
+            if(attrLightEmissionSpecularColor >= 0) {
+                glEnableVertexAttribArray(attrLightEmissionSpecularColor);
+                glVertexAttribPointer(attrLightEmissionSpecularColor, 4, GL_FLOAT, GL_FALSE, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mSpecularColor)));
+                glVertexAttribDivisor(attrLightEmissionSpecularColor, 1);
+            }
+            if(attrLightEmissionAmbientColor >= 0) {
+                glEnableVertexAttribArray(attrLightEmissionAmbientColor);
+                glVertexAttribPointer(attrLightEmissionAmbientColor, 4, GL_FLOAT, GL_FALSE, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mAmbientColor)));
+                glVertexAttribDivisor(attrLightEmissionAmbientColor, 1);
+            }
+            if(attrLightEmissionType >= 0) {
+                glEnableVertexAttribArray(attrLightEmissionType);
+                glVertexAttribIPointer(attrLightEmissionType, 1, GL_INT, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mType)));
+                glVertexAttribDivisor(attrLightEmissionType, 1);
+            }
+            if(attrLightEmissionDecayLinear >= 0) {
+                glEnableVertexAttribArray(attrLightEmissionDecayLinear);
+                glVertexAttribPointer(attrLightEmissionDecayLinear, 1, GL_FLOAT, GL_FALSE, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mDecayLinear)));
+                glVertexAttribDivisor(attrLightEmissionDecayLinear, 1);
+            }
+            if(attrLightEmissionDecayQuadratic >= 0) {
+                glEnableVertexAttribArray(attrLightEmissionDecayQuadratic);
+                glVertexAttribPointer(attrLightEmissionDecayQuadratic, 1, GL_FLOAT, GL_FALSE, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mDecayQuadratic)));
+                glVertexAttribDivisor(attrLightEmissionDecayQuadratic, 1);
+            }
+            if(attrLightEmissionCosCutoffInner >= 0) {
+                glEnableVertexAttribArray(attrLightEmissionCosCutoffInner);
+                glVertexAttribPointer(attrLightEmissionCosCutoffInner, 1, GL_FLOAT, GL_FALSE, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mCosCutoffInner)));
+                glVertexAttribDivisor(attrLightEmissionCosCutoffInner, 1);
+            }
+            if(attrLightEmissionCosCutoffOuter >= 0) {
+                glEnableVertexAttribArray(attrLightEmissionCosCutoffOuter);
+                glVertexAttribPointer(attrLightEmissionCosCutoffOuter, 1, GL_FLOAT, GL_FALSE, sizeof(Light), reinterpret_cast<void*>(offsetof(Light, mCosCutoffOuter)));
+                glVertexAttribDivisor(attrLightEmissionCosCutoffOuter, 1);
+            }
+    glBindVertexArray(0);
+}
+void LightCollection::disassociateShaderProgram(GLuint programID) {
     mLightVolume.disassociateShaderProgram(programID);
 }
 
@@ -47,7 +135,7 @@ GLuint LightCollection::addLight(const Light& light) {
 
     glm::mat4 modelMatrix { 
         glm::scale(
-            glm::translate(glm::mat4(1.f), light.mPosition),
+            glm::translate(glm::mat4(1.f), glm::vec3(light.mPosition)),
             glm::vec3(light.calculateRadius(0.05f))
         )
     };
@@ -68,7 +156,7 @@ void LightCollection::updateLight(GLuint instanceID, const Light& light) {
 
     glm::mat4 modelMatrix { 
         glm::scale(
-            glm::translate(glm::mat4(1.f), light.mPosition),
+            glm::translate(glm::mat4(1.f), glm::vec3(light.mPosition)),
             glm::vec3(light.calculateRadius(0.05f))
         )
     };
@@ -182,17 +270,17 @@ void LightCollection::copyResources(const LightCollection& other) {
 }
 
 float Light::calculateRadius(float intensityCutoff) const {
-    float intensityMax = mDiffuse.r;
-    if(mDiffuse.g > intensityMax) intensityMax = mDiffuse.g;
-    if(mDiffuse.b > intensityMax) intensityMax = mDiffuse.b;
+    float intensityMax = mDiffuseColor.r;
+    if(mDiffuseColor.g > intensityMax) intensityMax = mDiffuseColor.g;
+    if(mDiffuseColor.b > intensityMax) intensityMax = mDiffuseColor.b;
     float radiusCutoff {
         (
-            -mLinear
+            -mDecayLinear
             + std::sqrt(
-                mLinear*mLinear - 4.f * mQuadratic * (mConstant - intensityMax / intensityCutoff)
+                mDecayLinear*mDecayLinear - 4.f * mDecayQuadratic * (1.f - intensityMax / intensityCutoff)
             )
         )
-        / (2.f * mQuadratic)
+        / (2.f * mDecayQuadratic)
     };
     return radiusCutoff;
 }
@@ -200,13 +288,12 @@ float Light::calculateRadius(float intensityCutoff) const {
 Light Light::MakeDirectionalLight(const glm::vec3& direction, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient){
     return Light{
         .mType { Light::directional },
-        .mDirection { direction },
-        .mDiffuse { diffuse },
-        .mSpecular { specular },
-        .mAmbient{ ambient },
-        .mConstant {1.f},
-        .mLinear {0.f},
-        .mQuadratic {0.f},
+        .mDirection { direction, 0.f },
+        .mDiffuseColor { diffuse, 1.f },
+        .mSpecularColor { specular, 1.f },
+        .mAmbientColor{ ambient, 1.f },
+        .mDecayLinear {0.f},
+        .mDecayQuadratic {0.f},
         .mCosCutoffInner {0.f},
         .mCosCutoffOuter {0.f}
     };
@@ -215,13 +302,12 @@ Light Light::MakeDirectionalLight(const glm::vec3& direction, const glm::vec3& d
 Light Light::MakePointLight(const glm::vec3& position, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst){
     return Light{
         .mType { Light::point },
-        .mPosition { position },
-        .mDiffuse { diffuse },
-        .mSpecular { specular },
-        .mAmbient{ ambient },
-        .mConstant {1.f},
-        .mLinear {linearConst},
-        .mQuadratic {quadraticConst},
+        .mPosition { position, 1.f },
+        .mDiffuseColor { diffuse, 1.f, },
+        .mSpecularColor { specular, 1.f },
+        .mAmbientColor{ ambient, 1.f },
+        .mDecayLinear {linearConst},
+        .mDecayQuadratic {quadraticConst},
         .mCosCutoffInner {0.f},
         .mCosCutoffOuter {0.f}
     };
@@ -230,14 +316,13 @@ Light Light::MakePointLight(const glm::vec3& position, const glm::vec3& diffuse,
 Light Light::MakeSpotLight(const glm::vec3& position, const glm::vec3& direction, float innerAngle, float outerAngle, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst) {
     return Light{
         .mType { Light::spot },
-        .mPosition { position },
-        .mDirection { direction },
-        .mDiffuse { diffuse },
-        .mSpecular { specular },
-        .mAmbient{ ambient },
-        .mConstant {1.f},
-        .mLinear {linearConst},
-        .mQuadratic {quadraticConst},
+        .mPosition { position, 1.f },
+        .mDirection { direction, 0.f },
+        .mDiffuseColor { diffuse, 1.f },
+        .mSpecularColor { specular, 1.f },
+        .mAmbientColor{ ambient, 1.f },
+        .mDecayLinear {linearConst},
+        .mDecayQuadratic {quadraticConst},
         .mCosCutoffInner {glm::cos(glm::radians(innerAngle))},
         .mCosCutoffOuter {glm::cos(glm::radians(outerAngle))}
     };

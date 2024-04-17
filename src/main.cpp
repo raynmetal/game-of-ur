@@ -9,6 +9,7 @@
 
 #include "vertex.hpp"
 #include "model.hpp"
+#include "light.hpp"
 #include "fly_camera.hpp"
 #include "window_context_manager.hpp"
 #include "shader_program.hpp"
@@ -54,10 +55,30 @@ int main(int argc, char* argv[]) {
         {"src/shader/common/material.fs"},
         {"src/shader/geometry/geometry.fs"}
     };
-    // load our geometry shader
     ShaderProgram geometryShader { geometryVsSrc, geometryFsSrc };
     if(!geometryShader.getBuildSuccess()) {
         std::cout << "Could not compile basic shader!" << std::endl;
+        return 1;
+    }
+
+    std::vector<std::string> lightingVsSrc {
+        {"src/shader/common/versionHeader.glsl"},
+        {"src/shader/common/lightStruct.glsl"},
+        {"src/shader/common/projectionViewMatrices.vs"},
+        {"src/shader/common/modelNormalMatrices.vs"},
+        {"src/shader/common/fragmentAttributes.vs"},
+        {"src/shader/common/vertexAttributes.vs"},
+        {"src/shader/lighting/deferredLighting.vs"}
+    };
+    std::vector<std::string> lightingFsSrc {
+        {"src/shader/common/versionHeader.glsl"},
+        {"src/shader/common/lightStruct.glsl"},
+        {"src/shader/common/fragmentAttributes.fs"},
+        {"src/shader/lighting/deferredLighting.fs"}
+    };
+    ShaderProgram lightingShader { lightingVsSrc, lightingFsSrc };
+    if(!lightingShader.getBuildSuccess()) {
+        std::cout << "Could not compile lighting shader!" << std::endl;
         return 1;
     }
 
@@ -83,7 +104,7 @@ int main(int argc, char* argv[]) {
         glBindTexture(GL_TEXTURE_2D, 0);
 
         //Generate and attach a render buffer for storing depth and stencil values
-        GLuint geometryRBO {};
+        GLuint geometryRBO;
         glGenRenderbuffers(1, &geometryRBO);
         glBindRenderbuffer(GL_RENDERBUFFER, geometryRBO);
             glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, gWindowWidth, gWindowHeight);
@@ -97,6 +118,39 @@ int main(int argc, char* argv[]) {
         // Check for framebuffer completeness
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             std::cout << "ERROR::FRAMEBUFFER: Framebuffer is not complete" << std::endl;
+        }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    GLuint lightingFBO;
+    glGenFramebuffers(1, &lightingFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
+        GLuint lightingBuffers[2];
+        glGenTextures(2, lightingBuffers);
+        for(int i {0}; i < 2; ++i) {
+            glBindTexture(GL_TEXTURE_2D, lightingBuffers[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, gWindowWidth, gWindowHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, lightingBuffers[i], 0
+            );
+        }
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        GLuint lightingRBO;
+        glGenRenderbuffers(1, &lightingRBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, lightingRBO);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, gWindowWidth, gWindowHeight);
+            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, lightingRBO);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+
+        const GLenum lightingColorAttachments[2] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
+        glDrawBuffers(2, lightingColorAttachments);
+
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            std::cout << "ERROR::FRAMEBUFFER: Lighting framebuffer is incomplete" << std::endl;
         }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -116,6 +170,8 @@ int main(int argc, char* argv[]) {
     GLuint uboBindingPoint {0};
     geometryShader.use();
     geometryShader.setUniformBlock("Matrices", uboBindingPoint);
+    lightingShader.use();
+    lightingShader.setUniformBlock("Matrices", uboBindingPoint);
 
     // Bind the shared matrix uniform buffer to the same binding point
     glBindBufferRange(
@@ -217,10 +273,23 @@ int main(int argc, char* argv[]) {
     boardPieceModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
     Model sphereModel { generateSphereModel(2, 2) };
     sphereModel.addInstance(glm::vec3(0.f, 2.f, -2.f), glm::quat(glm::vec3(0.f)), glm::vec3(1.f));
+    LightCollection sceneLights {};
+    sceneLights.addLight(
+        Light::MakePointLight(
+            glm::vec3(0.f, 0.f, -2.f),
+            glm::vec3(1.f, 0.1f, 0.3f),
+            glm::vec3(1.2f, 0.4f, 0.7f),
+            glm::vec3(0.1f, 0.01f, 0.03f),
+            1.f,
+            3.f
+        )
+    );
 
     geometryShader.use();
     boardPieceModel.associateShaderProgram(geometryShader.getProgramID());
     sphereModel.associateShaderProgram(geometryShader.getProgramID());
+    lightingShader.use();
+    sceneLights.associateShaderProgram(lightingShader.getProgramID());
 
     FlyCamera camera {
         glm::vec3(0.f), 0.f, 0.f, 0.f
@@ -312,10 +381,18 @@ int main(int argc, char* argv[]) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glViewport(0, 0, gWindowWidth, gWindowHeight);
+        lightingShader.use();
+        glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
+            glDisable(GL_DEPTH_TEST);
+            glClear(GL_COLOR_BUFFER_BIT);
+            sceneLights.draw(lightingShader);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        glViewport(0, 0, gWindowWidth, gWindowHeight);
         glDisable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, geometryBuffers[2]);
+            glBindTexture(GL_TEXTURE_2D, lightingBuffers[0]);
         glActiveTexture(GL_TEXTURE0);
         basicShader.use();
         basicShader.setUInt("uRenderTexture", 0);
