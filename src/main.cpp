@@ -272,23 +272,20 @@ int main(int argc, char* argv[]) {
 
     Model boardPieceModel { "data/models/Generic Board Piece.obj" };
     boardPieceModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
-    Model sphereModel { generateSphereModel(2, 2) };
-    sphereModel.addInstance(glm::vec3(0.f, 2.f, -2.f), glm::quat(glm::vec3(0.f)), glm::vec3(1.f));
     LightCollection sceneLights {};
     sceneLights.addLight(
         Light::MakePointLight(
-            glm::vec3(0.f, 0.f, -2.f),
-            glm::vec3(1.f, 0.1f, 0.3f),
-            glm::vec3(1.2f, 0.4f, 0.7f),
+            glm::vec3(0.f, 1.5f, -1.f),
+            glm::vec3(4.f, 0.6f, 1.2f),
+            glm::vec3(.5f, 0.04f, 0.12f),
             glm::vec3(0.1f, 0.01f, 0.03f),
-            1.f,
-            3.f
+            .7f,
+            .02f
         )
     );
 
     geometryShader.use();
     boardPieceModel.associateShaderProgram(geometryShader.getProgramID());
-    sphereModel.associateShaderProgram(geometryShader.getProgramID());
     lightingShader.use();
     sceneLights.associateShaderProgram(lightingShader.getProgramID());
 
@@ -391,7 +388,6 @@ int main(int argc, char* argv[]) {
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             boardPieceModel.draw(geometryShader);
-            sphereModel.draw(geometryShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glActiveTexture(GL_TEXTURE0);
@@ -414,6 +410,7 @@ int main(int argc, char* argv[]) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glDisable(GL_DEPTH_TEST);
+        glEnable(GL_FRAMEBUFFER_SRGB);
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, screenTextures[currScreenTexture]);
@@ -428,6 +425,7 @@ int main(int argc, char* argv[]) {
                 reinterpret_cast<void*>(0)
             );
         glBindVertexArray(0);
+        glDisable(GL_FRAMEBUFFER_SRGB);
 
         SDL_GL_SwapWindow(WindowContextManager::getInstance().getSDLWindow());
     }
