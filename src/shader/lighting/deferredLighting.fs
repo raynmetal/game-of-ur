@@ -25,22 +25,22 @@ void main() {
     // Common intermediate calculations
     vec4 eyeDir = vec4(normalize(vec3(-gPosition)), 0.f); //fragment -> eye
     vec4 incidentDir = normalize(gPosition - fragAttrLightPlacement.mPosition); //light -> fragment
-    float lightDistance = length(gPosition - fragAttrLightPlacement.mPosition); 
     if(fragAttrLightEmission.mType == 0) incidentDir = normalize(fragAttrLightPlacement.mDirection);
-    vec4 halfwayDir = normalize(gNormal + (-incidentDir));
+    float lightDistance = length(gPosition - fragAttrLightPlacement.mPosition); 
+    vec4 halfwayDir = normalize(eyeDir + (-incidentDir));
 
     float factorDiffuse = max(dot(gNormal, -incidentDir), 0.f);
     float factorSpecular = factorDiffuse <= 0.f? 0.f: (
         pow(
             max(dot(halfwayDir, gNormal), 0.f),
-            32.f
+            25.f
         )
     );
     float factorAttenuation = 1.f;
     float factorSpotIntensity = 1.f;
     switch(fragAttrLightEmission.mType) {
         case 2: // spot light
-            float cosTheta = dot(gNormal, -incidentDir);
+            float cosTheta = dot(fragAttrLightPlacement.mDirection, incidentDir);
             factorSpotIntensity = clamp(
                 (cosTheta - fragAttrLightEmission.mCosCutoffOuter) 
                     / (fragAttrLightEmission.mCosCutoffInner - fragAttrLightEmission.mCosCutoffOuter),

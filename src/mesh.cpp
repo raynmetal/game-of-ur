@@ -20,7 +20,7 @@ void Mesh::draw(ShaderProgram& shaderProgram, GLuint instanceCount) {
             GL_TRIANGLES,
             mElements.size(),
             GL_UNSIGNED_INT,
-            0,
+            NULL,
             instanceCount
         );
     glBindVertexArray(0);

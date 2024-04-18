@@ -273,17 +273,29 @@ int main(int argc, char* argv[]) {
     Model boardPieceModel { "data/models/Generic Board Piece.obj" };
     boardPieceModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
     LightCollection sceneLights {};
+    GLuint flashlight { sceneLights.addLight(
+        Light::MakeSpotLight(
+            glm::vec3(0.f),
+            glm::vec3(0.f, 0.f, -1.f),
+            4.f,
+            13.f,
+            glm::vec3(2.f),
+            glm::vec3(2.f),
+            glm::vec3(.1f),
+            .7f,
+            .03f
+        )
+    )};
     sceneLights.addLight(
         Light::MakePointLight(
             glm::vec3(0.f, 1.5f, -1.f),
-            glm::vec3(4.f, 0.6f, 1.2f),
-            glm::vec3(.5f, 0.04f, 0.12f),
+            glm::vec3(2.f, 0.6f, 1.2f),
+            glm::vec3(1.5f, 1.04f, .32f),
             glm::vec3(0.1f, 0.01f, 0.03f),
             .7f,
             .02f
         )
     );
-
     geometryShader.use();
     boardPieceModel.associateShaderProgram(geometryShader.getProgramID());
     lightingShader.use();
@@ -317,13 +329,11 @@ int main(int argc, char* argv[]) {
         lightingBuffers[0], lightingBuffers[1]
     };
 
-
     //Timing related variables
     GLuint previousTicks { SDL_GetTicks() };
     float framerate {0.f};
     const float frameratePoll {1.f};
     float framerateCounter {0.f};
-
 
     //Main event loop
     glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -365,6 +375,10 @@ int main(int argc, char* argv[]) {
 
         // update objects according to calculated delta
         camera.update(deltaTime);
+        Light flashlightAttributes { sceneLights.getLight(flashlight) };
+        flashlightAttributes.mPosition = glm::vec4(camera.getPosition(), 1.f);
+        flashlightAttributes.mDirection = glm::vec4(camera.getForward(), 0.f);
+        sceneLights.updateLight(flashlight, flashlightAttributes);
 
         // Send shared matrices to the uniform buffer
         glBindBuffer(GL_UNIFORM_BUFFER, uboSharedMatrices);
@@ -404,9 +418,13 @@ int main(int argc, char* argv[]) {
         lightingShader.setUInt("uScreenWidth", gWindowWidth);
         lightingShader.setUInt("uScreenHeight", gWindowHeight);
         glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
-            glEnable(GL_DEPTH_TEST);
-            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+            // glEnable(GL_DEPTH_TEST);
+            glDisable(GL_DEPTH_TEST);
+            glEnable(GL_BLEND);
+            glBlendFunc(GL_ONE, GL_ONE);
+            glClear(GL_COLOR_BUFFER_BIT); //| GL_DEPTH_BUFFER_BIT);
             sceneLights.draw(lightingShader);
+            glDisable(GL_BLEND);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glDisable(GL_DEPTH_TEST);
