@@ -23,21 +23,20 @@ void handleInput(const SDL_Event& event);
 
 int main(int argc, char* argv[]) {
     init();
-
-    std::vector<std::string> basicVsSrc {
+    std::vector<std::string> tonemappingVsSrc {
         {"src/shader/common/versionHeader.glsl"},
         {"src/shader/common/fragmentAttributes.vs"},
         {"src/shader/common/vertexAttributes.vs"},
-        {"src/shader/basic/basic.vs"}
+        {"src/shader/simple_tonemapping/tonemapping.vs"}
     };
-    std::vector<std::string> basicFsSrc {
+    std::vector<std::string> tonemappingFsSrc {
         {"src/shader/common/versionHeader.glsl"},
         {"src/shader/common/fragmentAttributes.fs"},
-        {"src/shader/basic/basic.fs"}
+        {"src/shader/simple_tonemapping/tonemapping.fs"}
     };
-    ShaderProgram basicShader { basicVsSrc, basicFsSrc };
-    if(!basicShader.getBuildSuccess()) {
-        std::cout << "Could not compile basic shader!" << std::endl;
+    ShaderProgram tonemappingShader { tonemappingVsSrc, tonemappingFsSrc };
+    if(!tonemappingShader.getBuildSuccess()) {
+        std::cout << "Could not compile tonemapping shader!" << std::endl;
         return 1;
     }
 
@@ -225,7 +224,7 @@ int main(int argc, char* argv[]) {
     glGenVertexArrays(1, &screenVAO);
     glGenBuffers(1, &screenVertexBuffer);
     glGenBuffers(1, &screenElementBuffer);
-    basicShader.use();
+    tonemappingShader.use();
     glBindVertexArray(screenVAO);
         glBindBuffer(GL_ARRAY_BUFFER, screenVertexBuffer);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screenElementBuffer);
@@ -241,33 +240,42 @@ int main(int argc, char* argv[]) {
             screenElements.data(),
             GL_STATIC_DRAW
         );
-        basicShader.enableAttribArray("attrPosition");
-        basicShader.enableAttribArray("attrColor");
-        basicShader.enableAttribArray("attrTextureCoordinates");
-        glVertexAttribPointer(
-            basicShader.getLocationAttribArray("attrPosition"),
-            4,
-            GL_FLOAT,
-            GL_FALSE,
-            sizeof(Vertex),
-            reinterpret_cast<void*>(offsetof(Vertex, mPosition))
-        );
-        glVertexAttribPointer(
-            basicShader.getLocationAttribArray("attrColor"),
-            4,
-            GL_FLOAT,
-            GL_FALSE,
-            sizeof(Vertex),
-            reinterpret_cast<void*>(offsetof(Vertex, mColor))
-        );
-        glVertexAttribPointer(
-            basicShader.getLocationAttribArray("attrTextureCoordinates"),
-            2,
-            GL_FLOAT,
-            GL_FALSE,
-            sizeof(Vertex),
-            reinterpret_cast<void*>(offsetof(Vertex, mTextureCoordinates))
-        );
+        GLint screenAttrPosition { tonemappingShader.getLocationAttribArray("attrPosition") };
+        GLint screenAttrColor { tonemappingShader.getLocationAttribArray("attrColor") };
+        GLint screenAttrTextureCoordinates { tonemappingShader.getLocationAttribArray("attrTextureCoordinates") };
+        if(screenAttrPosition >= 0) {
+            tonemappingShader.enableAttribArray(screenAttrPosition);
+            glVertexAttribPointer(
+                screenAttrPosition,
+                4,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(Vertex),
+                reinterpret_cast<void*>(offsetof(Vertex, mPosition))
+            );
+        }
+        if(screenAttrColor >= 0) {
+            tonemappingShader.enableAttribArray(screenAttrColor);
+            glVertexAttribPointer(
+                screenAttrColor,
+                4,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(Vertex),
+                reinterpret_cast<void*>(offsetof(Vertex, mColor))
+            );
+        }
+        if(screenAttrTextureCoordinates >= 0) {
+            tonemappingShader.enableAttribArray(screenAttrTextureCoordinates);
+            glVertexAttribPointer(
+                screenAttrTextureCoordinates,
+                2,
+                GL_FLOAT,
+                GL_FALSE,
+                sizeof(Vertex),
+                reinterpret_cast<void*>(offsetof(Vertex, mTextureCoordinates))
+            );
+        }
     glBindVertexArray(0);
 
     Model boardPieceModel { "data/models/Generic Board Piece.obj" };
@@ -320,6 +328,7 @@ int main(int argc, char* argv[]) {
             glm::value_ptr(camera.getViewMatrix())
         );
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    float exposure = 1.f;
 
     // Debug: list of screen textures that may be rendered
     const GLuint nScreenTextures {5};
@@ -351,10 +360,15 @@ int main(int argc, char* argv[]) {
                 quit = true;
                 break;
             }
-            if(
-                event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_TAB
-            ) {
+            if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_TAB) {
                 currScreenTexture = (currScreenTexture + 1) % nScreenTextures;
+            }
+            if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_PERIOD) {
+                exposure += .1f;
+            }
+            if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_COMMA) {
+                if (exposure < .1f) exposure = 0.f;
+                else exposure -= .1f; 
             }
             camera.processInput(event);
         }
@@ -433,8 +447,9 @@ int main(int argc, char* argv[]) {
         glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, screenTextures[currScreenTexture]);
         glActiveTexture(GL_TEXTURE0);
-        basicShader.use();
-        basicShader.setUInt("uRenderTexture", 0);
+        tonemappingShader.use();
+        tonemappingShader.setUInt("uRenderTexture", 0);
+        tonemappingShader.setUFloat("uExposure", exposure);
         glBindVertexArray(screenVAO);
             glDrawElements(
                 GL_TRIANGLES,
