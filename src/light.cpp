@@ -133,10 +133,16 @@ GLuint LightCollection::addLight(const Light& light) {
         mDeletedInstanceIDs.pop();
     } else newInstanceID = mNextInstanceID++;
 
+    float sqrt2 {glm::sqrt(2.f)};
+
     glm::mat4 modelMatrix { 
         glm::scale(
             glm::translate(glm::mat4(1.f), glm::vec3(light.mPosition)),
-            glm::vec3(light.calculateRadius(0.05f))
+            light.mType != Light::LightType::directional? 
+                glm::vec3(light.calculateRadius(0.05f)):
+                // scale the sphere so that it encompasses the entire screen for directional
+                //lights
+                glm::vec3(sqrt2, sqrt2, 1.f)
         )
     };
 
@@ -153,11 +159,15 @@ Light LightCollection::getLight(GLuint instanceID) const {
 }
 void LightCollection::updateLight(GLuint instanceID, const Light& light) {
     if(mInstanceLightMap.find(instanceID) == mInstanceLightMap.end()) return;
+    float sqrt2 {glm::sqrt(2.f)};
 
     glm::mat4 modelMatrix { 
         glm::scale(
             glm::translate(glm::mat4(1.f), glm::vec3(light.mPosition)),
-            glm::vec3(light.calculateRadius(0.05f))
+            light.mType != Light::LightType::directional?
+                glm::vec3(light.calculateRadius(0.05f)):
+                // scale the sphere so it encompasses the entire screen, for directional lights
+                glm::vec3(sqrt2, sqrt2, 1.f)
         )
     };
 

@@ -19,8 +19,8 @@ void main() {
     vec4 gPosition = texture(uGeometryPositionMap, textureCoordinates);
     vec4 gNormal = normalize(texture(uGeometryNormalMap, textureCoordinates));
     vec4 gAlbedoSpec = texture(uGeometryAlbedoSpecMap, textureCoordinates);
-    vec4 gAlbedo = vec4(gAlbedoSpec.xyz, 1.f);
-    vec4 gSpecular = vec4(vec3(gAlbedoSpec.w), 1.f);
+    vec4 gAlbedo = vec4(gAlbedoSpec.rgb, 1.f);
+    vec4 gSpecular = vec4(vec3(gAlbedoSpec.a), 1.f);
 
     // Common intermediate calculations
     vec4 eyeDir = vec4(normalize(vec3(-gPosition)), 0.f); //fragment -> eye
@@ -33,7 +33,7 @@ void main() {
     float factorSpecular = factorDiffuse <= 0.f? 0.f: (
         pow(
             max(dot(halfwayDir, gNormal), 0.f),
-            25.f
+            16.f
         )
     );
     float factorAttenuation = 1.f;
@@ -69,4 +69,5 @@ void main() {
     vec4 componentAmbient = fragAttrLightEmission.mAmbientColor * gAlbedo;
 
     outColor = (componentDiffuse + componentSpecular + componentAmbient) * factorAttenuation * factorSpotIntensity;
+    outColor.a = 1.f;
 }

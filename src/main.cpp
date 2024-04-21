@@ -288,9 +288,9 @@ int main(int argc, char* argv[]) {
             4.f,
             13.f,
             glm::vec3(2.f),
-            glm::vec3(2.f),
-            glm::vec3(.1f),
-            .7f,
+            glm::vec3(4.f),
+            glm::vec3(.3f),
+            .07f,
             .03f
         )
     )};
@@ -298,12 +298,18 @@ int main(int argc, char* argv[]) {
         Light::MakePointLight(
             glm::vec3(0.f, 1.5f, -1.f),
             glm::vec3(2.f, 0.6f, 1.2f),
-            glm::vec3(1.5f, 1.04f, .32f),
+            glm::vec3(3.1f, 1.04f, .32f),
             glm::vec3(0.1f, 0.01f, 0.03f),
-            .7f,
+            .07f,
             .02f
         )
     );
+    sceneLights.addLight(Light::MakeDirectionalLight(
+        glm::vec3(0.f, -1.f, 1.f),
+        glm::vec3(20.f),
+        glm::vec3(20.f),
+        glm::vec3(0.2f)
+    ));
     geometryShader.use();
     boardPieceModel.associateShaderProgram(geometryShader.getProgramID());
     lightingShader.use();

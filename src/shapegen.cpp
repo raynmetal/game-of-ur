@@ -94,3 +94,48 @@ Model generateSphereModel(int nLatitude, int nMeridian) {
         mesh
     };
 }
+
+Mesh generateRectangleMesh(float width, float height) {
+    std::vector<Vertex> vertices {
+        {
+            {-width/2.f, height/2.f, 0.f, 1.f},
+            {0.f, 0.f, 1.f, 0.f},
+            {1.f, 0.f, 0.f, 0.f},
+            {1.f, 1.f, 1.f, 1.f},
+            {0.f, 1.f}
+        },
+        {
+            {width/2.f, height/2.f, 0.f, 1.f},
+            {0.f, 0.f, 1.f, 0.f},
+            {1.f, 0.f, 0.f, 0.f},
+            {1.f, 1.f, 1.f, 1.f},
+            {1.f, 1.f}
+        },
+        {
+            {width/2.f, -height/2.f, 0.f, 1.f},
+            {0.f, 0.f, 1.f, 0.f},
+            {1.f, 0.f, 0.f, 0.f},
+            {1.f, 1.f, 1.f, 1.f},
+            {1.f, 0.f}
+        },
+        {
+            {-width/2.f, -height/2.f, 0.f, 1.f},
+            {0.f, 0.f, 1.f, 0.f},
+            {1.f, 0.f, 0.f, 0.f},
+            {1.f, 1.f, 1.f, 1.f},
+            {0.f, 0.f}
+        },
+    };
+    std::vector<GLuint> elements {
+        {0}, {2}, {1},
+        {0}, {3}, {2}
+    };
+    return { vertices, elements, {} };
+}
+
+Model generateRectangleModel(float width, float height) {
+    Mesh mesh { generateRectangleMesh(width, height) };
+    return {
+        mesh
+    };
+}

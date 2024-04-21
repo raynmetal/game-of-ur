@@ -17,8 +17,10 @@ flat out LightEmission fragAttrLightEmission;
 
 void main() {
     // Light volume calculations
-    fragAttr.position = viewMatrix * attrModelMatrix * attrPosition;
     gl_Position = projectionMatrix * viewMatrix * attrModelMatrix * attrPosition;
+    if(attrLightEmission.mType == 0) { // directional lights, ignore matrices and pass attrPosition as is
+        gl_Position = attrModelMatrix * attrPosition;
+    }
 
     // Light placement calculations
     fragAttrLightPlacement.mPosition = viewMatrix * attrLightPlacement.mPosition;
