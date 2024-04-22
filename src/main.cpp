@@ -335,6 +335,7 @@ int main(int argc, char* argv[]) {
         geometryBuffers[0], geometryBuffers[1], geometryBuffers[2],
         lightingBuffers[0], lightingBuffers[1], bloomBuffers[1]
     };
+    float gamma = 2.2f;
 
     //Timing related variables
     GLuint previousTicks { SDL_GetTicks() };
@@ -367,6 +368,14 @@ int main(int argc, char* argv[]) {
             if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_COMMA) {
                 if (exposure < .1f) exposure = 0.f;
                 else exposure -= .1f; 
+            }
+            if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_k) {
+                gamma -= .1f;
+                if(gamma < 1.6f) gamma = 1.6f;
+            }
+            else if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_l) {
+                gamma += .1f;
+                if(gamma > 3.f) gamma = 3.f;
             }
             camera.processInput(event);
         }
@@ -459,6 +468,7 @@ int main(int argc, char* argv[]) {
 
         glDisable(GL_DEPTH_TEST);
         // glEnable(GL_FRAMEBUFFER_SRGB);
+        glDisable(GL_FRAMEBUFFER_SRGB);
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, screenTextures[currScreenTexture]);
@@ -469,6 +479,7 @@ int main(int argc, char* argv[]) {
         tonemappingShader.setUInt("uGenericTexture", 0);
         tonemappingShader.setUInt("uGenericTexture1", 1);
         tonemappingShader.setUFloat("uExposure", exposure);
+        tonemappingShader.setUFloat("uGamma", gamma);
         tonemappingShader.setUBool("uCombine", screenTextures[currScreenTexture] == lightingBuffers[0]);
         screenMesh.draw(tonemappingShader, 1);
         // glDisable(GL_FRAMEBUFFER_SRGB);
