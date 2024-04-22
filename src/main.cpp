@@ -32,11 +32,30 @@ int main(int argc, char* argv[]) {
     std::vector<std::string> tonemappingFsSrc {
         {"src/shader/common/versionHeader.glsl"},
         {"src/shader/common/fragmentAttributes.fs"},
+        {"src/shader/common/genericSampler.fs"},
         {"src/shader/simple_tonemapping/tonemapping.fs"}
     };
     ShaderProgram tonemappingShader { tonemappingVsSrc, tonemappingFsSrc };
     if(!tonemappingShader.getBuildSuccess()) {
         std::cout << "Could not compile tonemapping shader!" << std::endl;
+        return 1;
+    }
+
+    std::vector<std::string> gaussianblurVsSrc {
+        {"src/shader/common/versionHeader.glsl"},
+        {"src/shader/common/fragmentAttributes.vs"},
+        {"src/shader/common/vertexAttributes.vs"},
+        {"src/shader/blur/gaussian.vs"}
+    };
+    std::vector<std::string> gaussianblurFsSrc {
+        {"src/shader/common/versionHeader.glsl"},
+        {"src/shader/common/fragmentAttributes.fs"},
+        {"src/shader/common/genericSampler.fs"},
+        {"src/shader/blur/gaussian.fs"}
+    };
+    ShaderProgram gaussianblurShader { gaussianblurVsSrc, gaussianblurFsSrc };
+    if(!gaussianblurShader.getBuildSuccess()) {
+        std::cout << "Could not compile gaussian blur shader!" << std::endl;
         return 1;
     }
 
@@ -118,6 +137,32 @@ int main(int argc, char* argv[]) {
         // Check for framebuffer completeness
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             std::cout << "ERROR::FRAMEBUFFER: Framebuffer is not complete" << std::endl;
+            return 1;
+        }
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+    GLuint bloomFBO;
+    glGenFramebuffers(1, &bloomFBO);
+    glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+        GLuint bloomBuffers[2];
+        glGenTextures(2, bloomBuffers);
+        for(int i{0}; i < 2; ++i) {
+            glBindTexture(GL_TEXTURE_2D, bloomBuffers[i]);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, gWindowWidth, gWindowHeight, 0, GL_RGBA, GL_FLOAT, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
+            glFramebufferTexture2D(
+                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, bloomBuffers[i], 0
+            );
+        }
+        glBindTexture(GL_TEXTURE_2D, 0); 
+        glDrawBuffer(GL_COLOR_ATTACHMENT0);
+
+        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+            std::cout << "FRAMEBUFFER::ERROR:: Bloom framebuffer is not complete" << std::endl;
+            return 1;
         }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -151,6 +196,7 @@ int main(int argc, char* argv[]) {
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
             std::cout << "ERROR::FRAMEBUFFER: Lighting framebuffer is incomplete" << std::endl;
+            return 1;
         }
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -218,65 +264,11 @@ int main(int argc, char* argv[]) {
     };
 
     // Generate a VAO for rendering to the default framebuffer
-    GLuint screenVAO;
-    GLuint screenVertexBuffer;
-    GLuint screenElementBuffer;
-    glGenVertexArrays(1, &screenVAO);
-    glGenBuffers(1, &screenVertexBuffer);
-    glGenBuffers(1, &screenElementBuffer);
+    Mesh screenMesh{ generateRectangleMesh() };
     tonemappingShader.use();
-    glBindVertexArray(screenVAO);
-        glBindBuffer(GL_ARRAY_BUFFER, screenVertexBuffer);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, screenElementBuffer);
-        glBufferData(
-            GL_ARRAY_BUFFER,
-            screenVertices.size() * sizeof(Vertex),
-            screenVertices.data(),
-            GL_STATIC_DRAW
-        );
-        glBufferData(
-            GL_ELEMENT_ARRAY_BUFFER,
-            screenElements.size() * sizeof(GLuint),
-            screenElements.data(),
-            GL_STATIC_DRAW
-        );
-        GLint screenAttrPosition { tonemappingShader.getLocationAttribArray("attrPosition") };
-        GLint screenAttrColor { tonemappingShader.getLocationAttribArray("attrColor") };
-        GLint screenAttrTextureCoordinates { tonemappingShader.getLocationAttribArray("attrTextureCoordinates") };
-        if(screenAttrPosition >= 0) {
-            tonemappingShader.enableAttribArray(screenAttrPosition);
-            glVertexAttribPointer(
-                screenAttrPosition,
-                4,
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(Vertex),
-                reinterpret_cast<void*>(offsetof(Vertex, mPosition))
-            );
-        }
-        if(screenAttrColor >= 0) {
-            tonemappingShader.enableAttribArray(screenAttrColor);
-            glVertexAttribPointer(
-                screenAttrColor,
-                4,
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(Vertex),
-                reinterpret_cast<void*>(offsetof(Vertex, mColor))
-            );
-        }
-        if(screenAttrTextureCoordinates >= 0) {
-            tonemappingShader.enableAttribArray(screenAttrTextureCoordinates);
-            glVertexAttribPointer(
-                screenAttrTextureCoordinates,
-                2,
-                GL_FLOAT,
-                GL_FALSE,
-                sizeof(Vertex),
-                reinterpret_cast<void*>(offsetof(Vertex, mTextureCoordinates))
-            );
-        }
-    glBindVertexArray(0);
+    screenMesh.associateShaderProgram(tonemappingShader.getProgramID());
+    gaussianblurShader.use();
+    screenMesh.associateShaderProgram(gaussianblurShader.getProgramID());
 
     Model boardPieceModel { "data/models/Generic Board Piece.obj" };
     boardPieceModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
@@ -337,11 +329,11 @@ int main(int argc, char* argv[]) {
     float exposure = 1.f;
 
     // Debug: list of screen textures that may be rendered
-    const GLuint nScreenTextures {5};
+    constexpr GLuint nScreenTextures {6};
     GLuint currScreenTexture {3};
-    const GLuint screenTextures[5] { 
+    const GLuint screenTextures[nScreenTextures] { 
         geometryBuffers[0], geometryBuffers[1], geometryBuffers[2],
-        lightingBuffers[0], lightingBuffers[1]
+        lightingBuffers[0], lightingBuffers[1], bloomBuffers[1]
     };
 
     //Timing related variables
@@ -447,24 +439,39 @@ int main(int argc, char* argv[]) {
             glDisable(GL_BLEND);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
+        gaussianblurShader.use();
+        glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+            glDisable(GL_DEPTH_TEST);
+            glDisable(GL_BLEND);
+            glClear(GL_COLOR_BUFFER_BIT);
+            constexpr int nBlurPasses {6};
+            for(int i{0}; i < nBlurPasses; ++i) {
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, 
+                    i? bloomBuffers[i%2]: lightingBuffers[1]
+                );
+                glDrawBuffer(GL_COLOR_ATTACHMENT0 + (1+i)%2);
+                gaussianblurShader.setUInt("uGenericTexture", 0);
+                gaussianblurShader.setUBool("uHorizontal", i%2);
+                screenMesh.draw(gaussianblurShader, 1);
+            }
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
         glDisable(GL_DEPTH_TEST);
-        glEnable(GL_FRAMEBUFFER_SRGB);
+        // glEnable(GL_FRAMEBUFFER_SRGB);
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, screenTextures[currScreenTexture]);
+        glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, bloomBuffers[1]);
         glActiveTexture(GL_TEXTURE0);
         tonemappingShader.use();
-        tonemappingShader.setUInt("uRenderTexture", 0);
+        tonemappingShader.setUInt("uGenericTexture", 0);
+        tonemappingShader.setUInt("uGenericTexture1", 1);
         tonemappingShader.setUFloat("uExposure", exposure);
-        glBindVertexArray(screenVAO);
-            glDrawElements(
-                GL_TRIANGLES,
-                screenElements.size(),
-                GL_UNSIGNED_INT,
-                reinterpret_cast<void*>(0)
-            );
-        glBindVertexArray(0);
-        glDisable(GL_FRAMEBUFFER_SRGB);
+        tonemappingShader.setUBool("uCombine", screenTextures[currScreenTexture] == lightingBuffers[0]);
+        screenMesh.draw(tonemappingShader, 1);
+        // glDisable(GL_FRAMEBUFFER_SRGB);
 
         SDL_GL_SwapWindow(WindowContextManager::getInstance().getSDLWindow());
     }

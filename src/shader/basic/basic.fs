@@ -2,12 +2,11 @@
 Include:
     - common/versionHeader.glsl
     - common/fragmentAttributes.fs
+    - common/genericSampler.fs
 */
-
-uniform sampler2D uRenderTexture;
 
 out vec4 outColor;
 
 void main() {
-    outColor = fragAttr.color * texture(uRenderTexture, fragAttr.textureCoordinates);
+    outColor = fragAttr.color * texture(uGenericTexture, fragAttr.textureCoordinates);
 }

@@ -6,6 +6,8 @@ Include:
     -common/fragmentAttributes.fs
 */
 
+uniform float uBrightCutoff = 1.f;
+
 in LightPlacement fragAttrLightPlacement;
 flat in LightEmission fragAttrLightEmission;
 
@@ -70,4 +72,8 @@ void main() {
 
     outColor = (componentDiffuse + componentSpecular + componentAmbient) * factorAttenuation * factorSpotIntensity;
     outColor.a = 1.f;
+
+    if(dot(outColor.xyz, vec3(.2f, .7f, .1f)) >= uBrightCutoff) {
+        brightColor =  outColor;
+    }
 }
