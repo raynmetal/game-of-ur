@@ -7,13 +7,13 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "vertex.hpp"
-#include "model.hpp"
-#include "light.hpp"
-#include "fly_camera.hpp"
-#include "window_context_manager.hpp"
-#include "shader_program.hpp"
-#include "shapegen.hpp"
+#include "engine/vertex.hpp"
+#include "engine/model.hpp"
+#include "engine/light.hpp"
+#include "engine/fly_camera.hpp"
+#include "engine/window_context_manager.hpp"
+#include "engine/shader_program.hpp"
+#include "engine/shapegen.hpp"
 
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
@@ -228,41 +228,6 @@ int main(int argc, char* argv[]) {
         2*sizeof(glm::mat4)
     );
 
-    std::vector<Vertex> screenVertices {
-        {
-            {-1.f, -1.f, 0.f, 1.f}, // bottom left
-            {0.f, 0.f, 1.f, 0.f}, // facing +Z
-            glm::vec4(0.f),
-            glm::vec4(1.f), // color multiplier
-            {0.f, 0.f}, // bottom left UV
-        },
-        { 
-            {1.f, -1.f, 0.f, 1.f}, // bottom right
-            {0.f, 0.f, 1.f, 0.f}, // facing +Z
-            glm::vec4(0.f),
-            glm::vec4(1.f),
-            {1.f, 0.f},// bottom right UV
-        },
-        {
-            {1.f, 1.f, 0.f, 1.f}, // top right
-            {0.f, 0.f, 1.f, 0.f}, // facing +Z
-            glm::vec4(0.f),
-            glm::vec4(1.f),
-            {1.f, 1.f}
-        },
-        {
-            {-1.f, 1.f, 0.f, 1.f}, // top left
-            {0.f, 0.f, 1.f, 0.f}, // facing +Z
-            glm::vec4(0.f),
-            glm::vec4(1.f), 
-            {0.f, 1.f}
-        }
-    };
-    std::vector<GLuint> screenElements {
-        {0}, {1}, {2},
-        {0}, {2}, {3}
-    };
-
     // Generate a VAO for rendering to the default framebuffer
     Mesh screenMesh{ generateRectangleMesh() };
     tonemappingShader.use();
@@ -467,7 +432,6 @@ int main(int argc, char* argv[]) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         glDisable(GL_DEPTH_TEST);
-        // glEnable(GL_FRAMEBUFFER_SRGB);
         glDisable(GL_FRAMEBUFFER_SRGB);
         glClear(GL_COLOR_BUFFER_BIT);
         glActiveTexture(GL_TEXTURE0);
@@ -482,7 +446,6 @@ int main(int argc, char* argv[]) {
         tonemappingShader.setUFloat("uGamma", gamma);
         tonemappingShader.setUBool("uCombine", screenTextures[currScreenTexture] == lightingBuffers[0]);
         screenMesh.draw(tonemappingShader, 1);
-        // glDisable(GL_FRAMEBUFFER_SRGB);
 
         SDL_GL_SwapWindow(WindowContextManager::getInstance().getSDLWindow());
     }

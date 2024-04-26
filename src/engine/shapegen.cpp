@@ -3,7 +3,9 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
+#include "vertex.hpp"
 #include "mesh.hpp"
+#include "model.hpp"
 #include "shapegen.hpp"
 
 Mesh generateSphereMesh(int nLatitude, int nMeridian)  {
