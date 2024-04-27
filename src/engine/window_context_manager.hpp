@@ -37,6 +37,9 @@ public:
     /*Removes move assignment operator*/
     WindowContextManager& operator=(const WindowContextManager&& other) = delete;
 
+    /* swap color buffers */
+    void swapBuffers();
+
     /*Accessor for the OpenGL context pointer*/
     SDL_GLContext getGLContext() const;
     /*Accessor for the SDL Window pointer*/

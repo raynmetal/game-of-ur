@@ -54,6 +54,10 @@ WindowContextManager::~WindowContextManager() {
     delete mpAssetImporter;
 }
 
+void WindowContextManager::swapBuffers() {
+    SDL_GL_SwapWindow(mpSDLWindow);
+}
+
 WindowContextManager& WindowContextManager::getInstance(GLuint width, GLuint height) {
     static WindowContextManager instance { width, height };
     return instance;

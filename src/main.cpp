@@ -12,6 +12,7 @@
 #include "engine/light.hpp"
 #include "engine/fly_camera.hpp"
 #include "engine/window_context_manager.hpp"
+#include "engine/texture_manager.hpp"
 #include "engine/shader_program.hpp"
 #include "engine/shapegen.hpp"
 
@@ -19,7 +20,6 @@ extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
 
 void init();
-void handleInput(const SDL_Event& event);
 
 int main(int argc, char* argv[]) {
     init();
@@ -105,20 +105,21 @@ int main(int argc, char* argv[]) {
     GLuint geometryFBO;
     glGenFramebuffers(1, &geometryFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);       // Generate 3 color buffers for storing geometrical information
-        GLuint geometryBuffers[3];
-        GLenum geometryBufferColorInternalFormat[3] { GL_RGBA16F, GL_RGBA16F, GL_RGBA };
         GLenum geometryBufferColorFormat[3] { GL_FLOAT, GL_FLOAT, GL_UNSIGNED_BYTE };
-        glGenTextures(3, geometryBuffers);
+        std::vector<TextureManager::TextureHandle> geometryBufferHandles {};
         for(int i{0}; i < 3; ++i) {
-            glBindTexture(GL_TEXTURE_2D, geometryBuffers[i]);
-                glTexImage2D(GL_TEXTURE_2D, 0, geometryBufferColorInternalFormat[i], gWindowWidth, gWindowHeight, 0, GL_RGBA, geometryBufferColorFormat[i], nullptr);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-                glFramebufferTexture2D(
-                    GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, geometryBuffers[i], 0
-                );
+            geometryBufferHandles.push_back(
+                TextureManager::getInstance().getGeneratedTexture(
+                    std::string("geometryBuffer") + std::to_string(i),
+                    glm::vec2(gWindowWidth, gWindowHeight),
+                    geometryBufferColorFormat[i],
+                    GL_LINEAR,
+                    GL_LINEAR,
+                    GL_CLAMP_TO_EDGE,
+                    GL_CLAMP_TO_EDGE
+                )
+            );
+            geometryBufferHandles[i].attachToFramebuffer(i);
         }
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -144,18 +145,20 @@ int main(int argc, char* argv[]) {
     GLuint bloomFBO;
     glGenFramebuffers(1, &bloomFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
-        GLuint bloomBuffers[2];
-        glGenTextures(2, bloomBuffers);
+        std::vector<TextureManager::TextureHandle> bloomBufferHandles {};
         for(int i{0}; i < 2; ++i) {
-            glBindTexture(GL_TEXTURE_2D, bloomBuffers[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, gWindowWidth, gWindowHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE); 
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, bloomBuffers[i], 0
+            bloomBufferHandles.push_back(
+                TextureManager::getInstance().getGeneratedTexture(
+                    std::string{"bloomBuffer"} + std::to_string(i),
+                    glm::vec2(gWindowWidth, gWindowHeight),
+                    GL_FLOAT,
+                    GL_LINEAR,
+                    GL_LINEAR,
+                    GL_CLAMP_TO_EDGE,
+                    GL_CLAMP_TO_EDGE
+                )
             );
+            bloomBufferHandles[i].attachToFramebuffer(i);
         }
         glBindTexture(GL_TEXTURE_2D, 0); 
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
@@ -169,18 +172,20 @@ int main(int argc, char* argv[]) {
     GLuint lightingFBO;
     glGenFramebuffers(1, &lightingFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
-        GLuint lightingBuffers[2];
-        glGenTextures(2, lightingBuffers);
+        std::vector<TextureManager::TextureHandle> lightingBufferHandles {};
         for(int i {0}; i < 2; ++i) {
-            glBindTexture(GL_TEXTURE_2D, lightingBuffers[i]);
-            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, gWindowWidth, gWindowHeight, 0, GL_RGBA, GL_FLOAT, NULL);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-            glFramebufferTexture2D(
-                GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+i, GL_TEXTURE_2D, lightingBuffers[i], 0
+            lightingBufferHandles.push_back(
+                TextureManager::getInstance().getGeneratedTexture(
+                    std::string("lightingBuffer") + std::to_string(i),
+                    glm::vec2(gWindowWidth, gWindowHeight),
+                    GL_FLOAT,
+                    GL_LINEAR,
+                    GL_LINEAR,
+                    GL_CLAMP_TO_EDGE,
+                    GL_CLAMP_TO_EDGE
+                )
             );
+            lightingBufferHandles[i].attachToFramebuffer(i);
         }
         glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -296,9 +301,10 @@ int main(int argc, char* argv[]) {
     // Debug: list of screen textures that may be rendered
     constexpr GLuint nScreenTextures {6};
     GLuint currScreenTexture {3};
-    const GLuint screenTextures[nScreenTextures] { 
-        geometryBuffers[0], geometryBuffers[1], geometryBuffers[2],
-        lightingBuffers[0], lightingBuffers[1], bloomBuffers[1]
+    const TextureManager::TextureHandle screenTextureHandles[nScreenTextures] {
+        {geometryBufferHandles[0]}, {geometryBufferHandles[1]}, {geometryBufferHandles[2]},
+        {lightingBufferHandles[0]}, {lightingBufferHandles[1]},
+        {bloomBufferHandles[1]}
     };
     float gamma = 2.2f;
 
@@ -390,13 +396,9 @@ int main(int argc, char* argv[]) {
             boardPieceModel.draw(geometryShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, geometryBuffers[0]);
-        glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, geometryBuffers[1]);
-        glActiveTexture(GL_TEXTURE2);
-            glBindTexture(GL_TEXTURE_2D, geometryBuffers[2]);
-        glActiveTexture(GL_TEXTURE0);
+        for(int i{0}; i < 3; ++i) {
+            geometryBufferHandles[i].bind(i);
+        }
         lightingShader.use();
         lightingShader.setUInt("uGeometryPositionMap", 0);
         lightingShader.setUInt("uGeometryNormalMap", 1);
@@ -420,10 +422,9 @@ int main(int argc, char* argv[]) {
             glClear(GL_COLOR_BUFFER_BIT);
             constexpr int nBlurPasses {6};
             for(int i{0}; i < nBlurPasses; ++i) {
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, 
-                    i? bloomBuffers[i%2]: lightingBuffers[1]
-                );
+                    // i? bloomBuffers[i%2]: lightingBuffers[1]
+                if(!i) lightingBufferHandles[1].bind(0);
+                else bloomBufferHandles[i%2].bind(0);
                 glDrawBuffer(GL_COLOR_ATTACHMENT0 + (1+i)%2);
                 gaussianblurShader.setUInt("uGenericTexture", 0);
                 gaussianblurShader.setUBool("uHorizontal", i%2);
@@ -434,20 +435,17 @@ int main(int argc, char* argv[]) {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_FRAMEBUFFER_SRGB);
         glClear(GL_COLOR_BUFFER_BIT);
-        glActiveTexture(GL_TEXTURE0);
-            glBindTexture(GL_TEXTURE_2D, screenTextures[currScreenTexture]);
-        glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, bloomBuffers[1]);
-        glActiveTexture(GL_TEXTURE0);
+        screenTextureHandles[currScreenTexture].bind(0);
+        bloomBufferHandles[1].bind(1);
         tonemappingShader.use();
         tonemappingShader.setUInt("uGenericTexture", 0);
         tonemappingShader.setUInt("uGenericTexture1", 1);
         tonemappingShader.setUFloat("uExposure", exposure);
         tonemappingShader.setUFloat("uGamma", gamma);
-        tonemappingShader.setUBool("uCombine", screenTextures[currScreenTexture] == lightingBuffers[0]);
+        tonemappingShader.setUBool("uCombine", screenTextureHandles[currScreenTexture] == lightingBufferHandles[0]);
         screenMesh.draw(tonemappingShader, 1);
 
-        SDL_GL_SwapWindow(WindowContextManager::getInstance().getSDLWindow());
+        WindowContextManager::getInstance().swapBuffers();
     }
 
     // ... and then die
@@ -457,6 +455,7 @@ int main(int argc, char* argv[]) {
 void init() {
     std::cout << "This program is running" << std::endl;
 
-    // call get instance, just to initialize the window
+    // IMPORTANT: call get instance, just to initialize the window
+    // TODO: stupid name bound to trip me up sooner or later. Replace it.
     WindowContextManager::getInstance(gWindowWidth, gWindowHeight);
 }
