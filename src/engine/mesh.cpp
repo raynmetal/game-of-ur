@@ -7,7 +7,7 @@
 
 #include <glm/glm.hpp>
 
-#include "texture.hpp"
+#include "texture_manager.hpp"
 #include "vertex.hpp"
 
 #include "mesh.hpp"
@@ -33,11 +33,11 @@ void Mesh::bindMaterial(ShaderProgram& shaderProgram) {
     bool usingSpecularMap {false};
 
     GLuint textureUnit {0};
-    for(Texture* pTexture : mpTextures) {
-        glActiveTexture(GL_TEXTURE0 + textureUnit);
-        glBindTexture(GL_TEXTURE_2D, pTexture->getTextureID());
+    // for(Texture* pTexture : mpTextures) {
+    for(const TextureManager::TextureHandle& textureHandle : mTextureHandles) {
+        textureHandle.bind(textureUnit);
         //TODO: allow multiple materials to make up a single mesh
-        switch(pTexture->getUsage()) {
+        switch(textureHandle.getUsage()) {
             case Texture::Albedo:
                 usingAlbedoMap = true;
                 shaderProgram.setUInt("uMaterial.mTextureAlbedo", textureUnit);
@@ -65,11 +65,11 @@ void Mesh::bindMaterial(ShaderProgram& shaderProgram) {
 Mesh::Mesh(
     const std::vector<Vertex>& vertices,
     const std::vector<GLuint>& elements,
-    const std::vector<Texture*>& pTextures
-) : 
+    const std::vector<TextureManager::TextureHandle>& textureHandles
+) :
     mVertices{vertices},
     mElements{elements},
-    mpTextures{pTextures},
+    mTextureHandles{textureHandles},
     mVertexBuffer{0},
     mElementBuffer{0}
 {
@@ -83,7 +83,7 @@ Mesh::~Mesh() {
 Mesh::Mesh(Mesh&& other):
     mVertices {other.mVertices},
     mElements {other.mElements},
-    mpTextures {other.mpTextures},
+    mTextureHandles {other.mTextureHandles},
     mShaderVAOMap {other.mShaderVAOMap},
     mVertexBuffer {other.mVertexBuffer},
     mElementBuffer {other.mElementBuffer},
@@ -96,7 +96,7 @@ Mesh::Mesh(Mesh&& other):
 Mesh::Mesh(const Mesh& other):
     mVertices{other.mVertices},
     mElements{other.mElements},
-    mpTextures{other.mpTextures},
+    mTextureHandles{other.mTextureHandles},
     mVertexBuffer{0},
     mElementBuffer{0}
 {
@@ -111,7 +111,7 @@ Mesh& Mesh::operator=(Mesh&& other) {
 
     mVertices = other.mVertices;
     mElements = other.mElements;
-    mpTextures = other.mpTextures;
+    mTextureHandles = other.mTextureHandles;
     mShaderVAOMap = other.mShaderVAOMap;
     mDirty = other.mDirty;
     mVertexBuffer = other.mVertexBuffer;
@@ -130,7 +130,7 @@ Mesh& Mesh::operator=(const Mesh& other) {
 
     mVertices = other.mVertices;
     mElements = other.mElements;
-    mpTextures = other.mpTextures;
+    mTextureHandles = other.mTextureHandles;
     mVertexBuffer = 0;
     mElementBuffer = 0;
     allocateBuffers();

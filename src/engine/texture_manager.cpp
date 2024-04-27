@@ -27,12 +27,12 @@ TextureManager::TextureHandle TextureManager::getTexture(const std::string& name
         throw std::runtime_error("Texture does not exist");
     }
 
-    return {nameOrFilepath, mTextures[nameOrFilepath].getTextureID()};
+    return {nameOrFilepath, mTextures[nameOrFilepath].getTextureID(), mTextures[nameOrFilepath].getUsage()};
 }
 
 TextureManager::TextureHandle TextureManager::getFileTexture(const std::string& filepath, Texture::Usage usage) {
     if(mTextures.find(filepath) != mTextures.end()) {
-        return {filepath, mTextures[filepath].getTextureID()};
+        return {filepath, mTextures[filepath].getTextureID(), mTextures[filepath].getUsage()};
     }
 
     Texture fileTexture { filepath, usage };
@@ -44,12 +44,12 @@ TextureManager::TextureHandle TextureManager::getFileTexture(const std::string& 
 
     mTextures[filepath] = std::move(fileTexture);
 
-    return { filepath, mTextures[filepath].getTextureID() };
+    return { filepath, mTextures[filepath].getTextureID(), mTextures[filepath].getUsage() };
 }
 
 TextureManager::TextureHandle TextureManager::getGeneratedTexture(const std::string& name, glm::vec2 dimensions, GLenum dataType, GLenum magFilter, GLenum minFilter, GLenum wrapS, GLenum wrapT) {
     if(mTextures.find(name) != mTextures.end()) {
-        return {name, mTextures[name].getTextureID()};
+        return {name, mTextures[name].getTextureID(), mTextures[name].getUsage()};
     }
 
     GLenum colorFormat;
@@ -77,7 +77,7 @@ TextureManager::TextureHandle TextureManager::getGeneratedTexture(const std::str
     }
 
     mTextures[name] = {textureID, Texture::NA};
-    return { name, mTextures[name].getTextureID() };
+    return { name, mTextures[name].getTextureID(), mTextures[name].getUsage() };
 }
 
 void TextureManager::incrementReferenceCount(const std::string& name) {
@@ -119,6 +119,10 @@ std::string TextureManager::TextureHandle::getName() const {
     return mName;
 }
 
+Texture::Usage TextureManager::TextureHandle::getUsage() const {
+    return mUsage;
+}
+
 void TextureManager::TextureHandle::bind(GLuint textureUnit) const {
     glActiveTexture(GL_TEXTURE0 + textureUnit);
         glBindTexture(GL_TEXTURE_2D, mGLHandle);
@@ -132,7 +136,7 @@ void TextureManager::TextureHandle::attachToFramebuffer(GLuint attachmentUnit) c
     );
 }
 
-TextureManager::TextureHandle::TextureHandle(const std::string& name, GLuint glHandle): mName{name}, mGLHandle{glHandle} {
+TextureManager::TextureHandle::TextureHandle(const std::string& name, GLuint glHandle, Texture::Usage usage): mName{name}, mGLHandle{glHandle}, mUsage{usage} {
     TextureManager::getInstance().incrementReferenceCount(mName);
 }
 
@@ -140,11 +144,12 @@ TextureManager::TextureHandle::~TextureHandle(){
     TextureManager::getInstance().decrementReferenceCount(mName);
 }
 
-TextureManager::TextureHandle::TextureHandle(const TextureHandle& other): TextureHandle{other.mName, other.mGLHandle} {}
+TextureManager::TextureHandle::TextureHandle(const TextureHandle& other): TextureHandle{other.mName, other.mGLHandle, other.mUsage} {}
 
 TextureManager::TextureHandle::TextureHandle(TextureHandle&& other) {
     mName = other.mName;
     mGLHandle = other.mGLHandle;
+    mUsage = other.mUsage;
     other.mName = "";
     other.mGLHandle = 0;
 }
@@ -153,6 +158,7 @@ TextureManager::TextureHandle& TextureManager::TextureHandle::operator=(const Te
     if(&other == this) return *this;
     mName = other.mName;
     mGLHandle = other.mGLHandle;
+    mUsage = other.mUsage;
     TextureManager::getInstance().incrementReferenceCount(mName);
 
     return *this;
@@ -162,8 +168,10 @@ TextureManager::TextureHandle& TextureManager::TextureHandle::operator=(TextureH
     if(&other == this) return *this;
     mName = other.mName;
     mGLHandle = other.mGLHandle;
+    mUsage = other.mUsage;
     other.mName = "";
     other.mGLHandle = 0;
+    other.mUsage = Texture::NA;
 
     return *this;
 }
@@ -171,3 +179,4 @@ TextureManager::TextureHandle& TextureManager::TextureHandle::operator=(TextureH
 bool TextureManager::TextureHandle::operator==(const TextureHandle& other) const {
     return mName == other.mName;
 }
+

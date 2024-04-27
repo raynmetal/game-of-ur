@@ -121,7 +121,6 @@ int main(int argc, char* argv[]) {
             );
             geometryBufferHandles[i].attachToFramebuffer(i);
         }
-        glBindTexture(GL_TEXTURE_2D, 0);
 
         //Generate and attach a render buffer for storing depth and stencil values
         GLuint geometryRBO;
@@ -160,7 +159,6 @@ int main(int argc, char* argv[]) {
             );
             bloomBufferHandles[i].attachToFramebuffer(i);
         }
-        glBindTexture(GL_TEXTURE_2D, 0); 
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -187,7 +185,6 @@ int main(int argc, char* argv[]) {
             );
             lightingBufferHandles[i].attachToFramebuffer(i);
         }
-        glBindTexture(GL_TEXTURE_2D, 0);
 
         GLuint lightingRBO;
         glGenRenderbuffers(1, &lightingRBO);

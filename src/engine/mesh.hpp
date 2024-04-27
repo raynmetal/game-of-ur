@@ -7,7 +7,7 @@
 
 #include <GL/glew.h>
 
-#include "texture.hpp"
+#include "texture_manager.hpp"
 #include "vertex.hpp"
 #include "shader_program.hpp"
 
@@ -25,7 +25,7 @@ public:
     Mesh(
         const std::vector<Vertex>& vertices, 
         const std::vector<GLuint>& elements,
-        const std::vector<Texture*>& textures
+        const std::vector<TextureManager::TextureHandle>& textureHandles
     );
 
     /*
@@ -73,9 +73,9 @@ private:
 
     void bindMaterial(ShaderProgram& shaderProgram);
 
-    std::vector<Vertex> mVertices;
-    std::vector<GLuint> mElements;
-    std::vector<Texture*> mpTextures;
+    std::vector<Vertex> mVertices {};
+    std::vector<GLuint> mElements {};
+    std::vector<TextureManager::TextureHandle> mTextureHandles {};
     std::map<GLuint, GLuint> mShaderVAOMap {};
 
     GLuint mVertexBuffer;

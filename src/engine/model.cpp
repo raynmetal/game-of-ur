@@ -11,6 +11,7 @@
 #include <assimp/postprocess.h>
 
 #include "window_context_manager.hpp"
+#include "texture_manager.hpp"
 #include "vertex.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
@@ -29,18 +30,13 @@ Model::Model() {
     allocateBuffers();
 }
 
-Model::Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, std::vector<Texture>&& textures) :
+Model::Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureManager::TextureHandle>& textureHandles) :
     Model()
 {
-    std::swap(mTextures, textures);
-    std::vector<Texture*> pTextures(mTextures.size());
-    for(std::size_t i{0}; i < mTextures.size(); ++i) {
-        pTextures[i] = &mTextures[i];
-    }
     mpHierarchyRoot = new Model::TreeNode {};
     mpHierarchyRoot->mMeshIndices.push_back(0);
     mMeshes.push_back(
-        Mesh{ vertices, elements, pTextures }
+        Mesh{ vertices, elements, textureHandles }
     );
 }
 
@@ -71,15 +67,7 @@ Model::Model(const std::string& filepath): Model() {
     }
 
     mModelpath = filepath;
-    //TODO: pointers to textures in this list are easily broken
-    std::size_t nTextures {0};
-    for(std::size_t i{0}; i < pAiScene->mNumMaterials; ++i) {
-        nTextures += pAiScene->mMaterials[i]->GetTextureCount(aiTextureType_DIFFUSE);
-        nTextures += pAiScene->mMaterials[i]->GetTextureCount(aiTextureType_NORMALS);
-        nTextures += pAiScene->mMaterials[i]->GetTextureCount(aiTextureType_SPECULAR);
-    }
 
-    mTextures.reserve(nTextures); // avoids pointer invalidation from future resizing
     mpHierarchyRoot = processAssimpNode(nullptr, pAiScene->mRootNode, pAiScene);
 }
 
@@ -186,14 +174,12 @@ glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 
 void Model::free() {
     glDeleteBuffers(1, &mMatrixBuffer);
     mMatrixBuffer = 0;
-    mTextures.clear();
     mMeshes.clear();
     deleteTree(mpHierarchyRoot);
 }
 
 void Model::stealResources(Model& other) {
     std::swap(mMeshes, other.mMeshes);
-    std::swap(mTextures, other.mTextures);
 
     mMatrixBuffer = other.mMatrixBuffer;
     mInstanceModelMatrixMap = other.mInstanceModelMatrixMap;
@@ -211,7 +197,6 @@ void Model::stealResources(Model& other) {
 
 void Model::copyResources(const Model& other) {
     mMeshes = other.mMeshes;
-    mTextures = other.mTextures;
 
     mInstanceModelMatrixMap = other.mInstanceModelMatrixMap;
     mDeletedInstanceIDs = other.mDeletedInstanceIDs;
@@ -289,7 +274,7 @@ Model::TreeNode* Model::processAssimpNode(Model::TreeNode* pParentNode, aiNode* 
 Mesh Model::processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene) {
     std::vector<Vertex> vertices;
     std::vector<GLuint> elements;
-    std::vector<Texture*> pTextures;
+    std::vector<TextureManager::TextureHandle> textureHandles;
 
     // Load vertex data
     for(std::size_t i{0}; i < pAiMesh->mNumVertices; ++i) {
@@ -334,27 +319,27 @@ Mesh Model::processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene) {
             pAiScene->mMaterials[pAiMesh->mMaterialIndex]
         };
 
-        std::vector<Texture*> pMapsAlbedo {
+        std::vector<TextureManager::TextureHandle> textureHandlesAlbedo{
             loadAssimpTextures(pAiMaterial, Texture::Albedo)
         };
-        std::vector<Texture*> pMapsNormal {
+        std::vector<TextureManager::TextureHandle> textureHandlesNormal {
             loadAssimpTextures(pAiMaterial, Texture::Normal)
         };
-        std::vector<Texture*> pMapsSpecular {
+        std::vector<TextureManager::TextureHandle> textureHandlesSpecular {
             loadAssimpTextures(pAiMaterial, Texture::Specular)
         };
 
-        pTextures.insert(pTextures.end(), pMapsAlbedo.begin(), pMapsAlbedo.end());
-        pTextures.insert(pTextures.end(), pMapsNormal.begin(), pMapsNormal.end());
-        pTextures.insert(pTextures.end(), pMapsSpecular.begin(), pMapsSpecular.end());
+        textureHandles.insert(textureHandles.end(), textureHandlesAlbedo.begin(), textureHandlesAlbedo.end());
+        textureHandles.insert(textureHandles.end(), textureHandlesNormal.begin(), textureHandlesNormal.end());
+        textureHandles.insert(textureHandles.end(), textureHandlesSpecular.begin(), textureHandlesSpecular.end());
     }
 
     return {
-        vertices, elements, pTextures
+        vertices, elements, textureHandles
     };
 }
 
-std::vector<Texture*> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage) {
+std::vector<TextureManager::TextureHandle> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage) {
     // Determine assimp's representation of type of textures being loaded
     std::map<Texture::Usage, aiTextureType> kUsageTypeMap {
         { Texture::Albedo, aiTextureType_DIFFUSE },
@@ -365,7 +350,7 @@ std::vector<Texture*> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Texture
 
     // build up a list of texture pointers, adding textures
     // to this model if it isn't already present
-    std::vector<Texture*> pTextures {};
+    std::vector<TextureManager::TextureHandle> textureHandles {};
     std::size_t textureCount {
         pAiMaterial->GetTextureCount(
             kUsageTypeMap[usage]
@@ -375,17 +360,12 @@ std::vector<Texture*> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Texture
         aiString aiTextureName;
         pAiMaterial->GetTexture(type, i, &aiTextureName);
         std::string textureName { aiTextureName.C_Str() };
-
-        if(mLoadedTextures.find(textureName) == mLoadedTextures.end()) {
-            std::string texturePath { textureName };
-            mTextures.push_back({ texturePath, usage });
-            mLoadedTextures[textureName] = std::addressof(mTextures.back());
-        } 
-
-        pTextures.push_back(mLoadedTextures[textureName]);
+        textureHandles.push_back(
+            TextureManager::getInstance().getFileTexture(textureName, usage)
+        );
     }
 
-    return pTextures;
+    return textureHandles;
 }
 
 void Model::associateShaderProgram(GLuint programID) {

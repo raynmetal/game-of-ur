@@ -29,6 +29,8 @@ public:
 
         /* returns a copy of the (unique) name string for this texture */
         std::string getName() const;
+        /* returns the usage type of the texture being referred to */
+        Texture::Usage getUsage() const;
 
         /* binds texture to specified texture unit */
         void bind(GLuint textureUnit=0) const;
@@ -38,10 +40,11 @@ public:
 
     private: 
         /* creates a texture handle. can't be called outside outer class*/
-        TextureHandle(const std::string& name, GLuint glHandle);
+        TextureHandle(const std::string& name, GLuint glHandle, Texture::Usage usage);
 
         std::string mName;
         GLuint mGLHandle;
+        Texture::Usage mUsage {Texture::NA};
 
     friend class TextureManager;
     };
