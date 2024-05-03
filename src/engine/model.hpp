@@ -30,7 +30,7 @@ public:
     /* load a model from the specified file path */
     Model(const std::string& filepath);
     /* create a mesh out of a list of textures and vertices, store them in this model */
-    Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureManager::TextureHandle>& textureHandles);
+    Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureHandle>& textureHandles);
     /* create a model with a single mesh */
     Model(const Mesh& mesh);
 
@@ -100,7 +100,7 @@ private:
     TreeNode* processAssimpNode(TreeNode* pParentNode, aiNode* pAiNode, const aiScene* pAiScene);
     Mesh processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene);
 
-    std::vector<TextureManager::TextureHandle> loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage);
+    std::vector<TextureHandle> loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage);
 
     // /*
     // Textures used by meshes belonging to this model

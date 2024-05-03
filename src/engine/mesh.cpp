@@ -33,11 +33,10 @@ void Mesh::bindMaterial(ShaderProgram& shaderProgram) {
     bool usingSpecularMap {false};
 
     GLuint textureUnit {0};
-    // for(Texture* pTexture : mpTextures) {
-    for(const TextureManager::TextureHandle& textureHandle : mTextureHandles) {
-        textureHandle.bind(textureUnit);
+    for(const TextureHandle& textureHandle : mTextureHandles) {
+        textureHandle.getResource().bind(textureUnit);
         //TODO: allow multiple materials to make up a single mesh
-        switch(textureHandle.getUsage()) {
+        switch(textureHandle.getResource().getUsage()) {
             case Texture::Albedo:
                 usingAlbedoMap = true;
                 shaderProgram.setUInt("uMaterial.mTextureAlbedo", textureUnit);
@@ -65,7 +64,7 @@ void Mesh::bindMaterial(ShaderProgram& shaderProgram) {
 Mesh::Mesh(
     const std::vector<Vertex>& vertices,
     const std::vector<GLuint>& elements,
-    const std::vector<TextureManager::TextureHandle>& textureHandles
+    const std::vector<TextureHandle>& textureHandles
 ) :
     mVertices{vertices},
     mElements{elements},

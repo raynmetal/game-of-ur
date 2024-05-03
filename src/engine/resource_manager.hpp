@@ -14,7 +14,7 @@ class ResourceManager;
 
 template <typename T>
 class IResource {
-private:
+protected:
     /*
     Destroys the resource tied to this object, which could be a file handle,
     dynamically allocated memory, an open file handle, a device, and so on.
@@ -137,7 +137,7 @@ ResourceHandle<T> ResourceManager<T>::registerResource(const std::string& nameOr
     }
     else {
         //assumes T has implemented move semantics
-        mResources[nameOrLocation] = resource;
+        mResources[nameOrLocation] = std::move(resource);
         //redundant call to release()
         resource.releaseResource();
     }

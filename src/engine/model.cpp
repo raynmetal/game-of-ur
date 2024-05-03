@@ -30,7 +30,7 @@ Model::Model() {
     allocateBuffers();
 }
 
-Model::Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureManager::TextureHandle>& textureHandles) :
+Model::Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureHandle>& textureHandles) :
     Model()
 {
     mpHierarchyRoot = new Model::TreeNode {};
@@ -274,7 +274,7 @@ Model::TreeNode* Model::processAssimpNode(Model::TreeNode* pParentNode, aiNode* 
 Mesh Model::processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene) {
     std::vector<Vertex> vertices;
     std::vector<GLuint> elements;
-    std::vector<TextureManager::TextureHandle> textureHandles;
+    std::vector<TextureHandle> textureHandles;
 
     // Load vertex data
     for(std::size_t i{0}; i < pAiMesh->mNumVertices; ++i) {
@@ -319,13 +319,13 @@ Mesh Model::processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene) {
             pAiScene->mMaterials[pAiMesh->mMaterialIndex]
         };
 
-        std::vector<TextureManager::TextureHandle> textureHandlesAlbedo{
+        std::vector<TextureHandle> textureHandlesAlbedo{
             loadAssimpTextures(pAiMaterial, Texture::Albedo)
         };
-        std::vector<TextureManager::TextureHandle> textureHandlesNormal {
+        std::vector<TextureHandle> textureHandlesNormal {
             loadAssimpTextures(pAiMaterial, Texture::Normal)
         };
-        std::vector<TextureManager::TextureHandle> textureHandlesSpecular {
+        std::vector<TextureHandle> textureHandlesSpecular {
             loadAssimpTextures(pAiMaterial, Texture::Specular)
         };
 
@@ -339,7 +339,7 @@ Mesh Model::processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene) {
     };
 }
 
-std::vector<TextureManager::TextureHandle> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage) {
+std::vector<TextureHandle> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage) {
     // Determine assimp's representation of type of textures being loaded
     std::map<Texture::Usage, aiTextureType> kUsageTypeMap {
         { Texture::Albedo, aiTextureType_DIFFUSE },
@@ -350,7 +350,7 @@ std::vector<TextureManager::TextureHandle> Model::loadAssimpTextures(aiMaterial*
 
     // build up a list of texture pointers, adding textures
     // to this model if it isn't already present
-    std::vector<TextureManager::TextureHandle> textureHandles {};
+    std::vector<TextureHandle> textureHandles {};
     std::size_t textureCount {
         pAiMaterial->GetTextureCount(
             kUsageTypeMap[usage]
@@ -361,7 +361,10 @@ std::vector<TextureManager::TextureHandle> Model::loadAssimpTextures(aiMaterial*
         pAiMaterial->GetTexture(type, i, &aiTextureName);
         std::string textureName { aiTextureName.C_Str() };
         textureHandles.push_back(
-            TextureManager::getInstance().getFileTexture(textureName, usage)
+            TextureManager::getInstance().registerResource(
+                textureName,
+                Texture(textureName, usage)
+            )
         );
     }
 

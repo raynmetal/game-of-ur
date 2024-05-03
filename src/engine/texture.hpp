@@ -7,7 +7,7 @@
 
 #include "resource_manager.hpp"
 
-class Texture : IResource<Texture> {
+class Texture : public IResource<Texture> {
 public:
     enum Usage {
         NA,
@@ -18,9 +18,16 @@ public:
 
     /* Load texture directly from file */
     Texture(const std::string& filepath, const Usage usage=NA);
+
     /* Assume texture was manually loaded elsewhere, and store its 
     properties here */
     Texture(GLuint textureID, const Usage usage);
+
+    /*
+    Generates the texture described by the arguments
+    */
+    Texture(glm::vec2 dimensions, GLenum dataType, GLenum magFilter, GLenum minFilter, GLenum wrapS, GLenum wrapT);
+
     /* Load an empty texture object, with an mID of 0 indicating
     that there is no texture here */
     Texture();
@@ -42,6 +49,12 @@ public:
     bool loadFromFile(const std::string& filepath);
     /* basic deallocate function */
     virtual void free();
+
+    /* binds this texture to the specified texture unit */
+    void bind(GLuint textureUnit) const;
+
+    /* attaches this texture to a (presumably existing and bound) framebuffer*/
+    void attachToFramebuffer(GLuint attachmentUnit) const;
 
     /* texture ID getter */
     GLuint getTextureID() const;
@@ -68,6 +81,8 @@ protected:
 
     /* removes references to (OpenGL managed) texture tied to this object */
     void releaseResource() override;
+
+    friend class ResourceManager<Texture>;
 };
 
 #endif

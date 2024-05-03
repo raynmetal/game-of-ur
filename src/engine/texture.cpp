@@ -4,6 +4,7 @@
 
 #include <SDL2/SDL.h>
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 #include <SDL2/SDL_image.h>
 
 #include "texture.hpp"
@@ -22,6 +23,21 @@ Texture::Texture(GLuint textureID, const Usage type): mID{textureID}, mFilepath{
 {}
 Texture::Texture(): mID{0}, mFilepath{""}, mUsage{Usage::NA} 
 {}
+
+Texture::Texture(glm::vec2 dimensions, GLenum dataType, GLenum magFilter, GLenum minFilter, GLenum wrapS, GLenum wrapT) {
+    glGenTextures(1, &mID);
+    glBindTexture(GL_TEXTURE_2D, mID);
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, dataType == GL_FLOAT? GL_RGBA16F: GL_RGBA, 
+            dimensions.x, dimensions.y, 0, GL_RGBA, dataType, NULL
+        );
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
 
 Texture::Texture(Texture&& other) noexcept: mID{other.mID}, mFilepath{other.mFilepath}, mUsage{other.mUsage} {
     //Prevent other from destroying this texture when its
@@ -247,4 +263,20 @@ void Texture::releaseResource() {
     mID = 0;
     mUsage = Usage::NA;
     mFilepath = "";
+}
+
+void Texture::bind(GLuint textureUnit) const {
+    glActiveTexture(GL_TEXTURE0 + textureUnit);
+        glBindTexture(GL_TEXTURE_2D, mID);
+    glActiveTexture(GL_TEXTURE0);
+}
+
+void Texture::attachToFramebuffer(GLuint attachmentUnit) const {
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER,
+        GL_COLOR_ATTACHMENT0 + attachmentUnit,
+        GL_TEXTURE_2D,
+        mID,
+        0
+    );
 }

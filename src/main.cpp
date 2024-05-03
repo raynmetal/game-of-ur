@@ -106,20 +106,22 @@ int main(int argc, char* argv[]) {
     glGenFramebuffers(1, &geometryFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);       // Generate 3 color buffers for storing geometrical information
         GLenum geometryBufferColorFormat[3] { GL_FLOAT, GL_FLOAT, GL_UNSIGNED_BYTE };
-        std::vector<TextureManager::TextureHandle> geometryBufferHandles {};
+        std::vector<TextureHandle> geometryBufferHandles {};
         for(int i{0}; i < 3; ++i) {
             geometryBufferHandles.push_back(
-                TextureManager::getInstance().getGeneratedTexture(
+                TextureManager::getInstance().registerResource(
                     std::string("geometryBuffer") + std::to_string(i),
-                    glm::vec2(gWindowWidth, gWindowHeight),
-                    geometryBufferColorFormat[i],
-                    GL_LINEAR,
-                    GL_LINEAR,
-                    GL_CLAMP_TO_EDGE,
-                    GL_CLAMP_TO_EDGE
+                    {
+                        glm::vec2(gWindowWidth, gWindowHeight),
+                        geometryBufferColorFormat[i],
+                        GL_LINEAR,
+                        GL_LINEAR,
+                        GL_CLAMP_TO_EDGE,
+                        GL_CLAMP_TO_EDGE
+                    }
                 )
             );
-            geometryBufferHandles[i].attachToFramebuffer(i);
+            geometryBufferHandles[i].getResource().attachToFramebuffer(i);
         }
 
         //Generate and attach a render buffer for storing depth and stencil values
@@ -144,20 +146,22 @@ int main(int argc, char* argv[]) {
     GLuint bloomFBO;
     glGenFramebuffers(1, &bloomFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
-        std::vector<TextureManager::TextureHandle> bloomBufferHandles {};
+        std::vector<TextureHandle> bloomBufferHandles {};
         for(int i{0}; i < 2; ++i) {
             bloomBufferHandles.push_back(
-                TextureManager::getInstance().getGeneratedTexture(
+                TextureManager::getInstance().registerResource(
                     std::string{"bloomBuffer"} + std::to_string(i),
-                    glm::vec2(gWindowWidth, gWindowHeight),
-                    GL_FLOAT,
-                    GL_LINEAR,
-                    GL_LINEAR,
-                    GL_CLAMP_TO_EDGE,
-                    GL_CLAMP_TO_EDGE
+                    {
+                        glm::vec2(gWindowWidth, gWindowHeight),
+                        GL_FLOAT,
+                        GL_LINEAR,
+                        GL_LINEAR,
+                        GL_CLAMP_TO_EDGE,
+                        GL_CLAMP_TO_EDGE
+                    }
                 )
             );
-            bloomBufferHandles[i].attachToFramebuffer(i);
+            bloomBufferHandles[i].getResource().attachToFramebuffer(i);
         }
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
 
@@ -170,20 +174,22 @@ int main(int argc, char* argv[]) {
     GLuint lightingFBO;
     glGenFramebuffers(1, &lightingFBO);
     glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
-        std::vector<TextureManager::TextureHandle> lightingBufferHandles {};
+        std::vector<TextureHandle> lightingBufferHandles {};
         for(int i {0}; i < 2; ++i) {
             lightingBufferHandles.push_back(
-                TextureManager::getInstance().getGeneratedTexture(
+                TextureManager::getInstance().registerResource(
                     std::string("lightingBuffer") + std::to_string(i),
-                    glm::vec2(gWindowWidth, gWindowHeight),
-                    GL_FLOAT,
-                    GL_LINEAR,
-                    GL_LINEAR,
-                    GL_CLAMP_TO_EDGE,
-                    GL_CLAMP_TO_EDGE
+                    {
+                        glm::vec2(gWindowWidth, gWindowHeight),
+                        GL_FLOAT,
+                        GL_LINEAR,
+                        GL_LINEAR,
+                        GL_CLAMP_TO_EDGE,
+                        GL_CLAMP_TO_EDGE
+                    }
                 )
             );
-            lightingBufferHandles[i].attachToFramebuffer(i);
+            lightingBufferHandles[i].getResource().attachToFramebuffer(i);
         }
 
         GLuint lightingRBO;
@@ -298,7 +304,7 @@ int main(int argc, char* argv[]) {
     // Debug: list of screen textures that may be rendered
     constexpr GLuint nScreenTextures {6};
     GLuint currScreenTexture {3};
-    const TextureManager::TextureHandle screenTextureHandles[nScreenTextures] {
+    const TextureHandle screenTextureHandles[nScreenTextures] {
         {geometryBufferHandles[0]}, {geometryBufferHandles[1]}, {geometryBufferHandles[2]},
         {lightingBufferHandles[0]}, {lightingBufferHandles[1]},
         {bloomBufferHandles[1]}
@@ -394,7 +400,7 @@ int main(int argc, char* argv[]) {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         for(int i{0}; i < 3; ++i) {
-            geometryBufferHandles[i].bind(i);
+            geometryBufferHandles[i].getResource().bind(i);
         }
         lightingShader.use();
         lightingShader.setUInt("uGeometryPositionMap", 0);
@@ -420,8 +426,8 @@ int main(int argc, char* argv[]) {
             constexpr int nBlurPasses {6};
             for(int i{0}; i < nBlurPasses; ++i) {
                     // i? bloomBuffers[i%2]: lightingBuffers[1]
-                if(!i) lightingBufferHandles[1].bind(0);
-                else bloomBufferHandles[i%2].bind(0);
+                if(!i) lightingBufferHandles[1].getResource().bind(0);
+                else bloomBufferHandles[i%2].getResource().bind(0);
                 glDrawBuffer(GL_COLOR_ATTACHMENT0 + (1+i)%2);
                 gaussianblurShader.setUInt("uGenericTexture", 0);
                 gaussianblurShader.setUBool("uHorizontal", i%2);
@@ -432,8 +438,8 @@ int main(int argc, char* argv[]) {
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_FRAMEBUFFER_SRGB);
         glClear(GL_COLOR_BUFFER_BIT);
-        screenTextureHandles[currScreenTexture].bind(0);
-        bloomBufferHandles[1].bind(1);
+        screenTextureHandles[currScreenTexture].getResource().bind(0);
+        bloomBufferHandles[1].getResource().bind(1);
         tonemappingShader.use();
         tonemappingShader.setUInt("uGenericTexture", 0);
         tonemappingShader.setUInt("uGenericTexture1", 1);
