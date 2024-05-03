@@ -130,9 +130,8 @@ void Texture::free() {
 
     std::cout << "Texture " << mID << " is being freed" << std::endl;
     glDeleteTextures(1, &mID);
-    mID = 0;
-    mUsage = Usage::NA;
-    mFilepath = "";
+
+    releaseResource();
 }
 
 GLuint Texture::getTextureID() const { return mID; }
@@ -238,4 +237,14 @@ void Texture::copyImage(const Texture& other)  {
     GLuint error {glGetError()};
     if(error != 0)
         std::cout << "Error while copying texture: " << glewGetErrorString(error) << std::endl;
+}
+
+void Texture::destroyResource() {
+    free();
+}
+
+void Texture::releaseResource() {
+    mID = 0;
+    mUsage = Usage::NA;
+    mFilepath = "";
 }

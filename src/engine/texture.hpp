@@ -5,7 +5,9 @@
 
 #include <GL/glew.h>
 
-class Texture {
+#include "resource_manager.hpp"
+
+class Texture : IResource<Texture> {
 public:
     enum Usage {
         NA,
@@ -13,6 +15,7 @@ public:
         Normal,
         Specular
     };
+
     /* Load texture directly from file */
     Texture(const std::string& filepath, const Usage usage=NA);
     /* Assume texture was manually loaded elsewhere, and store its 
@@ -59,6 +62,12 @@ protected:
     std::string mFilepath;
     /* This texture's type, essentially indicating its usage */
     Usage mUsage;
+
+    /* destroys (OpenGL managed) texture tied to this object */
+    void destroyResource() override;
+
+    /* removes references to (OpenGL managed) texture tied to this object */
+    void releaseResource() override;
 };
 
 #endif
