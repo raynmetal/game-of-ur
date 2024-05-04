@@ -241,6 +241,20 @@ int main(int argc, char* argv[]) {
     screenMesh.associateShaderProgram(tonemappingShader.getProgramID());
     gaussianblurShader.use();
     screenMesh.associateShaderProgram(gaussianblurShader.getProgramID());
+    
+    {
+        TextureManager::getInstance().registerResource(
+            "bloomBuffer1",
+            {
+                glm::vec2(gWindowWidth, gWindowHeight),
+                GL_FLOAT,
+                GL_LINEAR,
+                GL_LINEAR,
+                GL_CLAMP_TO_EDGE,
+                GL_CLAMP_TO_EDGE
+            }
+        );
+    }
 
     ModelHandle boardPieceModelHandle { 
         ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"}) 
@@ -260,6 +274,10 @@ int main(int argc, char* argv[]) {
             .03f
         )
     )};
+    {
+        ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"});
+    }
+
     sceneLights.addLight(
         Light::MakePointLight(
             glm::vec3(0.f, 1.5f, -1.f),

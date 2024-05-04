@@ -176,6 +176,7 @@ void Model::free() {
     mMatrixBuffer = 0;
     mMeshes.clear();
     deleteTree(mpHierarchyRoot);
+    mpHierarchyRoot = nullptr;
 }
 
 void Model::stealResources(Model& other) {
