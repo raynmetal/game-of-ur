@@ -6,13 +6,6 @@
 #include <vector>
 #include <map>
 
-template<typename T>
-class ResourceHandle;
-
-template<typename T>
-class ResourceManager;
-
-template <typename T>
 class IResource {
 protected:
     /*
@@ -27,9 +20,10 @@ protected:
     a device, and so on)
     */
     virtual void releaseResource() = 0;
-
-friend class ResourceManager<T>;
 };
+
+template <typename T>
+class ResourceHandle;
 
 template<typename T>
 class ResourceManager {
@@ -100,7 +94,7 @@ public:
     std::string getName() const;
 
     /* returns a constant reference to the resource pointed to by this handle */
-    const T& getResource() const;
+    T& getResource() const;
 private:
     /* constructor for resource handle, callable only by the resource manager */
     ResourceHandle(const std::string& name);
@@ -193,7 +187,7 @@ std::string ResourceHandle<T>::getName() const {
 }
 
 template <typename T>
-const T& ResourceHandle<T>::getResource() const {
+T& ResourceHandle<T>::getResource() const {
     return ResourceManager<T>::getInstance().ResourceManager<T>::mResources[mName];
 }
 

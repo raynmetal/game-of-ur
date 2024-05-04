@@ -17,8 +17,9 @@
 #include "texture.hpp"
 #include "texture_manager.hpp"
 #include "mesh.hpp"
+#include "resource_manager.hpp"
 
-class Model {
+class Model : IResource {
 public:
     struct TreeNode {
         std::vector<GLint> mMeshIndices {};
@@ -26,6 +27,8 @@ public:
         TreeNode* mpParent {nullptr};
         std::vector<TreeNode*> mpChildren {};
     };
+
+    Model();
 
     /* load a model from the specified file path */
     Model(const std::string& filepath);
@@ -69,7 +72,6 @@ public:
     void draw(ShaderProgram& shaderProgram);
 
 private:
-    Model();
 
     /* updates buffers stored in GPU */
     void updateBuffers();
@@ -102,10 +104,8 @@ private:
 
     std::vector<TextureHandle> loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage);
 
-    // /*
-    // Textures used by meshes belonging to this model
-    // */
-    // std::vector<Texture> mTextures {};
+    void destroyResource() override;
+    void releaseResource() override;
 
     /*
     Meshes that make up this model
@@ -130,6 +130,7 @@ private:
     GLuint mInstanceCapacity {128};
     bool mDirty {true};
 
+friend class ResourceManager<Model>;
 };
 
 #endif

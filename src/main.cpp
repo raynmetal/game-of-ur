@@ -7,12 +7,11 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "engine/vertex.hpp"
-#include "engine/model.hpp"
 #include "engine/light.hpp"
 #include "engine/fly_camera.hpp"
 #include "engine/window_context_manager.hpp"
 #include "engine/texture_manager.hpp"
+#include "engine/model_manager.hpp"
 #include "engine/shader_program.hpp"
 #include "engine/shapegen.hpp"
 
@@ -243,8 +242,10 @@ int main(int argc, char* argv[]) {
     gaussianblurShader.use();
     screenMesh.associateShaderProgram(gaussianblurShader.getProgramID());
 
-    Model boardPieceModel { "data/models/Generic Board Piece.obj" };
-    boardPieceModel.addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
+    ModelHandle boardPieceModelHandle { 
+        ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"}) 
+    };
+    boardPieceModelHandle.getResource().addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
     LightCollection sceneLights {};
     GLuint flashlight { sceneLights.addLight(
         Light::MakeSpotLight(
@@ -276,7 +277,7 @@ int main(int argc, char* argv[]) {
         glm::vec3(0.2f)
     ));
     geometryShader.use();
-    boardPieceModel.associateShaderProgram(geometryShader.getProgramID());
+    boardPieceModelHandle.getResource().associateShaderProgram(geometryShader.getProgramID());
     lightingShader.use();
     sceneLights.associateShaderProgram(lightingShader.getProgramID());
 
@@ -396,7 +397,7 @@ int main(int argc, char* argv[]) {
         glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            boardPieceModel.draw(geometryShader);
+            boardPieceModelHandle.getResource().draw(geometryShader);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         for(int i{0}; i < 3; ++i) {

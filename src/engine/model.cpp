@@ -191,8 +191,7 @@ void Model::stealResources(Model& other) {
 
     // Prevent other from destroying our resources when its
     // destructor is called
-    other.mMatrixBuffer = 0;
-    other.mpHierarchyRoot = nullptr;
+    other.releaseResource();
 }
 
 void Model::copyResources(const Model& other) {
@@ -410,4 +409,15 @@ void Model::disassociateShaderProgram(GLuint programID) {
     for(Mesh& mesh: mMeshes) {
         mesh.disassociateShaderProgram(programID);
     }
+}
+
+void Model::destroyResource() {
+    free();
+}
+
+void Model::releaseResource() {
+    // Prevent this from destroying its resources when its
+    // destructor is called. 
+    mMatrixBuffer = 0;
+    mpHierarchyRoot = nullptr;
 }

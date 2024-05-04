@@ -7,7 +7,7 @@
 
 #include "resource_manager.hpp"
 
-class Texture : public IResource<Texture> {
+class Texture : public IResource {
 public:
     enum Usage {
         NA,
@@ -82,7 +82,7 @@ protected:
     /* removes references to (OpenGL managed) texture tied to this object */
     void releaseResource() override;
 
-    friend class ResourceManager<Texture>;
+friend class ResourceManager<Texture>;
 };
 
 #endif
