@@ -89,12 +89,16 @@ public:
 
     /* compares equality between two handles of the same underlying resource type */
     bool operator==(const ResourceHandle& other) const;
+    /* implementation of operator<, for use with various STL containers. Uses resource handle 
+    names for comparisons*/
+    bool operator<(const ResourceHandle& other) const;
 
     /* returns a name string for this handle*/
     std::string getName() const;
 
-    /* returns a constant reference to the resource pointed to by this handle */
+    /* returns a reference to the resource pointed to by this handle */
     T& getResource() const;
+
 private:
     /* constructor for resource handle, callable only by the resource manager */
     ResourceHandle(const std::string& name);
@@ -232,6 +236,10 @@ ResourceHandle<T>& ResourceHandle<T>::operator=(ResourceHandle<T>&& other) {
 template <typename T>
 bool ResourceHandle<T>::operator==(const ResourceHandle<T>& other) const {
     return mName == other.mName;
+}
+template <typename T>
+bool ResourceHandle<T>::operator<(const ResourceHandle<T>& other) const {
+    return mName < other.mName;
 }
 
 template <typename T>

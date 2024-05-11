@@ -30,22 +30,22 @@ LightCollection& LightCollection::operator=(const LightCollection& other) {
     return *this;
 }
 
-void LightCollection::draw(ShaderProgram& shaderProgram) {
+void LightCollection::draw(ShaderProgramHandle shaderProgramHandle) {
     updateBuffers();
 
-    shaderProgram.use();
-    mLightVolume.draw(shaderProgram, mInstanceLightMap.size());
+    shaderProgramHandle.getResource().use();
+    mLightVolume.draw(shaderProgramHandle, mInstanceLightMap.size());
 }
 
-void LightCollection::associateShaderProgram(GLuint programID) {
-    glUseProgram(programID);
+void LightCollection::associateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
+    glUseProgram(shaderProgramHandle.getResource().getProgramID());
     //TODO: set light and matrix instance pointers for this shader+mesh's
-    mLightVolume.associateShaderProgram(programID);
+    mLightVolume.associateShaderProgram(shaderProgramHandle);
 
-    GLuint shaderVAO { mLightVolume.getShaderVAO(programID) };
+    GLuint shaderVAO { mLightVolume.getShaderVAO(shaderProgramHandle) };
     glBindVertexArray(shaderVAO);
         glBindBuffer(GL_ARRAY_BUFFER, mModelMatrixBuffer);
-            GLint attrModelMatrix { glGetAttribLocation(programID, "attrModelMatrix") };
+            GLint attrModelMatrix { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrModelMatrix") };
             for(int i{0}; i < 4; ++i) {
                 glEnableVertexAttribArray(attrModelMatrix+i);
                 glVertexAttribPointer(
@@ -59,16 +59,16 @@ void LightCollection::associateShaderProgram(GLuint programID) {
                 glVertexAttribDivisor(attrModelMatrix+i, 1);
             }
         glBindBuffer(GL_ARRAY_BUFFER, mLightBuffer);
-            GLint attrLightPlacementPosition { glGetAttribLocation(programID, "attrLightPlacement.mPosition") };
-            GLint attrLightPlacementDirection { glGetAttribLocation(programID, "attrLightPlacement.mDirection") };
-            GLint attrLightEmissionDiffuseColor { glGetAttribLocation(programID, "attrLightEmission.mDiffuseColor") };
-            GLint attrLightEmissionSpecularColor { glGetAttribLocation(programID, "attrLightEmission.mSpecularColor") };
-            GLint attrLightEmissionAmbientColor { glGetAttribLocation(programID, "attrLightEmission.mAmbientColor") };
-            GLint attrLightEmissionType { glGetAttribLocation(programID, "attrLightEmission.mType") };
-            GLint attrLightEmissionDecayLinear { glGetAttribLocation(programID, "attrLightEmission.mDecayLinear") };
-            GLint attrLightEmissionDecayQuadratic { glGetAttribLocation(programID, "attrLightEmission.mDecayQuadratic") };
-            GLint attrLightEmissionCosCutoffInner { glGetAttribLocation(programID, "attrLightEmission.mCosCutoffInner") };
-            GLint attrLightEmissionCosCutoffOuter { glGetAttribLocation(programID, "attrLightEmission.mCosCutoffOuter") };
+            GLint attrLightPlacementPosition { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightPlacement.mPosition") };
+            GLint attrLightPlacementDirection { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightPlacement.mDirection") };
+            GLint attrLightEmissionDiffuseColor { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightEmission.mDiffuseColor") };
+            GLint attrLightEmissionSpecularColor { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightEmission.mSpecularColor") };
+            GLint attrLightEmissionAmbientColor { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightEmission.mAmbientColor") };
+            GLint attrLightEmissionType { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightEmission.mType") };
+            GLint attrLightEmissionDecayLinear { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightEmission.mDecayLinear") };
+            GLint attrLightEmissionDecayQuadratic { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightEmission.mDecayQuadratic") };
+            GLint attrLightEmissionCosCutoffInner { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightEmission.mCosCutoffInner") };
+            GLint attrLightEmissionCosCutoffOuter { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrLightEmission.mCosCutoffOuter") };
 
             if(attrLightPlacementPosition >= 0) {
                 glEnableVertexAttribArray(attrLightPlacementPosition);
@@ -122,8 +122,8 @@ void LightCollection::associateShaderProgram(GLuint programID) {
             }
     glBindVertexArray(0);
 }
-void LightCollection::disassociateShaderProgram(GLuint programID) {
-    mLightVolume.disassociateShaderProgram(programID);
+void LightCollection::disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
+    mLightVolume.disassociateShaderProgram(shaderProgramHandle);
 }
 
 GLuint LightCollection::addLight(const Light& light) {

@@ -12,10 +12,10 @@
 
 #include "mesh.hpp"
 
-void Mesh::draw(ShaderProgram& shaderProgram, GLuint instanceCount) {
-    shaderProgram.use();
-    bindMaterial(shaderProgram);
-    glBindVertexArray(mShaderVAOMap[shaderProgram.getProgramID()]);
+void Mesh::draw(ShaderProgramHandle shaderProgramHandle, GLuint instanceCount) {
+    shaderProgramHandle.getResource().use();
+    bindMaterial(shaderProgramHandle);
+    glBindVertexArray(mShaderVAOMap[shaderProgramHandle]);
         glDrawElementsInstanced(
             GL_TRIANGLES,
             mElements.size(),
@@ -26,7 +26,7 @@ void Mesh::draw(ShaderProgram& shaderProgram, GLuint instanceCount) {
     glBindVertexArray(0);
 }
 
-void Mesh::bindMaterial(ShaderProgram& shaderProgram) {
+void Mesh::bindMaterial(ShaderProgramHandle shaderProgramHandle) {
     //Set texture-related uniforms
     bool usingAlbedoMap {false};
     bool usingNormalMap {false};
@@ -39,26 +39,26 @@ void Mesh::bindMaterial(ShaderProgram& shaderProgram) {
         switch(textureHandle.getResource().getUsage()) {
             case Texture::Albedo:
                 usingAlbedoMap = true;
-                shaderProgram.setUInt("uMaterial.mTextureAlbedo", textureUnit);
+                shaderProgramHandle.getResource().setUInt("uMaterial.mTextureAlbedo", textureUnit);
             break;
             case Texture::Normal:
                 usingNormalMap = true;
-                shaderProgram.setUInt("uMaterial.mTextureNormal", textureUnit);
+                shaderProgramHandle.getResource().setUInt("uMaterial.mTextureNormal", textureUnit);
             break;
             case Texture::Specular:
                 usingSpecularMap = true;
-                shaderProgram.setUInt("uMaterial.mTextureSpecular", textureUnit);
+                shaderProgramHandle.getResource().setUInt("uMaterial.mTextureSpecular", textureUnit);
             break;
             default: break;
         }
         ++textureUnit;
     }
     glActiveTexture(GL_TEXTURE0);
-    shaderProgram.setUBool("uMaterial.mUsingAlbedoMap", usingAlbedoMap);
-    shaderProgram.setUBool("uMaterial.mUsingNormalMap", usingNormalMap);
-    shaderProgram.setUBool("uMaterial.mUsingSpecularMap", usingSpecularMap);
+    shaderProgramHandle.getResource().setUBool("uMaterial.mUsingAlbedoMap", usingAlbedoMap);
+    shaderProgramHandle.getResource().setUBool("uMaterial.mUsingNormalMap", usingNormalMap);
+    shaderProgramHandle.getResource().setUBool("uMaterial.mUsingSpecularMap", usingSpecularMap);
 
-    shaderProgram.setUFloat("uMaterial.mSpecularExponent", mSpecularExponent);
+    shaderProgramHandle.getResource().setUFloat("uMaterial.mSpecularExponent", mSpecularExponent);
 }
 
 Mesh::Mesh(
@@ -137,22 +137,22 @@ Mesh& Mesh::operator=(const Mesh& other) {
     return *this;
 }
 
-void Mesh::associateShaderProgram(GLuint programID){
+void Mesh::associateShaderProgram(ShaderProgramHandle shaderProgramHandle){
     //Ensure duplicate calls to this function don't create duplicate VAOs
-    if(getShaderVAO(programID)) return;
+    if(getShaderVAO(shaderProgramHandle)) return;
     GLuint shaderVAO;
     glGenVertexArrays(1, &shaderVAO);
-    glUseProgram(programID);
+    glUseProgram(shaderProgramHandle.getResource().getProgramID());
     glBindVertexArray(shaderVAO);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
 
         //Enable and set vertex pointers
         glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-        GLint attrPosition { glGetAttribLocation(programID, "attrPosition") };
-        GLint attrNormal { glGetAttribLocation(programID, "attrNormal") };
-        GLint attrTangent { glGetAttribLocation(programID, "attrTangent") };
-        GLint attrColor { glGetAttribLocation(programID, "attrColor") };
-        GLint attrTextureCoordinates { glGetAttribLocation(programID, "attrTextureCoordinates") };
+        GLint attrPosition { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrPosition") };
+        GLint attrNormal { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrNormal") };
+        GLint attrTangent { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrTangent") };
+        GLint attrColor { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrColor") };
+        GLint attrTextureCoordinates { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrTextureCoordinates") };
         if(attrPosition >= 0) {
             glEnableVertexAttribArray(attrPosition);
             glVertexAttribPointer(attrPosition, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mPosition)));
@@ -175,17 +175,17 @@ void Mesh::associateShaderProgram(GLuint programID){
         }
     glBindVertexArray(0);
 
-    mShaderVAOMap[programID] = shaderVAO;
+    mShaderVAOMap[shaderProgramHandle] = shaderVAO;
 }
 
-void Mesh::disassociateShaderProgram(GLuint programID) {
-    if(!getShaderVAO(programID)) return;
-    glDeleteVertexArrays(1, &mShaderVAOMap[programID]);
-    mShaderVAOMap.erase(programID);
+void Mesh::disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
+    if(!getShaderVAO(shaderProgramHandle)) return;
+    glDeleteVertexArrays(1, &mShaderVAOMap[shaderProgramHandle]);
+    mShaderVAOMap.erase(shaderProgramHandle);
 }
 
-GLuint Mesh::getShaderVAO(const GLuint programID) const {
-    auto resultIterator { mShaderVAOMap.find(programID) };
+GLuint Mesh::getShaderVAO(const ShaderProgramHandle& shaderProgramHandle) const {
+    auto resultIterator { mShaderVAOMap.find(shaderProgramHandle) };
     if(resultIterator == mShaderVAOMap.end()) return 0;
     return resultIterator->second;
 }

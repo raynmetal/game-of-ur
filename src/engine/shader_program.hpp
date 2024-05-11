@@ -7,8 +7,15 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-class ShaderProgram {
+#include "resource_manager.hpp"
+
+class ShaderProgram: IResource {
 public:
+    /*
+    Empty constructor that does nothing
+    */
+    ShaderProgram() = default;
+
     /*
     A constructor that reads and compiles a shader program 
     from vertex and fragment shader files
@@ -72,9 +79,14 @@ public:
     GLuint getProgramID() const;
 
 private:
+    void destroyResource();
+    void releaseResource();
+
     // program ID
     GLuint mID {};
     bool mBuildState { false };
+
+friend class ResourceManager<ShaderProgram>;
 };
 
 #endif

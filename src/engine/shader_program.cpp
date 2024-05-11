@@ -227,15 +227,15 @@ ShaderProgram::ShaderProgram(ShaderProgram&& other) noexcept :
 {
     // Prevent other from destroying resource 
     // when its destructor is called
-    other.mID = 0;
-    other.mBuildState = false;
+    other.releaseResource();
 }
+
 ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept {
     // Do nothing on self assignment
     if(&other == this) return *this;
 
-    // Free currently held resource
-    freeProgram(mID);
+    // Destroy whatever we've currently got to make room
+    destroyResource();
 
     //Copy other
     mID = other.mID;
@@ -243,8 +243,7 @@ ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept {
 
     //Prevent other from destroying moved resource when its
     //destructor is called
-    other.mID = 0;
-    other.mBuildState = false;
+    other.releaseResource();
 
     return *this;
 }
@@ -347,4 +346,15 @@ void ShaderProgram::setUniformBlock(const std::string& name, GLuint bindingPoint
 void freeProgram(GLuint programID) {
     if(programID)
         glDeleteProgram(programID);
+}
+
+void ShaderProgram::destroyResource() {
+    freeProgram(mID);
+    mID = 0;
+    mBuildState = false;
+}
+
+void ShaderProgram::releaseResource() {
+    mID = 0;
+    mBuildState = false;
 }

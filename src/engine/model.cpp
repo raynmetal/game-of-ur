@@ -12,17 +12,18 @@
 
 #include "window_context_manager.hpp"
 #include "texture_manager.hpp"
+#include "shader_program_manager.hpp"
 #include "vertex.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
 
 glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 scale);
 
-void Model::draw(ShaderProgram& shaderProgram) {
+void Model::draw(ShaderProgramHandle shaderProgramHandle) {
     updateBuffers();
 
     for(Mesh& mesh : mMeshes) {
-        mesh.draw(shaderProgram, mInstanceModelMatrixMap.size());
+        mesh.draw(shaderProgramHandle, mInstanceModelMatrixMap.size());
     }
 }
 
@@ -46,6 +47,12 @@ Model::Model(const Mesh& mesh) : Model() {
     mMeshes.push_back(
         mesh
     );
+}
+
+glm::mat4 Model::getInstance(GLuint instanceID) {
+    if(mInstanceModelMatrixMap.find(instanceID) != mInstanceModelMatrixMap.end())
+        return mInstanceModelMatrixMap[instanceID];
+    return glm::mat4{0.f};
 }
 
 Model::Model(const std::string& filepath): Model() {
@@ -156,7 +163,7 @@ void Model::updateBuffers() {
 
     // Move everything in the list to our matrix buffer
     glBindBuffer(GL_ARRAY_BUFFER, mMatrixBuffer);
-        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::mat4) * mInstanceCapacity, modelMatrices.data());
+        glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(glm::mat4) * mInstanceModelMatrixMap.size(), modelMatrices.data());
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 
     // Reset the dirty bool
@@ -371,21 +378,21 @@ std::vector<TextureHandle> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Te
     return textureHandles;
 }
 
-void Model::associateShaderProgram(GLuint programID) {
+void Model::associateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
     for(Mesh& mesh: mMeshes) {
         // TODO: This needs to be more robust somehow
         // Its okay to assume for now that since this model owns these meshes, our meshes won't
         // be associated with a shader until this model associates them
-        GLuint shaderVAO = mesh.getShaderVAO(programID);
+        GLuint shaderVAO = mesh.getShaderVAO(shaderProgramHandle);
         if(shaderVAO) continue;
 
-        mesh.associateShaderProgram(programID);
-        shaderVAO = mesh.getShaderVAO(programID);
+        mesh.associateShaderProgram(shaderProgramHandle);
+        shaderVAO = mesh.getShaderVAO(shaderProgramHandle);
         glBindVertexArray(shaderVAO);
             // Enable and set matrix pointers
             glBindBuffer(GL_ARRAY_BUFFER, mMatrixBuffer);
-            GLint attrModelMatrix { glGetAttribLocation(programID, "attrModelMatrix") };
-            GLint attrNormalMatrix { glGetAttribLocation(programID, "attrNormalMatrix") };
+            GLint attrModelMatrix { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrModelMatrix") };
+            GLint attrNormalMatrix { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrNormalMatrix") };
             if(attrModelMatrix >= 0) {
                 for(int i {0}; i < 4; ++i) {
                     glEnableVertexAttribArray(attrModelMatrix+i);
@@ -406,9 +413,9 @@ void Model::associateShaderProgram(GLuint programID) {
     }
 }
 
-void Model::disassociateShaderProgram(GLuint programID) {
+void Model::disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
     for(Mesh& mesh: mMeshes) {
-        mesh.disassociateShaderProgram(programID);
+        mesh.disassociateShaderProgram(shaderProgramHandle);
     }
 }
 

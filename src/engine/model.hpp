@@ -15,8 +15,9 @@
 
 #include "vertex.hpp"
 #include "texture.hpp"
-#include "texture_manager.hpp"
 #include "mesh.hpp"
+#include "texture_manager.hpp"
+#include "shader_program_manager.hpp"
 #include "resource_manager.hpp"
 
 class Model : IResource {
@@ -64,13 +65,12 @@ public:
     void removeInstance(GLuint instanceID);
 
     /* Sets up a VAO for a given shader program, setting pointers as necessary */
-    void associateShaderProgram(GLuint programID);
+    void associateShaderProgram(ShaderProgramHandle shaderProgramHandle);
     /* Removes VAO for a given shader program */
-    void disassociateShaderProgram(GLuint programID);
+    void disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle);
 
 
-    void draw(ShaderProgram& shaderProgram);
-
+    void draw(ShaderProgramHandle shaderProgramhandle);
 private:
 
     /* updates buffers stored in GPU */

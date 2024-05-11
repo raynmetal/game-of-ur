@@ -7,9 +7,9 @@
 
 #include <GL/glew.h>
 
-#include "texture_manager.hpp"
 #include "vertex.hpp"
-#include "shader_program.hpp"
+#include "texture_manager.hpp"
+#include "shader_program_manager.hpp"
 
 constexpr GLuint kInitialInstanceCapacity {128};
 
@@ -44,17 +44,17 @@ public:
     Mesh& operator=(const Mesh& other);
 
     /* Sets up a VAO for a given shader program, setting vertex pointers as necessary */
-    void associateShaderProgram(GLuint programID);
+    void associateShaderProgram(ShaderProgramHandle shaderProgramHandle);
     /* Removes VAO for a given shader program */
-    void disassociateShaderProgram(GLuint programID);
+    void disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle);
     /* Returns the ID of the VAO associated with this shader program */
-    GLuint getShaderVAO(const GLuint programID) const;
+    GLuint getShaderVAO(const ShaderProgramHandle& shaderProgramHandle) const;
 
     /* 
     Uses the shader program to render this mesh, setting uniform attributes. Assumes 
     instance related attributes are already set, requiring only the number of them to render
     */
-    void draw(ShaderProgram& shaderProgram, GLuint instanceCount);
+    void draw(ShaderProgramHandle shaderProgramHandle, GLuint instanceCount);
 
 private:
     /* 
@@ -71,12 +71,12 @@ private:
     */
     void allocateBuffers();
 
-    void bindMaterial(ShaderProgram& shaderProgram);
+    void bindMaterial(ShaderProgramHandle shaderProgramHandle);
 
     std::vector<Vertex> mVertices {};
     std::vector<GLuint> mElements {};
     std::vector<TextureHandle> mTextureHandles {};
-    std::map<GLuint, GLuint> mShaderVAOMap {};
+    std::map<ShaderProgramHandle, GLuint> mShaderVAOMap {};
 
     GLuint mVertexBuffer;
     GLuint mElementBuffer;

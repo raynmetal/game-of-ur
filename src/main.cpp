@@ -12,7 +12,7 @@
 #include "engine/window_context_manager.hpp"
 #include "engine/texture_manager.hpp"
 #include "engine/model_manager.hpp"
-#include "engine/shader_program.hpp"
+#include "engine/shader_program_manager.hpp"
 #include "engine/shapegen.hpp"
 
 extern constexpr int gWindowWidth {800};
@@ -23,30 +23,38 @@ void init();
 int main(int argc, char* argv[]) {
     init();
 
-    std::string tonemappingProgramJSONPath { "src/shader/tonemappingShader.json" };
-    ShaderProgram tonemappingShader { tonemappingProgramJSONPath };
-    if(!tonemappingShader.getBuildSuccess()) {
-        std::cout << "Could not compile tonemapping shader!" << std::endl;
+    ShaderProgramHandle tonemappingShaderHandle { ShaderProgramManager::getInstance().registerResource(
+        "src/shader/tonemappingShader.json",
+        {"src/shader/tonemappingShader.json"}
+    )};
+    if(!tonemappingShaderHandle.getResource().getBuildSuccess()) {
+        std::cout << "Could not compile " << tonemappingShaderHandle.getName() <<"!" << std::endl;
         return 1;
     }
 
-    std::string gaussianblurProgramJSONPath { "src/shader/gaussianblurShader.json" };
-    ShaderProgram gaussianblurShader { gaussianblurProgramJSONPath };
-    if(!gaussianblurShader.getBuildSuccess()) {
-        std::cout << "Could not compile gaussian blur shader!" << std::endl;
+    ShaderProgramHandle gaussianblurShaderHandle { ShaderProgramManager::getInstance().registerResource(
+        "src/shader/gaussianblurShader.json",
+        {"src/shader/gaussianblurShader.json"}
+    )};
+    if(!gaussianblurShaderHandle.getResource().getBuildSuccess()) {
+        std::cout << "Could not compile " << gaussianblurShaderHandle.getName() << "!" << std::endl;
         return 1;
     }
 
-    std::string geometryProgramJSONPath { "src/shader/geometryShader.json" };
-    ShaderProgram geometryShader { geometryProgramJSONPath };
-    if(!geometryShader.getBuildSuccess()) {
+    ShaderProgramHandle geometryShaderHandle { ShaderProgramManager::getInstance().registerResource(
+        "src/shader/geometryShader.json",
+        {"src/shader/geometryShader.json"}
+    )};
+    if(!geometryShaderHandle.getResource().getBuildSuccess()) {
         std::cout << "Could not compile basic shader!" << std::endl;
         return 1;
     }
 
-    std::string lightingProgramJSONPath { "src/shader/lightingShader.json" };
-    ShaderProgram lightingShader { lightingProgramJSONPath };
-    if(!lightingShader.getBuildSuccess()) {
+    ShaderProgramHandle lightingShaderHandle {ShaderProgramManager::getInstance().registerResource(
+        "src/shader/lightingShader.json",
+        {"src/shader/lightingShader.json"}
+    )};
+    if(!lightingShaderHandle.getResource().getBuildSuccess()) {
         std::cout << "Could not compile lighting shader!" << std::endl;
         return 1;
     }
@@ -172,10 +180,10 @@ int main(int argc, char* argv[]) {
 
     // Let the shader(s) know where to find the shared matrices
     GLuint uboBindingPoint {0};
-    geometryShader.use();
-    geometryShader.setUniformBlock("Matrices", uboBindingPoint);
-    lightingShader.use();
-    lightingShader.setUniformBlock("Matrices", uboBindingPoint);
+    geometryShaderHandle.getResource().use();
+    geometryShaderHandle.getResource().setUniformBlock("Matrices", uboBindingPoint);
+    lightingShaderHandle.getResource().use();
+    lightingShaderHandle.getResource().setUniformBlock("Matrices", uboBindingPoint);
 
     // Bind the shared matrix uniform buffer to the same binding point
     glBindBufferRange(
@@ -188,10 +196,10 @@ int main(int argc, char* argv[]) {
 
     // Generate a VAO for rendering to the default framebuffer
     Mesh screenMesh{ generateRectangleMesh() };
-    tonemappingShader.use();
-    screenMesh.associateShaderProgram(tonemappingShader.getProgramID());
-    gaussianblurShader.use();
-    screenMesh.associateShaderProgram(gaussianblurShader.getProgramID());
+    tonemappingShaderHandle.getResource().use();
+    screenMesh.associateShaderProgram(tonemappingShaderHandle);
+    gaussianblurShaderHandle.getResource().use();
+    screenMesh.associateShaderProgram(gaussianblurShaderHandle);
     
     ModelHandle boardPieceModelHandle { 
         ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"}) 
@@ -228,10 +236,10 @@ int main(int argc, char* argv[]) {
         glm::vec3(20.f),
         glm::vec3(0.2f)
     ));
-    geometryShader.use();
-    boardPieceModelHandle.getResource().associateShaderProgram(geometryShader.getProgramID());
-    lightingShader.use();
-    sceneLights.associateShaderProgram(lightingShader.getProgramID());
+    geometryShaderHandle.getResource().use();
+    boardPieceModelHandle.getResource().associateShaderProgram(geometryShaderHandle);
+    lightingShaderHandle.getResource().use();
+    sceneLights.associateShaderProgram(lightingShaderHandle);
 
     FlyCamera camera {
         glm::vec3(0.f), 0.f, 0.f, 0.f
@@ -345,33 +353,33 @@ int main(int argc, char* argv[]) {
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
         //Render geometry to our geometry framebuffer
-        geometryShader.use();
+        geometryShaderHandle.getResource().use();
         glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-            boardPieceModelHandle.getResource().draw(geometryShader);
+            boardPieceModelHandle.getResource().draw(geometryShaderHandle);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
         for(int i{0}; i < 3; ++i) {
             geometryBufferHandles[i].getResource().bind(i);
         }
-        lightingShader.use();
-        lightingShader.setUInt("uGeometryPositionMap", 0);
-        lightingShader.setUInt("uGeometryNormalMap", 1);
-        lightingShader.setUInt("uGeometryAlbedoSpecMap", 2);
-        lightingShader.setUInt("uScreenWidth", gWindowWidth);
-        lightingShader.setUInt("uScreenHeight", gWindowHeight);
+        lightingShaderHandle.getResource().use();
+        lightingShaderHandle.getResource().setUInt("uGeometryPositionMap", 0);
+        lightingShaderHandle.getResource().setUInt("uGeometryNormalMap", 1);
+        lightingShaderHandle.getResource().setUInt("uGeometryAlbedoSpecMap", 2);
+        lightingShaderHandle.getResource().setUInt("uScreenWidth", gWindowWidth);
+        lightingShaderHandle.getResource().setUInt("uScreenHeight", gWindowHeight);
         glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
             // glEnable(GL_DEPTH_TEST);
             glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
             glBlendFunc(GL_ONE, GL_ONE);
             glClear(GL_COLOR_BUFFER_BIT); //| GL_DEPTH_BUFFER_BIT);
-            sceneLights.draw(lightingShader);
+            sceneLights.draw(lightingShaderHandle);
             glDisable(GL_BLEND);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-        gaussianblurShader.use();
+        gaussianblurShaderHandle.getResource().use();
         glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
             glDisable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
@@ -382,9 +390,9 @@ int main(int argc, char* argv[]) {
                 if(!i) lightingBufferHandles[1].getResource().bind(0);
                 else bloomBufferHandles[i%2].getResource().bind(0);
                 glDrawBuffer(GL_COLOR_ATTACHMENT0 + (1+i)%2);
-                gaussianblurShader.setUInt("uGenericTexture", 0);
-                gaussianblurShader.setUBool("uHorizontal", i%2);
-                screenMesh.draw(gaussianblurShader, 1);
+                gaussianblurShaderHandle.getResource().setUInt("uGenericTexture", 0);
+                gaussianblurShaderHandle.getResource().setUBool("uHorizontal", i%2);
+                screenMesh.draw(gaussianblurShaderHandle, 1);
             }
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
@@ -393,13 +401,13 @@ int main(int argc, char* argv[]) {
         glClear(GL_COLOR_BUFFER_BIT);
         screenTextureHandles[currScreenTexture].getResource().bind(0);
         bloomBufferHandles[1].getResource().bind(1);
-        tonemappingShader.use();
-        tonemappingShader.setUInt("uGenericTexture", 0);
-        tonemappingShader.setUInt("uGenericTexture1", 1);
-        tonemappingShader.setUFloat("uExposure", exposure);
-        tonemappingShader.setUFloat("uGamma", gamma);
-        tonemappingShader.setUBool("uCombine", screenTextureHandles[currScreenTexture] == lightingBufferHandles[0]);
-        screenMesh.draw(tonemappingShader, 1);
+        tonemappingShaderHandle.getResource().use();
+        tonemappingShaderHandle.getResource().setUInt("uGenericTexture", 0);
+        tonemappingShaderHandle.getResource().setUInt("uGenericTexture1", 1);
+        tonemappingShaderHandle.getResource().setUFloat("uExposure", exposure);
+        tonemappingShaderHandle.getResource().setUFloat("uGamma", gamma);
+        tonemappingShaderHandle.getResource().setUBool("uCombine", screenTextureHandles[currScreenTexture] == lightingBufferHandles[0]);
+        screenMesh.draw(tonemappingShaderHandle, 1);
 
         WindowContextManager::getInstance().swapBuffers();
     }

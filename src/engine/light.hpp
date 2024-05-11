@@ -10,7 +10,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "shader_program.hpp"
+#include "shader_program_manager.hpp"
 #include "mesh.hpp"
 #include "shapegen.hpp"
 
@@ -57,12 +57,12 @@ public:
     /* copy assignment operator */
     LightCollection& operator=(const LightCollection& other);
 
-    void draw(ShaderProgram& shaderProgram);
+    void draw(ShaderProgramHandle shaderProgramHandle);
 
     /* associates a shader program with this collection's light volume mesh */
-    void associateShaderProgram(GLuint programID);
+    void associateShaderProgram(ShaderProgramHandle shaderProgramHandle);
     /* disassociates a shader program from this collection's light volume mesh */
-    void disassociateShaderProgram(GLuint programID);
+    void disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle);
 
     GLuint addLight(const Light& light);
     Light getLight(GLuint instanceID) const;
