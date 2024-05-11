@@ -22,79 +22,30 @@ void init();
 
 int main(int argc, char* argv[]) {
     init();
-    std::vector<std::string> tonemappingVsSrc {
-        {"src/shader/common/versionHeader.glsl"},
-        {"src/shader/common/fragmentAttributes.vs"},
-        {"src/shader/common/vertexAttributes.vs"},
-        {"src/shader/simple_tonemapping/tonemapping.vs"}
-    };
-    std::vector<std::string> tonemappingFsSrc {
-        {"src/shader/common/versionHeader.glsl"},
-        {"src/shader/common/fragmentAttributes.fs"},
-        {"src/shader/common/genericSampler.fs"},
-        {"src/shader/simple_tonemapping/tonemapping.fs"}
-    };
-    ShaderProgram tonemappingShader { tonemappingVsSrc, tonemappingFsSrc };
+
+    std::string tonemappingProgramJSONPath { "src/shader/tonemappingShader.json" };
+    ShaderProgram tonemappingShader { tonemappingProgramJSONPath };
     if(!tonemappingShader.getBuildSuccess()) {
         std::cout << "Could not compile tonemapping shader!" << std::endl;
         return 1;
     }
 
-    std::vector<std::string> gaussianblurVsSrc {
-        {"src/shader/common/versionHeader.glsl"},
-        {"src/shader/common/fragmentAttributes.vs"},
-        {"src/shader/common/vertexAttributes.vs"},
-        {"src/shader/blur/gaussian.vs"}
-    };
-    std::vector<std::string> gaussianblurFsSrc {
-        {"src/shader/common/versionHeader.glsl"},
-        {"src/shader/common/fragmentAttributes.fs"},
-        {"src/shader/common/genericSampler.fs"},
-        {"src/shader/blur/gaussian.fs"}
-    };
-    ShaderProgram gaussianblurShader { gaussianblurVsSrc, gaussianblurFsSrc };
+    std::string gaussianblurProgramJSONPath {"src/shader/gaussianblurShader.json"};
+    ShaderProgram gaussianblurShader { gaussianblurProgramJSONPath };
     if(!gaussianblurShader.getBuildSuccess()) {
         std::cout << "Could not compile gaussian blur shader!" << std::endl;
         return 1;
     }
 
-    std::vector<std::string> geometryVsSrc {
-        {"src/shader/common/versionHeader.glsl"},
-        {"src/shader/common/vertexAttributes.vs"},
-        {"src/shader/common/projectionViewMatrices.vs"},
-        {"src/shader/common/modelNormalMatrices.vs"},
-        {"src/shader/common/fragmentAttributes.vs"},
-        {"src/shader/geometry/geometry.vs"}
-    };
-    std::vector<std::string> geometryFsSrc {
-        {"src/shader/common/versionHeader.glsl"},
-        {"src/shader/common/fragmentAttributes.fs"},
-        {"src/shader/common/material.fs"},
-        {"src/shader/geometry/geometry.fs"}
-    };
-    ShaderProgram geometryShader { geometryVsSrc, geometryFsSrc };
+    std::string geometryProgramJSONPath {"src/shader/geometryShader.json"};
+    ShaderProgram geometryShader { geometryProgramJSONPath };
     if(!geometryShader.getBuildSuccess()) {
         std::cout << "Could not compile basic shader!" << std::endl;
         return 1;
     }
 
-    std::vector<std::string> lightingVsSrc {
-        {"src/shader/common/versionHeader.glsl"},
-        {"src/shader/common/lightStruct.glsl"},
-        {"src/shader/common/projectionViewMatrices.vs"},
-        {"src/shader/common/modelNormalMatrices.vs"},
-        {"src/shader/common/fragmentAttributes.vs"},
-        {"src/shader/common/vertexAttributes.vs"},
-        {"src/shader/lighting/deferredLighting.vs"}
-    };
-    std::vector<std::string> lightingFsSrc {
-        {"src/shader/common/versionHeader.glsl"},
-        {"src/shader/common/lightStruct.glsl"},
-        {"src/shader/common/fragmentAttributes.fs"},
-        {"src/shader/common/geometrySampler.fs"},
-        {"src/shader/lighting/deferredLighting.fs"}
-    };
-    ShaderProgram lightingShader { lightingVsSrc, lightingFsSrc };
+    std::string lightingProgramJSONPath {"src/shader/lightingShader.json"};
+    ShaderProgram lightingShader { lightingProgramJSONPath };
     if(!lightingShader.getBuildSuccess()) {
         std::cout << "Could not compile lighting shader!" << std::endl;
         return 1;
@@ -242,20 +193,6 @@ int main(int argc, char* argv[]) {
     gaussianblurShader.use();
     screenMesh.associateShaderProgram(gaussianblurShader.getProgramID());
     
-    {
-        TextureManager::getInstance().registerResource(
-            "bloomBuffer1",
-            {
-                glm::vec2(gWindowWidth, gWindowHeight),
-                GL_FLOAT,
-                GL_LINEAR,
-                GL_LINEAR,
-                GL_CLAMP_TO_EDGE,
-                GL_CLAMP_TO_EDGE
-            }
-        );
-    }
-
     ModelHandle boardPieceModelHandle { 
         ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"}) 
     };
@@ -274,9 +211,6 @@ int main(int argc, char* argv[]) {
             .03f
         )
     )};
-    {
-        ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"});
-    }
 
     sceneLights.addLight(
         Light::MakePointLight(

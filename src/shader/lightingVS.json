@@ -1,0 +1,13 @@
+{
+    "name": "lightingVS",
+    "type": "shader/vertex",
+    "sources": [
+        "common/versionHeader.glsl",
+        "common/lightStruct.glsl",
+        "common/projectionViewMatrices.vs",
+        "common/modelNormalMatrices.vs",
+        "common/fragmentAttributes.vs",
+        "common/vertexAttributes.vs",
+        "lighting/deferredLighting.vs"
+    ]
+}

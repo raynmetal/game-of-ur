@@ -3,6 +3,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
+#include <filesystem>
 
 #include <GL/glew.h>
 
@@ -10,14 +11,21 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include "shader_program.hpp"
 
 GLint loadAndCompileShader(const std::vector<std::string>& shaderPaths, GLuint& shaderID, GLuint shaderType);
 void freeProgram(GLuint programID);
 
-ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths) :mBuildState{false} {
+ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths) {
+    buildShader(vertexPaths, fragmentPaths);
+}
+
+void ShaderProgram::buildShader(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths){
     GLuint vertexShader;
     GLuint fragmentShader;
+    mBuildState = false;
 
     if(loadAndCompileShader(vertexPaths, vertexShader, GL_VERTEX_SHADER) != GL_TRUE) return;
     if(loadAndCompileShader(fragmentPaths, fragmentShader, GL_FRAGMENT_SHADER) != GL_TRUE){
@@ -28,6 +36,7 @@ ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const 
     //Create a shader program
     GLint success {};
     char infoLog[512];
+    freeProgram(mID);
     mID = glCreateProgram();
     glAttachShader(mID, vertexShader);
     glAttachShader(mID, fragmentShader);
@@ -53,10 +62,57 @@ ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const 
     return;
 }
 
-ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) :mBuildState{false} {
+ShaderProgram::ShaderProgram(const std::string& programJSONPath) {
+    std::ifstream jsonFileStream;
+
+    jsonFileStream.open(programJSONPath);
+    nlohmann::json programJSON{ nlohmann::json::parse(jsonFileStream) };
+    jsonFileStream.close();
+
+    std::filesystem::path programPath { programJSONPath };
+    std::filesystem::path parentDirectory { programPath.parent_path() };
+
+    std::cout << programJSON << std::endl;
+    nlohmann::json::iterator endIter { programJSON[0].end() };
+    nlohmann::json::iterator vertexIter { programJSON[0].find("vertexShader") };
+    nlohmann::json::iterator fragmentIter { programJSON[0].find("fragmentShader") };
+    if(vertexIter == endIter || fragmentIter == endIter) {
+        throw std::invalid_argument("Shader program JSON file does not contain appropriate fragment or vertex shader definitions.");
+    }
+    std::filesystem::path vertexJSONPath { parentDirectory / std::string(*vertexIter) };
+    std::filesystem::path fragmentJSONPath { parentDirectory / std::string(*fragmentIter) };
+
+    std::vector<std::string> vertexSources {};
+    jsonFileStream.open(vertexJSONPath.string());
+    nlohmann::json vertexJSON { nlohmann::json::parse(jsonFileStream) };
+    jsonFileStream.close();
+    std::filesystem::path vertexJSONDirectory { vertexJSONPath.parent_path() };
+    for(std::string source : vertexJSON[0]["sources"]) {
+        vertexSources.push_back((vertexJSONDirectory / source).string());
+    }
+
+    std::vector<std::string> fragmentSources {};
+    jsonFileStream.open(fragmentJSONPath.string());
+    nlohmann::json fragmentJSON { nlohmann::json::parse(jsonFileStream) };
+    jsonFileStream.close();
+    std::filesystem::path fragmentJSONDirectory { fragmentJSONPath.parent_path() };
+    for(std::string source : fragmentJSON[0]["sources"]) {
+        fragmentSources.push_back((fragmentJSONDirectory / source).string());
+    }
+
+    buildShader(vertexSources, fragmentSources);
+}
+
+
+ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) {
+    buildShader(vertexPaths, fragmentPaths, geometryPaths);
+}
+
+void ShaderProgram::buildShader(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) {
     GLuint vertexShader {};
     GLuint fragmentShader {};
     GLuint geometryShader {};
+    mBuildState = false;
 
     if(loadAndCompileShader(vertexPaths, vertexShader, GL_VERTEX_SHADER) != GL_TRUE) return;
     if(loadAndCompileShader(fragmentPaths, fragmentShader, GL_FRAGMENT_SHADER) != GL_TRUE) {
@@ -72,6 +128,7 @@ ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const 
     //Create a shader program
     GLint success {};
     char infoLog[512];   
+    freeProgram(mID);
     mID = glCreateProgram();
     glAttachShader(mID, vertexShader);
     glAttachShader(mID, fragmentShader);
@@ -96,7 +153,6 @@ ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const 
 
     // Store build success
     mBuildState = true;
-    return;
 }
 
 GLint loadAndCompileShader(const std::vector<std::string>& shaderPaths, GLuint& shaderID, GLuint shaderType) {

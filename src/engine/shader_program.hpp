@@ -20,24 +20,33 @@ public:
     */
     ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths);
     /*
+    A constructor that reads and compiles a shader program
+    from its JSON definition at the specified path
+    */
+    ShaderProgram(const std::string& programJSONPath);
+
+    /*
     Shader destructor; deletes shader from memory
     */
     ~ShaderProgram();
 
     /* Shader copy constructor */
     ShaderProgram(const ShaderProgram& other);
-
     /* Shader copy assignment */
     ShaderProgram& operator=(const ShaderProgram& other);
-
     /* Shader move constructor */
     ShaderProgram(ShaderProgram&& other) noexcept;
-
     /* Shader move assignment */
     ShaderProgram& operator=(ShaderProgram&& other) noexcept;
 
-    //use/activate this shader
+    /* build shader using a set of vertex and fragment sources */
+    void buildShader(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths);
+    /* build shader using a set of vertex, fragment, and geometry sources */
+    void buildShader(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths);
+
+    /* Activate this shader */
     void use() const;
+    /* Retrieve the build status of this shader*/
     bool getBuildSuccess() const;
 
     //utility attrib array functions
@@ -64,8 +73,8 @@ public:
 
 private:
     // program ID
-    GLuint mID;
-    bool mBuildState;
+    GLuint mID {};
+    bool mBuildState { false };
 };
 
 #endif
