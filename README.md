@@ -36,3 +36,7 @@ raynmetal/game-of-ur is distributed under the terms of the MIT License.
 This program makes extensive use of the following libraries: 
 
 - [SDL](https://www.libsdl.org/)
+- [SDL Image](https://github.com/libsdl-org/SDL_image)
+- [GLEW](https://github.com/nigels-com/glew)
+- [Nlohmann JSON](https://json.nlohmann.me/)
+- [GLM](https://github.com/g-truc/glm)
