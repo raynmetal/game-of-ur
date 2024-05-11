@@ -19,10 +19,10 @@ GLint loadAndCompileShader(const std::vector<std::string>& shaderPaths, GLuint& 
 void freeProgram(GLuint programID);
 
 ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths) {
-    buildShader(vertexPaths, fragmentPaths);
+    buildProgram(vertexPaths, fragmentPaths);
 }
 
-void ShaderProgram::buildShader(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths){
+void ShaderProgram::buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths){
     GLuint vertexShader;
     GLuint fragmentShader;
     mBuildState = false;
@@ -100,15 +100,15 @@ ShaderProgram::ShaderProgram(const std::string& programJSONPath) {
         fragmentSources.push_back((fragmentJSONDirectory / source).string());
     }
 
-    buildShader(vertexSources, fragmentSources);
+    buildProgram(vertexSources, fragmentSources);
 }
 
 
 ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) {
-    buildShader(vertexPaths, fragmentPaths, geometryPaths);
+    buildProgram(vertexPaths, fragmentPaths, geometryPaths);
 }
 
-void ShaderProgram::buildShader(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) {
+void ShaderProgram::buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) {
     GLuint vertexShader {};
     GLuint fragmentShader {};
     GLuint geometryShader {};
@@ -221,23 +221,6 @@ ShaderProgram::~ShaderProgram() {
     freeProgram(mID);
 }
 
-ShaderProgram::ShaderProgram(const ShaderProgram& other) :
-    mID{other.mID},
-    mBuildState{other.mBuildState}
-{}
-ShaderProgram& ShaderProgram::operator=(const ShaderProgram& other){
-    if(&other == this) return *this;
-
-    //Free currently held resource
-    freeProgram(mID);
-
-    //Copy other's resource
-    mID = other.mID;
-    mBuildState = other.mBuildState;
-
-    return *this;
-}
-
 ShaderProgram::ShaderProgram(ShaderProgram&& other) noexcept :
     mID {other.mID},
     mBuildState{other.mBuildState}
@@ -245,6 +228,7 @@ ShaderProgram::ShaderProgram(ShaderProgram&& other) noexcept :
     // Prevent other from destroying resource 
     // when its destructor is called
     other.mID = 0;
+    other.mBuildState = false;
 }
 ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept {
     // Do nothing on self assignment
@@ -260,6 +244,7 @@ ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept {
     //Prevent other from destroying moved resource when its
     //destructor is called
     other.mID = 0;
+    other.mBuildState = false;
 
     return *this;
 }

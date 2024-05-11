@@ -30,21 +30,21 @@ int main(int argc, char* argv[]) {
         return 1;
     }
 
-    std::string gaussianblurProgramJSONPath {"src/shader/gaussianblurShader.json"};
+    std::string gaussianblurProgramJSONPath { "src/shader/gaussianblurShader.json" };
     ShaderProgram gaussianblurShader { gaussianblurProgramJSONPath };
     if(!gaussianblurShader.getBuildSuccess()) {
         std::cout << "Could not compile gaussian blur shader!" << std::endl;
         return 1;
     }
 
-    std::string geometryProgramJSONPath {"src/shader/geometryShader.json"};
+    std::string geometryProgramJSONPath { "src/shader/geometryShader.json" };
     ShaderProgram geometryShader { geometryProgramJSONPath };
     if(!geometryShader.getBuildSuccess()) {
         std::cout << "Could not compile basic shader!" << std::endl;
         return 1;
     }
 
-    std::string lightingProgramJSONPath {"src/shader/lightingShader.json"};
+    std::string lightingProgramJSONPath { "src/shader/lightingShader.json" };
     ShaderProgram lightingShader { lightingProgramJSONPath };
     if(!lightingShader.getBuildSuccess()) {
         std::cout << "Could not compile lighting shader!" << std::endl;

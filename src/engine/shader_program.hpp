@@ -31,18 +31,18 @@ public:
     ~ShaderProgram();
 
     /* Shader copy constructor */
-    ShaderProgram(const ShaderProgram& other);
+    ShaderProgram(const ShaderProgram& other) = delete;
     /* Shader copy assignment */
-    ShaderProgram& operator=(const ShaderProgram& other);
+    ShaderProgram& operator=(const ShaderProgram& other) = delete;
     /* Shader move constructor */
     ShaderProgram(ShaderProgram&& other) noexcept;
     /* Shader move assignment */
     ShaderProgram& operator=(ShaderProgram&& other) noexcept;
 
     /* build shader using a set of vertex and fragment sources */
-    void buildShader(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths);
+    void buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths);
     /* build shader using a set of vertex, fragment, and geometry sources */
-    void buildShader(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths);
+    void buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths);
 
     /* Activate this shader */
     void use() const;
