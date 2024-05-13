@@ -65,36 +65,49 @@ void ShaderProgram::buildProgram(const std::vector<std::string>& vertexPaths, co
 ShaderProgram::ShaderProgram(const std::string& programJSONPath) {
     std::ifstream jsonFileStream;
 
+    // Load parent shader program definition
     jsonFileStream.open(programJSONPath);
     nlohmann::json programJSON{ nlohmann::json::parse(jsonFileStream) };
     jsonFileStream.close();
-
-    std::filesystem::path programPath { programJSONPath };
-    std::filesystem::path parentDirectory { programPath.parent_path() };
-
-    std::cout << programJSON << std::endl;
     nlohmann::json::iterator endIter { programJSON[0].end() };
+    nlohmann::json::iterator typeIter { programJSON[0].find("type") };
+    if(typeIter == endIter || *typeIter != "shader/program") {
+        throw std::invalid_argument("Shader program JSON file " + programJSONPath + " is not of type \"shader/program\".");
+    }
+    std::cout << programJSON << std::endl;
     nlohmann::json::iterator vertexIter { programJSON[0].find("vertexShader") };
     nlohmann::json::iterator fragmentIter { programJSON[0].find("fragmentShader") };
     if(vertexIter == endIter || fragmentIter == endIter) {
-        throw std::invalid_argument("Shader program JSON file does not contain appropriate fragment or vertex shader definitions.");
+        throw std::invalid_argument("Shader program JSON file " + programJSONPath + " does not contain appropriate fragment or vertex shader definitions.");
     }
+    std::filesystem::path programPath { programJSONPath };
+    std::filesystem::path parentDirectory { programPath.parent_path() };
     std::filesystem::path vertexJSONPath { parentDirectory / std::string(*vertexIter) };
     std::filesystem::path fragmentJSONPath { parentDirectory / std::string(*fragmentIter) };
 
+    // load vertex shader definition
     std::vector<std::string> vertexSources {};
     jsonFileStream.open(vertexJSONPath.string());
     nlohmann::json vertexJSON { nlohmann::json::parse(jsonFileStream) };
     jsonFileStream.close();
+    typeIter = vertexJSON[0].find("type");
+    if(typeIter == vertexJSON[0].end() || *typeIter != "shader/vertex") {
+        throw std::invalid_argument("Vertex shader JSON file " + vertexJSONPath.string() + " is not of type \"shader/vertex\".");
+    }
     std::filesystem::path vertexJSONDirectory { vertexJSONPath.parent_path() };
     for(std::string source : vertexJSON[0]["sources"]) {
         vertexSources.push_back((vertexJSONDirectory / source).string());
     }
 
+    // load fragment shader definition
     std::vector<std::string> fragmentSources {};
     jsonFileStream.open(fragmentJSONPath.string());
     nlohmann::json fragmentJSON { nlohmann::json::parse(jsonFileStream) };
     jsonFileStream.close();
+    typeIter = fragmentJSON[0].find("type");
+    if(typeIter == fragmentJSON[0].end() || *typeIter != "shader/fragment") {
+        throw std::invalid_argument("Fragment shader JSON file " + fragmentJSONPath.string() + " is not of type \"shader/fragment\".");
+    }
     std::filesystem::path fragmentJSONDirectory { fragmentJSONPath.parent_path() };
     for(std::string source : fragmentJSON[0]["sources"]) {
         fragmentSources.push_back((fragmentJSONDirectory / source).string());
