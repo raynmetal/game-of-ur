@@ -24,12 +24,34 @@ Texture::Texture(GLuint textureID, const Usage type): mID{textureID}, mFilepath{
 Texture::Texture(): mID{0}, mFilepath{""}, mUsage{Usage::NA} 
 {}
 
-Texture::Texture(glm::vec2 dimensions, GLenum dataType, GLenum magFilter, GLenum minFilter, GLenum wrapS, GLenum wrapT) {
+Texture::Texture(glm::vec2 dimensions, GLenum dataType, GLenum magFilter, GLenum minFilter, GLenum wrapS, GLenum wrapT, unsigned int nComponents) {
+    assert(dataType == GL_FLOAT || dataType == GL_UNSIGNED_BYTE);
+    assert(nComponents == 1 || nComponents == 4);
+
     glGenTextures(1, &mID);
     glBindTexture(GL_TEXTURE_2D, mID);
+        // for now, we just support 4(RGBA) or 1(Red) components.
+        GLenum internalFormat;
+        GLenum externalFormat;
+        if(dataType == GL_FLOAT && nComponents == 1){ 
+            internalFormat = GL_R16F;
+            externalFormat = GL_RED;
+        } else if (dataType == GL_FLOAT && nComponents == 4) {
+            internalFormat = GL_RGBA16F;
+            externalFormat = GL_RGBA;
+        } else if (dataType == GL_UNSIGNED_BYTE && nComponents == 1) {
+            internalFormat = GL_RED;
+            externalFormat = GL_RED;
+        } else if (dataType == GL_UNSIGNED_BYTE && nComponents == 4) {
+            internalFormat = GL_RGBA;
+            externalFormat = GL_RGBA;
+        } else {
+            throw std::invalid_argument("Invalid data type and component count combination provided in texture constructor");
+        }
+
         glTexImage2D(
-            GL_TEXTURE_2D, 0, dataType == GL_FLOAT? GL_RGBA16F: GL_RGBA, 
-            dimensions.x, dimensions.y, 0, GL_RGBA, dataType, NULL
+            GL_TEXTURE_2D, 0, internalFormat, 
+            dimensions.x, dimensions.y, 0, externalFormat, dataType, NULL
         );
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);

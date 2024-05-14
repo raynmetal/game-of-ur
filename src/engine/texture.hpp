@@ -26,7 +26,7 @@ public:
     /*
     Generates the texture described by the arguments
     */
-    Texture(glm::vec2 dimensions, GLenum dataType, GLenum magFilter, GLenum minFilter, GLenum wrapS, GLenum wrapT);
+    Texture(glm::vec2 dimensions, GLenum dataType, GLenum magFilter, GLenum minFilter, GLenum wrapS, GLenum wrapT, unsigned int nComponents=4);
 
     /* Load an empty texture object, with an mID of 0 indicating
     that there is no texture here */
