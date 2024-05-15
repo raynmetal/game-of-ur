@@ -60,14 +60,14 @@ void Framebuffer::initialize(glm::vec2 dimensions, GLuint nColorAttachments, std
                     "framebuffer_" + std::to_string(mID) + "::color_buffer_" + std::to_string(count),
                     {
                         mDimensions,
-                        colorBufferDefinition.mDataType == ColorBufferDefinition::DataType::Float?
-                            GL_FLOAT: GL_UNSIGNED_BYTE,
+                        static_cast<GLenum>(colorBufferDefinition.mDataType == ColorBufferDefinition::DataType::Float?
+                            GL_FLOAT: GL_UNSIGNED_BYTE),
                         GL_LINEAR,
                         GL_LINEAR,
                         GL_CLAMP_TO_EDGE,
                         GL_CLAMP_TO_EDGE,
-                        colorBufferDefinition.mComponentCount == ColorBufferDefinition::ComponentCount::Four?
-                            4: 1
+                        static_cast<GLuint>(colorBufferDefinition.mComponentCount == ColorBufferDefinition::ComponentCount::Four?
+                            4: 1)
                     }
                 )
             );
@@ -143,7 +143,7 @@ void Framebuffer::copyResource(const Framebuffer& other) {
 
     bind();
         GLuint count {0};
-        for(const TextureHandle textureHandle: other.mTextureHandles) {
+        for(const TextureHandle& textureHandle: other.mTextureHandles) {
             mTextureHandles.push_back(
                 TextureManager::getInstance().registerResource(
                     "framebuffer_" + std::to_string(mID) + "::color_buffer_" + std::to_string(count),

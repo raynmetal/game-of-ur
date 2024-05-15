@@ -9,11 +9,11 @@
 #include "resource_manager.hpp"
 
 struct ColorBufferDefinition {
-    enum class ComponentCount {
+    enum class ComponentCount : GLuint {
         One = 1,
         Four = 4
     };
-    enum class DataType {
+    enum class DataType : GLuint {
         Float = GL_FLOAT,
         Byte = GL_UNSIGNED_BYTE
     };

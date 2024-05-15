@@ -13,6 +13,7 @@
 #include "engine/texture_manager.hpp"
 #include "engine/model_manager.hpp"
 #include "engine/shader_program_manager.hpp"
+#include "engine/framebuffer_manager.hpp"
 #include "engine/shapegen.hpp"
 
 extern constexpr int gWindowWidth {800};
@@ -60,112 +61,49 @@ int main(int argc, char* argv[]) {
     }
 
     // Create a framebuffer for storing geometrical information
-    GLuint geometryFBO;
-    glGenFramebuffers(1, &geometryFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);       // Generate 3 color buffers for storing geometrical information
-        GLenum geometryBufferColorFormat[3] { GL_FLOAT, GL_FLOAT, GL_UNSIGNED_BYTE };
-        std::vector<TextureHandle> geometryBufferHandles {};
-        for(int i{0}; i < 3; ++i) {
-            geometryBufferHandles.push_back(
-                TextureManager::getInstance().registerResource(
-                    std::string("geometryBuffer") + std::to_string(i),
-                    {
-                        glm::vec2(gWindowWidth, gWindowHeight),
-                        geometryBufferColorFormat[i],
-                        GL_LINEAR,
-                        GL_LINEAR,
-                        GL_CLAMP_TO_EDGE,
-                        GL_CLAMP_TO_EDGE
-                    }
-                )
-            );
-            geometryBufferHandles[i].getResource().attachToFramebuffer(i);
-        }
-
-        //Generate and attach a render buffer for storing depth and stencil values
-        GLuint geometryRBO;
-        glGenRenderbuffers(1, &geometryRBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, geometryRBO);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, gWindowWidth, gWindowHeight);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, geometryRBO);
-
-        // Specify that we'll be rendering to 3 colour attachments in this framebuffer
-        const GLenum geometryColorAttachments[3] {GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1, GL_COLOR_ATTACHMENT2};
-        glDrawBuffers(3, geometryColorAttachments);
-
-        // Check for framebuffer completeness
-        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            std::cout << "ERROR::FRAMEBUFFER: Framebuffer is not complete" << std::endl;
-            return 1;
-        }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    GLuint bloomFBO;
-    glGenFramebuffers(1, &bloomFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
-        std::vector<TextureHandle> bloomBufferHandles {};
-        for(int i{0}; i < 2; ++i) {
-            bloomBufferHandles.push_back(
-                TextureManager::getInstance().registerResource(
-                    std::string{"bloomBuffer"} + std::to_string(i),
-                    {
-                        glm::vec2(gWindowWidth, gWindowHeight),
-                        GL_FLOAT,
-                        GL_LINEAR,
-                        GL_LINEAR,
-                        GL_CLAMP_TO_EDGE,
-                        GL_CLAMP_TO_EDGE
-                    }
-                )
-            );
-            bloomBufferHandles[i].getResource().attachToFramebuffer(i);
-        }
-        glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            std::cout << "FRAMEBUFFER::ERROR:: Bloom framebuffer is not complete" << std::endl;
-            return 1;
-        }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
-    GLuint lightingFBO;
-    glGenFramebuffers(1, &lightingFBO);
-    glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
-        std::vector<TextureHandle> lightingBufferHandles {};
-        for(int i {0}; i < 2; ++i) {
-            lightingBufferHandles.push_back(
-                TextureManager::getInstance().registerResource(
-                    std::string("lightingBuffer") + std::to_string(i),
-                    {
-                        glm::vec2(gWindowWidth, gWindowHeight),
-                        GL_FLOAT,
-                        GL_LINEAR,
-                        GL_LINEAR,
-                        GL_CLAMP_TO_EDGE,
-                        GL_CLAMP_TO_EDGE
-                    }
-                )
-            );
-            lightingBufferHandles[i].getResource().attachToFramebuffer(i);
-        }
-
-        GLuint lightingRBO;
-        glGenRenderbuffers(1, &lightingRBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, lightingRBO);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, gWindowWidth, gWindowHeight);
-            glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, lightingRBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-
-        const GLenum lightingColorAttachments[2] { GL_COLOR_ATTACHMENT0, GL_COLOR_ATTACHMENT1 };
-        glDrawBuffers(2, lightingColorAttachments);
-
-        if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            std::cout << "ERROR::FRAMEBUFFER: Lighting framebuffer is incomplete" << std::endl;
-            return 1;
-        }
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+    FramebufferHandle geometryFramebufferHandle {
+        FramebufferManager::getInstance().registerResource(
+            "geometryFramebuffer",
+            {
+                {gWindowWidth, gWindowHeight},
+                3,
+                {
+                    {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float},
+                    {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float},
+                    {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Byte}
+                },
+                true
+            }
+        )
+    };
+    FramebufferHandle bloomFramebufferHandle {
+        FramebufferManager::getInstance().registerResource(
+            "bloomFramebuffer",
+            {
+                {gWindowWidth, gWindowHeight},
+                2,
+                {
+                    {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float},
+                    {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float}
+                },
+                false
+            }
+        )
+    };
+    FramebufferHandle lightingFramebufferHandle {
+        FramebufferManager::getInstance().registerResource(
+            "lightingFramebuffer",
+            {
+                {gWindowWidth, gWindowHeight},
+                2,
+                {
+                    {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float},
+                    {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float}
+                },
+                true
+            }
+        )
+    };
     // Set up a uniform buffer for shared matrices
     GLuint uboSharedMatrices;
     glGenBuffers(1, &uboSharedMatrices);
@@ -177,14 +115,12 @@ int main(int argc, char* argv[]) {
             GL_STATIC_DRAW
         );
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-
     // Let the shader(s) know where to find the shared matrices
     GLuint uboBindingPoint {0};
     geometryShaderHandle.getResource().use();
     geometryShaderHandle.getResource().setUniformBlock("Matrices", uboBindingPoint);
     lightingShaderHandle.getResource().use();
     lightingShaderHandle.getResource().setUniformBlock("Matrices", uboBindingPoint);
-
     // Bind the shared matrix uniform buffer to the same binding point
     glBindBufferRange(
         GL_UNIFORM_BUFFER,
@@ -200,10 +136,11 @@ int main(int argc, char* argv[]) {
     screenMesh.associateShaderProgram(tonemappingShaderHandle);
     gaussianblurShaderHandle.getResource().use();
     screenMesh.associateShaderProgram(gaussianblurShaderHandle);
-    
+
     ModelHandle boardPieceModelHandle { 
         ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"}) 
     };
+
     boardPieceModelHandle.getResource().addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
     LightCollection sceneLights {};
     GLuint flashlight { sceneLights.addLight(
@@ -265,6 +202,15 @@ int main(int argc, char* argv[]) {
     // Debug: list of screen textures that may be rendered
     constexpr GLuint nScreenTextures {6};
     GLuint currScreenTexture {3};
+    const std::vector<TextureHandle> geometryBufferHandles {
+        geometryFramebufferHandle.getResource().getColorBufferHandles()
+    };
+    const std::vector<TextureHandle> bloomBufferHandles {
+        bloomFramebufferHandle.getResource().getColorBufferHandles()
+    };
+    const std::vector<TextureHandle> lightingBufferHandles {
+        lightingFramebufferHandle.getResource().getColorBufferHandles()
+    };
     const TextureHandle screenTextureHandles[nScreenTextures] {
         {geometryBufferHandles[0]}, {geometryBufferHandles[1]}, {geometryBufferHandles[2]},
         {lightingBufferHandles[0]}, {lightingBufferHandles[1]},
@@ -354,11 +300,11 @@ int main(int argc, char* argv[]) {
 
         //Render geometry to our geometry framebuffer
         geometryShaderHandle.getResource().use();
-        glBindFramebuffer(GL_FRAMEBUFFER, geometryFBO);
+        geometryFramebufferHandle.getResource().bind();
             glEnable(GL_DEPTH_TEST);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
             boardPieceModelHandle.getResource().draw(geometryShaderHandle);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        geometryFramebufferHandle.getResource().unbind();
 
         for(int i{0}; i < 3; ++i) {
             geometryBufferHandles[i].getResource().bind(i);
@@ -369,7 +315,7 @@ int main(int argc, char* argv[]) {
         lightingShaderHandle.getResource().setUInt("uGeometryAlbedoSpecMap", 2);
         lightingShaderHandle.getResource().setUInt("uScreenWidth", gWindowWidth);
         lightingShaderHandle.getResource().setUInt("uScreenHeight", gWindowHeight);
-        glBindFramebuffer(GL_FRAMEBUFFER, lightingFBO);
+        lightingFramebufferHandle.getResource().bind();
             // glEnable(GL_DEPTH_TEST);
             glDisable(GL_DEPTH_TEST);
             glEnable(GL_BLEND);
@@ -377,10 +323,10 @@ int main(int argc, char* argv[]) {
             glClear(GL_COLOR_BUFFER_BIT); //| GL_DEPTH_BUFFER_BIT);
             sceneLights.draw(lightingShaderHandle);
             glDisable(GL_BLEND);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        lightingFramebufferHandle.getResource().unbind();
 
         gaussianblurShaderHandle.getResource().use();
-        glBindFramebuffer(GL_FRAMEBUFFER, bloomFBO);
+        bloomFramebufferHandle.getResource().bind();
             glDisable(GL_DEPTH_TEST);
             glDisable(GL_BLEND);
             glClear(GL_COLOR_BUFFER_BIT);
@@ -394,7 +340,7 @@ int main(int argc, char* argv[]) {
                 gaussianblurShaderHandle.getResource().setUBool("uHorizontal", i%2);
                 screenMesh.draw(gaussianblurShaderHandle, 1);
             }
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        bloomFramebufferHandle.getResource().unbind();
 
         glDisable(GL_DEPTH_TEST);
         glDisable(GL_FRAMEBUFFER_SRGB);
@@ -422,4 +368,12 @@ void init() {
     // IMPORTANT: call get instance, just to initialize the window
     // TODO: stupid name bound to trip me up sooner or later. Replace it.
     WindowContextManager::getInstance(gWindowWidth, gWindowHeight);
+
+    // The framebuffer resource manager depends on the texture resource manager existing (especially 
+    // during destruction at end of program.) Instantiate these managers in reverse order of their
+    // dependence
+    TextureManager::getInstance();
+    ShaderProgramManager::getInstance();
+    ModelManager::getInstance();
+    FramebufferManager::getInstance();
 }
