@@ -14,7 +14,6 @@
 
 void Mesh::draw(ShaderProgramHandle shaderProgramHandle, GLuint instanceCount) {
     shaderProgramHandle.getResource().use();
-    mMaterial.bind(shaderProgramHandle);
     glBindVertexArray(mShaderVAOMap[shaderProgramHandle]);
         glDrawElementsInstanced(
             GL_TRIANGLES,
@@ -28,12 +27,10 @@ void Mesh::draw(ShaderProgramHandle shaderProgramHandle, GLuint instanceCount) {
 
 Mesh::Mesh(
     const std::vector<Vertex>& vertices,
-    const std::vector<GLuint>& elements,
-    const std::vector<TextureHandle>& textureHandles
+    const std::vector<GLuint>& elements
 ) :
     mVertices{vertices},
     mElements{elements},
-    mMaterial{textureHandles, 18.f},
     mVertexBuffer{0},
     mElementBuffer{0}
 {
@@ -47,7 +44,6 @@ Mesh::~Mesh() {
 Mesh::Mesh(Mesh&& other):
     mVertices {other.mVertices},
     mElements {other.mElements},
-    mMaterial {other.mMaterial},
     mShaderVAOMap {other.mShaderVAOMap},
     mVertexBuffer {other.mVertexBuffer},
     mElementBuffer {other.mElementBuffer},
@@ -60,7 +56,6 @@ Mesh::Mesh(Mesh&& other):
 Mesh::Mesh(const Mesh& other):
     mVertices{other.mVertices},
     mElements{other.mElements},
-    mMaterial {other.mMaterial},
     mVertexBuffer{0},
     mElementBuffer{0}
 {
@@ -75,7 +70,6 @@ Mesh& Mesh::operator=(Mesh&& other) {
 
     mVertices = other.mVertices;
     mElements = other.mElements;
-    mMaterial = other.mMaterial;
     mShaderVAOMap = other.mShaderVAOMap;
     mDirty = other.mDirty;
     mVertexBuffer = other.mVertexBuffer;
@@ -94,7 +88,6 @@ Mesh& Mesh::operator=(const Mesh& other) {
 
     mVertices = other.mVertices;
     mElements = other.mElements;
-    mMaterial = other.mMaterial;
     mVertexBuffer = 0;
     mElementBuffer = 0;
     allocateBuffers();

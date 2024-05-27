@@ -3,7 +3,9 @@
 
 #include <stdexcept>
 #include <string>
+#include <sstream>
 #include <vector>
+#include <random>
 #include <map>
 
 class IResource {
@@ -130,16 +132,32 @@ ResourceHandle<T> ResourceManager<T>::getResourceHandle(const std::string& nameO
 
 template <typename T>
 ResourceHandle<T> ResourceManager<T>::registerResource(const std::string& nameOrLocation, T&& resource) {
-    if(mResources.find(nameOrLocation) != mResources.end()) {
+    std::string resourceIdentifier = nameOrLocation;
+    // a blank string indicates that we want to create a unique name for this resource
+    if(resourceIdentifier == "") {
+        resourceIdentifier.resize(18);
+        do {
+
+            static std::default_random_engine randomGenerator;
+            static std::uniform_int_distribution<char> letterDistribution(0, 25);
+            for(int i = 0; i < 18; ++i) {
+                resourceIdentifier[i] = 'a' + letterDistribution(randomGenerator);
+            }
+        } 
+        while(mResources.find(resourceIdentifier) != mResources.end());
+    }
+
+    else if(mResources.find(resourceIdentifier) != mResources.end()) {
         resource.destroyResource();
+        return { resourceIdentifier };
     }
-    else {
-        //assumes T has implemented move semantics
-        mResources[nameOrLocation] = std::move(resource);
-        //redundant call to release()
-        resource.releaseResource();
-    }
-    return { nameOrLocation };
+
+    //assumes T has implemented move semantics
+    mResources[resourceIdentifier] = std::move(resource);
+
+    //redundant call to release()
+    resource.releaseResource();
+    return { resourceIdentifier };
 }
 
 template <typename T>

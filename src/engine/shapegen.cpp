@@ -83,18 +83,12 @@ Mesh generateSphereMesh(int nLatitude, int nMeridian)  {
         previousBaseIndex = currentBaseIndex;
     }
 
-    return {
-        vertices,
-        elements,
-        {}
-    };
+    return { vertices, elements };
 }
 
 Model generateSphereModel(int nLatitude, int nMeridian) {
     Mesh mesh { generateSphereMesh(nLatitude, nMeridian) };
-    return {
-        mesh
-    };
+    return { mesh };
 }
 
 Mesh generateRectangleMesh(float width, float height) {
@@ -132,12 +126,10 @@ Mesh generateRectangleMesh(float width, float height) {
         {0}, {2}, {1},
         {0}, {3}, {2}
     };
-    return { vertices, elements, {} };
+    return { vertices, elements };
 }
 
 Model generateRectangleModel(float width, float height) {
     Mesh mesh { generateRectangleMesh(width, height) };
-    return {
-        mesh
-    };
+    return { mesh };
 }

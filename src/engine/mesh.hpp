@@ -25,8 +25,7 @@ public:
     */
     Mesh(
         const std::vector<Vertex>& vertices, 
-        const std::vector<GLuint>& elements,
-        const std::vector<TextureHandle>& textureHandles
+        const std::vector<GLuint>& elements
     );
 
     /*
@@ -74,12 +73,10 @@ private:
 
     std::vector<Vertex> mVertices {};
     std::vector<GLuint> mElements {};
-    Material mMaterial;
     std::map<ShaderProgramHandle, GLuint> mShaderVAOMap {};
 
     GLuint mVertexBuffer;
     GLuint mElementBuffer;
-
 
     bool mDirty {true};
 };

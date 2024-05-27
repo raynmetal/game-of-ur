@@ -18,6 +18,7 @@
 #include "mesh.hpp"
 #include "texture_manager.hpp"
 #include "shader_program_manager.hpp"
+#include "material_manager.hpp"
 #include "resource_manager.hpp"
 
 class Model : IResource {
@@ -31,11 +32,11 @@ public:
 
     Model();
 
-    /* load a model from the specified file path */
+    /* Load a model from the specified file path */
     Model(const std::string& filepath);
-    /* create a mesh out of a list of textures and vertices, store them in this model */
+    /* Create a mesh out of a list of textures and vertices, store them in this model */
     Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureHandle>& textureHandles);
-    /* create a model with a single mesh */
+    /* Create a model with a single mesh */
     Model(const Mesh& mesh);
 
     /* Model destructor */
@@ -72,63 +73,77 @@ public:
 
     void draw(ShaderProgramHandle shaderProgramhandle);
 private:
+    /*
+     * Meshes that make up this model
+     */
+    std::vector<Mesh> mMeshes {};
+    /*
+     * The materials that correspond to each mesh on this model
+     */
+    std::vector<MaterialHandle> mMaterialHandles {};
+    /*
+     * Root node leading to full hierarchy (of meshes)
+     */
+    TreeNode* mpHierarchyRoot {nullptr};
+    /*
+     * ID of the matrix buffer managed by this object
+     */
+    GLuint mMatrixBuffer {0};
+    /*
+     * The transform to the current world position for a given instance, with
+     * the instance ID as key
+     */
+    std::map<GLuint, glm::mat4> mInstanceModelMatrixMap {};
+    /*
+     * The IDs of deleted instances, to be reused by any new instances
+     * of this model that may be instantiated later
+     */
+    std::queue<GLuint> mDeletedInstanceIDs {};
+    GLuint mNextInstanceID {0};
+    /*
+     * The number of instances the memory on GPU presently allocated can store
+     * for this model
+     */
+    GLuint mInstanceCapacity {128};
+    /*
+     * Whether there has been a change in position or number of instance(s) of this
+     * model within this cycle, requiring fresh data to be sent to the GPU
+     */
+    bool mDirty {true};
 
-    /* updates buffers stored in GPU */
+    /* Updates buffers stored in GPU */
     void updateBuffers();
 
     /* 
-    utility method for destroying resources associated with
-    this model
-    */
+     * Utility method for destroying resources associated with
+     * this model
+     */
     void free();
     /*
-    utility method for taking resources from another instance of
-    this class 
-    */
+     * Utility method for taking resources from another instance of
+     * this class 
+     */
     void stealResources(Model& other);
     /*
-    utility method for deeply replicating resources from another 
-    instance of this class
-    */
+     * Utility method for deeply replicating resources from another 
+     * instance of this class
+     */
     void copyResources(const Model& other);
     /*
-    utility method for allocating buffers
-    */
+     * Utility method for allocating buffers
+     */
     void allocateBuffers();
 
     void deleteTree(Model::TreeNode* pRootNode);
     TreeNode* copyTree(const TreeNode* pRootNode, Model::TreeNode* pParentNode=nullptr);
 
     TreeNode* processAssimpNode(TreeNode* pParentNode, aiNode* pAiNode, const aiScene* pAiScene);
-    Mesh processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene);
+    void processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene);
 
     std::vector<TextureHandle> loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage);
 
     void destroyResource() override;
     void releaseResource() override;
-
-    /*
-    Meshes that make up this model
-    */
-    std::vector<Mesh> mMeshes {};
-    /*
-    root node leading to full hierarchy (of meshes)
-    */
-    TreeNode* mpHierarchyRoot {nullptr};
-    /*
-    string containing path to the model file
-    */
-    std::string mModelpath {""};
-
-    /*
-    ID of the matrix buffer managed by this object
-    */
-    GLuint mMatrixBuffer {0};
-    std::map<GLuint, glm::mat4> mInstanceModelMatrixMap {};
-    std::queue<GLuint> mDeletedInstanceIDs {};
-    GLuint mNextInstanceID {0};
-    GLuint mInstanceCapacity {128};
-    bool mDirty {true};
 
 friend class ResourceManager<Model>;
 };

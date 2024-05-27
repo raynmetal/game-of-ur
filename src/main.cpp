@@ -10,6 +10,7 @@
 #include "engine/light.hpp"
 #include "engine/fly_camera.hpp"
 #include "engine/window_context_manager.hpp"
+#include "engine/material_manager.hpp"
 #include "engine/texture_manager.hpp"
 #include "engine/model_manager.hpp"
 #include "engine/shader_program_manager.hpp"
@@ -374,6 +375,7 @@ void init() {
     // dependence
     TextureManager::getInstance();
     ShaderProgramManager::getInstance();
-    ModelManager::getInstance();
     FramebufferManager::getInstance();
+    MaterialManager::getInstance();
+    ModelManager::getInstance();
 }

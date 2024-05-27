@@ -46,3 +46,13 @@ void Material::bind(ShaderProgramHandle shaderProgramHandle) {
 
     shaderProgramHandle.getResource().setUFloat("uMaterial.mSpecularExponent", mSpecularExponent);
 }
+
+void Material::destroyResource() {
+    mTextureHandles.clear();
+    mSpecularExponent = 0.f;
+}
+
+void Material::releaseResource() {
+    mTextureHandles.clear();
+    mSpecularExponent = 0.f;
+}
