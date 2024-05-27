@@ -10,6 +10,7 @@
 #include "vertex.hpp"
 #include "texture_manager.hpp"
 #include "shader_program_manager.hpp"
+#include "material.hpp"
 
 constexpr GLuint kInitialInstanceCapacity {128};
 
@@ -71,17 +72,14 @@ private:
     */
     void allocateBuffers();
 
-    void bindMaterial(ShaderProgramHandle shaderProgramHandle);
-
     std::vector<Vertex> mVertices {};
     std::vector<GLuint> mElements {};
-    std::vector<TextureHandle> mTextureHandles {};
+    Material mMaterial;
     std::map<ShaderProgramHandle, GLuint> mShaderVAOMap {};
 
     GLuint mVertexBuffer;
     GLuint mElementBuffer;
 
-    GLfloat mSpecularExponent {64.f};
 
     bool mDirty {true};
 };

@@ -14,7 +14,7 @@
 
 void Mesh::draw(ShaderProgramHandle shaderProgramHandle, GLuint instanceCount) {
     shaderProgramHandle.getResource().use();
-    bindMaterial(shaderProgramHandle);
+    mMaterial.bind(shaderProgramHandle);
     glBindVertexArray(mShaderVAOMap[shaderProgramHandle]);
         glDrawElementsInstanced(
             GL_TRIANGLES,
@@ -26,41 +26,6 @@ void Mesh::draw(ShaderProgramHandle shaderProgramHandle, GLuint instanceCount) {
     glBindVertexArray(0);
 }
 
-void Mesh::bindMaterial(ShaderProgramHandle shaderProgramHandle) {
-    //Set texture-related uniforms
-    bool usingAlbedoMap {false};
-    bool usingNormalMap {false};
-    bool usingSpecularMap {false};
-
-    GLuint textureUnit {0};
-    for(const TextureHandle& textureHandle : mTextureHandles) {
-        textureHandle.getResource().bind(textureUnit);
-        //TODO: allow multiple materials to make up a single mesh
-        switch(textureHandle.getResource().getUsage()) {
-            case Texture::Albedo:
-                usingAlbedoMap = true;
-                shaderProgramHandle.getResource().setUInt("uMaterial.mTextureAlbedo", textureUnit);
-            break;
-            case Texture::Normal:
-                usingNormalMap = true;
-                shaderProgramHandle.getResource().setUInt("uMaterial.mTextureNormal", textureUnit);
-            break;
-            case Texture::Specular:
-                usingSpecularMap = true;
-                shaderProgramHandle.getResource().setUInt("uMaterial.mTextureSpecular", textureUnit);
-            break;
-            default: break;
-        }
-        ++textureUnit;
-    }
-    glActiveTexture(GL_TEXTURE0);
-    shaderProgramHandle.getResource().setUBool("uMaterial.mUsingAlbedoMap", usingAlbedoMap);
-    shaderProgramHandle.getResource().setUBool("uMaterial.mUsingNormalMap", usingNormalMap);
-    shaderProgramHandle.getResource().setUBool("uMaterial.mUsingSpecularMap", usingSpecularMap);
-
-    shaderProgramHandle.getResource().setUFloat("uMaterial.mSpecularExponent", mSpecularExponent);
-}
-
 Mesh::Mesh(
     const std::vector<Vertex>& vertices,
     const std::vector<GLuint>& elements,
@@ -68,7 +33,7 @@ Mesh::Mesh(
 ) :
     mVertices{vertices},
     mElements{elements},
-    mTextureHandles{textureHandles},
+    mMaterial{textureHandles, 18.f},
     mVertexBuffer{0},
     mElementBuffer{0}
 {
@@ -82,7 +47,7 @@ Mesh::~Mesh() {
 Mesh::Mesh(Mesh&& other):
     mVertices {other.mVertices},
     mElements {other.mElements},
-    mTextureHandles {other.mTextureHandles},
+    mMaterial {other.mMaterial},
     mShaderVAOMap {other.mShaderVAOMap},
     mVertexBuffer {other.mVertexBuffer},
     mElementBuffer {other.mElementBuffer},
@@ -95,7 +60,7 @@ Mesh::Mesh(Mesh&& other):
 Mesh::Mesh(const Mesh& other):
     mVertices{other.mVertices},
     mElements{other.mElements},
-    mTextureHandles{other.mTextureHandles},
+    mMaterial {other.mMaterial},
     mVertexBuffer{0},
     mElementBuffer{0}
 {
@@ -110,7 +75,7 @@ Mesh& Mesh::operator=(Mesh&& other) {
 
     mVertices = other.mVertices;
     mElements = other.mElements;
-    mTextureHandles = other.mTextureHandles;
+    mMaterial = other.mMaterial;
     mShaderVAOMap = other.mShaderVAOMap;
     mDirty = other.mDirty;
     mVertexBuffer = other.mVertexBuffer;
@@ -129,7 +94,7 @@ Mesh& Mesh::operator=(const Mesh& other) {
 
     mVertices = other.mVertices;
     mElements = other.mElements;
-    mTextureHandles = other.mTextureHandles;
+    mMaterial = other.mMaterial;
     mVertexBuffer = 0;
     mElementBuffer = 0;
     allocateBuffers();
@@ -203,6 +168,7 @@ void Mesh::free() {
 
     mShaderVAOMap.clear();
 }
+
 void Mesh::releaseResources() {
     mVertexBuffer = 0;
     mElementBuffer = 0;
