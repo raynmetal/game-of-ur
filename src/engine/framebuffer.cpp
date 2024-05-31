@@ -192,3 +192,7 @@ void Framebuffer::stealResource(Framebuffer& other) {
 
     other.releaseResource();
 }
+
+bool Framebuffer::hasRBO() {
+    return mRBO != 0;
+}

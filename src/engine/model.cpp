@@ -14,8 +14,8 @@
 #include "material_manager.hpp"
 #include "texture_manager.hpp"
 #include "shader_program_manager.hpp"
+#include "mesh_manager.hpp"
 #include "vertex.hpp"
-#include "mesh.hpp"
 #include "model.hpp"
 
 glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 scale);
@@ -23,9 +23,9 @@ glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 
 void Model::draw(ShaderProgramHandle shaderProgramHandle) {
     updateBuffers();
     shaderProgramHandle.getResource().use();
-    for(std::size_t i {0}; i < mMeshes.size(); ++i) {
+    for(std::size_t i {0}; i < mMeshHandles.size(); ++i) {
         mMaterialHandles[i].getResource().bind(shaderProgramHandle);
-        mMeshes[i].draw(shaderProgramHandle, mInstanceModelMatrixMap.size());
+        mMeshHandles[i].getResource().draw(shaderProgramHandle, mInstanceModelMatrixMap.size());
     }
 }
 
@@ -46,12 +46,15 @@ Model::Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& ele
         )
     );
 
-    mMeshes.push_back(
-        Mesh{ vertices, elements }
+    mMeshHandles.push_back(
+        MeshManager::getInstance().registerResource(
+            "",
+            { vertices, elements }
+        )
     );
 }
 
-Model::Model(const Mesh& mesh) : Model() {
+Model::Model(const MeshHandle& meshHandle) : Model() {
     mpHierarchyRoot = new Model::TreeNode {};
     mpHierarchyRoot->mMeshIndices.push_back(0);
     mMaterialHandles.push_back(
@@ -59,8 +62,11 @@ Model::Model(const Mesh& mesh) : Model() {
             "", {{}, 18.f}
         )
     );
-    mMeshes.push_back(
-        mesh
+    mMeshHandles.push_back(
+        MeshManager::getInstance().registerResource(
+            "",
+            Mesh{ meshHandle.getResource() }
+        )
     );
 }
 
@@ -194,14 +200,14 @@ glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 
 void Model::free() {
     glDeleteBuffers(1, &mMatrixBuffer);
     mMatrixBuffer = 0;
-    mMeshes.clear();
+    mMeshHandles.clear();
     mMaterialHandles.clear();
     deleteTree(mpHierarchyRoot);
     mpHierarchyRoot = nullptr;
 }
 
 void Model::stealResources(Model& other) {
-    std::swap(mMeshes, other.mMeshes);
+    std::swap(mMeshHandles, other.mMeshHandles);
 
     mMatrixBuffer = other.mMatrixBuffer;
     mMaterialHandles = other.mMaterialHandles;
@@ -218,7 +224,7 @@ void Model::stealResources(Model& other) {
 }
 
 void Model::copyResources(const Model& other) {
-    mMeshes = other.mMeshes;
+    mMeshHandles = other.mMeshHandles;
 
     mInstanceModelMatrixMap = other.mInstanceModelMatrixMap;
     mMaterialHandles = other.mMaterialHandles;
@@ -282,7 +288,7 @@ Model::TreeNode* Model::processAssimpNode(Model::TreeNode* pParentNode, aiNode* 
         aiMesh* pAiMesh {
             pAiScene->mMeshes[pAiNode->mMeshes[i]]
         };
-        int meshIndex { static_cast<int>(mMeshes.size()) };
+        int meshIndex { static_cast<int>(mMeshHandles.size()) };
         processAssimpMesh(pAiMesh, pAiScene);
         pNewNode->mMeshIndices.push_back(meshIndex);
     }
@@ -337,8 +343,11 @@ void Model::processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene) {
         }
     }
 
-    mMeshes.push_back(
-        {vertices, elements}
+    mMeshHandles.push_back(
+        MeshManager::getInstance().registerResource(
+            "",
+            {vertices, elements}
+        )
     );
 
     // Load textures
@@ -402,15 +411,15 @@ std::vector<TextureHandle> Model::loadAssimpTextures(aiMaterial* pAiMaterial, Te
 }
 
 void Model::associateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
-    for(Mesh& mesh: mMeshes) {
+    for(const MeshHandle& meshHandle: mMeshHandles) {
         // TODO: This needs to be more robust somehow
         // Its okay to assume for now that since this model owns these meshes, our meshes won't
         // be associated with a shader until this model associates them
-        GLuint shaderVAO = mesh.getShaderVAO(shaderProgramHandle);
+        GLuint shaderVAO = meshHandle.getResource().getShaderVAO(shaderProgramHandle);
         if(shaderVAO) continue;
 
-        mesh.associateShaderProgram(shaderProgramHandle);
-        shaderVAO = mesh.getShaderVAO(shaderProgramHandle);
+        meshHandle.getResource().associateShaderProgram(shaderProgramHandle);
+        shaderVAO = meshHandle.getResource().getShaderVAO(shaderProgramHandle);
         glBindVertexArray(shaderVAO);
             // Enable and set matrix pointers
             glBindBuffer(GL_ARRAY_BUFFER, mMatrixBuffer);
@@ -437,8 +446,8 @@ void Model::associateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
 }
 
 void Model::disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
-    for(Mesh& mesh: mMeshes) {
-        mesh.disassociateShaderProgram(shaderProgramHandle);
+    for(const MeshHandle& meshHandle: mMeshHandles) {
+        meshHandle.getResource().disassociateShaderProgram(shaderProgramHandle);
     }
 }
 

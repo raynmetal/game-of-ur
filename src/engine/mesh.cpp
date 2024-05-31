@@ -38,7 +38,7 @@ Mesh::Mesh(
 }
 
 Mesh::~Mesh() {
-    free();
+    destroyResource();
 }
 
 Mesh::Mesh(Mesh&& other):
@@ -50,7 +50,7 @@ Mesh::Mesh(Mesh&& other):
     mDirty {other.mDirty}
 {
     // prevent other from removing our resources when its deconstructor is called
-    other.releaseResources();
+    other.releaseResource();
 }
 
 Mesh::Mesh(const Mesh& other):
@@ -66,7 +66,7 @@ Mesh& Mesh::operator=(Mesh&& other) {
     if(&other == this) 
         return *this;
 
-    free();
+    destroyResource();
 
     mVertices = other.mVertices;
     mElements = other.mElements;
@@ -75,7 +75,7 @@ Mesh& Mesh::operator=(Mesh&& other) {
     mVertexBuffer = other.mVertexBuffer;
     mElementBuffer = other.mElementBuffer;
 
-    other.releaseResources();
+    other.releaseResource();
 
     return *this;
 }
@@ -84,7 +84,7 @@ Mesh& Mesh::operator=(const Mesh& other) {
     if(&other == this) 
         return *this;
     
-    free();
+    destroyResource();
 
     mVertices = other.mVertices;
     mElements = other.mElements;
@@ -148,7 +148,7 @@ GLuint Mesh::getShaderVAO(const ShaderProgramHandle& shaderProgramHandle) const 
     return resultIterator->second;
 }
 
-void Mesh::free() {
+void Mesh::destroyResource() {
     glDeleteBuffers(1, &mVertexBuffer);
     glDeleteBuffers(1, &mElementBuffer);
 
@@ -162,7 +162,7 @@ void Mesh::free() {
     mShaderVAOMap.clear();
 }
 
-void Mesh::releaseResources() {
+void Mesh::releaseResource() {
     mVertexBuffer = 0;
     mElementBuffer = 0;
     mShaderVAOMap.clear();

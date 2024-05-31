@@ -16,7 +16,7 @@ LightCollection::LightCollection(const LightCollection& other) {
 LightCollection& LightCollection::operator=(LightCollection&& other) {
     if(&other == this) return *this;
 
-    free();
+    destroyResource();
     stealResources(other);
 
     return *this;
@@ -24,7 +24,7 @@ LightCollection& LightCollection::operator=(LightCollection&& other) {
 LightCollection& LightCollection::operator=(const LightCollection& other) {
     if(&other == this) return *this;
 
-    free();
+    destroyResource();
     copyResources(other);
 
     return *this;
@@ -34,15 +34,15 @@ void LightCollection::draw(ShaderProgramHandle shaderProgramHandle) {
     updateBuffers();
 
     shaderProgramHandle.getResource().use();
-    mLightVolume.draw(shaderProgramHandle, mInstanceLightMap.size());
+    mLightVolume.getResource().draw(shaderProgramHandle, mInstanceLightMap.size());
 }
 
 void LightCollection::associateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
     glUseProgram(shaderProgramHandle.getResource().getProgramID());
     //TODO: set light and matrix instance pointers for this shader+mesh's
-    mLightVolume.associateShaderProgram(shaderProgramHandle);
+    mLightVolume.getResource().associateShaderProgram(shaderProgramHandle);
 
-    GLuint shaderVAO { mLightVolume.getShaderVAO(shaderProgramHandle) };
+    GLuint shaderVAO { mLightVolume.getResource().getShaderVAO(shaderProgramHandle) };
     glBindVertexArray(shaderVAO);
         glBindBuffer(GL_ARRAY_BUFFER, mModelMatrixBuffer);
             GLint attrModelMatrix { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrModelMatrix") };
@@ -123,7 +123,7 @@ void LightCollection::associateShaderProgram(ShaderProgramHandle shaderProgramHa
     glBindVertexArray(0);
 }
 void LightCollection::disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
-    mLightVolume.disassociateShaderProgram(shaderProgramHandle);
+    mLightVolume.getResource().disassociateShaderProgram(shaderProgramHandle);
 }
 
 GLuint LightCollection::addLight(const Light& light) {
@@ -187,7 +187,7 @@ void LightCollection::removeLight(GLuint instanceID) {
     mDirty = true;
 }
 
-void LightCollection::free() {
+void LightCollection::destroyResource() {
     glDeleteBuffers(1, &mModelMatrixBuffer);
     glDeleteBuffers(1, &mLightBuffer);
     mModelMatrixBuffer = 0;
@@ -250,6 +250,13 @@ void LightCollection::allocateBuffers() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void LightCollection::releaseResource() {
+    // Prevent ourself from destroying our release resourced when its destructor
+    // is called
+    mModelMatrixBuffer = 0;
+    mLightBuffer = 0;
+}
+
 void LightCollection::stealResources(LightCollection& other) {
     mModelMatrixBuffer = other.mModelMatrixBuffer;
     mLightBuffer = other.mLightBuffer;
@@ -263,8 +270,7 @@ void LightCollection::stealResources(LightCollection& other) {
 
     // Prevent other from destroying our resources when its destructor
     // is called
-    other.mModelMatrixBuffer = 0;
-    other.mLightBuffer = 0;
+    other.releaseResource();
 }
 
 void LightCollection::copyResources(const LightCollection& other) {

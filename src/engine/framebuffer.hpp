@@ -54,6 +54,8 @@ public:
     default framebuffer) */
     void unbind();
 
+    bool hasRBO();
+
 private:
     GLuint mID {};
     GLuint mRBO {};

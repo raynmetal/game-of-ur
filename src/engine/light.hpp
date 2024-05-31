@@ -11,8 +11,9 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "shader_program_manager.hpp"
-#include "mesh.hpp"
+#include "mesh_manager.hpp"
 #include "shapegen.hpp"
+#include "resource_manager.hpp"
 
 struct Light {
     static Light MakeDirectionalLight(const glm::vec3& direction, const glm::vec3& diffuse,  const glm::vec3& specular, const glm::vec3& ambient);
@@ -44,7 +45,7 @@ struct Light {
     float calculateRadius(float intensityCutoff) const;
 };
 
-class LightCollection {
+class LightCollection : IResource {
 public:
     /* default constructor */
     LightCollection();
@@ -72,13 +73,14 @@ public:
 private:
     void updateBuffers();
     void allocateBuffers();
-    void free();
+    void destroyResource() override;
+    void releaseResource() override;
     void stealResources(LightCollection& other);
     void copyResources(const LightCollection& other);
 
     GLuint mModelMatrixBuffer { 0 };
     GLuint mLightBuffer { 0 };
-    Mesh mLightVolume {generateSphereMesh(10, 10)};
+    MeshHandle mLightVolume {generateSphereMesh(10, 10)};
 
     GLuint mNextInstanceID {0};
     std::queue<GLuint> mDeletedInstanceIDs {};
@@ -86,6 +88,8 @@ private:
     std::map<GLuint, Light> mInstanceLightMap {};
     GLuint mInstanceCapacity { 128 };
     bool mDirty {true};
+
+friend class ResourceManager<LightCollection>;
 };
 
 #endif

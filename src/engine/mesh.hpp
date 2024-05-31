@@ -7,19 +7,19 @@
 
 #include <GL/glew.h>
 
-#include "vertex.hpp"
-#include "texture_manager.hpp"
 #include "shader_program_manager.hpp"
+#include "vertex.hpp"
 #include "material.hpp"
-
-constexpr GLuint kInitialInstanceCapacity {128};
+#include "resource_manager.hpp"
 
 /* 
 A class whose main purpose is to store geometry-related information. At present, it also holds data
 representing its material (primarily textures)
 */
-class Mesh {
+class Mesh : IResource {
 public:
+    Mesh() = default;
+
     /*
     Initializer for the mesh class
     */
@@ -57,28 +57,31 @@ public:
     void draw(ShaderProgramHandle shaderProgramHandle, GLuint instanceCount);
 
 private:
-    /* 
-    Destroys resources used by this object
-    */
-    void free();
-    /*
-    Removes references to allocated resources without destroying the
-    resources themselves
-    */
-    void releaseResources();
-    /*
-    Sends vertex and element data to the GPU
-    */
-    void allocateBuffers();
-
     std::vector<Vertex> mVertices {};
     std::vector<GLuint> mElements {};
     std::map<ShaderProgramHandle, GLuint> mShaderVAOMap {};
 
-    GLuint mVertexBuffer;
-    GLuint mElementBuffer;
+    GLuint mVertexBuffer {0};
+    GLuint mElementBuffer {0};
 
     bool mDirty {true};
+
+    /* 
+    Destroys resources used by this object
+    */
+    void destroyResource();
+
+    /*
+    Removes references to allocated resources without destroying the
+    resources themselves
+    */
+    void releaseResource();
+
+    /*
+    Sends vertex and element data to the GPU
+    */
+    void allocateBuffers();
+friend class ResourceManager<Mesh>;
 };
 
 #endif

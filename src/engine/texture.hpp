@@ -4,6 +4,7 @@
 #include <string>
 
 #include <GL/glew.h>
+#include <glm/glm.hpp>
 
 #include "resource_manager.hpp"
 

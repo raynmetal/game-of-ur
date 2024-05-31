@@ -8,9 +8,7 @@
 #include <GL/glew.h>
 
 #include "shader_program_manager.hpp"
-
 #include "texture_manager.hpp"
-
 #include "resource_manager.hpp"
 
 class Material : IResource {

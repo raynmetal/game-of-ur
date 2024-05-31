@@ -5,12 +5,15 @@
 
 #include "vertex.hpp"
 #include "mesh.hpp"
+#include "model_manager.hpp"
+#include "mesh_manager.hpp"
 #include "model.hpp"
 #include "shapegen.hpp"
 
-Mesh generateSphereMesh(int nLatitude, int nMeridian)  {
-    if(nLatitude < 1) nLatitude = 1; // at least one latitude, the equator
-    if(nMeridian < 2) nMeridian = 2; // at least 2 meridians, 90 deg apart
+MeshHandle generateSphereMesh(int nLatitude, int nMeridian)  {
+    assert(nLatitude >= 1);
+    assert(nMeridian >= 2);
+
     const int nVerticesPerLatitude { 2 * nMeridian };
     const int nVerticesTotal { 2 + nLatitude * nVerticesPerLatitude };
 
@@ -83,15 +86,33 @@ Mesh generateSphereMesh(int nLatitude, int nMeridian)  {
         previousBaseIndex = currentBaseIndex;
     }
 
-    return { vertices, elements };
+    std::string meshName {
+        "_generated_sphere__nLat_"
+        + std::to_string(nLatitude)
+        + "__nMer_"
+        + std::to_string(nMeridian)
+    };
+
+    return MeshManager::getInstance().registerResource(
+        meshName,
+        { vertices, elements }
+    );
 }
 
-Model generateSphereModel(int nLatitude, int nMeridian) {
-    Mesh mesh { generateSphereMesh(nLatitude, nMeridian) };
-    return { mesh };
+ModelHandle generateSphereModel(int nLatitude, int nMeridian) {
+    MeshHandle sphereMesh { generateSphereMesh(nLatitude, nMeridian) };
+    return { 
+        ModelManager::getInstance().registerResource(
+            sphereMesh.getName(),
+            sphereMesh
+        )
+    };
 }
 
-Mesh generateRectangleMesh(float width, float height) {
+MeshHandle generateRectangleMesh(float width, float height) {
+    assert(width > 0.f);
+    assert(height > 0.f);
+
     std::vector<Vertex> vertices {
         {
             {-width/2.f, height/2.f, 0.f, 1.f},
@@ -126,10 +147,26 @@ Mesh generateRectangleMesh(float width, float height) {
         {0}, {2}, {1},
         {0}, {3}, {2}
     };
-    return { vertices, elements };
+
+    std::string meshName {
+        "_generated_rectangle__width_"
+        + std::to_string(width)
+        + "__height_"
+        + std::to_string(height)
+    };
+
+    return MeshManager::getInstance().registerResource(
+        meshName,
+        { vertices, elements }
+    );
 }
 
-Model generateRectangleModel(float width, float height) {
-    Mesh mesh { generateRectangleMesh(width, height) };
-    return { mesh };
+ModelHandle generateRectangleModel(float width, float height) {
+    MeshHandle rectangleMesh { generateRectangleMesh(width, height) };
+    return {
+        ModelManager::getInstance().registerResource(
+            rectangleMesh.getName(),
+            rectangleMesh
+        )
+    };
 }

@@ -14,8 +14,7 @@
 #include <assimp/material.h>
 
 #include "vertex.hpp"
-#include "texture.hpp"
-#include "mesh.hpp"
+#include "mesh_manager.hpp"
 #include "texture_manager.hpp"
 #include "shader_program_manager.hpp"
 #include "material_manager.hpp"
@@ -37,7 +36,7 @@ public:
     /* Create a mesh out of a list of textures and vertices, store them in this model */
     Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureHandle>& textureHandles);
     /* Create a model with a single mesh */
-    Model(const Mesh& mesh);
+    Model(const MeshHandle& meshHandle);
 
     /* Model destructor */
     ~Model();
@@ -72,11 +71,12 @@ public:
 
 
     void draw(ShaderProgramHandle shaderProgramhandle);
+
 private:
     /*
      * Meshes that make up this model
      */
-    std::vector<Mesh> mMeshes {};
+    std::vector<MeshHandle> mMeshHandles {};
     /*
      * The materials that correspond to each mesh on this model
      */
