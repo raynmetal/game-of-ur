@@ -129,9 +129,17 @@ int main(int argc, char* argv[]) {
     };
 
     GeometryRenderStage geometryRenderStage {geometryShaderHandle, geometryFramebufferHandle};
+    geometryRenderStage.declareRenderTarget("geometryPosition", 0);
+    geometryRenderStage.declareRenderTarget("geometryNormal", 1);
+    geometryRenderStage.declareRenderTarget("geometryAlbedoSpecular", 2);
     LightingRenderStage lightingRenderStage {lightingShaderHandle, lightingFramebufferHandle};
+    lightingRenderStage.declareRenderTarget("litScene", 0);
+    lightingRenderStage.declareRenderTarget("brightCutoff", 1);
     BlurRenderStage blurRenderStage {gaussianblurShaderHandle, bloomFramebufferHandle};
+    blurRenderStage.declareRenderTarget("pingBuffer", 0);
+    blurRenderStage.declareRenderTarget("pongBuffer", 1);
     TonemappingRenderStage tonemappingRenderStage {tonemappingShaderHandle, tonemappingFramebufferHandle };
+    tonemappingRenderStage.declareRenderTarget("tonemappedScene", 0);
     ScreenRenderStage screenRenderStage {screenShaderHandle};
 
     // Set up a uniform buffer for shared matrices
@@ -232,38 +240,26 @@ int main(int argc, char* argv[]) {
     // Debug: list of screen textures that may be rendered
     constexpr GLuint nScreenTextures {7};
     GLuint currScreenTexture {3};
-    const std::vector<TextureHandle> geometryBufferHandles {
-        geometryFramebufferHandle.getResource().getColorBufferHandles()
-    };
-    const std::vector<TextureHandle> bloomBufferHandles {
-        bloomFramebufferHandle.getResource().getColorBufferHandles()
-    };
-    const std::vector<TextureHandle> lightingBufferHandles {
-        lightingFramebufferHandle.getResource().getColorBufferHandles()
-    };
-    const std::vector<TextureHandle> tonemappingBufferHandles {
-        tonemappingFramebufferHandle.getResource().getColorBufferHandles()
-    };
     const TextureHandle screenTextureHandles[nScreenTextures] {
-        {geometryBufferHandles[0]}, {geometryBufferHandles[1]}, {geometryBufferHandles[2]},
-        {lightingBufferHandles[0]}, {lightingBufferHandles[1]},
-        {bloomBufferHandles[0]}, 
-        {tonemappingBufferHandles[0]}
+        {geometryRenderStage.getRenderTarget("geometryPosition")}, {geometryRenderStage.getRenderTarget("geometryNormal")}, {geometryRenderStage.getRenderTarget("geometryAlbedoSpecular")},
+        {lightingRenderStage.getRenderTarget("litScene")}, {lightingRenderStage.getRenderTarget("brightCutoff")},
+        {blurRenderStage.getRenderTarget("pingBuffer")}, 
+        {tonemappingRenderStage.getRenderTarget("tonemappedScene")}
     };
     float gamma = 2.2f;
 
     // Last pieces of pipeline setup
-    lightingRenderStage.attachTexture("positionMap", geometryBufferHandles[0]);
-    lightingRenderStage.attachTexture("normalMap", geometryBufferHandles[1]);
-    lightingRenderStage.attachTexture("albedoSpecularMap", geometryBufferHandles[2]);
+    lightingRenderStage.attachTexture("positionMap", geometryRenderStage.getRenderTarget("geometryPosition"));
+    lightingRenderStage.attachTexture("normalMap", geometryRenderStage.getRenderTarget("geometryNormal"));
+    lightingRenderStage.attachTexture("albedoSpecularMap", geometryRenderStage.getRenderTarget("geometryAlbedoSpecular"));
     lightingRenderStage.updateIntParameter("screenWidth", gWindowWidth);
     lightingRenderStage.updateIntParameter("screenHeight", gWindowHeight);
     blurRenderStage.attachMesh("screenMesh", screenMeshHandle);
-    blurRenderStage.attachTexture("unblurredImage", lightingBufferHandles[1]);
+    blurRenderStage.attachTexture("unblurredImage", lightingRenderStage.getRenderTarget("brightCutoff"));
     blurRenderStage.updateIntParameter("nPasses", 12);
     tonemappingRenderStage.attachMesh("screenMesh", screenMeshHandle);
-    tonemappingRenderStage.attachTexture("litScene", lightingBufferHandles[0]);
-    tonemappingRenderStage.attachTexture("bloomEffect", bloomBufferHandles[0]);
+    tonemappingRenderStage.attachTexture("litScene", lightingRenderStage.getRenderTarget("litScene"));
+    tonemappingRenderStage.attachTexture("bloomEffect", blurRenderStage.getRenderTarget("pingBuffer"));
     tonemappingRenderStage.updateFloatParameter("exposure", exposure);
     tonemappingRenderStage.updateFloatParameter("gamma", gamma);
     tonemappingRenderStage.updateIntParameter("combine", true);

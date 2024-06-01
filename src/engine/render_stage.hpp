@@ -65,9 +65,11 @@ public:
     virtual void validate() = 0;
     virtual void execute() = 0;
 
-
+    void declareRenderTarget(const std::string& name, unsigned int index);
+    TextureHandle getRenderTarget(const std::string& name);
 protected:
     FramebufferHandle mFramebufferHandle;
+    std::map<std::string, unsigned int> mRenderTargets {};
 };
 
 class GeometryRenderStage : public BaseOffscreenRenderStage {

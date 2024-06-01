@@ -82,6 +82,15 @@ LightCollectionHandle BaseRenderStage::getLightCollection(const std::string& nam
     return mLightCollectionAttachments.at(name);
 }
 
+void BaseOffscreenRenderStage::declareRenderTarget(const std::string& name, unsigned int index) {
+    assert(index < mFramebufferHandle.getResource().getColorBufferHandles().size());
+    mRenderTargets.insert_or_assign(name, index);
+}
+
+TextureHandle BaseOffscreenRenderStage::getRenderTarget(const std::string& name) {
+    return mFramebufferHandle.getResource().getColorBufferHandles()[mRenderTargets.at(name)];
+}
+
 void GeometryRenderStage::validate() {
     /*
      * Three colour buffers corresponding to position, normal, albedospec (for now)
@@ -243,7 +252,6 @@ void ScreenRenderStage::execute() {
     mShaderHandle.getResource().use();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_BLEND);
-    //glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
