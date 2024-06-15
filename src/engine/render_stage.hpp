@@ -14,10 +14,11 @@
 
 class BaseRenderStage {
 public:
-    BaseRenderStage(const ShaderProgramHandle& shaderProgramHandle);
+    BaseRenderStage(const std::string& shaderFilepath);
 
     virtual ~BaseRenderStage() = default;
 
+    virtual void setup() = 0;
     virtual void validate() = 0;
     virtual void execute() = 0;
 
@@ -59,9 +60,9 @@ protected:
 
 class BaseOffscreenRenderStage: public BaseRenderStage {
 public:
-    BaseOffscreenRenderStage(const ShaderProgramHandle& shaderProgramHandle, const FramebufferHandle& framebufferHandle);
-    virtual ~BaseOffscreenRenderStage() = default;
+    BaseOffscreenRenderStage(const std::string& shaderFilepath);
 
+    virtual void setup() = 0;
     virtual void validate() = 0;
     virtual void execute() = 0;
 
@@ -74,48 +75,53 @@ protected:
 
 class GeometryRenderStage : public BaseOffscreenRenderStage {
 public:
-    GeometryRenderStage(const ShaderProgramHandle& shaderProgramHandle, const FramebufferHandle& framebufferHandle) 
-        : BaseOffscreenRenderStage(shaderProgramHandle, framebufferHandle)
+    GeometryRenderStage(const std::string& shaderFilepath) 
+        : BaseOffscreenRenderStage(shaderFilepath)
     {}
 
+    virtual void setup() override;
     virtual void validate() override;
     virtual void execute() override;
 };
 
 class LightingRenderStage : public BaseOffscreenRenderStage {
 public:
-    LightingRenderStage(const ShaderProgramHandle& shaderProgramHandle, const FramebufferHandle& framebufferHandle)
-        : BaseOffscreenRenderStage(shaderProgramHandle, framebufferHandle)
+    LightingRenderStage(const std::string& shaderFilepath)
+        : BaseOffscreenRenderStage(shaderFilepath)
     {}
+    virtual void setup() override;
     virtual void validate() override;
     virtual void execute() override;
 };
 
 class BlurRenderStage : public BaseOffscreenRenderStage {
 public:
-    BlurRenderStage(const ShaderProgramHandle& shaderProgramHandle, const FramebufferHandle& framebufferHandle)
-        : BaseOffscreenRenderStage(shaderProgramHandle, framebufferHandle)
+    BlurRenderStage(const std::string& shaderFilepath)
+        : BaseOffscreenRenderStage{shaderFilepath}
     {}
+    virtual void setup() override;
     virtual void validate() override;
     virtual void execute() override;
 };
 
 class TonemappingRenderStage : public BaseOffscreenRenderStage {
 public:
-    TonemappingRenderStage(const ShaderProgramHandle& shaderProgramHandle, const FramebufferHandle& framebufferHandle)
-        : BaseOffscreenRenderStage(shaderProgramHandle, framebufferHandle)
+    TonemappingRenderStage(const std::string& shaderFilepath)
+        : BaseOffscreenRenderStage{shaderFilepath}
     {}
 
+    virtual void setup() override;
     virtual void validate() override;
     virtual void execute() override;
 };
 
 class ScreenRenderStage: public BaseRenderStage {
 public:
-    ScreenRenderStage(const ShaderProgramHandle& shaderProgramHandle) 
-        : BaseRenderStage(shaderProgramHandle)
+    ScreenRenderStage(const std::string& shaderFilepath)
+        : BaseRenderStage(shaderFilepath)
     {}
 
+    virtual void setup() override;
     virtual void validate() override;
     virtual void execute() override;
 };

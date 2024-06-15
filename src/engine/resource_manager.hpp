@@ -77,6 +77,9 @@ public:
     /* decrements reference count in corresponding resource manager */
     ~ResourceHandle();
 
+    /* creates an empty resource handle, callable by anybody */
+    ResourceHandle() {};
+
     /* copy constructor */
     ResourceHandle(const ResourceHandle& other);
 
@@ -107,7 +110,7 @@ private:
 
     /* the unique name of this resource. May be a filepath, or even a URL, depending on 
     the kind of resource being referred to */
-    std::string mName;
+    std::string mName {};
 
 /* Resource managers and resource handles are tightly coupled */
 friend class ResourceManager<T>;

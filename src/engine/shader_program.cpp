@@ -54,7 +54,7 @@ void ShaderProgram::buildProgram(const std::vector<std::string>& vertexPaths, co
             << infoLog << std::endl;
         glDeleteProgram(mID);
         mID = 0;
-        return;
+        throw std::invalid_argument("Not a valid shader program JSON file");
     }
 
     // Store build success

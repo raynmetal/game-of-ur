@@ -6,17 +6,18 @@
 #include "render_stage.hpp"
 
 BaseRenderStage::BaseRenderStage(
-    const ShaderProgramHandle& shaderProgramHandle
-):
-    mShaderHandle(shaderProgramHandle)
+    const std::string& shaderFilepath
+) : mShaderHandle {
+        ShaderProgramManager::getInstance().registerResource(
+            shaderFilepath, {shaderFilepath}
+        )
+    }
 {}
 
 BaseOffscreenRenderStage::BaseOffscreenRenderStage(
-    const ShaderProgramHandle& shaderProgramHandle, 
-    const FramebufferHandle& framebufferHandle
+    const std::string& shaderFilepath
 ):
-    BaseRenderStage{shaderProgramHandle},
-    mFramebufferHandle {framebufferHandle} 
+    BaseRenderStage{shaderFilepath}
 {}
 
 void BaseRenderStage::updateFloatParameter(const std::string& name, const float parameter) {
@@ -91,6 +92,28 @@ TextureHandle BaseOffscreenRenderStage::getRenderTarget(const std::string& name)
     return mFramebufferHandle.getResource().getColorBufferHandles()[mRenderTargets.at(name)];
 }
 
+void GeometryRenderStage::setup() {
+    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
+        "geometryFramebuffer",
+        {
+            // TODO: Where do we get window dimensions from? Hardcoded for now
+            {800, 600},
+            3,
+            {
+                {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float},
+                {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float},
+                {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Byte}
+            },
+            true
+        }
+    );
+    declareRenderTarget("geometryPosition", 0);
+    declareRenderTarget("geometryNormal", 1);
+    declareRenderTarget("geometryAlbedoSpecular", 2);
+    mShaderHandle.getResource().use();
+    mShaderHandle.getResource().setUniformBlock("Matrices", 0);
+}
+
 void GeometryRenderStage::validate() {
     /*
      * Three colour buffers corresponding to position, normal, albedospec (for now)
@@ -116,6 +139,25 @@ void GeometryRenderStage::execute() {
         }
 
     mFramebufferHandle.getResource().unbind();
+}
+
+void LightingRenderStage::setup() {
+    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
+        "lightingFramebuffer",
+        {
+            {800, 600},
+            2,
+            {
+                {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float},
+                {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float}
+            },
+            true
+        }
+    );
+    declareRenderTarget("litScene", 0);
+    declareRenderTarget("brightCutoff", 1);
+    mShaderHandle.getResource().use();
+    mShaderHandle.getResource().setUniformBlock("Matrices", 0);
 }
 
 void LightingRenderStage::validate() {
@@ -167,6 +209,24 @@ void LightingRenderStage::execute() {
     mFramebufferHandle.getResource().unbind();
 }
 
+void BlurRenderStage::setup() {
+    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
+        "bloomFramebuffer",
+        {
+            {800, 600},
+            2,
+            {
+                {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float},
+                {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Float}
+            },
+            false
+        }
+    );
+    declareRenderTarget("pingBuffer", 0);
+    declareRenderTarget("pongBuffer", 1);
+    attachMesh("screenMesh", generateRectangleMesh());
+}
+
 void BlurRenderStage::validate() {
     assert(2 == mFramebufferHandle.getResource().getColorBufferHandles().size());
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
@@ -216,6 +276,21 @@ void BlurRenderStage::execute() {
     mFramebufferHandle.getResource().unbind();
 }
 
+void TonemappingRenderStage::setup() {
+    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
+        "tonemappingFramebuffer",
+        {
+            {800, 600},
+            1,
+            {
+                {ColorBufferDefinition::ComponentCount::Four, ColorBufferDefinition::DataType::Byte}
+            },
+            true
+        }
+    );
+    declareRenderTarget("tonemappedScene", 0);
+    attachMesh("screenMesh", generateRectangleMesh());
+}
 void TonemappingRenderStage::validate() {
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("litScene") != mTextureAttachments.end());
@@ -243,6 +318,9 @@ void TonemappingRenderStage::execute() {
     mFramebufferHandle.getResource().unbind();
 }
 
+void ScreenRenderStage::setup() {
+    attachMesh("screenMesh", generateRectangleMesh());
+}
 void ScreenRenderStage::validate() {
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("renderSource") != mTextureAttachments.end());
