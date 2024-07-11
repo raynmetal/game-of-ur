@@ -7,9 +7,7 @@
 #include "model_manager.hpp"
 
 MeshHandle generateSphereMesh(int nLatitude, int nMeridian);
-ModelHandle generateSphereModel(int nLatitude, int nMeridian);
 
 MeshHandle generateRectangleMesh(float width=2.f, float height=2.f);
-ModelHandle generateRectangleModel(float width=2.f, float height=2.f);
 
 #endif

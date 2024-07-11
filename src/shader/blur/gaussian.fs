@@ -20,13 +20,13 @@ void main() {
     }
     offset /= textureSize(uGenericTexture, 0);
 
-    outColor = weights[0] * texture(uGenericTexture, fragAttr.textureCoordinates);
+    outColor = weights[0] * texture(uGenericTexture, fragAttr.UV1);
     for(int i = 1; i < 5; ++i) {
         outColor += weights[i] * texture(uGenericTexture,
-            i * offset + fragAttr.textureCoordinates
+            i * offset + fragAttr.UV1
         );
         outColor += weights[i] * texture(uGenericTexture,
-            -i * offset + fragAttr.textureCoordinates
+            -i * offset + fragAttr.UV1
         );
     }
     outColor.a = 1.f;

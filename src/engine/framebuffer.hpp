@@ -8,19 +8,6 @@
 #include "texture_manager.hpp"
 #include "resource_manager.hpp"
 
-struct ColorBufferDefinition {
-    enum class ComponentCount : GLuint {
-        One = 1,
-        Four = 4
-    };
-    enum class DataType : GLuint {
-        Float = GL_FLOAT,
-        Byte = GL_UNSIGNED_BYTE
-    };
-    ComponentCount mComponentCount {ComponentCount::Four};
-    DataType mDataType {DataType::Byte};
-};
-
 
 class Framebuffer : IResource {
 public:

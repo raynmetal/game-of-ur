@@ -9,67 +9,30 @@
 
 #include "texture.hpp"
 
-Texture::Texture(const std::string& filepath, const Usage type) : mID{0}, mFilepath{filepath}, mUsage{type} {
+Texture::Texture(const std::string& filepath) : mID{0}, mFilepath{filepath} {
     bool success {
         loadFromFile(filepath)
     };
-    if(!success) {
-        std::cout << "Could not load texture from " << filepath
-            << "!" << std::endl;
-    } else std::cout << "Texture at " << filepath << " loaded successfully!"
-        << std::endl;
+    assert(success && ("Could not load texture from " + filepath + "!").c_str());
 }
-Texture::Texture(GLuint textureID, const Usage type): mID{textureID}, mFilepath{""}, mUsage{type}
-{}
-Texture::Texture(): mID{0}, mFilepath{""}, mUsage{Usage::NA} 
+Texture::Texture(): mID{0}, mFilepath{""}
 {}
 
-Texture::Texture(glm::vec2 dimensions, GLenum dataType, GLenum magFilter, GLenum minFilter, GLenum wrapS, GLenum wrapT, unsigned int nComponents) {
-    assert(dataType == GL_FLOAT || dataType == GL_UNSIGNED_BYTE);
-    assert(nComponents == 1 || nComponents == 4);
-
-    glGenTextures(1, &mID);
-    glBindTexture(GL_TEXTURE_2D, mID);
-        // for now, we just support 4(RGBA) or 1(Red) components.
-        GLenum internalFormat;
-        GLenum externalFormat;
-        if(dataType == GL_FLOAT && nComponents == 1){ 
-            internalFormat = GL_R16F;
-            externalFormat = GL_RED;
-        } else if (dataType == GL_FLOAT && nComponents == 4) {
-            internalFormat = GL_RGBA16F;
-            externalFormat = GL_RGBA;
-        } else if (dataType == GL_UNSIGNED_BYTE && nComponents == 1) {
-            internalFormat = GL_RED;
-            externalFormat = GL_RED;
-        } else if (dataType == GL_UNSIGNED_BYTE && nComponents == 4) {
-            internalFormat = GL_RGBA;
-            externalFormat = GL_RGBA;
-        } else {
-            throw std::invalid_argument("Invalid data type and component count combination provided in texture constructor");
-        }
-
-        glTexImage2D(
-            GL_TEXTURE_2D, 0, internalFormat, 
-            dimensions.x, dimensions.y, 0, externalFormat, dataType, NULL
-        );
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrapS);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrapT);
-    glBindTexture(GL_TEXTURE_2D, 0);
+Texture::Texture(ColorBufferDefinition definition)
+    : mColorBufferDefinition{ definition } 
+{ 
+    generateTexture();
 }
 
-Texture::Texture(Texture&& other) noexcept: mID{other.mID}, mFilepath{other.mFilepath}, mUsage{other.mUsage} {
+Texture::Texture(Texture&& other) noexcept: mID{other.mID}, mFilepath{other.mFilepath}, mColorBufferDefinition{other.mColorBufferDefinition} {
     //Prevent other from destroying this texture when its
     //deconstructor is called
-    other.mID = 0;
+    other.releaseResource();
 }
 
-Texture::Texture(const Texture& other): mFilepath {other.mFilepath}, mUsage {other.mUsage} {
-    glGenTextures(1, &mID);
-
+Texture::Texture(const Texture& other)
+: mFilepath {other.mFilepath}, mColorBufferDefinition {other.mColorBufferDefinition}
+{
     copyImage(other);
 }
 
@@ -80,11 +43,11 @@ Texture& Texture::operator=(Texture&& other) noexcept {
 
     mID = other.mID;
     mFilepath = other.mFilepath;
-    mUsage = other.mUsage;
+    mColorBufferDefinition = other.mColorBufferDefinition;
 
     // Prevent the destruction of the texture we now own
     // when other's deconstructor is called
-    other.mID = 0;
+    other.releaseResource();
 
     return *this;
 }
@@ -94,10 +57,8 @@ Texture& Texture::operator=(const Texture& other) {
 
     free();
 
-    mUsage = other.mUsage;
     mFilepath = other.mFilepath;
-    glGenTextures(1, &mID);
-
+    mColorBufferDefinition = other.mColorBufferDefinition;
     copyImage(other);
 
     return *this;
@@ -107,7 +68,8 @@ Texture::~Texture() {
     free();
 }
 
-bool Texture::loadFromFile(const std::string& filename) {
+bool Texture::loadFromFile(const std::string& filename, const ColorBufferDefinition& colorBufferDefinition) {
+    mColorBufferDefinition = colorBufferDefinition ;
     free();
 
     // Load image from file into a convenient SDL surface, per the image
@@ -131,13 +93,14 @@ bool Texture::loadFromFile(const std::string& filename) {
 
     // Move surface pixels to the graphics card
     GLuint texture;
+    mColorBufferDefinition.mDimensions = {pretexture->w, pretexture->h};
     glGenTextures(1, &texture);
     glBindTexture(GL_TEXTURE_2D, texture);
     glTexImage2D(GL_TEXTURE_2D, 0,
         //assume linear space if not an albedo texture
-        mUsage == Usage::Albedo? GL_SRGB_ALPHA: GL_RGBA,
-        pretexture->w, pretexture->h,
-        0, GL_RGBA, GL_UNSIGNED_BYTE,
+        internalFormat(),
+        mColorBufferDefinition.mDimensions.x, mColorBufferDefinition.mDimensions.y,
+        0, externalFormat(), mColorBufferDefinition.mDataType,
         reinterpret_cast<void*>(pretexture->pixels)
     );
     SDL_FreeSurface(pretexture);
@@ -153,10 +116,10 @@ bool Texture::loadFromFile(const std::string& filename) {
     }
 
     // Configure a few texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mColorBufferDefinition.mWrapS);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mColorBufferDefinition.mWrapT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mColorBufferDefinition.mMinFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mColorBufferDefinition.mMagFilter);
 
     // store the id of loaded texture in mID, and return success
     mID = texture;
@@ -165,64 +128,31 @@ bool Texture::loadFromFile(const std::string& filename) {
 
 void Texture::free() {
     if(!mID) return;
-
     std::cout << "Texture " << mID << " is being freed" << std::endl;
     glDeleteTextures(1, &mID);
-
     releaseResource();
 }
 
 GLuint Texture::getTextureID() const { return mID; }
-Texture::Usage Texture::getUsage() const { return mUsage; }
 
 GLint Texture::getWidth() const{
     if(!mID) return 0;
-    GLint width;
-    glBindTexture(GL_TEXTURE_2D, mID);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &width);
-    glBindTexture(GL_TEXTURE_2D, 0);
 
-    return width;
+    return mColorBufferDefinition.mDimensions.x;
 }
 GLint Texture::getHeight() const {
     if(!mID) return 0;
-    GLint height;
-    glBindTexture(GL_TEXTURE_2D, mID);
-        glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &height);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    return height;
+    return mColorBufferDefinition.mDimensions.y;
 }
 
 void Texture::copyImage(const Texture& other)  {
-    GLint width {other.getWidth()};
-    GLint height {other.getHeight()};
-
     // Allocate memory to our texture
     glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, mID);
-        glTexImage2D(
-            GL_TEXTURE_2D,
-            0,
-            mUsage == Usage::Albedo? GL_SRGB_ALPHA: GL_RGBA,
-            width, height,
-            0,
-            GL_RGBA, GL_UNSIGNED_BYTE,
-            NULL
-        );
+    generateTexture();
 
-        // Configure a few texture parameters
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-    glBindTexture(GL_TEXTURE_2D, 0);
-
-    // Create temporary framebuffers which we'll use to copy other's texture data
+    // Create 2 temporary framebuffers which we'll use to copy other's texture data
     GLuint tempReadFBO;
     GLuint tempWriteFBO;
-    GLuint tempReadRBO;
-    GLuint tempWriteRBO;
     glGenFramebuffers(1, &tempReadFBO);
     glGenFramebuffers(1, &tempWriteFBO);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, tempReadFBO);
@@ -230,51 +160,38 @@ void Texture::copyImage(const Texture& other)  {
             GL_READ_FRAMEBUFFER, GL_COLOR_ATTACHMENT1, GL_TEXTURE_2D, other.mID, 0
         );
         glReadBuffer(GL_COLOR_ATTACHMENT1);
-
-        //Create a render buffer for completeness
-        glGenRenderbuffers(1, &tempReadRBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, tempReadRBO);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-            glFramebufferRenderbuffer(GL_READ_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, tempReadRBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        if(glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            std::cout << "Something went wrong while creating read rbo for texture copy! " << std::endl;
-        }
+        assert(glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE 
+            && "Something went wrong while creating read FBO for texture copy! "
+        );
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, tempWriteFBO);
         glFramebufferTexture2D(
             GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mID, 0
         );
         glDrawBuffer(GL_COLOR_ATTACHMENT0);
-
-        //Create a renderbuffer for completeness
-        glGenRenderbuffers(1, &tempWriteRBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, tempWriteRBO);
-            glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, width, height);
-            glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, tempWriteRBO);
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        if(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
-            std::cout << "Something went wrong while creating read rbo for texture copy! " << std::endl;
-        }
+        assert(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE 
+            && "Something went wrong while creating draw FBO for texture copy! "
+        );
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     // Blit other's data into our colour buffer
-    glViewport(0, 0, width, height);
+    glViewport(0, 0, mColorBufferDefinition.mDimensions.x, mColorBufferDefinition.mDimensions.y);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, tempReadFBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, tempWriteFBO);
-        glBlitFramebuffer(0, 0, width, height, 0, 0, width, height, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+        glBlitFramebuffer(0, 0, 
+            mColorBufferDefinition.mDimensions.x, mColorBufferDefinition.mDimensions.y, 
+            0, 0,
+            mColorBufferDefinition.mDimensions.x, mColorBufferDefinition.mDimensions.y, 
+            GL_COLOR_BUFFER_BIT, GL_NEAREST);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
 
     // Delete temporary buffers created for this operation
     glDeleteFramebuffers(1, &tempReadFBO);
     glDeleteFramebuffers(1, &tempWriteFBO);
-    glDeleteRenderbuffers(1, &tempReadRBO);
-    glDeleteRenderbuffers(1, &tempWriteRBO);
 
     GLuint error {glGetError()};
-    if(error != 0)
-        std::cout << "Error while copying texture: " << glewGetErrorString(error) << std::endl;
+    assert(error == GL_FALSE && "Error while copying texture!");
 }
 
 void Texture::destroyResource() {
@@ -282,8 +199,9 @@ void Texture::destroyResource() {
 }
 
 void Texture::releaseResource() {
+    if(mID)
+        std::cout << "Texture " << mID << " is being released" << std::endl;
     mID = 0;
-    mUsage = Usage::NA;
     mFilepath = "";
 }
 
@@ -302,3 +220,65 @@ void Texture::attachToFramebuffer(GLuint attachmentUnit) const {
         0
     );
 }
+
+void Texture::generateTexture() {
+    assert(mColorBufferDefinition.mDataType == GL_FLOAT || mColorBufferDefinition.mDataType == GL_UNSIGNED_BYTE);
+    assert(mColorBufferDefinition.mComponentCount == 1 || mColorBufferDefinition.mComponentCount == 4);
+
+    if(!mID) glGenTextures(1, &mID);
+
+    glBindTexture(GL_TEXTURE_2D, mID);
+        glTexImage2D(
+            GL_TEXTURE_2D, 0, internalFormat(), 
+            mColorBufferDefinition.mDimensions.x, mColorBufferDefinition.mDimensions.y, 0, externalFormat(), mColorBufferDefinition.mDataType, NULL
+        );
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, mColorBufferDefinition.mMagFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, mColorBufferDefinition.mMinFilter);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mColorBufferDefinition.mWrapS);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mColorBufferDefinition.mWrapT);
+    glBindTexture(GL_TEXTURE_2D, 0);
+}
+
+GLenum Texture::internalFormat() {
+    GLenum internalFormat;
+
+    if(mColorBufferDefinition.mDataType == GL_FLOAT && mColorBufferDefinition.mComponentCount == 1){ 
+        internalFormat = GL_R16F;
+    } else if (mColorBufferDefinition.mDataType == GL_FLOAT && mColorBufferDefinition.mComponentCount == 4) {
+        internalFormat = GL_RGBA16F;
+    } else if (mColorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && mColorBufferDefinition.mComponentCount == 1) {
+        internalFormat = GL_RED;
+    } else if (mColorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && mColorBufferDefinition.mComponentCount == 4) {
+
+        if(mColorBufferDefinition.mUsesWebColors) {
+            internalFormat = GL_SRGB_ALPHA;
+        } else {
+            internalFormat = GL_RGBA;
+        }
+
+    } else {
+        throw std::invalid_argument("Invalid data type and component count combination provided in texture constructor");
+    }
+
+    return internalFormat;
+}
+
+GLenum Texture::externalFormat() {
+    GLenum externalFormat;
+
+    if(mColorBufferDefinition.mDataType == GL_FLOAT && mColorBufferDefinition.mComponentCount == 1){ 
+        externalFormat = GL_RED;
+    } else if (mColorBufferDefinition.mDataType == GL_FLOAT && mColorBufferDefinition.mComponentCount == 4) {
+        externalFormat = GL_RGBA;
+    } else if (mColorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && mColorBufferDefinition.mComponentCount == 1) {
+        externalFormat = GL_RED;
+    } else if (mColorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && mColorBufferDefinition.mComponentCount == 4) {
+        externalFormat = GL_RGBA;
+    } else {
+        throw std::invalid_argument("Invalid data type and component count combination provided in texture constructor");
+    }
+
+    return externalFormat;
+}
+

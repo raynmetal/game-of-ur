@@ -58,17 +58,7 @@ void Framebuffer::initialize(glm::vec2 dimensions, GLuint nColorAttachments, std
             mTextureHandles.push_back(
                 TextureManager::getInstance().registerResource(
                     "framebuffer_" + std::to_string(mID) + "::color_buffer_" + std::to_string(count),
-                    {
-                        mDimensions,
-                        static_cast<GLenum>(colorBufferDefinition.mDataType == ColorBufferDefinition::DataType::Float?
-                            GL_FLOAT: GL_UNSIGNED_BYTE),
-                        GL_LINEAR,
-                        GL_LINEAR,
-                        GL_CLAMP_TO_EDGE,
-                        GL_CLAMP_TO_EDGE,
-                        static_cast<GLuint>(colorBufferDefinition.mComponentCount == ColorBufferDefinition::ComponentCount::Four?
-                            4: 1)
-                    }
+                    { colorBufferDefinition }
                 )
             );
             //Assume the first n color buffers become the first n

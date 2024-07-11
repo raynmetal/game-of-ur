@@ -4,7 +4,7 @@
 #include "resource_manager.hpp"
 #include "model.hpp"
 
-typedef ResourceManager<Model> ModelManager;
-typedef ResourceHandle<Model> ModelHandle;
+typedef ResourceManager<StaticModel> ModelManager;
+typedef ResourceHandle<StaticModel> ModelHandle;
 
 #endif

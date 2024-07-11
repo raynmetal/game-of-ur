@@ -20,7 +20,7 @@ MeshHandle generateSphereMesh(int nLatitude, int nMeridian)  {
     const float angleVerticalDelta { 180.f / (1 + nLatitude) };
     const float angleHorizontalDelta{ 180.f / nMeridian };
 
-    std::vector<Vertex> vertices(nVerticesTotal);
+    std::vector<BuiltinVertexData> vertices(nVerticesTotal);
     int currentIndex { 0 };
     for(int i{0}; i < 2 + nLatitude; ++i) {
         const float angleVertical { i * angleVerticalDelta };
@@ -95,52 +95,42 @@ MeshHandle generateSphereMesh(int nLatitude, int nMeridian)  {
 
     return MeshManager::getInstance().registerResource(
         meshName,
-        { vertices, elements }
+        BuiltinMesh{ vertices, elements }
     );
-}
-
-ModelHandle generateSphereModel(int nLatitude, int nMeridian) {
-    MeshHandle sphereMesh { generateSphereMesh(nLatitude, nMeridian) };
-    return { 
-        ModelManager::getInstance().registerResource(
-            sphereMesh.getName(),
-            sphereMesh
-        )
-    };
 }
 
 MeshHandle generateRectangleMesh(float width, float height) {
     assert(width > 0.f);
     assert(height > 0.f);
 
-    std::vector<Vertex> vertices {
+    std::vector<BuiltinVertexData> vertices {
         {
-            {-width/2.f, height/2.f, 0.f, 1.f},
-            {0.f, 0.f, 1.f, 0.f},
-            {1.f, 0.f, 0.f, 0.f},
-            {1.f, 1.f, 1.f, 1.f},
-            {0.f, 1.f}
+            .mPosition {-width/2.f, height/2.f, 0.f, 1.f},
+            .mNormal{0.f, 0.f, 1.f, 0.f},
+            .mTangent{1.f, 0.f, 0.f, 0.f},
+            .mColor{1.f, 1.f, 1.f, 1.f},
+            .mUV1{0.f, 1.f}
         },
         {
-            {width/2.f, height/2.f, 0.f, 1.f},
-            {0.f, 0.f, 1.f, 0.f},
-            {1.f, 0.f, 0.f, 0.f},
-            {1.f, 1.f, 1.f, 1.f},
-            {1.f, 1.f}
+            .mPosition {width/2.f, height/2.f, 0.f, 1.f},
+            .mNormal{0.f, 0.f, 1.f, 0.f},
+            .mTangent{1.f, 0.f, 0.f, 0.f},
+            .mColor{1.f, 1.f, 1.f, 1.f},
+            .mUV1{1.f, 1.f}
         },
         {
-            {width/2.f, -height/2.f, 0.f, 1.f},
-            {0.f, 0.f, 1.f, 0.f},
-            {1.f, 0.f, 0.f, 0.f},
-            {1.f, 1.f, 1.f, 1.f},
-            {1.f, 0.f}
+            .mPosition {width/2.f, -height/2.f, 0.f, 1.f},
+            .mNormal {0.f, 0.f, 1.f, 0.f},
+            .mTangent {1.f, 0.f, 0.f, 0.f},
+            .mColor {1.f, 1.f, 1.f, 1.f},
+            .mUV1 {1.f, 0.f}
         },
         {
-            {-width/2.f, -height/2.f, 0.f, 1.f},
-            {0.f, 0.f, 1.f, 0.f},
-            {1.f, 0.f, 0.f, 0.f},
-            {1.f, 1.f, 1.f, 1.f},
-            {0.f, 0.f}
+            .mPosition {-width/2.f, -height/2.f, 0.f, 1.f},
+            .mNormal {0.f, 0.f, 1.f, 0.f},
+            .mTangent {1.f, 0.f, 0.f, 0.f},
+            .mColor {1.f, 1.f, 1.f, 1.f},
+            .mUV1 {0.f, 0.f}
         },
     };
     std::vector<GLuint> elements {
@@ -157,16 +147,7 @@ MeshHandle generateRectangleMesh(float width, float height) {
 
     return MeshManager::getInstance().registerResource(
         meshName,
-        { vertices, elements }
+        BuiltinMesh { vertices, elements }
     );
 }
 
-ModelHandle generateRectangleModel(float width, float height) {
-    MeshHandle rectangleMesh { generateRectangleMesh(width, height) };
-    return {
-        ModelManager::getInstance().registerResource(
-            rectangleMesh.getName(),
-            rectangleMesh
-        )
-    };
-}

@@ -3,59 +3,95 @@
 
 #include <string>
 #include <map>
+#include <queue>
 
 #include "texture_manager.hpp"
 #include "shader_program_manager.hpp"
 #include "framebuffer_manager.hpp"
 #include "mesh_manager.hpp"
 #include "material_manager.hpp"
+#include "instance.hpp"
 #include "model_manager.hpp"
 #include "light.hpp"
+
+
+/*
+    Creates a simple sort key with the following priority:
+        Mesh > Material Texture > Material Everything Else
+*/
+
+struct RenderUnit {
+    RenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, glm::mat4 modelMatrix)
+    :
+        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, mModelMatrix{modelMatrix}
+    {
+        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(meshHandle.getName())) };
+        std::uint32_t materialHash { static_cast<uint32_t>(std::hash<std::string>{}(materialHandle.getName()))};
+        mSortKey |= (meshHash << ((sizeof(uint32_t)/2)*8)) & 0xFFFF0000;
+        mSortKey |= (materialHash << 0) & 0x0000FFFF;
+    }
+
+    bool operator<(const RenderUnit& other) const {
+        return mSortKey < other.mSortKey;
+    }
+
+    std::uint32_t mSortKey {};
+    MeshHandle mMeshHandle;
+    MaterialHandle mMaterialHandle;
+    glm::mat4 mModelMatrix;
+};
+
+struct RenderLightUnit {
+    RenderLightUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const glm::mat4& modelMatrix, const LightData& lightData)  {
+        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(meshHandle.getName())) };
+        std::uint32_t materialHash {static_cast<uint32_t>(std::hash<std::string>{}(materialHandle.getName()))};
+        mSortKey |= (meshHash << ((sizeof(unsigned int)/2)*8)) & 0xFFFF0000;
+        mSortKey |= (materialHash << 0) & 0x0000FFFF;
+    }
+
+    bool operator<(const RenderLightUnit& other) const {
+        return mSortKey < other.mSortKey;
+    }
+
+    std::uint32_t mSortKey {};
+    MeshHandle mMeshHandle;
+    MaterialHandle mMaterialHandle;
+    glm::mat4 mModelMatrix;
+    LightData mLightAttributes;
+};
 
 class BaseRenderStage {
 public:
     BaseRenderStage(const std::string& shaderFilepath);
 
-    virtual ~BaseRenderStage() = default;
+    BaseRenderStage(const BaseRenderStage& other) = delete;
+    BaseRenderStage(BaseRenderStage&& other) = delete;
+    BaseRenderStage& operator=(const BaseRenderStage& other) = delete;
+    BaseRenderStage& operator=(BaseRenderStage&& other) = delete;
+
+    virtual ~BaseRenderStage();
 
     virtual void setup() = 0;
     virtual void validate() = 0;
     virtual void execute() = 0;
 
-    void updateFloatParameter(const std::string& name, float parameter);
-    void updateIntParameter(const std::string& name, int parameter);
     void attachTexture(const std::string& name, const TextureHandle& textureHandle);
     void attachMesh(const std::string& name, const MeshHandle& meshHandle);
-    void attachModel(const std::string& name, const ModelHandle& modelHandle);
-    void attachLightCollection(const std::string& name, const LightCollectionHandle& lightCollectionHandle);
 
-    float getFloatParameter(const std::string& name);
-    int getIntParameter(const std::string& name);
     TextureHandle getTexture(const std::string& name);
     MeshHandle getMesh(const std::string& name);
-    ModelHandle getModel(const std::string& name);
-    LightCollectionHandle getLightCollection(const std::string& name);
+
+    void submitToRenderQueue(RenderUnit renderUnit);
+    void submitToRenderQueue(RenderLightUnit lightRenderUnit);
 protected:
+    GLuint mVertexArrayObject {};
     ShaderProgramHandle mShaderHandle;
 
     std::map<std::string, TextureHandle> mTextureAttachments {};
-    /*
-     * TODO: We probably want to replace this later with vertex buffer 
-     * attachments, but for now we're working with what we've got
-     */
     std::map<std::string, MeshHandle> mMeshAttachments {};
-    /*
-     * TODO: We probably want to replace this later with vertex buffer 
-     * attachments, but for now we're working with what we've got
-     */
-    std::map<std::string, ModelHandle> mModelAttachments {};
-    /*
-     * TODO: We probably want to replace this later with vertex buffer 
-     * attachments, but for now we're working with what we've got
-     */
-    std::map<std::string, LightCollectionHandle> mLightCollectionAttachments {};
-    std::map<std::string, float> mFloatParameters {};
-    std::map<std::string, int> mIntParameters {};
+
+    std::priority_queue<RenderUnit> mOpaqueMeshQueue {};
+    std::priority_queue<RenderLightUnit> mLightQueue {};
 };
 
 class BaseOffscreenRenderStage: public BaseRenderStage {
@@ -68,6 +104,7 @@ public:
 
     void declareRenderTarget(const std::string& name, unsigned int index);
     TextureHandle getRenderTarget(const std::string& name);
+
 protected:
     FramebufferHandle mFramebufferHandle;
     std::map<std::string, unsigned int> mRenderTargets {};
@@ -94,26 +131,26 @@ public:
     virtual void execute() override;
 };
 
-class BlurRenderStage : public BaseOffscreenRenderStage {
-public:
-    BlurRenderStage(const std::string& shaderFilepath)
-        : BaseOffscreenRenderStage{shaderFilepath}
-    {}
-    virtual void setup() override;
-    virtual void validate() override;
-    virtual void execute() override;
-};
+// class BlurRenderStage : public BaseOffscreenRenderStage {
+// public:
+//     BlurRenderStage(const std::string& shaderFilepath)
+//         : BaseOffscreenRenderStage{shaderFilepath}
+//     {}
+//     virtual void setup() override;
+//     virtual void validate() override;
+//     virtual void execute() override;
+// };
 
-class TonemappingRenderStage : public BaseOffscreenRenderStage {
-public:
-    TonemappingRenderStage(const std::string& shaderFilepath)
-        : BaseOffscreenRenderStage{shaderFilepath}
-    {}
+// class TonemappingRenderStage : public BaseOffscreenRenderStage {
+// public:
+//     TonemappingRenderStage(const std::string& shaderFilepath)
+//         : BaseOffscreenRenderStage{shaderFilepath}
+//     {}
 
-    virtual void setup() override;
-    virtual void validate() override;
-    virtual void execute() override;
-};
+//     virtual void setup() override;
+//     virtual void validate() override;
+//     virtual void execute() override;
+// };
 
 class ScreenRenderStage: public BaseRenderStage {
 public:

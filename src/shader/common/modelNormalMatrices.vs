@@ -1,2 +1,1 @@
-in mat4 attrModelMatrix;
-in mat4 attrNormalMatrix;
+layout(location=7) in mat4 attrModelMatrix;

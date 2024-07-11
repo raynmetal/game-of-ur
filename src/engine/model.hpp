@@ -20,7 +20,14 @@
 #include "material_manager.hpp"
 #include "resource_manager.hpp"
 
-class Model : IResource {
+/*
+ * A class that
+ *  a) Loads models from their respective 3D model files
+ *  b) Stores references to all the meshes used by the model
+ *  c) Stores the hierarchical relationship between the meshes
+ *  d) Stores material properties used by shaders for each mesh
+ */
+class StaticModel : IResource {
 public:
     struct TreeNode {
         std::vector<GLint> mMeshIndices {};
@@ -29,48 +36,30 @@ public:
         std::vector<TreeNode*> mpChildren {};
     };
 
-    Model();
+    StaticModel();
 
     /* Load a model from the specified file path */
-    Model(const std::string& filepath);
+    StaticModel(const std::string& filepath);
     /* Create a mesh out of a list of textures and vertices, store them in this model */
-    Model(const std::vector<Vertex>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureHandle>& textureHandles);
+    StaticModel(const std::vector<BuiltinVertexData>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureHandle>& textureHandles);
     /* Create a model with a single mesh */
-    Model(const MeshHandle& meshHandle);
+    StaticModel(const MeshHandle& meshHandle);
 
     /* Model destructor */
-    ~Model();
+    ~StaticModel();
 
     /* Move constructor */
-    Model(Model&& other);
+    StaticModel(StaticModel&& other);
     /* Copy constructor */
-    Model(const Model& other);
+    StaticModel(const StaticModel& other);
 
     /* Move assignment */
-    Model& operator=(Model&& other);
+    StaticModel& operator=(StaticModel&& other);
     /* Copy assignment */
-    Model& operator=(const Model& other);
+    StaticModel& operator=(const StaticModel& other);
 
-    /* Adds an instance based on model matrix provided as input */
-    GLuint addInstance(glm::mat4 modelMatrix);
-    /* Adds an instance based on position and scale vectors, and orientation quaternion */
-    GLuint addInstance(glm::vec3 position, glm::quat orientation, glm::vec3 scale);
-    /* Gets matrix transform for this instance*/
-    glm::mat4 getInstance(GLuint instanceID);
-    /* Replaces the transform associated with this instance with transform in input */
-    void updateInstance(GLuint instanceID, glm::mat4 transform);
-    /* Replaces the transform associated with this instance based on model matrix computed from input */
-    void updateInstance(GLuint instanceID, glm::vec3 position, glm::quat orientation, glm::vec3 scale);
-    /* Removes instance associated with instanceID (returned by the instance add function earlier)*/
-    void removeInstance(GLuint instanceID);
-
-    /* Sets up a VAO for a given shader program, setting pointers as necessary */
-    void associateShaderProgram(ShaderProgramHandle shaderProgramHandle);
-    /* Removes VAO for a given shader program */
-    void disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle);
-
-
-    void draw(ShaderProgramHandle shaderProgramhandle);
+    std::vector<MeshHandle> getMeshHandles() const;
+    std::vector<MaterialHandle> getMaterialHandles() const;
 
 private:
     /*
@@ -85,67 +74,37 @@ private:
      * Root node leading to full hierarchy (of meshes)
      */
     TreeNode* mpHierarchyRoot {nullptr};
-    /*
-     * ID of the matrix buffer managed by this object
-     */
-    GLuint mMatrixBuffer {0};
-    /*
-     * The transform to the current world position for a given instance, with
-     * the instance ID as key
-     */
-    std::map<GLuint, glm::mat4> mInstanceModelMatrixMap {};
-    /*
-     * The IDs of deleted instances, to be reused by any new instances
-     * of this model that may be instantiated later
-     */
-    std::queue<GLuint> mDeletedInstanceIDs {};
-    GLuint mNextInstanceID {0};
-    /*
-     * The number of instances the memory on GPU presently allocated can store
-     * for this model
-     */
-    GLuint mInstanceCapacity {128};
-    /*
-     * Whether there has been a change in position or number of instance(s) of this
-     * model within this cycle, requiring fresh data to be sent to the GPU
-     */
-    bool mDirty {true};
-
-    /* Updates buffers stored in GPU */
-    void updateBuffers();
 
     /* 
      * Utility method for destroying resources associated with
      * this model
      */
     void free();
+
     /*
      * Utility method for taking resources from another instance of
      * this class 
      */
-    void stealResources(Model& other);
+    void stealResources(StaticModel& other);
+
     /*
      * Utility method for deeply replicating resources from another 
      * instance of this class
      */
-    void copyResources(const Model& other);
-    /*
-     * Utility method for allocating buffers
-     */
-    void allocateBuffers();
+    void copyResources(const StaticModel& other);
 
-    void deleteTree(Model::TreeNode* pRootNode);
-    TreeNode* copyTree(const TreeNode* pRootNode, Model::TreeNode* pParentNode=nullptr);
+    void deleteTree(StaticModel::TreeNode* pRootNode);
+    TreeNode* copyTree(const TreeNode* pRootNode, StaticModel::TreeNode* pParentNode=nullptr);
 
     TreeNode* processAssimpNode(TreeNode* pParentNode, aiNode* pAiNode, const aiScene* pAiScene);
     void processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene);
 
-    std::vector<TextureHandle> loadAssimpTextures(aiMaterial* pAiMaterial, Texture::Usage usage);
+    std::vector<TextureHandle> loadAssimpTextures(aiMaterial* pAiMaterial, aiTextureType textureType);
 
     void destroyResource() override;
     void releaseResource() override;
 
-friend class ResourceManager<Model>;
+friend class ResourceManager<StaticModel>;
 };
 
 #endif

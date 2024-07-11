@@ -8,26 +8,27 @@
 
 #include "resource_manager.hpp"
 
+struct ColorBufferDefinition {
+    glm::vec2 mDimensions {800, 600};
+    GLenum mMagFilter { GL_LINEAR };
+    GLenum mMinFilter { GL_LINEAR };
+    GLenum mWrapS { GL_CLAMP_TO_EDGE };
+    GLenum mWrapT { GL_CLAMP_TO_EDGE };
+    GLenum mDataType { GL_UNSIGNED_BYTE };
+    GLbyte mComponentCount { 4 };
+    bool mUsesWebColors { false };
+};
+
+
 class Texture : public IResource {
 public:
-    enum Usage {
-        NA,
-        Albedo,
-        Normal,
-        Specular
-    };
-
     /* Load texture directly from file */
-    Texture(const std::string& filepath, const Usage usage=NA);
-
-    /* Assume texture was manually loaded elsewhere, and store its 
-    properties here */
-    Texture(GLuint textureID, const Usage usage);
+    Texture(const std::string& filepath);
 
     /*
     Generates the texture described by the arguments
     */
-    Texture(glm::vec2 dimensions, GLenum dataType, GLenum magFilter, GLenum minFilter, GLenum wrapS, GLenum wrapT, unsigned int nComponents=4);
+    Texture(ColorBufferDefinition definition);
 
     /* Load an empty texture object, with an mID of 0 indicating
     that there is no texture here */
@@ -47,7 +48,13 @@ public:
     virtual ~Texture();
 
     /* basic load and allocate function */
-    bool loadFromFile(const std::string& filepath);
+    bool loadFromFile(
+        const std::string& filepath, 
+        const ColorBufferDefinition& colorBufferDefinition = {
+            .mDataType { GL_UNSIGNED_BYTE },
+            .mUsesWebColors { true }
+        }
+    );
     /* basic deallocate function */
     virtual void free();
 
@@ -59,8 +66,6 @@ public:
 
     /* texture ID getter */
     GLuint getTextureID() const;
-    /* texture usage getter */
-    Usage getUsage() const;
 
     /* get texture width */
     GLint getWidth() const;
@@ -71,15 +76,17 @@ protected:
     void copyImage(const Texture& other);
 
     /* This texture's name, as referenced by OpenGL */
-    GLuint mID;
+    GLuint mID {0};
     /* The path this texture was loaded from, if any */
-    std::string mFilepath;
-    /* This texture's type, essentially indicating its usage */
-    Usage mUsage;
+    std::string mFilepath {""};
+    ColorBufferDefinition mColorBufferDefinition;
+
+    void generateTexture();
+    GLenum internalFormat();
+    GLenum externalFormat();
 
     /* destroys (OpenGL managed) texture tied to this object */
     void destroyResource() override;
-
     /* removes references to (OpenGL managed) texture tied to this object */
     void releaseResource() override;
 

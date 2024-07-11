@@ -3,9 +3,8 @@
     "type": "shader/fragment",
     "sources": [
         "common/versionHeader.glsl",
-        "common/lightStruct.glsl",
-        "common/fragmentAttributes.fs",
         "common/geometrySampler.fs",
+        "common/lightStruct.fs",
         "lighting/deferredLighting.fs"
     ]
 }

@@ -35,7 +35,6 @@ void ShaderProgram::buildProgram(const std::vector<std::string>& vertexPaths, co
 
     //Create a shader program
     GLint success {};
-    char infoLog[512];
     freeProgram(mID);
     mID = glCreateProgram();
     glAttachShader(mID, vertexShader);
@@ -49,12 +48,13 @@ void ShaderProgram::buildProgram(const std::vector<std::string>& vertexPaths, co
     //Report failure, if it occurred
     glGetProgramiv(mID, GL_LINK_STATUS, &success);
     if(success != GL_TRUE) {
-        glGetProgramInfoLog(mID, 512, NULL, infoLog);
+        char infoLog[4096];
+        glGetProgramInfoLog(mID, 4096, NULL, infoLog);
         std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
             << infoLog << std::endl;
         glDeleteProgram(mID);
         mID = 0;
-        throw std::invalid_argument("Not a valid shader program JSON file");
+        throw std::invalid_argument("Could not link vertex and fragment shaders.");
     }
 
     // Store build success

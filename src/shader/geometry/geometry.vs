@@ -10,15 +10,14 @@ Include:
 void main() {
     // precomputed view and normal matrices
     mat4 viewModelMatrix = viewMatrix * attrModelMatrix;
-    mat4 viewNormalMatrix = viewMatrix * attrNormalMatrix;
 
     // fragment attributes, in terms of camera space
     fragAttr.position = viewModelMatrix * attrPosition;
-    fragAttr.normal = viewNormalMatrix * attrNormal;
-    fragAttr.tangent = viewNormalMatrix * attrTangent;
+    fragAttr.normal = viewModelMatrix * attrNormal;
+    fragAttr.tangent = viewModelMatrix * attrTangent;
 
     // color related fragment attributes
-    fragAttr.textureCoordinates = attrTextureCoordinates;
+    fragAttr.UV1 = attrUV1;
     fragAttr.color = attrColor;
 
     // pre-NDC position, after projection and before viewport

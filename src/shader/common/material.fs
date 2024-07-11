@@ -7,3 +7,5 @@ struct Material {
     bool mUsingSpecularMap;
     float mSpecularExponent;
 };
+
+uniform Material uMaterial;

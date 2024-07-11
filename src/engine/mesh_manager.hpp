@@ -4,7 +4,7 @@
 #include "resource_manager.hpp"
 #include "mesh.hpp"
 
-typedef ResourceManager<Mesh> MeshManager;
-typedef ResourceHandle<Mesh> MeshHandle;
+typedef ResourceManager<BuiltinMesh> MeshManager;
+typedef ResourceHandle<BuiltinMesh> MeshHandle;
 
 #endif

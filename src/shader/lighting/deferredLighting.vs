@@ -1,18 +1,12 @@
 /*
 Include:
     -common/versionHeader.glsl
-    -common/lightStruct.glsl
+    -common/lightStruct.vs
     -common/projectionViewMatrices.vs
     -common/modelNormalMatrices.vs
     -common/fragmentAttributes.vs
     -common/vertexAttributes.vs
 */
-
-in LightPlacement attrLightPlacement;
-in LightEmission attrLightEmission;
-
-out LightPlacement fragAttrLightPlacement;
-flat out LightEmission fragAttrLightEmission;
 
 
 void main() {
@@ -27,5 +21,12 @@ void main() {
     fragAttrLightPlacement.mDirection = viewMatrix * attrLightPlacement.mDirection;
 
     // Light emission, passed on as is
-    fragAttrLightEmission = attrLightEmission;
+    fragAttrLightEmission.mDiffuseColor = attrLightEmission.mDiffuseColor;
+    fragAttrLightEmission.mSpecularColor = attrLightEmission.mSpecularColor;
+    fragAttrLightEmission.mAmbientColor = attrLightEmission.mAmbientColor;
+    fragAttrLightEmission.mType = attrLightEmission.mType;
+    fragAttrLightEmission.mDecayLinear = attrLightEmission.mDecayLinear;
+    fragAttrLightEmission.mDecayQuadratic = attrLightEmission.mDecayQuadratic;
+    fragAttrLightEmission.mCosCutoffInner = attrLightEmission.mCosCutoffInner;
+    fragAttrLightEmission.mCosCutoffOuter = attrLightEmission.mCosCutoffOuter;
 }

@@ -7,81 +7,110 @@
 
 #include <GL/glew.h>
 
-#include "shader_program_manager.hpp"
-#include "vertex.hpp"
-#include "material.hpp"
 #include "resource_manager.hpp"
+#include <assimp/scene.h>
+
+#include "vertex.hpp"
 
 /* 
-A class whose main purpose is to store geometry-related information. At present, it also holds data
-representing its material (primarily textures)
+A class whose main purpose is to store geometry-related information.
 */
-class Mesh : IResource {
+class BaseMesh: IResource {
 public:
-    Mesh() = default;
-
     /*
     Initializer for the mesh class
     */
-    Mesh(
-        const std::vector<Vertex>& vertices, 
-        const std::vector<GLuint>& elements
-    );
+    BaseMesh(const VertexLayout& vertexLayout);
 
     /*
     Mesh class destructor
     */
-    ~Mesh();
+    virtual ~BaseMesh();
 
     /* move constructor */
-    Mesh(Mesh&& other);
+    BaseMesh(BaseMesh&& other);
     /* copy constructor */
-    Mesh(const Mesh& other);
+    BaseMesh(const BaseMesh& other);
 
     /* move assignment */
-    Mesh& operator=(Mesh&& other);
+    BaseMesh& operator=(BaseMesh&& other);
     /* copy assignment */
-    Mesh& operator=(const Mesh& other);
+    BaseMesh& operator=(const BaseMesh& other);
 
-    /* Sets up a VAO for a given shader program, setting vertex pointers as necessary */
-    void associateShaderProgram(ShaderProgramHandle shaderProgramHandle);
-    /* Removes VAO for a given shader program */
-    void disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle);
-    /* Returns the ID of the VAO associated with this shader program */
-    GLuint getShaderVAO(const ShaderProgramHandle& shaderProgramHandle) const;
+    VertexLayout getVertexLayout() const;
+
+    virtual GLuint getElementCount() = 0;
+
+    // Bind the VAO associated with this mesh. If it hasn't been 
+    // created yet, calls upload, then binds the VAO
+    void bind(const VertexLayout& shaderVertexLayout);
+
+    // Unbind the VAO associated with this mesh. as simple as binding
+    // vertex array 0
+    void unbind();
+
+    bool isUploaded() { return mUploaded; }
+
+protected:
+    // uploads vertex data to the GPU, and sets up a corresponding VBO,
+    // VAO, and EBO
+    virtual void upload() = 0;
+
+    GLuint mVertexBufferIndex { 0 };
+    GLuint mElementBufferIndex { 0 };
+
+protected:
+
+    bool mUploaded { false };
+
+    // deletes vertex data corresponding to this mesh from the GPU. Should unset
+    // mUploaded once done
+    void unload();
+
+    // Sets attribute pointers per the data contained in 
+    // the vertex layout.
+    void setAttributePointers(const VertexLayout& shaderVertexLayout, std::size_t startingOffset = 0);
+
+
+    void _upload();
+
+    VertexLayout mVertexLayout;
 
     /* 
-    Uses the shader program to render this mesh, setting uniform attributes. Assumes 
-    instance related attributes are already set, requiring only the number of them to render
+    Destroys the GPU resources used by this object
     */
-    void draw(ShaderProgramHandle shaderProgramHandle, GLuint instanceCount);
-
-private:
-    std::vector<Vertex> mVertices {};
-    std::vector<GLuint> mElements {};
-    std::map<ShaderProgramHandle, GLuint> mShaderVAOMap {};
-
-    GLuint mVertexBuffer {0};
-    GLuint mElementBuffer {0};
-
-    bool mDirty {true};
-
-    /* 
-    Destroys resources used by this object
-    */
-    void destroyResource();
+    virtual void destroyResource() override;
 
     /*
-    Removes references to allocated resources without destroying the
+    Removes references to GPU allocated resources without destroying the
     resources themselves
     */
-    void releaseResource();
+    virtual void releaseResource() override;
+};
 
-    /*
-    Sends vertex and element data to the GPU
-    */
-    void allocateBuffers();
-friend class ResourceManager<Mesh>;
+class BuiltinMesh : public BaseMesh {
+public:
+    BuiltinMesh(aiMesh* const pAiMesh);
+    BuiltinMesh(
+        const std::vector<BuiltinVertexData>& vertices={}, 
+        const std::vector<GLuint>& elements={}
+    );
+
+    virtual GLuint getElementCount() {
+        return mElements.size();
+    }
+
+protected:
+    virtual void upload() override;
+
+private:
+    std::vector<BuiltinVertexData> mVertices {};
+    std::vector<GLuint> mElements {};
+
+    virtual void destroyResource() override {BaseMesh::destroyResource();}
+    virtual void releaseResource() override {BaseMesh::releaseResource();}
+
+friend class ResourceManager<BuiltinMesh>;
 };
 
 #endif

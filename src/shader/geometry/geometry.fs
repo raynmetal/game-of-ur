@@ -5,8 +5,6 @@ Include:
     - common/material.fs
 */
 
-uniform Material uMaterial;
-
 out layout(location=0) vec4 geometryPosition;
 out layout(location=1) vec4 geometryNormal;
 out layout(location=2) vec4 geometryAlbedoSpec;
@@ -22,14 +20,14 @@ void main() {
         mat4 tbnMatrix = mat4(tangent, bitangent, geometryNormal, vec4(0.f, 0.f, 0.f, 1.f));
 
         //recompute gBuffer normal with the one we've read from the normal map
-        geometryNormal = tbnMatrix * (texture(uMaterial.mTextureNormal, fragAttr.textureCoordinates) * 2.f - 1.f);
+        geometryNormal = tbnMatrix * (texture(uMaterial.mTextureNormal, fragAttr.UV1) * 2.f - 1.f);
     }
 
     geometryAlbedoSpec = fragAttr.color;
     if(uMaterial.mUsingAlbedoMap) {
-        geometryAlbedoSpec = vec4(texture(uMaterial.mTextureAlbedo, fragAttr.textureCoordinates).rgb, 1.f);
+        geometryAlbedoSpec = vec4(texture(uMaterial.mTextureAlbedo, fragAttr.UV1).rgb, 1.f);
     }
     if(uMaterial.mUsingSpecularMap) {
-        geometryAlbedoSpec.a = texture(uMaterial.mTextureSpecular, fragAttr.textureCoordinates).r;
+        geometryAlbedoSpec.a = texture(uMaterial.mTextureSpecular, fragAttr.UV1).r;
     }
 }

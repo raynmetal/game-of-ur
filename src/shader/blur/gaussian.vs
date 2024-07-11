@@ -6,6 +6,6 @@ INCLUDE:
 */
 
 void main() {
-    fragAttr.textureCoordinates = attrTextureCoordinates;
+    fragAttr.UV1= attrUV1;
     gl_Position = attrPosition;
 }

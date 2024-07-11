@@ -3,11 +3,10 @@
     "type": "shader/vertex",
     "sources": [
         "common/versionHeader.glsl",
-        "common/lightStruct.glsl",
         "common/projectionViewMatrices.vs",
-        "common/modelNormalMatrices.vs",
-        "common/fragmentAttributes.vs",
         "common/vertexAttributes.vs",
+        "common/modelNormalMatrices.vs",
+        "common/lightStruct.vs",
         "lighting/deferredLighting.vs"
     ]
 }

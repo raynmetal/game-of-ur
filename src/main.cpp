@@ -9,13 +9,13 @@
 
 #include "engine/fly_camera.hpp"
 #include "engine/window_context_manager.hpp"
-#include "engine/material_manager.hpp"
 #include "engine/texture_manager.hpp"
-#include "engine/model_manager.hpp"
-#include "engine/light_manager.hpp"
-#include "engine/mesh_manager.hpp"
 #include "engine/shader_program_manager.hpp"
 #include "engine/framebuffer_manager.hpp"
+#include "engine/mesh_manager.hpp"
+#include "engine/material_manager.hpp"
+#include "engine/model_manager.hpp"
+#include "engine/light.hpp"
 #include "engine/render_stage.hpp"
 #include "engine/shapegen.hpp"
 
@@ -23,19 +23,27 @@ extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
 
 void init();
+void cleanup();
+
+glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 scale) {
+    glm::mat4 rotateMatrix { glm::normalize(orientation) };
+    glm::mat4 translateMatrix { glm::translate(glm::mat4(1.f), position) };
+    glm::mat4 scaleMatrix { glm::scale(glm::mat4(1.f), scale) };
+    return translateMatrix * rotateMatrix * scaleMatrix;
+}
 
 int main(int argc, char* argv[]) {
     init();
 
     GeometryRenderStage geometryRenderStage{"src/shader/geometryShader.json"};
     LightingRenderStage lightingRenderStage {"src/shader/lightingShader.json"};
-    BlurRenderStage blurRenderStage {"src/shader/gaussianblurShader.json"};
-    TonemappingRenderStage tonemappingRenderStage { "src/shader/tonemappingShader.json" };
+    // BlurRenderStage blurRenderStage {"src/shader/gaussianblurShader.json"};
+    // TonemappingRenderStage tonemappingRenderStage { "src/shader/tonemappingShader.json" };
     ScreenRenderStage screenRenderStage { "src/shader/screenShader.json" };
     geometryRenderStage.setup();
     lightingRenderStage.setup();
-    blurRenderStage.setup();
-    tonemappingRenderStage.setup();
+    // blurRenderStage.setup();
+    // tonemappingRenderStage.setup();
     screenRenderStage.setup();
 
     // Set up a uniform buffer for shared matrices
@@ -65,14 +73,9 @@ int main(int argc, char* argv[]) {
         ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"}) 
     };
 
-    boardPieceModelHandle.getResource().addInstance(glm::vec3(0.f, 0.f, -2.f), glm::quat(glm::vec3(0.f, 0.f, 0.f)), glm::vec3(1.f));
-    LightCollectionHandle sceneLightsHandle {
-        LightCollectionManager::getInstance().registerResource("sceneLights",
-            {}
-        )
-    };
-    GLuint flashlight { sceneLightsHandle.getResource().addLight(
-        Light::MakeSpotLight(
+    std::vector<LightData> lightData {};
+    lightData.push_back(
+        LightData::MakeSpotLight(
             glm::vec3(0.f),
             glm::vec3(0.f, 0.f, -1.f),
             4.f,
@@ -83,10 +86,10 @@ int main(int argc, char* argv[]) {
             .07f,
             .03f
         )
-    )};
+    );
 
-    sceneLightsHandle.getResource().addLight(
-        Light::MakePointLight(
+    lightData.push_back(
+        LightData::MakePointLight(
             glm::vec3(0.f, 1.5f, -1.f),
             glm::vec3(2.f, 0.6f, 1.2f),
             glm::vec3(3.1f, 1.04f, .32f),
@@ -95,14 +98,27 @@ int main(int argc, char* argv[]) {
             .02f
         )
     );
-    sceneLightsHandle.getResource().addLight(Light::MakeDirectionalLight(
-        glm::vec3(0.f, -1.f, 1.f),
-        glm::vec3(20.f),
-        glm::vec3(20.f),
-        glm::vec3(0.2f)
-    ));
-    geometryRenderStage.attachModel("boardPiece", boardPieceModelHandle);
-    lightingRenderStage.attachLightCollection("sceneLights", sceneLightsHandle);
+
+    lightData.push_back(
+        LightData::MakeDirectionalLight(
+            glm::vec3(0.f, -1.f, 1.f),
+            glm::vec3(20.f),
+            glm::vec3(20.f),
+            glm::vec3(0.2f)
+        )
+    );
+
+    MaterialHandle lightMaterialHandle {
+        MaterialManager::getInstance().registerResource(
+            "lightMaterial",
+            {}
+        )
+    };
+    lightMaterialHandle.getResource().updateIntProperty("screenWidth", 800);
+    lightMaterialHandle.getResource().updateIntProperty("screenHeight", 600);
+
+    // geometryRenderStage.attachModel("boardPiece", boardPieceModelHandle);
+    // lightingRenderStage.attachLightCollection("sceneLights", sceneLightsHandle);
 
     FlyCamera camera {
         glm::vec3(0.f), 0.f, 0.f, 0.f
@@ -126,36 +142,39 @@ int main(int argc, char* argv[]) {
     float exposure = 1.f;
 
     // Debug: list of screen textures that may be rendered
-    constexpr GLuint nScreenTextures {7};
-    GLuint currScreenTexture {3};
+    constexpr GLuint nScreenTextures {3};
+    GLuint currScreenTexture {2};
     const TextureHandle screenTextureHandles[nScreenTextures] {
         {geometryRenderStage.getRenderTarget("geometryPosition")}, {geometryRenderStage.getRenderTarget("geometryNormal")}, {geometryRenderStage.getRenderTarget("geometryAlbedoSpecular")},
-        {lightingRenderStage.getRenderTarget("litScene")}, {lightingRenderStage.getRenderTarget("brightCutoff")},
-        {blurRenderStage.getRenderTarget("pingBuffer")}, 
-        {tonemappingRenderStage.getRenderTarget("tonemappedScene")}
+        // {lightingRenderStage.getRenderTarget("litScene")}, {lightingRenderStage.getRenderTarget("brightCutoff")}
+        // {blurRenderStage.getRenderTarget("pingBuffer")}, 
+        // {tonemappingRenderStage.getRenderTarget("tonemappedScene")}
     };
     float gamma = 2.2f;
 
+
     // Last pieces of pipeline setup, where we connect all the
     // render stages together
-    lightingRenderStage.attachTexture("positionMap", geometryRenderStage.getRenderTarget("geometryPosition"));
-    lightingRenderStage.attachTexture("normalMap", geometryRenderStage.getRenderTarget("geometryNormal"));
-    lightingRenderStage.attachTexture("albedoSpecularMap", geometryRenderStage.getRenderTarget("geometryAlbedoSpecular"));
-    lightingRenderStage.updateIntParameter("screenWidth", gWindowWidth);
-    lightingRenderStage.updateIntParameter("screenHeight", gWindowHeight);
-    blurRenderStage.attachTexture("unblurredImage", lightingRenderStage.getRenderTarget("brightCutoff"));
-    blurRenderStage.updateIntParameter("nPasses", 12);
-    tonemappingRenderStage.attachTexture("litScene", lightingRenderStage.getRenderTarget("litScene"));
-    tonemappingRenderStage.attachTexture("bloomEffect", blurRenderStage.getRenderTarget("pingBuffer"));
-    tonemappingRenderStage.updateFloatParameter("exposure", exposure);
-    tonemappingRenderStage.updateFloatParameter("gamma", gamma);
-    tonemappingRenderStage.updateIntParameter("combine", true);
+    // lightingRenderStage.attachTexture("positionMap", geometryRenderStage.getRenderTarget("geometryPosition"));
+    // lightingRenderStage.attachTexture("normalMap", geometryRenderStage.getRenderTarget("geometryNormal"));
+    // lightingRenderStage.attachTexture("albedoSpecularMap", geometryRenderStage.getRenderTarget("geometryAlbedoSpecular"));
+    // lightingRenderStage.updateIntParameter("screenWidth", gWindowWidth);
+    // lightingRenderStage.updateIntParameter("screenHeight", gWindowHeight);
+    // blurRenderStage.attachTexture("unblurredImage", lightingRenderStage.getRenderTarget("brightCutoff"));
+    // blurRenderStage.updateIntParameter("nPasses", 12);
+    // tonemappingRenderStage.attachTexture("litScene", lightingRenderStage.getRenderTarget("litScene"));
+    // tonemappingRenderStage.attachTexture("bloomEffect", blurRenderStage.getRenderTarget("pingBuffer"));
+    // tonemappingRenderStage.updateFloatParameter("exposure", exposure);
+    // tonemappingRenderStage.updateFloatParameter("gamma", gamma);
+    // tonemappingRenderStage.updateIntParameter("combine", true);
     screenRenderStage.attachTexture("renderSource", screenTextureHandles[currScreenTexture]);
     geometryRenderStage.validate();
-    lightingRenderStage.validate();
-    blurRenderStage.validate();
-    tonemappingRenderStage.validate();
+    // lightingRenderStage.validate();
+    // blurRenderStage.validate();
+    // tonemappingRenderStage.validate();
     screenRenderStage.validate();
+
+    MeshHandle sphereMesh { generateSphereMesh(10, 5) };
 
     //Timing related variables
     GLuint previousTicks { SDL_GetTicks() };
@@ -163,11 +182,13 @@ int main(int argc, char* argv[]) {
     const float frameratePoll {1.f};
     float framerateCounter {0.f};
 
+
     //Main event loop
     glClearColor(0.f, 0.f, 0.f, 1.f);
     SDL_Event event;
     bool quit {false};
-    glDisable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_FRAMEBUFFER_SRGB);
+
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
@@ -184,28 +205,30 @@ int main(int argc, char* argv[]) {
                 currScreenTexture = (currScreenTexture + 1) % nScreenTextures;
                 screenRenderStage.attachTexture("renderSource", screenTextureHandles[currScreenTexture]);
             }
-            if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_PERIOD) {
-                exposure += .1f;
-                tonemappingRenderStage.updateFloatParameter("exposure", exposure);
-            }
-            if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_COMMA) {
-                if (exposure < .1f) exposure = 0.f;
-                else exposure -= .1f; 
-                tonemappingRenderStage.updateFloatParameter("exposure", exposure);
-            }
-            if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_j) {
-                gamma -= .1f;
-                if(gamma < 1.6f) gamma = 1.6f;
-                tonemappingRenderStage.updateFloatParameter("gamma", gamma);
-            }
-            else if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_k) {
-                gamma += .1f;
-                if(gamma > 3.f) gamma = 3.f;
-                tonemappingRenderStage.updateFloatParameter("gamma", gamma);
-            }
+            // if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_PERIOD) {
+            //     exposure += .1f;
+            //     tonemappingRenderStage.updateFloatParameter("exposure", exposure);
+            // }
+            // if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_COMMA) {
+            //     if (exposure < .1f) exposure = 0.f;
+            //     else exposure -= .1f; 
+            //     tonemappingRenderStage.updateFloatParameter("exposure", exposure);
+            // }
+            // if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_j) {
+            //     gamma -= .1f;
+            //     if(gamma < 1.6f) gamma = 1.6f;
+            //     tonemappingRenderStage.updateFloatParameter("gamma", gamma);
+            // }
+            // else if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_k) {
+            //     gamma += .1f;
+            //     if(gamma > 3.f) gamma = 3.f;
+            //     tonemappingRenderStage.updateFloatParameter("gamma", gamma);
+            // }
             camera.processInput(event);
         }
         if(quit) break;
+
+        LightData& flashlightData { lightData[0] };
 
         // update time related variables
         GLuint currentTicks { SDL_GetTicks() };
@@ -222,10 +245,40 @@ int main(int argc, char* argv[]) {
 
         // update objects according to calculated delta
         camera.update(deltaTime);
-        Light flashlightAttributes { sceneLightsHandle.getResource().getLight(flashlight) };
-        flashlightAttributes.mPosition = glm::vec4(camera.getPosition(), 1.f);
-        flashlightAttributes.mDirection = glm::vec4(camera.getForward(), 0.f);
-        sceneLightsHandle.getResource().updateLight(flashlight, flashlightAttributes);
+        flashlightData.mPosition = glm::vec4(camera.getPosition(), 1.f);
+        flashlightData.mDirection = glm::vec4(camera.getForward(), 0.f);
+
+        //Submit our various board piece meshes to the opaque render queue
+        std::vector<MeshHandle> boardPieceMeshHandles {boardPieceModelHandle.getResource().getMeshHandles()};
+        std::vector<MaterialHandle> boardPieceMaterialHandles {boardPieceModelHandle.getResource().getMaterialHandles()};
+        for(std::size_t i{0}; i < boardPieceMeshHandles.size(); ++i) {
+            geometryRenderStage.submitToRenderQueue(
+                RenderUnit {
+                    boardPieceMeshHandles[i],
+                    boardPieceMaterialHandles[i],
+                    buildModelMatrix(
+                        {0.f, 0.f, -2.f}, {}, {1.f, 1.f, 1.f}
+                    )
+                }
+            );
+        }
+
+
+        // //Submit our light data to the lighting render queue
+        // for(const auto& light: lightData) {
+        //     lightingRenderStage.submitToRenderQueue(
+        //         RenderLightUnit {
+        //             sphereMesh,
+        //             lightMaterialHandle,
+        //             buildModelMatrix(
+        //                 light.mPosition,
+        //                 {},
+        //                 glm::vec3{light.mRadius}
+        //             ),
+        //             light
+        //         }
+        //     );
+        // }
 
         // Send shared matrices to the uniform buffer
         glBindBuffer(GL_UNIFORM_BUFFER, uboSharedMatrices);
@@ -243,17 +296,24 @@ int main(int argc, char* argv[]) {
             );
         glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
+        GLenum error = glGetError();
+        if(error!= GL_FALSE) {
+            glewGetErrorString(error);
+            std::cout << "Error occurred during mesh attribute setting: "  << error
+                << ":" << glewGetErrorString(error) << std::endl;
+            throw error;
+        }
         //Render geometry to our geometry framebuffer
         geometryRenderStage.execute();
-        lightingRenderStage.execute();
-        blurRenderStage.execute();
-        tonemappingRenderStage.execute();
+        // lightingRenderStage.execute();
+        // blurRenderStage.execute();
+        // tonemappingRenderStage.execute();
         screenRenderStage.execute();
 
         WindowContextManager::getInstance().swapBuffers();
     }
-
     // ... and then die
+    cleanup();
     return 0;
 }
 
@@ -269,9 +329,13 @@ void init() {
     // dependence
     TextureManager::getInstance();
     ShaderProgramManager::getInstance();
-    MeshManager::getInstance();
-    LightCollectionManager::getInstance();
-    FramebufferManager::getInstance();
     MaterialManager::getInstance();
+    Material::Init();
+    MeshManager::getInstance();
+    FramebufferManager::getInstance();
     ModelManager::getInstance();
+}
+
+void cleanup() {
+    Material::Clear();
 }

@@ -12,180 +12,231 @@
 
 #include "mesh.hpp"
 
-void Mesh::draw(ShaderProgramHandle shaderProgramHandle, GLuint instanceCount) {
-    shaderProgramHandle.getResource().use();
-    glBindVertexArray(mShaderVAOMap[shaderProgramHandle]);
-        glDrawElementsInstanced(
-            GL_TRIANGLES,
-            mElements.size(),
-            GL_UNSIGNED_INT,
-            NULL,
-            instanceCount
-        );
-    glBindVertexArray(0);
-}
-
-Mesh::Mesh(
-    const std::vector<Vertex>& vertices,
-    const std::vector<GLuint>& elements
+BaseMesh::BaseMesh(
+    const VertexLayout& vertexLayout
 ) :
-    mVertices{vertices},
-    mElements{elements},
-    mVertexBuffer{0},
-    mElementBuffer{0}
-{
-    allocateBuffers();
-}
+    mVertexLayout{ vertexLayout }
+{}
 
-Mesh::~Mesh() {
+BaseMesh::~BaseMesh() {
     destroyResource();
 }
 
-Mesh::Mesh(Mesh&& other):
-    mVertices {other.mVertices},
-    mElements {other.mElements},
-    mShaderVAOMap {other.mShaderVAOMap},
-    mVertexBuffer {other.mVertexBuffer},
-    mElementBuffer {other.mElementBuffer},
-    mDirty {other.mDirty}
+BaseMesh::BaseMesh(BaseMesh&& other):
+    mVertexBufferIndex { other.mVertexBufferIndex },
+    mElementBufferIndex { other.mElementBufferIndex },
+    mUploaded { other.mUploaded },
+    mVertexLayout { other.mVertexLayout }
 {
-    // prevent other from removing our resources when its deconstructor is called
+    // Prevent other from removing our resources when its destructor is called
     other.releaseResource();
 }
 
-Mesh::Mesh(const Mesh& other):
-    mVertices{other.mVertices},
-    mElements{other.mElements},
-    mVertexBuffer{0},
-    mElementBuffer{0}
+BaseMesh::BaseMesh(const BaseMesh& other):
+    mVertexLayout { other.mVertexLayout }
 {
-    allocateBuffers();
+    mVertexLayout = other.mVertexLayout;
 }
 
-Mesh& Mesh::operator=(Mesh&& other) {
+BaseMesh& BaseMesh::operator=(BaseMesh&& other) {
     if(&other == this) 
         return *this;
 
     destroyResource();
 
-    mVertices = other.mVertices;
-    mElements = other.mElements;
-    mShaderVAOMap = other.mShaderVAOMap;
-    mDirty = other.mDirty;
-    mVertexBuffer = other.mVertexBuffer;
-    mElementBuffer = other.mElementBuffer;
+    mVertexBufferIndex = other.mVertexBufferIndex;
+    mElementBufferIndex = other.mElementBufferIndex;
+    mUploaded = other.mUploaded;
 
     other.releaseResource();
 
     return *this;
 }
 
-Mesh& Mesh::operator=(const Mesh& other) {
+BaseMesh& BaseMesh::operator=(const BaseMesh& other) {
     if(&other == this) 
         return *this;
     
     destroyResource();
-
-    mVertices = other.mVertices;
-    mElements = other.mElements;
-    mVertexBuffer = 0;
-    mElementBuffer = 0;
-    allocateBuffers();
+    mVertexLayout = other.mVertexLayout;
 
     return *this;
 }
 
-void Mesh::associateShaderProgram(ShaderProgramHandle shaderProgramHandle){
-    //Ensure duplicate calls to this function don't create duplicate VAOs
-    if(getShaderVAO(shaderProgramHandle)) return;
-    GLuint shaderVAO;
-    glGenVertexArrays(1, &shaderVAO);
-    glUseProgram(shaderProgramHandle.getResource().getProgramID());
-    glBindVertexArray(shaderVAO);
-        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
-
-        //Enable and set vertex pointers
-        glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-        GLint attrPosition { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrPosition") };
-        GLint attrNormal { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrNormal") };
-        GLint attrTangent { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrTangent") };
-        GLint attrColor { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrColor") };
-        GLint attrTextureCoordinates { glGetAttribLocation(shaderProgramHandle.getResource().getProgramID(), "attrTextureCoordinates") };
-        if(attrPosition >= 0) {
-            glEnableVertexAttribArray(attrPosition);
-            glVertexAttribPointer(attrPosition, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mPosition)));
-        }
-        if(attrNormal >= 0) {
-            glEnableVertexAttribArray(attrNormal);
-            glVertexAttribPointer(attrNormal, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mNormal)));
-        }
-        if(attrTangent >= 0) {
-            glEnableVertexAttribArray(attrTangent);
-            glVertexAttribPointer(attrTangent, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mTangent)));
-        }
-        if(attrColor >= 0) {
-            glEnableVertexAttribArray(attrColor);
-            glVertexAttribPointer(attrColor, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mColor)));
-        }
-        if(attrTextureCoordinates >= 0) {
-            glEnableVertexAttribArray(attrTextureCoordinates);
-            glVertexAttribPointer(attrTextureCoordinates, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), reinterpret_cast<void*>(offsetof(Vertex, mTextureCoordinates)));
-        }
-    glBindVertexArray(0);
-
-    mShaderVAOMap[shaderProgramHandle] = shaderVAO;
-}
-
-void Mesh::disassociateShaderProgram(ShaderProgramHandle shaderProgramHandle) {
-    if(!getShaderVAO(shaderProgramHandle)) return;
-    glDeleteVertexArrays(1, &mShaderVAOMap[shaderProgramHandle]);
-    mShaderVAOMap.erase(shaderProgramHandle);
-}
-
-GLuint Mesh::getShaderVAO(const ShaderProgramHandle& shaderProgramHandle) const {
-    auto resultIterator { mShaderVAOMap.find(shaderProgramHandle) };
-    if(resultIterator == mShaderVAOMap.end()) return 0;
-    return resultIterator->second;
-}
-
-void Mesh::destroyResource() {
-    glDeleteBuffers(1, &mVertexBuffer);
-    glDeleteBuffers(1, &mElementBuffer);
-
-    std::vector<GLuint> shaderVAOs(mShaderVAOMap.size());
-    std::size_t count{0};
-    for(std::pair shaderVAO : mShaderVAOMap) {
-        shaderVAOs[count ++] = shaderVAO.second;
+void BaseMesh::bind(const VertexLayout& shaderVertexLayout) {
+    if(!mUploaded) {
+        _upload();
     }
-    glDeleteVertexArrays(count, shaderVAOs.data());
-
-    mShaderVAOMap.clear();
+    assert(mUploaded);
+    glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferIndex);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBufferIndex);
+        setAttributePointers(shaderVertexLayout);
+        GLenum error = glGetError();
+        if(error!= GL_FALSE) {
+            glewGetErrorString(error);
+            std::cout << "Error occurred during mesh attribute setting: "  << error
+                << ":" << glewGetErrorString(error) << std::endl;
+            throw error;
+        }
 }
 
-void Mesh::releaseResource() {
-    mVertexBuffer = 0;
-    mElementBuffer = 0;
-    mShaderVAOMap.clear();
-}
+void BaseMesh::setAttributePointers(const VertexLayout& shaderVertexLayout, std::size_t startingOffset) {
+    assert(mUploaded);
+    assert(shaderVertexLayout.isSubsetOf(mVertexLayout));
 
-void Mesh::allocateBuffers() {
-    if(!mElementBuffer) {
-        glGenBuffers(1, &mElementBuffer);
-    }
-    if(!mVertexBuffer) {
-        glGenBuffers(1, &mVertexBuffer);
+    const std::size_t stride { mVertexLayout.computeStride() };
+    const std::vector<VertexAttributeDescriptor>& attributeDescList { mVertexLayout.getAttributeList() };
+    const std::vector<VertexAttributeDescriptor>& shaderAttributeDescList { shaderVertexLayout.getAttributeList() };
+
+    std::size_t currentOffset {0};
+    std::size_t shaderVertexAttributeIndex {0};
+    for(std::size_t i {0}; i < attributeDescList.size() && shaderVertexAttributeIndex < shaderAttributeDescList.size(); ++i) {
+        const VertexAttributeDescriptor& attributeDesc = attributeDescList[i];
+        const VertexAttributeDescriptor& shaderAttributeDesc = shaderAttributeDescList[shaderVertexAttributeIndex];
+        if(attributeDesc == shaderAttributeDesc){
+            glVertexAttribPointer(
+                attributeDesc.mLayoutLocation,
+                attributeDesc.mNComponents,
+                attributeDesc.mType,
+                GL_FALSE,
+                stride,
+                reinterpret_cast<void*>(startingOffset + currentOffset)
+            );
+            GLenum error = glGetError();
+            if(error!= GL_FALSE) {
+                std::cout << "Error occurred during mesh attribute setting: "  << error
+                    << ":" << glewGetErrorString(error) << std::endl;
+                throw error;
+            }
+
+            glEnableVertexAttribArray(attributeDesc.mLayoutLocation);
+            error = glGetError();
+            if(error!= GL_FALSE) {
+                std::cout << "Error occurred during mesh attribute enabling: "  << error
+                    << ":" << glewGetErrorString(error) << std::endl;
+                throw error;
+            }
+
+            ++shaderVertexAttributeIndex;
+        }
+
+        currentOffset += attributeDesc.mSize;
     }
 
-    glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
-        glBufferData(
-            GL_ARRAY_BUFFER, sizeof(Vertex) * mVertices.size(),
-            mVertices.data(), GL_STATIC_DRAW
-        );
-        glBufferData(
-            GL_ELEMENT_ARRAY_BUFFER, sizeof(GLuint) * mElements.size(),
-            mElements.data(), GL_STATIC_DRAW
-        );
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+    assert(shaderVertexAttributeIndex == shaderAttributeDescList.size());
+}
+
+void BaseMesh::unbind() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void BaseMesh::_upload() {
+    if(mUploaded) return;
+
+    upload();
+    assert(mVertexBufferIndex);
+    assert(mElementBufferIndex);
+    mUploaded = true;
+}
+
+void BaseMesh::unload() {
+    if(!mUploaded) return;
+
+    glDeleteBuffers(1, &mVertexBufferIndex);
+    mVertexBufferIndex = 0;
+    glDeleteBuffers(1, &mElementBufferIndex);
+    mElementBufferIndex = 0;
+
+    mUploaded = false;
+}
+
+void BaseMesh::destroyResource() {
+    unload();
+}
+
+void BaseMesh::releaseResource() {
+    if(!mUploaded) return;
+
+    mVertexBufferIndex = 0;
+    mElementBufferIndex = 0;
+
+    mUploaded = false;
+}
+
+VertexLayout BaseMesh::getVertexLayout() const {
+    return mVertexLayout;
+}
+
+BuiltinMesh::BuiltinMesh(aiMesh* pAiMesh) 
+: BaseMesh{BuiltinVertexLayout} 
+{
+    for (std::size_t i{0}; i < pAiMesh->mNumVertices; ++i) {
+        // TODO: make fetching vertex data more robust. There is no
+        // guarantee that a mesh will contain vertex colours or
+        // texture sampling coordinates
+        mVertices.push_back({
+            { // position
+                pAiMesh->mVertices[i].x,
+                pAiMesh->mVertices[i].y,
+                pAiMesh->mVertices[i].z,
+                1.f
+            },
+            { // normal
+                pAiMesh->mNormals[i].x,
+                pAiMesh->mNormals[i].y,
+                pAiMesh->mNormals[i].z,
+                0.f
+            },
+            { // tangent
+                pAiMesh->mTangents[i].x,
+                pAiMesh->mTangents[i].y,
+                pAiMesh->mTangents[i].z,
+                0.f
+            },
+            { 1.f, 1.f, 1.f, 1.f },
+            {
+                pAiMesh->mTextureCoords[0][i].x,
+                pAiMesh->mTextureCoords[0][i].y
+            }
+        });
+    }
+
+    for(std::size_t i{0}; i < pAiMesh->mNumFaces; ++i) {
+        aiFace face = pAiMesh->mFaces[i];
+        for(std::size_t elementIndex{0}; elementIndex < face.mNumIndices; ++elementIndex) {
+            mElements.push_back(face.mIndices[elementIndex]);
+        }
+    }
+}
+
+BuiltinMesh::BuiltinMesh(
+    const std::vector<BuiltinVertexData>& vertices,
+    const std::vector<GLuint>& elements
+) : BaseMesh{BuiltinVertexLayout}, mVertices {vertices}, mElements {elements}
+{}
+
+
+void BuiltinMesh::upload() {
+    // Nop if already uploaded
+    if(isUploaded()) return;
+
+    //   TODO: somehow have the base class take care of more of the memory 
+    // management? Regardless of the type of vertex data, so long as we have
+    // a pointer to the underlying array, there's no reason we shouldn't
+    // be able to upload data in the base class rather than leaving it to
+    // the subclass
+    //   Not sure how we can achieve this.
+
+    // Generate names for our vertex, element, and array buffers
+    glGenBuffers(1, &mVertexBufferIndex);
+    glGenBuffers(1, &mElementBufferIndex);
+
+    // Set up the buffer objects for this mesh
+    glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferIndex);
+        glBufferData(GL_ARRAY_BUFFER, mVertices.size() * sizeof(BuiltinVertexData), mVertices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBufferIndex);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mElements.size() * sizeof(GLuint), mElements.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }

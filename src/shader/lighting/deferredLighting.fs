@@ -1,15 +1,12 @@
 /*
 Include: 
     -common/versionHeader.glsl
-    -common/lightStruct.glsl
+    -common/lightStruct.fs
     -common/geometrySampler.fs
     -common/fragmentAttributes.fs
 */
 
 uniform float uBrightCutoff = 1.f;
-
-in LightPlacement fragAttrLightPlacement;
-flat in LightEmission fragAttrLightEmission;
 
 layout (location=0) out vec4 outColor;
 layout (location=1) out vec4 brightColor;
@@ -28,7 +25,7 @@ void main() {
     vec4 eyeDir = vec4(normalize(vec3(-gPosition)), 0.f); //fragment -> eye
     vec4 incidentDir = normalize(gPosition - fragAttrLightPlacement.mPosition); //light -> fragment
     if(fragAttrLightEmission.mType == 0) incidentDir = normalize(fragAttrLightPlacement.mDirection);
-    float lightDistance = length(gPosition - fragAttrLightPlacement.mPosition); 
+    float lightDistance = length(gPosition - fragAttrLightPlacement.mPosition);
     vec4 halfwayDir = normalize(eyeDir + (-incidentDir));
 
     float factorDiffuse = max(dot(gNormal, -incidentDir), 0.f);
