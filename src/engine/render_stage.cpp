@@ -237,7 +237,6 @@ void LightingRenderStage::execute() {
         glBlendFunc(GL_ONE, GL_ONE);
         glClear(GL_COLOR_BUFFER_BIT);
 
-
         while(!mLightQueue.empty()) {
             std::vector<glm::mat4> modelMatrices {};
             std::vector<LightData> lightDataList {};
@@ -262,16 +261,6 @@ void LightingRenderStage::execute() {
 
 
             mShaderHandle.getResource().use();
-            std::cout << "attrPosition: "
-                << glGetAttribLocation(mShaderHandle.getResource().getProgramID(), "attrPosition") << std::endl;
-            // std::cout << "attrNormal: "
-            //     << glGetAttribLocation(mShaderHandle.getResource().getProgramID(), "attrNormal") << std::endl;
-            // std::cout << "attrTangent: "
-            //     << glGetAttribLocation(mShaderHandle.getResource().getProgramID(), "attrTangent") << std::endl;
-            // std::cout << "attrColor: "
-            //     << glGetAttribLocation(mShaderHandle.getResource().getProgramID(), "attrColor") << std::endl;
-            // std::cout << "attrUV1: "
-            //     << glGetAttribLocation(mShaderHandle.getResource().getProgramID(), "attrUV1") << std::endl;
             std::vector<std::string> gBufferAliases {
                 {"positionMap"}, {"normalMap"}, {"albedoSpecularMap"}
             };
@@ -297,7 +286,19 @@ void LightingRenderStage::execute() {
                 BuiltinModelMatrixAllocator modelMatrixAllocator{ modelMatrices };
                 LightInstanceAllocator lightInstanceAllocator{ lightDataList };
                 modelMatrixAllocator.bind(BuiltinModelMatrixLayout);
-                lightInstanceAllocator.bind(LightInstanceLayout);
+                lightInstanceAllocator.bind({{
+                    {"attrLightPlacement.mPosition", RUNTIME, 4, GL_FLOAT},
+                    {"attrLightPlacement.mDirection", RUNTIME, 4, GL_FLOAT},
+
+                    {"attrLightEmission.mType", RUNTIME, 1, GL_INT},
+                    {"attrLightEmission.mDiffuseColor", RUNTIME, 4, GL_FLOAT},
+                    {"attrLightEmission.mSpecularColor", RUNTIME, 4, GL_FLOAT},
+                    {"attrLightEmission.mAmbientColor", RUNTIME, 4, GL_FLOAT},
+                    {"attrLightEmission.mDecayLinear", RUNTIME, 1, GL_FLOAT},
+                    {"attrLightEmission.mDecayQuadratic", RUNTIME, 1, GL_FLOAT},
+                    {"attrLightEmission.mCosCutoffInner", RUNTIME, 1, GL_FLOAT},
+                    {"attrLightEmission.mCosCutoffOuter", RUNTIME, 1, GL_FLOAT}
+                }});
                 glDrawElementsInstanced(
                     GL_TRIANGLES, first.mMeshHandle.getResource().getElementCount(), 
                     GL_UNSIGNED_INT, nullptr, lightDataList.size()
@@ -428,7 +429,8 @@ void ScreenRenderStage::execute() {
     mShaderHandle.getResource().use();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_BLEND);
-    glDisable(GL_FRAMEBUFFER_SRGB);
+    // glDisable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVertexArrayObject);

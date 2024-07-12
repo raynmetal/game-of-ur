@@ -27,9 +27,10 @@ struct LightData {
     };
 
     //Basic light attributes
-    LightType mType;
     glm::vec4 mPosition;
     glm::vec4 mDirection;
+
+    LightType mType;
     glm::vec4 mDiffuseColor;
     glm::vec4 mSpecularColor;
     glm::vec4 mAmbientColor;
@@ -48,16 +49,18 @@ struct LightData {
 };
 
 static InstanceLayout LightInstanceLayout {{
-    {"lightPosition", LOCATION_LIGHTPOSITION, 4, GL_FLOAT},
-    {"lightDirection", LOCATION_LIGHTDIRECTION, 4, GL_FLOAT},
-    {"lightDiffuseColor", LOCATION_DIFFUSECOLOR, 4, GL_FLOAT},
-    {"lightSpecularColor", LOCATION_SPECULARCOLOR, 4, GL_FLOAT},
-    {"lightAmbientColor", LOCATION_AMBIENTCOLOR, 4, GL_FLOAT},
-    {"lightType", LOCATION_LIGHTTYPE, 1, GL_INT},
-    {"lightDecayLinear", LOCATION_LIGHTDECAYLINEAR, 1, GL_FLOAT},
-    {"lightDecayQuadratic", LOCATION_LIGHTDECAYQUADRATIC, 1, GL_FLOAT},
-    {"lightCosCutoffInner", LOCATION_LIGHTCOSCUTOFFINNER, 1, GL_FLOAT},
-    {"lightCosCutoffOuter", LOCATION_LIGHTCOSCUTOFFOUTER, 1, GL_FLOAT}
+    {"attrLightPlacement.mPosition", RUNTIME, 4, GL_FLOAT},
+    {"attrLightPlacement.mDirection", RUNTIME, 4, GL_FLOAT},
+
+    {"attrLightEmission.mType", RUNTIME, 1, GL_INT},
+    {"attrLightEmission.mDiffuseColor", RUNTIME, 4, GL_FLOAT},
+    {"attrLightEmission.mSpecularColor", RUNTIME, 4, GL_FLOAT},
+    {"attrLightEmission.mAmbientColor", RUNTIME, 4, GL_FLOAT},
+    {"attrLightEmission.mDecayLinear", RUNTIME, 1, GL_FLOAT},
+    {"attrLightEmission.mDecayQuadratic", RUNTIME, 1, GL_FLOAT},
+    {"attrLightEmission.mCosCutoffInner", RUNTIME, 1, GL_FLOAT},
+    {"attrLightEmission.mCosCutoffOuter", RUNTIME, 1, GL_FLOAT},
+    {"attrLightEmission.mRadius", RUNTIME, 1, GL_FLOAT}
 }};
 
 class LightInstanceAllocator : public BaseInstanceAllocator {

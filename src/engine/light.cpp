@@ -22,8 +22,8 @@ float LightData::CalculateRadius(const glm::vec4& diffuseColor, float decayLinea
 
 LightData LightData::MakeDirectionalLight(const glm::vec3& direction, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient){
     return LightData{
-        .mType { LightData::directional },
         .mDirection { direction, 0.f },
+        .mType { LightData::directional },
         .mDiffuseColor { diffuse, 1.f },
         .mSpecularColor { specular, 1.f },
         .mAmbientColor{ ambient, 1.f },
@@ -36,8 +36,8 @@ LightData LightData::MakeDirectionalLight(const glm::vec3& direction, const glm:
 
 LightData LightData::MakePointLight(const glm::vec3& position, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst){
     return LightData{
-        .mType { LightData::point },
         .mPosition { position, 1.f },
+        .mType { LightData::point },
         .mDiffuseColor { diffuse, 1.f, },
         .mSpecularColor { specular, 1.f },
         .mAmbientColor{ ambient, 1.f },
@@ -51,9 +51,9 @@ LightData LightData::MakePointLight(const glm::vec3& position, const glm::vec3& 
 
 LightData LightData::MakeSpotLight(const glm::vec3& position, const glm::vec3& direction, float innerAngle, float outerAngle, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst) {
     return LightData{
-        .mType { LightData::spot },
         .mPosition { position, 1.f },
         .mDirection { direction, 0.f },
+        .mType { LightData::spot },
         .mDiffuseColor { diffuse, 1.f },
         .mSpecularColor { specular, 1.f },
         .mAmbientColor{ ambient, 1.f },

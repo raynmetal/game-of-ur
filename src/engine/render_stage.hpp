@@ -42,7 +42,9 @@ struct RenderUnit {
 };
 
 struct RenderLightUnit {
-    RenderLightUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const glm::mat4& modelMatrix, const LightData& lightData)  {
+    RenderLightUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const glm::mat4& modelMatrix, const LightData& lightData):
+        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, mModelMatrix{modelMatrix}, mLightAttributes{lightData}
+    {
         std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(meshHandle.getName())) };
         std::uint32_t materialHash {static_cast<uint32_t>(std::hash<std::string>{}(materialHandle.getName()))};
         mSortKey |= (meshHash << ((sizeof(unsigned int)/2)*8)) & 0xFFFF0000;

@@ -54,11 +54,11 @@ void main() {
             // both point and spot lights experience attenuation
             factorAttenuation = (
                 1.f
-                    / (
-                        1.f
-                        + fragAttrLightEmission.mDecayLinear * lightDistance
-                        + fragAttrLightEmission.mDecayQuadratic * lightDistance * lightDistance
-                    )
+                / (
+                    1.f
+                    + fragAttrLightEmission.mDecayLinear * lightDistance
+                    + fragAttrLightEmission.mDecayQuadratic * lightDistance * lightDistance
+                )
             );
         break;
     }
@@ -67,7 +67,7 @@ void main() {
     vec4 componentSpecular = factorSpecular * fragAttrLightEmission.mSpecularColor * gSpecular;
     vec4 componentAmbient = fragAttrLightEmission.mAmbientColor * gAlbedo;
 
-    outColor = (componentDiffuse + componentSpecular + componentAmbient) * factorAttenuation * factorSpotIntensity;
+    outColor = ((componentDiffuse) + (componentSpecular) + (componentAmbient)) * factorAttenuation * factorSpotIntensity;
     outColor.a = 1.f;
 
     if(dot(outColor.xyz, vec3(.2f, .7f, .1f)) >= uBrightCutoff) {

@@ -21,12 +21,5 @@ void main() {
     fragAttrLightPlacement.mDirection = viewMatrix * attrLightPlacement.mDirection;
 
     // Light emission, passed on as is
-    fragAttrLightEmission.mDiffuseColor = attrLightEmission.mDiffuseColor;
-    fragAttrLightEmission.mSpecularColor = attrLightEmission.mSpecularColor;
-    fragAttrLightEmission.mAmbientColor = attrLightEmission.mAmbientColor;
-    fragAttrLightEmission.mType = attrLightEmission.mType;
-    fragAttrLightEmission.mDecayLinear = attrLightEmission.mDecayLinear;
-    fragAttrLightEmission.mDecayQuadratic = attrLightEmission.mDecayQuadratic;
-    fragAttrLightEmission.mCosCutoffInner = attrLightEmission.mCosCutoffInner;
-    fragAttrLightEmission.mCosCutoffOuter = attrLightEmission.mCosCutoffOuter;
+    fragAttrLightEmission = attrLightEmission;
 }

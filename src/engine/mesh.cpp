@@ -94,23 +94,31 @@ void BaseMesh::setAttributePointers(const VertexLayout& shaderVertexLayout, std:
         const VertexAttributeDescriptor& attributeDesc = attributeDescList[i];
         const VertexAttributeDescriptor& shaderAttributeDesc = shaderAttributeDescList[shaderVertexAttributeIndex];
         if(attributeDesc == shaderAttributeDesc){
-            glVertexAttribPointer(
-                attributeDesc.mLayoutLocation,
-                attributeDesc.mNComponents,
-                attributeDesc.mType,
-                GL_FALSE,
-                stride,
-                reinterpret_cast<void*>(startingOffset + currentOffset)
-            );
-            GLenum error = glGetError();
-            if(error!= GL_FALSE) {
-                std::cout << "Error occurred during mesh attribute setting: "  << error
-                    << ":" << glewGetErrorString(error) << std::endl;
-                throw error;
+            switch(attributeDesc.mType){
+                case GL_INT:
+                case GL_UNSIGNED_INT:
+                    glVertexAttribIPointer(
+                        attributeDesc.mLayoutLocation,
+                        attributeDesc.mNComponents,
+                        attributeDesc.mType,
+                        stride,
+                        reinterpret_cast<void*>(startingOffset + currentOffset)
+                    );
+                break;
+                case GL_FLOAT:
+                default:
+                    glVertexAttribPointer(
+                        attributeDesc.mLayoutLocation,
+                        attributeDesc.mNComponents,
+                        attributeDesc.mType,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(startingOffset + currentOffset)
+                    );
+                break;
             }
-
             glEnableVertexAttribArray(attributeDesc.mLayoutLocation);
-            error = glGetError();
+            GLenum error { glGetError() };
             if(error!= GL_FALSE) {
                 std::cout << "Error occurred during mesh attribute enabling: "  << error
                     << ":" << glewGetErrorString(error) << std::endl;

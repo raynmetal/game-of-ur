@@ -7,18 +7,9 @@
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
-enum DefaultInstanceAttributeLocations {
-    LOCATION_MATRIXMODEL=7,
-    LOCATION_LIGHTPOSITION=11,
-    LOCATION_LIGHTDIRECTION=12,
-    LOCATION_DIFFUSECOLOR=13,
-    LOCATION_SPECULARCOLOR=14,
-    LOCATION_AMBIENTCOLOR=15,
-    LOCATION_LIGHTTYPE=16,
-    LOCATION_LIGHTDECAYLINEAR=17,
-    LOCATION_LIGHTDECAYQUADRATIC=18,
-    LOCATION_LIGHTCOSCUTOFFINNER=19,
-    LOCATION_LIGHTCOSCUTOFFOUTER=20
+enum DefaultInstanceAttributeLocations : int {
+    FIXED_MATRIXMODEL=7,
+    RUNTIME=-8,
 };
 
 struct InstanceAttributeDescriptor {
@@ -145,10 +136,10 @@ private:
 
 static InstanceLayout BuiltinModelMatrixLayout {
     {
-        {"modelMatrixCol0", LOCATION_MATRIXMODEL, 4, GL_FLOAT},
-        {"modelMatrixCol1", LOCATION_MATRIXMODEL+1, 4, GL_FLOAT},
-        {"modelMatrixCol2", LOCATION_MATRIXMODEL+2, 4, GL_FLOAT},
-        {"modelMatrixCol3", LOCATION_MATRIXMODEL+3, 4, GL_FLOAT},
+        {"modelMatrixCol0", FIXED_MATRIXMODEL, 4, GL_FLOAT},
+        {"modelMatrixCol1", FIXED_MATRIXMODEL+1, 4, GL_FLOAT},
+        {"modelMatrixCol2", FIXED_MATRIXMODEL+2, 4, GL_FLOAT},
+        {"modelMatrixCol3", FIXED_MATRIXMODEL+3, 4, GL_FLOAT},
     }
 };
 

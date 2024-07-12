@@ -35,27 +35,54 @@ void BaseInstanceAllocator::setAttributePointers(const InstanceLayout& shaderIns
     const std::size_t stride {mInstanceLayout.computeStride()};
     const std::vector<InstanceAttributeDescriptor>& attributeDescList { mInstanceLayout.getAttributeList() };
     const std::vector<InstanceAttributeDescriptor>& shaderAttributeDescList { shaderInstanceLayout.getAttributeList() };
-
+    GLint programID { 0 };
+    glGetIntegerv(GL_CURRENT_PROGRAM, &programID);
     std::size_t currentOffset {0};
     std::size_t shaderInstanceAttributeIndex {0};
+
     for(std::size_t i{0}; i < attributeDescList.size(); ++i) {
         const InstanceAttributeDescriptor& attributeDesc = attributeDescList[i];
         const InstanceAttributeDescriptor& shaderAttributeDesc = shaderAttributeDescList[shaderInstanceAttributeIndex];
 
         if(attributeDesc == shaderAttributeDesc) {
-            glVertexAttribPointer(
-                attributeDesc.mLayoutLocation,
-                attributeDesc.mNComponents,
-                attributeDesc.mType,
-                GL_FALSE,
-                stride,
-                reinterpret_cast<void*>(startingOffset + currentOffset)
-            );
-            glEnableVertexAttribArray(attributeDesc.mLayoutLocation);
-            glVertexAttribDivisor(attributeDesc.mLayoutLocation, 1);
+            GLint layoutLocation {attributeDesc.mLayoutLocation};
+            if(layoutLocation == DefaultInstanceAttributeLocations::RUNTIME) {
+                layoutLocation = glGetAttribLocation(programID, attributeDesc.mName.c_str());
+            }
+            switch(attributeDesc.mType){
+                case GL_INT:
+                case GL_UNSIGNED_INT:
+                    glVertexAttribIPointer(
+                        layoutLocation,
+                        attributeDesc.mNComponents,
+                        attributeDesc.mType,
+                        stride,
+                        reinterpret_cast<void*>(startingOffset + currentOffset)
+                    );
+                break;
+                case GL_FLOAT:
+                default:
+                    glVertexAttribPointer(
+                        layoutLocation,
+                        attributeDesc.mNComponents,
+                        attributeDesc.mType,
+                        GL_FALSE,
+                        stride,
+                        reinterpret_cast<void*>(startingOffset + currentOffset)
+                    );
+                break;
+            }
+            glEnableVertexAttribArray(layoutLocation);
+            glVertexAttribDivisor(layoutLocation, 1);
             ++shaderInstanceAttributeIndex;
         }
-
+        GLenum error = glGetError();
+        if(error!= GL_FALSE) {
+            glewGetErrorString(error);
+            std::cout << "Error occurred during instance attribute setting: "  << error
+                << ":" << glewGetErrorString(error) << std::endl;
+            throw error;
+        }
         currentOffset += attributeDesc.mSize;
     }
 

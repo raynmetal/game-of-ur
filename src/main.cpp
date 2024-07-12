@@ -142,26 +142,22 @@ int main(int argc, char* argv[]) {
     float exposure = 1.f;
 
     // Debug: list of screen textures that may be rendered
-    constexpr GLuint nScreenTextures {3};
+    constexpr GLuint nScreenTextures {5};
     GLuint currScreenTexture {2};
     const TextureHandle screenTextureHandles[nScreenTextures] {
         {geometryRenderStage.getRenderTarget("geometryPosition")}, {geometryRenderStage.getRenderTarget("geometryNormal")}, {geometryRenderStage.getRenderTarget("geometryAlbedoSpecular")},
-        // {lightingRenderStage.getRenderTarget("litScene")}, {lightingRenderStage.getRenderTarget("brightCutoff")}
-        // {blurRenderStage.getRenderTarget("pingBuffer")}, 
+        {lightingRenderStage.getRenderTarget("litScene")}, {lightingRenderStage.getRenderTarget("brightCutoff")},
+        // {blurRenderStage.getRenderTarget("pingBuffer")},
         // {tonemappingRenderStage.getRenderTarget("tonemappedScene")}
     };
-    float gamma = 2.2f;
-
+    float gamma { 2.2f };
 
     // Last pieces of pipeline setup, where we connect all the
     // render stages together
-    // lightingRenderStage.attachTexture("positionMap", geometryRenderStage.getRenderTarget("geometryPosition"));
-    // lightingRenderStage.attachTexture("normalMap", geometryRenderStage.getRenderTarget("geometryNormal"));
-    // lightingRenderStage.attachTexture("albedoSpecularMap", geometryRenderStage.getRenderTarget("geometryAlbedoSpecular"));
-    // lightingRenderStage.updateIntParameter("screenWidth", gWindowWidth);
-    // lightingRenderStage.updateIntParameter("screenHeight", gWindowHeight);
+    lightingRenderStage.attachTexture("positionMap", geometryRenderStage.getRenderTarget("geometryPosition"));
+    lightingRenderStage.attachTexture("normalMap", geometryRenderStage.getRenderTarget("geometryNormal"));
+    lightingRenderStage.attachTexture("albedoSpecularMap", geometryRenderStage.getRenderTarget("geometryAlbedoSpecular"));
     // blurRenderStage.attachTexture("unblurredImage", lightingRenderStage.getRenderTarget("brightCutoff"));
-    // blurRenderStage.updateIntParameter("nPasses", 12);
     // tonemappingRenderStage.attachTexture("litScene", lightingRenderStage.getRenderTarget("litScene"));
     // tonemappingRenderStage.attachTexture("bloomEffect", blurRenderStage.getRenderTarget("pingBuffer"));
     // tonemappingRenderStage.updateFloatParameter("exposure", exposure);
@@ -169,7 +165,7 @@ int main(int argc, char* argv[]) {
     // tonemappingRenderStage.updateIntParameter("combine", true);
     screenRenderStage.attachTexture("renderSource", screenTextureHandles[currScreenTexture]);
     geometryRenderStage.validate();
-    // lightingRenderStage.validate();
+    lightingRenderStage.validate();
     // blurRenderStage.validate();
     // tonemappingRenderStage.validate();
     screenRenderStage.validate();
@@ -181,7 +177,6 @@ int main(int argc, char* argv[]) {
     float framerate {0.f};
     const float frameratePoll {1.f};
     float framerateCounter {0.f};
-
 
     //Main event loop
     glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -264,21 +259,24 @@ int main(int argc, char* argv[]) {
         }
 
 
-        // //Submit our light data to the lighting render queue
-        // for(const auto& light: lightData) {
-        //     lightingRenderStage.submitToRenderQueue(
-        //         RenderLightUnit {
-        //             sphereMesh,
-        //             lightMaterialHandle,
-        //             buildModelMatrix(
-        //                 light.mPosition,
-        //                 {},
-        //                 glm::vec3{light.mRadius}
-        //             ),
-        //             light
-        //         }
-        //     );
-        // }
+        //Submit our light data to the lighting render queue
+        for(const auto& light: lightData) {
+            const float sqrt2 { sqrt(2.f) };
+            lightingRenderStage.submitToRenderQueue(
+                RenderLightUnit {
+                    sphereMesh,
+                    lightMaterialHandle,
+                    buildModelMatrix(
+                        light.mPosition,
+                        {},
+                        light.mType != LightData::directional?
+                            glm::vec3{ light.mRadius }:
+                            glm::vec3(sqrt2, sqrt2, 1.f)
+                    ),
+                    light
+                }
+            );
+        }
 
         // Send shared matrices to the uniform buffer
         glBindBuffer(GL_UNIFORM_BUFFER, uboSharedMatrices);
@@ -305,7 +303,7 @@ int main(int argc, char* argv[]) {
         }
         //Render geometry to our geometry framebuffer
         geometryRenderStage.execute();
-        // lightingRenderStage.execute();
+        lightingRenderStage.execute();
         // blurRenderStage.execute();
         // tonemappingRenderStage.execute();
         screenRenderStage.execute();
