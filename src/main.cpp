@@ -192,25 +192,33 @@ int main(int argc, char* argv[]) {
                 currScreenTexture = (currScreenTexture + 1) % nScreenTextures;
                 screenRenderStage.attachTexture("renderSource", screenTextureHandles[currScreenTexture]);
             }
-            // if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_PERIOD) {
-            //     exposure += .1f;
-            //     tonemappingRenderStage.updateFloatParameter("exposure", exposure);
-            // }
-            // if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_COMMA) {
-            //     if (exposure < .1f) exposure = 0.f;
-            //     else exposure -= .1f; 
-            //     tonemappingRenderStage.updateFloatParameter("exposure", exposure);
-            // }
-            // if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_j) {
-            //     gamma -= .1f;
-            //     if(gamma < 1.6f) gamma = 1.6f;
-            //     tonemappingRenderStage.updateFloatParameter("gamma", gamma);
-            // }
-            // else if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_k) {
-            //     gamma += .1f;
-            //     if(gamma > 3.f) gamma = 3.f;
-            //     tonemappingRenderStage.updateFloatParameter("gamma", gamma);
-            // }
+            if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_PERIOD) {
+                exposure += .1f;
+                tonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
+                    "exposure", exposure
+                );
+            }
+            if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_COMMA) {
+                if (exposure < .1f) exposure = 0.f;
+                else exposure -= .1f; 
+                tonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
+                    "exposure", exposure
+                );
+            }
+            if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_j) {
+                gamma -= .1f;
+                if(gamma < 1.6f) gamma = 1.6f;
+                tonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
+                    "gamma", gamma 
+                );
+            }
+            else if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_k) {
+                gamma += .1f;
+                if(gamma > 3.f) gamma = 3.f;
+                tonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
+                    "gamma", gamma 
+                );
+            }
             camera.processInput(event);
         }
         if(quit) break;
@@ -249,7 +257,6 @@ int main(int argc, char* argv[]) {
                 }
             );
         }
-
 
         //Submit our light data to the lighting render queue
         for(const auto& light: lightData) {
@@ -293,7 +300,7 @@ int main(int argc, char* argv[]) {
                 << ":" << glewGetErrorString(error) << std::endl;
             throw error;
         }
-        //Render geometry to our geometry framebuffer
+        // Execute each rendering stage in its proper order
         geometryRenderStage.execute();
         lightingRenderStage.execute();
         blurRenderStage.execute();
