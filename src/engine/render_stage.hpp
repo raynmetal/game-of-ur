@@ -79,9 +79,11 @@ public:
 
     void attachTexture(const std::string& name, const TextureHandle& textureHandle);
     void attachMesh(const std::string& name, const MeshHandle& meshHandle);
+    void attachMaterial(const std::string& name, const MaterialHandle& materialHandle);
 
     TextureHandle getTexture(const std::string& name);
     MeshHandle getMesh(const std::string& name);
+    MaterialHandle getMaterial(const std::string& name);
 
     void submitToRenderQueue(RenderUnit renderUnit);
     void submitToRenderQueue(RenderLightUnit lightRenderUnit);
@@ -91,6 +93,7 @@ protected:
 
     std::map<std::string, TextureHandle> mTextureAttachments {};
     std::map<std::string, MeshHandle> mMeshAttachments {};
+    std::map<std::string, MaterialHandle> mMaterialAttachments {};
 
     std::priority_queue<RenderUnit> mOpaqueMeshQueue {};
     std::priority_queue<RenderLightUnit> mLightQueue {};
@@ -133,26 +136,26 @@ public:
     virtual void execute() override;
 };
 
-// class BlurRenderStage : public BaseOffscreenRenderStage {
-// public:
-//     BlurRenderStage(const std::string& shaderFilepath)
-//         : BaseOffscreenRenderStage{shaderFilepath}
-//     {}
-//     virtual void setup() override;
-//     virtual void validate() override;
-//     virtual void execute() override;
-// };
+class BlurRenderStage : public BaseOffscreenRenderStage {
+public:
+    BlurRenderStage(const std::string& shaderFilepath)
+        : BaseOffscreenRenderStage{shaderFilepath}
+    {}
+    virtual void setup() override;
+    virtual void validate() override;
+    virtual void execute() override;
+};
 
-// class TonemappingRenderStage : public BaseOffscreenRenderStage {
-// public:
-//     TonemappingRenderStage(const std::string& shaderFilepath)
-//         : BaseOffscreenRenderStage{shaderFilepath}
-//     {}
+class TonemappingRenderStage : public BaseOffscreenRenderStage {
+public:
+    TonemappingRenderStage(const std::string& shaderFilepath)
+        : BaseOffscreenRenderStage{shaderFilepath}
+    {}
 
-//     virtual void setup() override;
-//     virtual void validate() override;
-//     virtual void execute() override;
-// };
+    virtual void setup() override;
+    virtual void validate() override;
+    virtual void execute() override;
+};
 
 class ScreenRenderStage: public BaseRenderStage {
 public:

@@ -93,6 +93,7 @@ void BaseMesh::setAttributePointers(const VertexLayout& shaderVertexLayout, std:
     for(std::size_t i {0}; i < attributeDescList.size() && shaderVertexAttributeIndex < shaderAttributeDescList.size(); ++i) {
         const VertexAttributeDescriptor& attributeDesc = attributeDescList[i];
         const VertexAttributeDescriptor& shaderAttributeDesc = shaderAttributeDescList[shaderVertexAttributeIndex];
+
         if(attributeDesc == shaderAttributeDesc){
             switch(attributeDesc.mType){
                 case GL_INT:
@@ -124,7 +125,6 @@ void BaseMesh::setAttributePointers(const VertexLayout& shaderVertexLayout, std:
                     << ":" << glewGetErrorString(error) << std::endl;
                 throw error;
             }
-
             ++shaderVertexAttributeIndex;
         }
 

@@ -37,13 +37,13 @@ int main(int argc, char* argv[]) {
 
     GeometryRenderStage geometryRenderStage{"src/shader/geometryShader.json"};
     LightingRenderStage lightingRenderStage {"src/shader/lightingShader.json"};
-    // BlurRenderStage blurRenderStage {"src/shader/gaussianblurShader.json"};
-    // TonemappingRenderStage tonemappingRenderStage { "src/shader/tonemappingShader.json" };
+    BlurRenderStage blurRenderStage {"src/shader/gaussianblurShader.json"};
+    TonemappingRenderStage tonemappingRenderStage { "src/shader/tonemappingShader.json" };
     ScreenRenderStage screenRenderStage { "src/shader/screenShader.json" };
     geometryRenderStage.setup();
     lightingRenderStage.setup();
-    // blurRenderStage.setup();
-    // tonemappingRenderStage.setup();
+    blurRenderStage.setup();
+    tonemappingRenderStage.setup();
     screenRenderStage.setup();
 
     // Set up a uniform buffer for shared matrices
@@ -87,7 +87,6 @@ int main(int argc, char* argv[]) {
             .03f
         )
     );
-
     lightData.push_back(
         LightData::MakePointLight(
             glm::vec3(0.f, 1.5f, -1.f),
@@ -98,13 +97,12 @@ int main(int argc, char* argv[]) {
             .02f
         )
     );
-
     lightData.push_back(
         LightData::MakeDirectionalLight(
-            glm::vec3(0.f, -1.f, 1.f),
+            glm::vec3(0.f, -.3f, 1.f),
             glm::vec3(20.f),
             glm::vec3(20.f),
-            glm::vec3(0.2f)
+            glm::vec3(.4f)
         )
     );
 
@@ -116,9 +114,6 @@ int main(int argc, char* argv[]) {
     };
     lightMaterialHandle.getResource().updateIntProperty("screenWidth", 800);
     lightMaterialHandle.getResource().updateIntProperty("screenHeight", 600);
-
-    // geometryRenderStage.attachModel("boardPiece", boardPieceModelHandle);
-    // lightingRenderStage.attachLightCollection("sceneLights", sceneLightsHandle);
 
     FlyCamera camera {
         glm::vec3(0.f), 0.f, 0.f, 0.f
@@ -142,13 +137,13 @@ int main(int argc, char* argv[]) {
     float exposure = 1.f;
 
     // Debug: list of screen textures that may be rendered
-    constexpr GLuint nScreenTextures {5};
-    GLuint currScreenTexture {2};
+    constexpr GLuint nScreenTextures {7};
+    GLuint currScreenTexture {3};
     const TextureHandle screenTextureHandles[nScreenTextures] {
         {geometryRenderStage.getRenderTarget("geometryPosition")}, {geometryRenderStage.getRenderTarget("geometryNormal")}, {geometryRenderStage.getRenderTarget("geometryAlbedoSpecular")},
         {lightingRenderStage.getRenderTarget("litScene")}, {lightingRenderStage.getRenderTarget("brightCutoff")},
-        // {blurRenderStage.getRenderTarget("pingBuffer")},
-        // {tonemappingRenderStage.getRenderTarget("tonemappedScene")}
+        {blurRenderStage.getRenderTarget("pingBuffer")},
+        {tonemappingRenderStage.getRenderTarget("tonemappedScene")}
     };
     float gamma { 2.2f };
 
@@ -157,17 +152,14 @@ int main(int argc, char* argv[]) {
     lightingRenderStage.attachTexture("positionMap", geometryRenderStage.getRenderTarget("geometryPosition"));
     lightingRenderStage.attachTexture("normalMap", geometryRenderStage.getRenderTarget("geometryNormal"));
     lightingRenderStage.attachTexture("albedoSpecularMap", geometryRenderStage.getRenderTarget("geometryAlbedoSpecular"));
-    // blurRenderStage.attachTexture("unblurredImage", lightingRenderStage.getRenderTarget("brightCutoff"));
-    // tonemappingRenderStage.attachTexture("litScene", lightingRenderStage.getRenderTarget("litScene"));
-    // tonemappingRenderStage.attachTexture("bloomEffect", blurRenderStage.getRenderTarget("pingBuffer"));
-    // tonemappingRenderStage.updateFloatParameter("exposure", exposure);
-    // tonemappingRenderStage.updateFloatParameter("gamma", gamma);
-    // tonemappingRenderStage.updateIntParameter("combine", true);
+    blurRenderStage.attachTexture("unblurredImage", lightingRenderStage.getRenderTarget("brightCutoff"));
+    tonemappingRenderStage.attachTexture("litScene", lightingRenderStage.getRenderTarget("litScene"));
+    tonemappingRenderStage.attachTexture("bloomEffect", blurRenderStage.getRenderTarget("pingBuffer"));
     screenRenderStage.attachTexture("renderSource", screenTextureHandles[currScreenTexture]);
     geometryRenderStage.validate();
     lightingRenderStage.validate();
-    // blurRenderStage.validate();
-    // tonemappingRenderStage.validate();
+    blurRenderStage.validate();
+    tonemappingRenderStage.validate();
     screenRenderStage.validate();
 
     MeshHandle sphereMesh { generateSphereMesh(10, 5) };
@@ -304,8 +296,8 @@ int main(int argc, char* argv[]) {
         //Render geometry to our geometry framebuffer
         geometryRenderStage.execute();
         lightingRenderStage.execute();
-        // blurRenderStage.execute();
-        // tonemappingRenderStage.execute();
+        blurRenderStage.execute();
+        tonemappingRenderStage.execute();
         screenRenderStage.execute();
 
         WindowContextManager::getInstance().swapBuffers();

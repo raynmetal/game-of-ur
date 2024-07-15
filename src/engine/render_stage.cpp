@@ -51,6 +51,17 @@ TextureHandle BaseRenderStage::getTexture(const std::string& name) {
     return mTextureAttachments.at(name);
 }
 
+void BaseRenderStage::attachMaterial(
+    const std::string& name,
+    const MaterialHandle& materialHandle
+) {
+    mMaterialAttachments.insert_or_assign(name, materialHandle);
+}
+
+MaterialHandle BaseRenderStage::getMaterial(const std::string& name) {
+    return mMaterialAttachments.at(name);
+}
+
 void BaseRenderStage::submitToRenderQueue(RenderUnit renderUnit) {
     mOpaqueMeshQueue.push(renderUnit);
 }
@@ -308,114 +319,153 @@ void LightingRenderStage::execute() {
     mFramebufferHandle.getResource().unbind();
 }
 
-// void BlurRenderStage::setup() {
-//     mFramebufferHandle = FramebufferManager::getInstance().registerResource(
-//         "bloomFramebuffer",
-//         {
-//             {800, 600},
-//             2,
-//             {
-//                 ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4},
-//                 ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4}
-//             },
-//             false
-//         }
-//     );
-//     declareRenderTarget("pingBuffer", 0);
-//     declareRenderTarget("pongBuffer", 1);
-//     attachMesh("screenMesh", generateRectangleMesh());
-// }
+void BlurRenderStage::setup() {
+    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
+        "bloomFramebuffer",
+        {
+            {800, 600},
+            2,
+            {
+                ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4},
+                ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4}
+            },
+            false
+        }
+    );
+    declareRenderTarget("pingBuffer", 0);
+    declareRenderTarget("pongBuffer", 1);
+    attachMesh("screenMesh", generateRectangleMesh());
+    attachMaterial("screenMaterial",
+        MaterialManager::getInstance().registerResource("", {})
+    );
+    Material::RegisterIntProperty("nBlurPasses", 12);
+}
 
-// void BlurRenderStage::validate() {
-//     assert(2 == mFramebufferHandle.getResource().getColorBufferHandles().size());
-//     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
-//     assert(mTextureAttachments.find("unblurredImage") != mTextureAttachments.end());
-//     assert(mIntParameters.find("nPasses") != mIntParameters.end());
-//     assert(mIntParameters.at("nPasses")>=2);
-//     /*
-//      * TODO: assert various other things related to rendering a blur
-//      */
-// }
+void BlurRenderStage::validate() {
+    assert(2 == mFramebufferHandle.getResource().getColorBufferHandles().size());
+    assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
+    assert(mTextureAttachments.find("unblurredImage") != mTextureAttachments.end());
+    /*
+     * TODO: assert various other things related to rendering a blur
+     */
+}
 
-// void BlurRenderStage::execute() {
-//     mShaderHandle.getResource().use();
-//     mFramebufferHandle.getResource().bind();
-//         const std::vector<GLenum> drawbufferEnums {
-//             {GL_COLOR_ATTACHMENT0},
-//             {GL_COLOR_ATTACHMENT1}
-//         };
-//         glDisable(GL_DEPTH_TEST);
-//         glDisable(GL_FRAMEBUFFER_SRGB);
-//         glDisable(GL_BLEND);
-//         glDrawBuffers(2, drawbufferEnums.data()); // clear both buffers
-//         glClear(GL_COLOR_BUFFER_BIT);
+void BlurRenderStage::execute() {
+    mShaderHandle.getResource().use();
+    mFramebufferHandle.getResource().bind();
+        const std::vector<GLenum> drawbufferEnums {
+            {GL_COLOR_ATTACHMENT0},
+            {GL_COLOR_ATTACHMENT1}
+        };
+        glDisable(GL_DEPTH_TEST);
+        glDisable(GL_FRAMEBUFFER_SRGB);
+        glDisable(GL_BLEND);
+        glDrawBuffers(2, drawbufferEnums.data()); // clear both buffers
+        glClear(GL_COLOR_BUFFER_BIT);
 
-//         const int nPasses {  mIntParameters.at("nPasses") };
-//         mTextureAttachments.at("unblurredImage").getResource().bind(0);
-//         mShaderHandle.getResource().setUInt("uGenericTexture", 0);
-//         mShaderHandle.getResource().setUBool("uHorizontal", false);
+        const int nPasses {  mMaterialAttachments
+            .at("screenMaterial").getResource().getIntProperty("nBlurPasses")
+        };
+        mTextureAttachments.at("unblurredImage").getResource().bind(0);
+        mShaderHandle.getResource().setUInt("uGenericTexture", 0);
+        mShaderHandle.getResource().setUBool("uHorizontal", false);
+        MeshHandle screenMeshHandle { mMeshAttachments.at("screenMesh") };
 
-//         // In the first pass, draw to the pong buffer, then 
-//         // alternate between ping and pong
-//         std::vector<TextureHandle> pingpongBuffers {
-//             mFramebufferHandle.getResource().getColorBufferHandles()
-//         };
-//         MeshHandle screenMeshHandle { mMeshAttachments.at("screenMesh") };
-//         glDrawBuffer(GL_COLOR_ATTACHMENT1);
-//         for(int i{0}; i < nPasses; ++i) {
-//             // Blur our image along one axis
-//             // screenMeshHandle.getResource().draw(mShaderHandle, 1);
+        // In the first pass, draw to the pong buffer, then 
+        // alternate between ping and pong
+        std::vector<TextureHandle> pingpongBuffers {
+            mFramebufferHandle.getResource().getColorBufferHandles()
+        };
 
-//             // Prepare for the next pass, flipping color buffers
-//             // and axis
-//             pingpongBuffers[(1+i)%2].getResource().bind(0);
-//             mShaderHandle.getResource().setUBool("uHorizontal", (1+i)%2);
-//             glDrawBuffer(GL_COLOR_ATTACHMENT0 + i%2);
-//         }
-//     mFramebufferHandle.getResource().unbind();
-// }
+        glDrawBuffer(GL_COLOR_ATTACHMENT1);
+        // Blur our image along one axis
+        glBindVertexArray(mVertexArrayObject);
+            screenMeshHandle.getResource().bind({{
+                {"position", LOCATION_POSITION, 4, GL_FLOAT},
+                {"UV1", LOCATION_UV1, 2, GL_FLOAT}
+            }});
+            for(int i{0}; i < nPasses; ++i) {
+                glDrawElements(
+                    GL_TRIANGLES, screenMeshHandle.getResource().getElementCount(), 
+                    GL_UNSIGNED_INT, nullptr
+                );
 
-// void TonemappingRenderStage::setup() {
-//     mFramebufferHandle = FramebufferManager::getInstance().registerResource(
-//         "tonemappingFramebuffer",
-//         {
-//             {800, 600},
-//             1,
-//             {
-//                 {.mDataType=GL_UNSIGNED_BYTE, .mComponentCount=4}
-//             },
-//             true
-//         }
-//     );
-//     declareRenderTarget("tonemappedScene", 0);
-//     attachMesh("screenMesh", generateRectangleMesh());
-// }
-// void TonemappingRenderStage::validate() {
-//     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
-//     assert(mTextureAttachments.find("litScene") != mTextureAttachments.end());
-//     assert(mTextureAttachments.find("bloomEffect") != mTextureAttachments.end());
-//     assert(mFramebufferHandle.getResource().getColorBufferHandles().size() >= 1);
-//     assert(mFloatParameters.find("exposure") != mFloatParameters.end());
-//     assert(mFloatParameters.find("gamma") != mFloatParameters.end());
-//     assert(mIntParameters.find("combine") != mIntParameters.end());
-// }
+                // Prepare for the next pass, flipping color buffers
+                // and axis
+                pingpongBuffers[(1+i)%2].getResource().bind(0);
+                mShaderHandle.getResource().setUBool("uHorizontal", (1+i)%2);
+                glDrawBuffer(GL_COLOR_ATTACHMENT0 + i%2);
+            }
+        glBindVertexArray(0);
+    mFramebufferHandle.getResource().unbind();
+}
 
-// void TonemappingRenderStage::execute() {
-//     mShaderHandle.getResource().use();
-//     mFramebufferHandle.getResource().bind();
-//         glDisable(GL_DEPTH_TEST);
-//         glDisable(GL_FRAMEBUFFER_SRGB);
-//         glClear(GL_COLOR_BUFFER_BIT);
-//         mTextureAttachments.at("litScene").getResource().bind(0);
-//         mTextureAttachments.at("bloomEffect").getResource().bind(1);
-//         mShaderHandle.getResource().setUInt("uGenericTexture", 0);
-//         mShaderHandle.getResource().setUInt("uGenericTexture1", 1);
-//         mShaderHandle.getResource().setUFloat("uExposure", mFloatParameters.at("exposure"));
-//         mShaderHandle.getResource().setUFloat("uGamma", mFloatParameters.at("gamma"));
-//         mShaderHandle.getResource().setUInt("uCombine", mIntParameters.at("combine"));
-//         // mMeshAttachments.at("screenMesh").getResource().draw(mShaderHandle, 1);
-//     mFramebufferHandle.getResource().unbind();
-// }
+void TonemappingRenderStage::setup() {
+    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
+        "tonemappingFramebuffer",
+        {
+            {800, 600},
+            1,
+            {
+                {.mDataType=GL_UNSIGNED_BYTE, .mComponentCount=4}
+            },
+            true
+        }
+    );
+    declareRenderTarget("tonemappedScene", 0);
+    attachMesh("screenMesh", generateRectangleMesh());
+    attachMaterial("screenMaterial",
+        MaterialManager::getInstance().registerResource("", {})
+    );
+
+    Material::RegisterFloatProperty("exposure", 1.f);
+    Material::RegisterFloatProperty("gamma", 2.2f);
+    Material::RegisterIntProperty("combine", true);
+}
+
+void TonemappingRenderStage::validate() {
+    assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
+    assert(mTextureAttachments.find("litScene") != mTextureAttachments.end());
+    assert(mTextureAttachments.find("bloomEffect") != mTextureAttachments.end());
+    assert(mFramebufferHandle.getResource().getColorBufferHandles().size() >= 1);
+
+}
+
+void TonemappingRenderStage::execute() {
+    mShaderHandle.getResource().use();
+    MaterialHandle screenMaterial {getMaterial("screenMaterial")};
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_FRAMEBUFFER_SRGB);
+    glClear(GL_COLOR_BUFFER_BIT);
+    mFramebufferHandle.getResource().bind();
+        mTextureAttachments.at("litScene").getResource().bind(0);
+        mTextureAttachments.at("bloomEffect").getResource().bind(1);
+        mShaderHandle.getResource().setUInt("uGenericTexture", 0);
+        mShaderHandle.getResource().setUInt("uGenericTexture1", 1);
+        mShaderHandle.getResource().setUFloat("uExposure", 
+            screenMaterial.getResource().getFloatProperty("exposure")
+        );
+        mShaderHandle.getResource().setUFloat("uGamma", 
+            screenMaterial.getResource().getFloatProperty("gamma")
+        );
+        mShaderHandle.getResource().setUInt("uCombine", 
+            screenMaterial.getResource().getIntProperty("combine")
+        );
+        glBindVertexArray(mVertexArrayObject);
+            mMeshAttachments.at("screenMesh").getResource().bind({{
+                {"position", LOCATION_POSITION, 4, GL_FLOAT},
+                {"UV1", LOCATION_UV1, 2, GL_FLOAT}
+            }});
+            glDrawElementsInstanced(
+                GL_TRIANGLES,
+                mMeshAttachments.at("screenMesh").getResource().getElementCount(),
+                GL_UNSIGNED_INT,
+                nullptr,
+                1
+            );
+        glBindVertexArray(0);
+    mFramebufferHandle.getResource().unbind();
+}
 
 void ScreenRenderStage::setup() {
     attachMesh("screenMesh", generateRectangleMesh());
@@ -430,7 +480,7 @@ void ScreenRenderStage::execute() {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_BLEND);
     // glDisable(GL_FRAMEBUFFER_SRGB);
-    glEnable(GL_FRAMEBUFFER_SRGB);
+    glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVertexArrayObject);

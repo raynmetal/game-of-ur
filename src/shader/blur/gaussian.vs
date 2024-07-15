@@ -6,6 +6,6 @@ INCLUDE:
 */
 
 void main() {
-    fragAttr.UV1= attrUV1;
+    fragAttr.UV1 = attrUV1;
     gl_Position = attrPosition;
 }
