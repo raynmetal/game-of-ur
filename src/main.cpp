@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "engine/simple_ecs.hpp"
 #include "engine/fly_camera.hpp"
 #include "engine/window_context_manager.hpp"
 #include "engine/texture_manager.hpp"
