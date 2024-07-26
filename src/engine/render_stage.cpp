@@ -189,11 +189,6 @@ void GeometryRenderStage::execute() {
                     first.mMaterialHandle.getResource().getIntProperty("usesTextureNormal")
                 );
 
-                // glDrawElementsInstanced(
-                //     GL_TRIANGLES, first.mMeshHandle.getResource().getElementCount(),
-                //     GL_UNSIGNED_INT, nullptr, instanceData.size()
-                // );
-
                 glDrawElementsInstanced(
                     GL_TRIANGLES, first.mMeshHandle.getResource().getElementCount(),
                     GL_UNSIGNED_INT, nullptr, 1
@@ -250,13 +245,15 @@ void LightingRenderStage::execute() {
 
         while(!mLightQueue.empty()) {
             std::vector<glm::mat4> modelMatrices {};
-            std::vector<LightData> lightDataList {};
+            std::vector<LightEmissionData> lightEmissionList {};
+            std::vector<Placement> lightPlacementList{};
 
             RenderLightUnit first {mLightQueue.top()};
             mLightQueue.pop();
 
             modelMatrices.push_back(first.mModelMatrix);
-            lightDataList.push_back(first.mLightAttributes);
+            lightPlacementList.push_back(first.mPlacement);
+            lightEmissionList.push_back(first.mLightAttributes);
 
             while(
                 !mLightQueue.empty() 
@@ -267,7 +264,8 @@ void LightingRenderStage::execute() {
                 mLightQueue.pop();
 
                 modelMatrices.push_back(renderLightUnit.mModelMatrix);
-                lightDataList.push_back(renderLightUnit.mLightAttributes);
+                lightPlacementList.push_back(renderLightUnit.mPlacement);
+                lightEmissionList.push_back(renderLightUnit.mLightAttributes);
             }
 
 
@@ -295,7 +293,7 @@ void LightingRenderStage::execute() {
                     {"position", LOCATION_POSITION, 4, GL_FLOAT}
                 }});
                 BuiltinModelMatrixAllocator modelMatrixAllocator{ modelMatrices };
-                LightInstanceAllocator lightInstanceAllocator{ lightDataList };
+                LightInstanceAllocator lightInstanceAllocator{ lightEmissionList, lightPlacementList };
                 modelMatrixAllocator.bind(BuiltinModelMatrixLayout);
                 lightInstanceAllocator.bind({{
                     {"attrLightPlacement.mPosition", RUNTIME, 4, GL_FLOAT},
@@ -312,7 +310,7 @@ void LightingRenderStage::execute() {
                 }});
                 glDrawElementsInstanced(
                     GL_TRIANGLES, first.mMeshHandle.getResource().getElementCount(), 
-                    GL_UNSIGNED_INT, nullptr, lightDataList.size()
+                    GL_UNSIGNED_INT, nullptr, lightEmissionList.size()
                 );
             glBindVertexArray(0);
         }

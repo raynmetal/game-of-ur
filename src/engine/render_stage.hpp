@@ -13,6 +13,7 @@
 #include "instance.hpp"
 #include "model_manager.hpp"
 #include "light.hpp"
+#include "util.hpp"
 
 
 /*
@@ -21,9 +22,11 @@
 */
 
 struct RenderUnit {
-    RenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, glm::mat4 modelMatrix)
+    RenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, Placement placement)
     :
-        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, mModelMatrix{modelMatrix}
+        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, 
+        mModelMatrix{buildModelMatrix(placement.mPosition, placement.mOrientation, placement.mScale)},
+        mPlacement { placement }
     {
         std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(meshHandle.getName())) };
         std::uint32_t materialHash { static_cast<uint32_t>(std::hash<std::string>{}(materialHandle.getName()))};
@@ -39,11 +42,15 @@ struct RenderUnit {
     MeshHandle mMeshHandle;
     MaterialHandle mMaterialHandle;
     glm::mat4 mModelMatrix;
+    Placement mPlacement;
 };
 
 struct RenderLightUnit {
-    RenderLightUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const glm::mat4& modelMatrix, const LightData& lightData):
-        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, mModelMatrix{modelMatrix}, mLightAttributes{lightData}
+    RenderLightUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const Placement& placement, const LightEmissionData& lightEmissionData):
+        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle},
+        mModelMatrix{buildModelMatrix(placement.mPosition, placement.mOrientation, placement.mScale)},
+        mPlacement {placement},
+        mLightAttributes {lightEmissionData}
     {
         std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(meshHandle.getName())) };
         std::uint32_t materialHash {static_cast<uint32_t>(std::hash<std::string>{}(materialHandle.getName()))};
@@ -59,7 +66,8 @@ struct RenderLightUnit {
     MeshHandle mMeshHandle;
     MaterialHandle mMaterialHandle;
     glm::mat4 mModelMatrix;
-    LightData mLightAttributes;
+    Placement mPlacement;
+    LightEmissionData mLightAttributes;
 };
 
 class BaseRenderStage {

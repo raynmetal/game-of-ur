@@ -50,10 +50,10 @@ void FlyCamera::update(float deltaTime) {
     mPosition += deltaTime * mVelocity.x * glm::normalize(glm::cross(cameraDirection, tempUp));
 }
 
-glm::vec3 FlyCamera::getPosition() {
+glm::vec3 FlyCamera::getPosition() const {
     return mPosition;
 }
-glm::vec3 FlyCamera::getForward() {
+glm::vec3 FlyCamera::getForward() const {
     glm::vec3 cameraDirection {
         cos(glm::radians(mOrientation.y)) * sin(glm::radians(mOrientation.x)),
         sin(glm::radians(mOrientation.y)),
@@ -62,7 +62,12 @@ glm::vec3 FlyCamera::getForward() {
     return cameraDirection;
 }
 
-glm::mat4 FlyCamera::getViewMatrix(){
+glm::mat4 FlyCamera::getRotationMatrix() const {
+    const glm::mat4& viewMatrix {getViewMatrix()};
+    return glm::mat3{viewMatrix};
+}
+
+glm::mat4 FlyCamera::getViewMatrix() const {
     const glm::vec3 tempUp {0.f, 1.f, 0.f};
     glm::vec3 cameraDirection { getForward() };
     glm::mat4 viewMatrix {
@@ -75,7 +80,7 @@ glm::mat4 FlyCamera::getViewMatrix(){
     return viewMatrix;
 }
 
-glm::mat4 FlyCamera::getProjectionMatrix(){
+glm::mat4 FlyCamera::getProjectionMatrix() const{
     glm::mat4 projectionMatrix {
         glm::perspective(
             static_cast<float>(glm::radians(mFOV)),

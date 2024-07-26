@@ -1,10 +1,13 @@
+
 #include <iostream>
 #include <cmath>
+#include <cassert>
+
 #include <glm/glm.hpp>
 
 #include "light.hpp"
 
-float LightData::CalculateRadius(const glm::vec4& diffuseColor, float decayLinear, float decayQuadratic, float intensityCutoff) {
+float LightEmissionData::CalculateRadius(const glm::vec4& diffuseColor, float decayLinear, float decayQuadratic, float intensityCutoff) {
     float intensityMax = diffuseColor.r;
     if(diffuseColor.g > intensityMax) intensityMax = diffuseColor.g;
     if(diffuseColor.b > intensityMax) intensityMax = diffuseColor.b;
@@ -20,10 +23,8 @@ float LightData::CalculateRadius(const glm::vec4& diffuseColor, float decayLinea
     return radiusCutoff;
 }
 
-LightData LightData::MakeDirectionalLight(const glm::vec3& direction, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient){
-    return LightData{
-        .mDirection { direction, 0.f },
-        .mType { LightData::directional },
+LightEmissionData LightEmissionData::MakeDirectionalLight(const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient){
+    return LightEmissionData{
         .mDiffuseColor { diffuse, 1.f },
         .mSpecularColor { specular, 1.f },
         .mAmbientColor{ ambient, 1.f },
@@ -34,10 +35,9 @@ LightData LightData::MakeDirectionalLight(const glm::vec3& direction, const glm:
     };
 }
 
-LightData LightData::MakePointLight(const glm::vec3& position, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst){
-    return LightData{
-        .mPosition { position, 1.f },
-        .mType { LightData::point },
+LightEmissionData LightEmissionData::MakePointLight(const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst){
+    return LightEmissionData {
+        .mType { LightEmissionData::point },
         .mDiffuseColor { diffuse, 1.f, },
         .mSpecularColor { specular, 1.f },
         .mAmbientColor{ ambient, 1.f },
@@ -49,11 +49,9 @@ LightData LightData::MakePointLight(const glm::vec3& position, const glm::vec3& 
     };
 }
 
-LightData LightData::MakeSpotLight(const glm::vec3& position, const glm::vec3& direction, float innerAngle, float outerAngle, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst) {
-    return LightData{
-        .mPosition { position, 1.f },
-        .mDirection { direction, 0.f },
-        .mType { LightData::spot },
+LightEmissionData LightEmissionData::MakeSpotLight(float innerAngle, float outerAngle, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst) {
+    return LightEmissionData{
+        .mType { LightEmissionData::spot },
         .mDiffuseColor { diffuse, 1.f },
         .mSpecularColor { specular, 1.f },
         .mAmbientColor{ ambient, 1.f },
@@ -65,17 +63,27 @@ LightData LightData::MakeSpotLight(const glm::vec3& position, const glm::vec3& d
     };
 }
 
-LightInstanceAllocator::LightInstanceAllocator(const std::vector<LightData>& lightDataList)
+LightInstanceAllocator::LightInstanceAllocator(const std::vector<LightEmissionData>& lightEmissionDataList, const std::vector<Placement>& lightPlacementDataList)
 :
-    BaseInstanceAllocator { LightInstanceLayout },
-    mLightDataList { lightDataList }
-{}
+    BaseInstanceAllocator { LightInstanceLayout },  mLightData {}
+{
+    assert(lightEmissionDataList.size() == lightPlacementDataList.size() && "One to one mapping between emission and placement required");
+    mLightData.resize(lightEmissionDataList.size());
+    for(std::size_t i{0}; i < lightEmissionDataList.size(); ++i) {
+        mLightData[0].first.first = lightPlacementDataList[i].mPosition;
+        mLightData[0].first.second = (
+            glm::mat4(lightPlacementDataList[i].mOrientation) 
+            * glm::vec4(0.f, 0.f, -1.f, 0.f) // Orientation relative to the -Z axis
+        );
+        mLightData[0].second = lightEmissionDataList[i];
+    }
+}
 
 void LightInstanceAllocator::upload() {
     if(isUploaded()) return;
 
     glGenBuffers(1, &mVertexBufferIndex);
     glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferIndex);
-        glBufferData(GL_ARRAY_BUFFER, mLightDataList.size() * sizeof(LightData), mLightDataList.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mLightData.size() * sizeof(mLightData), mLightData.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

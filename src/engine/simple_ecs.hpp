@@ -48,11 +48,11 @@ public:
 };
 
 template<typename T>
-class ComponentArray : IComponentArray {
+class ComponentArray : public IComponentArray {
 public:
     void addComponent(EntityID entityID, T component);
     void removeComponent(EntityID entityID);
-    T& getComponent(EntityID entityID) const;
+    T& getComponent(EntityID entityID);
     virtual void handleEntityDestroyed(EntityID entityID) override;
     virtual void copyComponent(EntityID to, EntityID from) override;
 
@@ -65,7 +65,7 @@ private:
 class ComponentManager {
 public:
     template<typename T> 
-    std::size_t registerComponentArray();
+    void registerComponentArray();
 
     template<typename T>
     ComponentType getComponentType();
@@ -79,7 +79,7 @@ public:
     void removeComponent(EntityID entityID);
 
     template<typename T>
-    T& getComponent(EntityID entityID) const;
+    T& getComponent(EntityID entityID);
 
     template<typename T>
     void copyComponent(EntityID to, EntityID from);
@@ -88,16 +88,18 @@ public:
 
     void handleEntityDestroyed(EntityID entityID);
 
+    void unregisterAll();
+
 private:
     std::unordered_map<std::size_t, ComponentType> mHashToComponentType {};
-    std::unordered_map<std::size_t, std::unique_ptr<IComponentArray>> mHashToComponentArray {};
+    std::unordered_map<std::size_t, std::shared_ptr<IComponentArray>> mHashToComponentArray {};
     std::unordered_map<EntityID, Signature> mEntityToSignature {};
 
     template<typename T>
     std::shared_ptr<ComponentArray<T>> getComponentArray() {
         const std::size_t componentHash { typeid(T).hash_code() };
         assert(mHashToComponentType.find(componentHash) != mHashToComponentType.end() && "This component type has not been registered");
-        return std::static_pointer_cast<ComponentArray<T>>(mHashToComponentArray[componentHash]);
+        return std::dynamic_pointer_cast<ComponentArray<T>>(mHashToComponentArray[componentHash]);
     }
 };
 
@@ -112,6 +114,9 @@ public:
 
     bool isEnabled(EntityID entityID);
 
+protected:
+    const std::set<EntityID>& getEnabledEntities();
+
 private:
     std::set<EntityID> mEnabledEntities {};
     std::set<EntityID> mDisabledEntities {};
@@ -121,6 +126,8 @@ class SystemManager {
 public:
     template<typename TSystem>
     void registerSystem(Signature signature);
+
+    void unregisterAll();
 
     template<typename TSystem>
     std::shared_ptr<TSystem> getSystem();
@@ -140,7 +147,7 @@ public:
 
 private:
     std::unordered_map<std::size_t, Signature> mHashToSignature {};
-    std::unordered_map<std::size_t, std::unique_ptr<System>> mHashToSystem {};
+    std::unordered_map<std::size_t, std::shared_ptr<System>> mHashToSystem {};
 };
 
 class Entity {
@@ -213,7 +220,7 @@ void ComponentArray<T>::removeComponent(EntityID entityID) {
 }
 
 template <typename T>
-T& ComponentArray<T>::getComponent(EntityID entityID) const {
+T& ComponentArray<T>::getComponent(EntityID entityID) {
     assert(mEntityToComponentIndex.find(entityID) != mEntityToComponentIndex.end());
     std::size_t componentID { mEntityToComponentIndex.at(entityID) };
     return mComponents[componentID];
@@ -238,12 +245,14 @@ void ComponentArray<T>::copyComponent(EntityID to, EntityID from) {
 }
 
 template<typename T> 
-std::size_t ComponentManager::registerComponentArray() {
+void ComponentManager::registerComponentArray() {
     const std::size_t componentHash { typeid(T).hash_code() };
     assert(mHashToComponentType.find(componentHash) == mHashToComponentType.end() && "Component type already registered");
     assert(mHashToComponentType.size() + 1 < kMaxComponents && "Component type limit reached");
+    mHashToComponentArray.insert_or_assign(
+        componentHash, std::static_pointer_cast<IComponentArray>(std::make_shared<ComponentArray<T>>())
+    );
     mHashToComponentType[componentHash] = mHashToComponentType.size();
-    mHashToComponentArray[componentHash] = std::make_shared<ComponentArray<T>>();
 }
 
 template<typename T>
@@ -266,7 +275,7 @@ void ComponentManager::removeComponent(EntityID entityID) {
 }
 
 template<typename T>
-T& ComponentManager::getComponent(EntityID entityID) const {
+T& ComponentManager::getComponent(EntityID entityID) {
     return getComponentArray<T>()->getComponent(entityID);
 }
 
@@ -282,14 +291,14 @@ void SystemManager::registerSystem(Signature signature) {
     std::size_t systemHash {typeid(T).hash_code()};
     assert(mHashToSignature.find(systemHash) == mHashToSignature.end() && "System has already been registered");
     mHashToSignature[systemHash] = signature;
-    mHashToSystem[systemHash] = std::make_unique<T>({});
+    mHashToSystem.insert_or_assign(systemHash, std::make_shared<T>());
 }
 
 template<typename T>
 std::shared_ptr<T> SystemManager::getSystem() {
     std::size_t systemHash {typeid(T).hash_code()};
     assert(mHashToSignature.find(systemHash) != mHashToSignature.end() && "System has not yet been registered");
-    return mHashToSystem[systemHash];
+    return std::dynamic_pointer_cast<T>(mHashToSystem[systemHash]);
 }
 
 template<typename T>
@@ -313,7 +322,7 @@ void Entity::addComponent(const T& component) {
 
 template<typename T>
 T& Entity::getComponent() {
-    gComponentManager.getComponent<T>(mID);
+    return gComponentManager.getComponent<T>(mID);
 }
 
 template <typename T>

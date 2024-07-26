@@ -120,6 +120,10 @@ void System::removeEntity(EntityID entityID) {
     mDisabledEntities.erase(entityID);
 }
 
+const std::set<EntityID>& System::getEnabledEntities() {
+    return mEnabledEntities;
+}
+
 bool System::isEnabled(EntityID entityID) {
     assert(
         (
@@ -174,3 +178,13 @@ void ComponentManager::handleEntityDestroyed(EntityID entityID) {
     mEntityToSignature.erase(entityID);
 }
 
+void SystemManager::unregisterAll() {
+    mHashToSystem.clear();
+    mHashToSignature.clear();
+}
+
+void ComponentManager::unregisterAll() {
+    mHashToComponentArray.clear();
+    mHashToComponentType.clear();
+    mEntityToSignature.clear();
+}

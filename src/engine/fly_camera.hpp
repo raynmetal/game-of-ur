@@ -18,10 +18,11 @@ public:
     void update(float deltaTime);
     void processInput(const SDL_Event& event);
 
-    glm::vec3 getPosition();
-    glm::vec3 getForward();
-    glm::mat4 getViewMatrix();
-    glm::mat4 getProjectionMatrix();
+    glm::vec3 getPosition() const;
+    glm::vec3 getForward() const;
+    glm::mat4 getViewMatrix() const;
+    glm::mat4 getRotationMatrix() const;
+    glm::mat4 getProjectionMatrix() const;
 
     void setActive(bool active);
     void setLookSensitivity(float lookSensitivity);

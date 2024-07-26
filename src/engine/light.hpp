@@ -1,6 +1,7 @@
 #ifndef ZOLIGHT_H
 #define ZOLIGHT_H
 
+#include <utility>
 #include <queue>
 #include <map>
 
@@ -10,25 +11,29 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "placement.hpp"
 #include "mesh_manager.hpp"
 #include "shapegen.hpp"
 #include "resource_manager.hpp"
 #include "instance.hpp"
 
-struct LightData {
-    static LightData MakeDirectionalLight(const glm::vec3& direction, const glm::vec3& diffuse,  const glm::vec3& specular, const glm::vec3& ambient);
-    static LightData MakePointLight(const glm::vec3& position, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst);
-    static LightData MakeSpotLight(const glm::vec3& position, const glm::vec3& direction, float innerAngle, float outerAngle, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst);
+struct LightEmissionData;
+
+using LightPackedData = std::pair<std::pair<glm::vec4, glm::vec4>, LightEmissionData>;
+
+struct LightEmissionData {
+    static LightEmissionData MakeDirectionalLight(const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient);
+    static LightEmissionData MakePointLight(const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst);
+    static LightEmissionData MakeSpotLight(
+        float innerAngle, float outerAngle, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient,
+        float linearConst, float quadraticConst
+    );
 
     enum LightType:int {
         directional=0,
         point=1,
         spot=2
     };
-
-    //Basic light attributes
-    glm::vec4 mPosition;
-    glm::vec4 mDirection;
 
     LightType mType;
     glm::vec4 mDiffuseColor;
@@ -48,6 +53,7 @@ struct LightData {
     static float CalculateRadius(const glm::vec4& diffuseColor, float decayLinear, float decayQuadratic, float intensityCutoff);
 };
 
+
 static InstanceLayout LightInstanceLayout {{
     {"attrLightPlacement.mPosition", RUNTIME, 4, GL_FLOAT},
     {"attrLightPlacement.mDirection", RUNTIME, 4, GL_FLOAT},
@@ -63,15 +69,17 @@ static InstanceLayout LightInstanceLayout {{
     {"attrLightEmission.mRadius", RUNTIME, 1, GL_FLOAT}
 }};
 
+
 class LightInstanceAllocator : public BaseInstanceAllocator {
 public:
-    LightInstanceAllocator(const std::vector<LightData>& lightDataList);
+    LightInstanceAllocator(const std::vector<LightEmissionData>& lightEmissionDataList, const std::vector<Placement>& lightPlacementList);
 
 protected:
     virtual void upload() override;
 
 private:
-    std::vector<LightData> mLightDataList;
+    std::vector<LightPackedData> mLightData;
 };
+
 
 #endif
