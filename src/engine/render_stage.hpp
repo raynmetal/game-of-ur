@@ -48,7 +48,7 @@ struct RenderUnit {
 struct RenderLightUnit {
     RenderLightUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const Placement& placement, const LightEmissionData& lightEmissionData):
         mMeshHandle{meshHandle}, mMaterialHandle{materialHandle},
-        mModelMatrix{buildModelMatrix(placement.mPosition, placement.mOrientation, placement.mScale)},
+        mModelMatrix{buildModelMatrix(placement.mPosition, {}, placement.mScale)},
         mPlacement {placement},
         mLightAttributes {lightEmissionData}
     {

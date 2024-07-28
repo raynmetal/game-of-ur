@@ -70,12 +70,17 @@ LightInstanceAllocator::LightInstanceAllocator(const std::vector<LightEmissionDa
     assert(lightEmissionDataList.size() == lightPlacementDataList.size() && "One to one mapping between emission and placement required");
     mLightData.resize(lightEmissionDataList.size());
     for(std::size_t i{0}; i < lightEmissionDataList.size(); ++i) {
-        mLightData[0].first.first = lightPlacementDataList[i].mPosition;
-        mLightData[0].first.second = (
-            glm::mat4(lightPlacementDataList[i].mOrientation) 
+        // TODO: fix this light orientation hack
+        glm::quat lightOrientation {lightPlacementDataList[i].mOrientation};
+        lightOrientation.x *= -1;
+        lightOrientation.y *= -1;
+        lightOrientation.z *= -1;
+        mLightData[i].first.first = lightPlacementDataList[i].mPosition;
+        mLightData[i].first.second = (
+            glm::mat4_cast(lightOrientation)
             * glm::vec4(0.f, 0.f, -1.f, 0.f) // Orientation relative to the -Z axis
         );
-        mLightData[0].second = lightEmissionDataList[i];
+        mLightData[i].second = lightEmissionDataList[i];
     }
 }
 
@@ -84,6 +89,6 @@ void LightInstanceAllocator::upload() {
 
     glGenBuffers(1, &mVertexBufferIndex);
     glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferIndex);
-        glBufferData(GL_ARRAY_BUFFER, mLightData.size() * sizeof(mLightData), mLightData.data(), GL_DYNAMIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, mLightData.size() * sizeof(LightPackedData), mLightData.data(), GL_DYNAMIC_DRAW);
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

@@ -31,6 +31,13 @@ RenderSystem::RenderSystem():
     gSystemManager.registerSystem<LightQueue>(lightQueueSignature);
     gSystemManager.registerSystem<OpaqueQueue>(opaqueObjectQueueSignature);
 
+    MaterialHandle lightMaterialHandle {
+        MaterialManager::getInstance().registerResource(
+            "lightMaterial",
+            {}
+        )
+    };
+
     mGeometryRenderStage.setup();
     mLightingRenderStage.setup();
     mBlurRenderStage.setup();
@@ -83,16 +90,6 @@ RenderSystem::RenderSystem():
     mTonemappingRenderStage.validate();
     mScreenRenderStage.validate();
 
-    MaterialHandle lightMaterialHandle {
-        MaterialManager::getInstance().registerResource(
-            "lightMaterial",
-            {}
-        )
-    };
-    lightMaterialHandle.getResource().updateIntProperty("screenWidth", 800);
-    lightMaterialHandle.getResource().updateIntProperty("screenHeight", 600);
-
-
     glClearColor(0.f, 0.f, 0.f, 1.f);
 }
 
@@ -139,6 +136,7 @@ void RenderSystem::execute() {
 }
 
 void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage) {
+
     for(EntityID entity: getEnabledEntities()) {
         Placement placement { gComponentManager.getComponent<Placement>(entity) };
         ModelHandle modelHandle { gComponentManager.getComponent<ModelHandle>(entity) };
@@ -155,12 +153,15 @@ void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage) {
 }
 
 void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage) {
+    MaterialHandle lightMaterialHandle { 
+        MaterialManager::getInstance().getResourceHandle("lightMaterial")
+    };
     for(EntityID entity: getEnabledEntities()) {
-        Placement placement { gComponentManager.getComponent<Placement>(entity)};
-        LightEmissionData lightEmissionData {gComponentManager.getComponent<LightEmissionData>(entity)};
-        renderStage.submitToRenderQueue(RenderLightUnit{
+        Placement placement { gComponentManager.getComponent<Placement>(entity) };
+        LightEmissionData lightEmissionData { gComponentManager.getComponent<LightEmissionData>(entity) };
+        renderStage.submitToRenderQueue(RenderLightUnit {
             mSphereMesh,
-            mLightMaterial,
+            lightMaterialHandle,
             placement,
             lightEmissionData
         });

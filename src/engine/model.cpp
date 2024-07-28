@@ -18,8 +18,6 @@
 #include "vertex.hpp"
 #include "model.hpp"
 
-glm::mat4 buildModelMatrix(glm::vec3 position, glm::quat orientation, glm::vec3 scale);
-
 StaticModel::StaticModel() {
 }
 

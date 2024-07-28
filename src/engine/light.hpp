@@ -53,7 +53,6 @@ struct LightEmissionData {
     static float CalculateRadius(const glm::vec4& diffuseColor, float decayLinear, float decayQuadratic, float intensityCutoff);
 };
 
-
 static InstanceLayout LightInstanceLayout {{
     {"attrLightPlacement.mPosition", RUNTIME, 4, GL_FLOAT},
     {"attrLightPlacement.mDirection", RUNTIME, 4, GL_FLOAT},

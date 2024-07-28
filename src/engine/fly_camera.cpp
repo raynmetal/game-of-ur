@@ -64,7 +64,7 @@ glm::vec3 FlyCamera::getForward() const {
 
 glm::mat4 FlyCamera::getRotationMatrix() const {
     const glm::mat4& viewMatrix {getViewMatrix()};
-    return glm::mat3{viewMatrix};
+    return glm::mat3{ viewMatrix };
 }
 
 glm::mat4 FlyCamera::getViewMatrix() const {

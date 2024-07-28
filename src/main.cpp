@@ -35,10 +35,6 @@ int main(int argc, char* argv[]) {
     gComponentManager.registerComponentArray<LightEmissionData>();
     gComponentManager.registerComponentArray<ModelHandle>();
 
-
-    // lightQueueSignature.set(gComponentManager.getComponentType<MeshHandle>(), true);
-    // lightQueueSignature.set(gComponentManager.getComponentType<MaterialHandle>(), true);
-
     gSystemManager.registerSystem<RenderSystem>(Signature{});
 
     const float sqrt2 { sqrt(2.f) };
@@ -57,11 +53,10 @@ int main(int argc, char* argv[]) {
         )
     );
     lightEntities[0].addComponent<Placement>({
-        glm::vec4(0.f),
+        glm::vec4(glm::vec3(0.f), 1.f),
         glm::quat(),
         glm::vec3(lightEntities[0].getComponent<LightEmissionData>().mRadius)
     });
-
 
     // build point light
     lightEntities[1].addComponent<LightEmissionData>(
@@ -74,27 +69,27 @@ int main(int argc, char* argv[]) {
         )
     );
     lightEntities[1].addComponent<Placement>({
-        glm::vec4(0.f, 1.5f, -1.f, 1.f),
-        glm::quat(),
-        glm::vec3(lightEntities[1].getComponent<LightEmissionData>().mRadius)
+        glm::vec4{0.f, 1.5f, -1.f, 1.f},
+        glm::quat{},
+        glm::vec3{lightEntities[1].getComponent<LightEmissionData>().mRadius}
     });
 
     // build directional (sun) light
     lightEntities[2].addComponent<LightEmissionData>(
         LightEmissionData::MakeDirectionalLight(
-            glm::vec3(20.f),
-            glm::vec3(20.f),
-            glm::vec3(.4f)
+            glm::vec3{20.f},
+            glm::vec3{20.f},
+            glm::vec3{.4f}
         )
     );
     lightEntities[2].addComponent<Placement>({
-        glm::vec4(0.f),
-        glm::quat {glm::vec3 {
+        glm::vec4{glm::vec3(0.f), 1.f},
+        glm::quat { glm::vec3 {
             glm::radians(-20.f), // pitch
             glm::radians(180.f), // yaw
             glm::radians(0.f) // roll
         }},
-        glm::vec3(sqrt2, sqrt2, 1.f)
+        glm::vec3{sqrt2, sqrt2, 1.f}
     });
 
 
@@ -102,7 +97,9 @@ int main(int argc, char* argv[]) {
     boardPiece.addComponent<ModelHandle>(
         ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"})
     );
-    boardPiece.addComponent<Placement>({});
+    boardPiece.addComponent<Placement>({
+        {0.f, -1.f, -1.f, 1.f}
+    });
 
     FlyCamera camera {
         glm::vec3(0.f),
@@ -193,7 +190,7 @@ int main(int argc, char* argv[]) {
         // update objects according to calculated delta
         camera.update(deltaTime);
         flashlight.getComponent<Placement>().mPosition = glm::vec4(camera.getPosition(), 1.f);
-        flashlight.getComponent<Placement>().mOrientation = glm::quat{ camera.getRotationMatrix() };
+        flashlight.getComponent<Placement>().mOrientation = glm::quat_cast(camera.getRotationMatrix());
         gSystemManager.getSystem<RenderSystem>()->updateCameraMatrices(camera);
 
         GLenum error = glGetError();
@@ -205,7 +202,6 @@ int main(int argc, char* argv[]) {
         }
 
         gSystemManager.getSystem<RenderSystem>()->execute();
-
     }
     // ... and then die
     cleanup();

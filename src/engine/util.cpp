@@ -9,4 +9,3 @@ glm::mat4 buildModelMatrix(glm::vec4 position, glm::quat orientation, glm::vec3 
     glm::mat4 scaleMatrix { glm::scale(glm::mat4(1.f), scale) };
     return translateMatrix * rotateMatrix * scaleMatrix;
 }
-
