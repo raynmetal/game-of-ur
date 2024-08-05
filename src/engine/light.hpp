@@ -11,11 +11,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "placement.hpp"
 #include "mesh_manager.hpp"
 #include "shapegen.hpp"
 #include "resource_manager.hpp"
 #include "instance.hpp"
+#include "scene_system.hpp"
 
 struct LightEmissionData;
 

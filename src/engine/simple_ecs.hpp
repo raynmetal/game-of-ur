@@ -162,6 +162,8 @@ public:
 
     ~Entity();
 
+    inline EntityID getID() { return mID; };
+
     template<typename T> 
     void addComponent(const T& component);
 

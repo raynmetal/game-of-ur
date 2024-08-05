@@ -12,7 +12,6 @@
 
 #include "render_system.hpp"
 
-
 RenderSystem::RenderSystem():
     mGeometryRenderStage { "src/shader/geometryShader.json" },
     mLightingRenderStage { "src/shader/lightingShader.json" },
@@ -22,14 +21,22 @@ RenderSystem::RenderSystem():
 {
     Signature lightQueueSignature {};
     lightQueueSignature.set(gComponentManager.getComponentType<Placement>(), true);
+    lightQueueSignature.set(gComponentManager.getComponentType<Transform>(), true);
     lightQueueSignature.set(gComponentManager.getComponentType<LightEmissionData>(), true);
 
     Signature opaqueObjectQueueSignature {};
-    opaqueObjectQueueSignature.set(gComponentManager.getComponentType<Placement>(), true);
+    // opaqueObjectQueueSignature.set(gComponentManager.getComponentType<Placement>(), true);
+    opaqueObjectQueueSignature.set(gComponentManager.getComponentType<Transform>(), true);
     opaqueObjectQueueSignature.set(gComponentManager.getComponentType<ModelHandle>(), true);
 
     gSystemManager.registerSystem<LightQueue>(lightQueueSignature);
     gSystemManager.registerSystem<OpaqueQueue>(opaqueObjectQueueSignature);
+
+    mGeometryRenderStage.setup();
+    mLightingRenderStage.setup();
+    mBlurRenderStage.setup();
+    mTonemappingRenderStage.setup();
+    mScreenRenderStage.setup();
 
     MaterialHandle lightMaterialHandle {
         MaterialManager::getInstance().registerResource(
@@ -37,12 +44,8 @@ RenderSystem::RenderSystem():
             {}
         )
     };
-
-    mGeometryRenderStage.setup();
-    mLightingRenderStage.setup();
-    mBlurRenderStage.setup();
-    mTonemappingRenderStage.setup();
-    mScreenRenderStage.setup();
+    lightMaterialHandle.getResource().updateIntProperty("screenWidth", 800);
+    lightMaterialHandle.getResource().updateIntProperty("screenHeight", 600);
 
     // Set up a uniform buffer for shared matrices
     glGenBuffers(1, &mMatrixUniformBufferIndex);
@@ -54,7 +57,6 @@ RenderSystem::RenderSystem():
             GL_STATIC_DRAW
         );
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
-    // Let the shader(s) know where to find the shared matrices
 
     // Bind the shared matrix uniform buffer to the same binding point
     glBindBufferRange(
@@ -84,6 +86,9 @@ RenderSystem::RenderSystem():
     mTonemappingRenderStage.attachTexture("litScene", mLightingRenderStage.getRenderTarget("litScene"));
     mTonemappingRenderStage.attachTexture("bloomEffect", mBlurRenderStage.getRenderTarget("pingBuffer"));
     mScreenRenderStage.attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+
+    // Functions containing a set of asserts, ensuring that valid connections have
+    // been made between the rendering stages
     mGeometryRenderStage.validate();
     mLightingRenderStage.validate();
     mBlurRenderStage.validate();
@@ -136,17 +141,19 @@ void RenderSystem::execute() {
 }
 
 void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage) {
-
     for(EntityID entity: getEnabledEntities()) {
         Placement placement { gComponentManager.getComponent<Placement>(entity) };
         ModelHandle modelHandle { gComponentManager.getComponent<ModelHandle>(entity) };
-        std::vector<MeshHandle> meshList { modelHandle.getResource().getMeshHandles() };
-        std::vector<MaterialHandle> materialList { modelHandle.getResource().getMaterialHandles() };
+        Transform entityTransform { gComponentManager.getComponent<Transform>(entity) };
+        const std::vector<MeshHandle>& meshList { modelHandle.getResource().getMeshHandles() };
+        const std::vector<MaterialHandle>& materialList { modelHandle.getResource().getMaterialHandles() };
+
         for(std::size_t i{0}; i < meshList.size(); ++i) {
             renderStage.submitToRenderQueue({
                 meshList[i],
                 materialList[i],
-                placement
+                placement,
+                entityTransform.mModelMatrix
             });
         }
     }
@@ -157,13 +164,17 @@ void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage) {
         MaterialManager::getInstance().getResourceHandle("lightMaterial")
     };
     for(EntityID entity: getEnabledEntities()) {
+        Transform entityTransform { gComponentManager.getComponent<Transform>(entity)};
         Placement placement { gComponentManager.getComponent<Placement>(entity) };
         LightEmissionData lightEmissionData { gComponentManager.getComponent<LightEmissionData>(entity) };
         renderStage.submitToRenderQueue(RenderLightUnit {
             mSphereMesh,
             lightMaterialHandle,
             placement,
-            lightEmissionData
+            lightEmissionData,
+            lightEmissionData.mType != LightEmissionData::directional?
+                entityTransform.mModelMatrix:
+                buildModelMatrix(placement.mPosition, {}, placement.mScale)
         });
     }
 }

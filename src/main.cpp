@@ -8,7 +8,6 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "engine/simple_ecs.hpp"
-#include "engine/placement.hpp"
 #include "engine/fly_camera.hpp"
 #include "engine/window_context_manager.hpp"
 #include "engine/texture_manager.hpp"
@@ -21,6 +20,7 @@
 #include "engine/render_stage.hpp"
 #include "engine/shapegen.hpp"
 #include "engine/render_system.hpp"
+#include "engine/scene_system.hpp"
 
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
@@ -34,8 +34,15 @@ int main(int argc, char* argv[]) {
     gComponentManager.registerComponentArray<Placement>();
     gComponentManager.registerComponentArray<LightEmissionData>();
     gComponentManager.registerComponentArray<ModelHandle>();
+    gComponentManager.registerComponentArray<Transform>();
+    gComponentManager.registerComponentArray<SceneNode>();
 
+    Signature sceneSystemSignature {};
+    sceneSystemSignature.set(gComponentManager.getComponentType<Transform>(), true);
+    sceneSystemSignature.set(gComponentManager.getComponentType<SceneNode>(), true);
+    sceneSystemSignature.set(gComponentManager.getComponentType<Placement>(), true);
     gSystemManager.registerSystem<RenderSystem>(Signature{});
+    gSystemManager.registerSystem<SceneSystem>(sceneSystemSignature);
 
     const float sqrt2 { sqrt(2.f) };
     std::vector<Entity> lightEntities(3);
@@ -57,6 +64,8 @@ int main(int argc, char* argv[]) {
         glm::quat(),
         glm::vec3(lightEntities[0].getComponent<LightEmissionData>().mRadius)
     });
+    lightEntities[0].addComponent<Transform>({});
+    lightEntities[0].addComponent<SceneNode>({});
 
     // build point light
     lightEntities[1].addComponent<LightEmissionData>(
@@ -73,6 +82,8 @@ int main(int argc, char* argv[]) {
         glm::quat{},
         glm::vec3{lightEntities[1].getComponent<LightEmissionData>().mRadius}
     });
+    lightEntities[1].addComponent<Transform>({});
+    lightEntities[1].addComponent<SceneNode>({});
 
     // build directional (sun) light
     lightEntities[2].addComponent<LightEmissionData>(
@@ -91,7 +102,8 @@ int main(int argc, char* argv[]) {
         }},
         glm::vec3{sqrt2, sqrt2, 1.f}
     });
-
+    lightEntities[2].addComponent<Transform>({});
+    lightEntities[2].addComponent<SceneNode>({});
 
     Entity boardPiece {};
     boardPiece.addComponent<ModelHandle>(
@@ -100,6 +112,8 @@ int main(int argc, char* argv[]) {
     boardPiece.addComponent<Placement>({
         {0.f, -1.f, -1.f, 1.f}
     });
+    boardPiece.addComponent<Transform>({});
+    boardPiece.addComponent<SceneNode>({});
 
     FlyCamera camera {
         glm::vec3(0.f),
@@ -111,7 +125,8 @@ int main(int argc, char* argv[]) {
     float exposure { 1.f };
     float gamma { 2.2f };
 
-    MeshHandle sphereMesh { generateSphereMesh(10, 5) };
+    gSystemManager.getSystem<SceneSystem>()->rebuildGraph();
+    gSystemManager.getSystem<SceneSystem>()->updateTransforms();
 
     //Timing related variables
     GLuint previousTicks { SDL_GetTicks() };
@@ -191,6 +206,8 @@ int main(int argc, char* argv[]) {
         camera.update(deltaTime);
         flashlight.getComponent<Placement>().mPosition = glm::vec4(camera.getPosition(), 1.f);
         flashlight.getComponent<Placement>().mOrientation = glm::quat_cast(camera.getRotationMatrix());
+        gSystemManager.getSystem<SceneSystem>()->markDirty(flashlight.getID());
+        gSystemManager.getSystem<SceneSystem>()->updateTransforms();
         gSystemManager.getSystem<RenderSystem>()->updateCameraMatrices(camera);
 
         GLenum error = glGetError();

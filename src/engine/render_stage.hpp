@@ -24,14 +24,18 @@
 struct RenderUnit {
     RenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, Placement placement)
     :
-        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, 
-        mModelMatrix{buildModelMatrix(placement.mPosition, placement.mOrientation, placement.mScale)},
+        mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle }, 
+        mModelMatrix{ buildModelMatrix(placement.mPosition, placement.mOrientation, placement.mScale) },
         mPlacement { placement }
     {
-        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(meshHandle.getName())) };
-        std::uint32_t materialHash { static_cast<uint32_t>(std::hash<std::string>{}(materialHandle.getName()))};
-        mSortKey |= (meshHash << ((sizeof(uint32_t)/2)*8)) & 0xFFFF0000;
-        mSortKey |= (materialHash << 0) & 0x0000FFFF;
+        setSortKey();
+    }
+
+    RenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, Placement placement, glm::mat4 modelMatrix):
+        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, 
+        mModelMatrix{modelMatrix}, mPlacement {placement}
+    {
+        setSortKey();
     }
 
     bool operator<(const RenderUnit& other) const {
@@ -43,19 +47,23 @@ struct RenderUnit {
     MaterialHandle mMaterialHandle;
     glm::mat4 mModelMatrix;
     Placement mPlacement;
+
+    void setSortKey() {
+        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(mMeshHandle.getName())) };
+        std::uint32_t materialHash { static_cast<uint32_t>(std::hash<std::string>{}(mMaterialHandle.getName()))};
+        mSortKey |= (meshHash << ((sizeof(uint32_t)/2)*8)) & 0xFFFF0000;
+        mSortKey |= (materialHash << 0) & 0x0000FFFF;
+    }
 };
 
 struct RenderLightUnit {
-    RenderLightUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const Placement& placement, const LightEmissionData& lightEmissionData):
-        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle},
-        mModelMatrix{buildModelMatrix(placement.mPosition, {}, placement.mScale)},
-        mPlacement {placement},
-        mLightAttributes {lightEmissionData}
+    RenderLightUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const Placement& placement, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
+        mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle },
+        mModelMatrix{ modelMatrix },
+        mPlacement { placement },
+        mLightAttributes { lightEmissionData }
     {
-        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(meshHandle.getName())) };
-        std::uint32_t materialHash {static_cast<uint32_t>(std::hash<std::string>{}(materialHandle.getName()))};
-        mSortKey |= (meshHash << ((sizeof(unsigned int)/2)*8)) & 0xFFFF0000;
-        mSortKey |= (materialHash << 0) & 0x0000FFFF;
+        setSortKey();
     }
 
     bool operator<(const RenderLightUnit& other) const {
@@ -68,6 +76,13 @@ struct RenderLightUnit {
     glm::mat4 mModelMatrix;
     Placement mPlacement;
     LightEmissionData mLightAttributes;
+
+    void setSortKey() {
+        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(mMeshHandle.getName())) };
+        std::uint32_t materialHash { static_cast<uint32_t>(std::hash<std::string>{}(mMaterialHandle.getName()))};
+        mSortKey |= (meshHash << ((sizeof(uint32_t)/2)*8)) & 0xFFFF0000;
+        mSortKey |= (materialHash << 0) & 0x0000FFFF;
+    }
 };
 
 class BaseRenderStage {
