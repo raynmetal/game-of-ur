@@ -62,11 +62,11 @@ MaterialHandle BaseRenderStage::getMaterial(const std::string& name) {
     return mMaterialAttachments.at(name);
 }
 
-void BaseRenderStage::submitToRenderQueue(RenderUnit renderUnit) {
+void BaseRenderStage::submitToRenderQueue(OpaqueRenderUnit renderUnit) {
     mOpaqueMeshQueue.push(renderUnit);
 }
 
-void BaseRenderStage::submitToRenderQueue(RenderLightUnit renderLightUnit) {
+void BaseRenderStage::submitToRenderQueue(LightRenderUnit renderLightUnit) {
     mLightQueue.push(renderLightUnit);
 }
 
@@ -142,7 +142,7 @@ void GeometryRenderStage::execute() {
         while(!mOpaqueMeshQueue.empty()) {
             std::vector<glm::mat4> instanceData{};
 
-            RenderUnit first { mOpaqueMeshQueue.top() };
+            OpaqueRenderUnit first { mOpaqueMeshQueue.top() };
             instanceData.push_back(mOpaqueMeshQueue.top().mModelMatrix);
             mOpaqueMeshQueue.pop();
 
@@ -191,7 +191,7 @@ void GeometryRenderStage::execute() {
 
                 glDrawElementsInstanced(
                     GL_TRIANGLES, first.mMeshHandle.getResource().getElementCount(),
-                    GL_UNSIGNED_INT, nullptr, 1
+                    GL_UNSIGNED_INT, nullptr, instanceData.size()
                 );
             glBindVertexArray(0);
         }
@@ -248,7 +248,7 @@ void LightingRenderStage::execute() {
             std::vector<LightEmissionData> lightEmissionList {};
             std::vector<Placement> lightPlacementList{};
 
-            RenderLightUnit first {mLightQueue.top()};
+            LightRenderUnit first {mLightQueue.top()};
             mLightQueue.pop();
 
             modelMatrices.push_back(first.mModelMatrix);
@@ -260,7 +260,7 @@ void LightingRenderStage::execute() {
                 && mLightQueue.top().mMeshHandle == first.mMeshHandle
                 && mLightQueue.top().mMaterialHandle == first.mMaterialHandle
             ) {
-                const RenderLightUnit renderLightUnit {mLightQueue.top()};
+                const LightRenderUnit renderLightUnit {mLightQueue.top()};
                 mLightQueue.pop();
 
                 modelMatrices.push_back(renderLightUnit.mModelMatrix);

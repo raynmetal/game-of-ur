@@ -21,8 +21,8 @@
         Mesh > Material Texture > Material Everything Else
 */
 
-struct RenderUnit {
-    RenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, Placement placement)
+struct OpaqueRenderUnit {
+    OpaqueRenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, Placement placement)
     :
         mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle }, 
         mModelMatrix{ buildModelMatrix(placement.mPosition, placement.mOrientation, placement.mScale) },
@@ -31,14 +31,14 @@ struct RenderUnit {
         setSortKey();
     }
 
-    RenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, Placement placement, glm::mat4 modelMatrix):
+    OpaqueRenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, Placement placement, glm::mat4 modelMatrix):
         mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, 
         mModelMatrix{modelMatrix}, mPlacement {placement}
     {
         setSortKey();
     }
 
-    bool operator<(const RenderUnit& other) const {
+    bool operator<(const OpaqueRenderUnit& other) const {
         return mSortKey < other.mSortKey;
     }
 
@@ -56,8 +56,8 @@ struct RenderUnit {
     }
 };
 
-struct RenderLightUnit {
-    RenderLightUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const Placement& placement, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
+struct LightRenderUnit {
+    LightRenderUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const Placement& placement, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
         mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle },
         mModelMatrix{ modelMatrix },
         mPlacement { placement },
@@ -66,7 +66,7 @@ struct RenderLightUnit {
         setSortKey();
     }
 
-    bool operator<(const RenderLightUnit& other) const {
+    bool operator<(const LightRenderUnit& other) const {
         return mSortKey < other.mSortKey;
     }
 
@@ -108,8 +108,8 @@ public:
     MeshHandle getMesh(const std::string& name);
     MaterialHandle getMaterial(const std::string& name);
 
-    void submitToRenderQueue(RenderUnit renderUnit);
-    void submitToRenderQueue(RenderLightUnit lightRenderUnit);
+    void submitToRenderQueue(OpaqueRenderUnit renderUnit);
+    void submitToRenderQueue(LightRenderUnit lightRenderUnit);
 protected:
     GLuint mVertexArrayObject {};
     ShaderProgramHandle mShaderHandle;
@@ -118,8 +118,8 @@ protected:
     std::map<std::string, MeshHandle> mMeshAttachments {};
     std::map<std::string, MaterialHandle> mMaterialAttachments {};
 
-    std::priority_queue<RenderUnit> mOpaqueMeshQueue {};
-    std::priority_queue<RenderLightUnit> mLightQueue {};
+    std::priority_queue<OpaqueRenderUnit> mOpaqueMeshQueue {};
+    std::priority_queue<LightRenderUnit> mLightQueue {};
 };
 
 class BaseOffscreenRenderStage: public BaseRenderStage {

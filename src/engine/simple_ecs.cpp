@@ -91,6 +91,16 @@ void System::enableEntity(EntityID entityID) {
     mEnabledEntities.insert(entityID);
 }
 
+Entity& Entity::copy(const Entity& other) {
+    if(other.mID == kMaxEntities) return *this;
+
+    gComponentManager.copyComponents(mID, other.mID);
+    const Signature& signature { gComponentManager.getSignature(mID) };
+    gSystemManager.handleEntitySignatureChanged(mID, signature);
+
+    return *this;
+}
+
 void System::disableEntity(EntityID entityID) {
     assert(
         (
@@ -160,6 +170,7 @@ void ComponentManager::copyComponents(EntityID to, EntityID from) {
     for(auto& pair: mHashToComponentArray) {
         pair.second->copyComponent(to, from);
     }
+    mEntityToSignature[to] |= mEntityToSignature[from];
 }
 
 

@@ -164,6 +164,8 @@ public:
 
     inline EntityID getID() { return mID; };
 
+    Entity& copy(const Entity& other);
+
     template<typename T> 
     void addComponent(const T& component);
 

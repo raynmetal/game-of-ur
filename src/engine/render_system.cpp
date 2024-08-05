@@ -167,7 +167,7 @@ void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage) {
         Transform entityTransform { gComponentManager.getComponent<Transform>(entity)};
         Placement placement { gComponentManager.getComponent<Placement>(entity) };
         LightEmissionData lightEmissionData { gComponentManager.getComponent<LightEmissionData>(entity) };
-        renderStage.submitToRenderQueue(RenderLightUnit {
+        renderStage.submitToRenderQueue(LightRenderUnit {
             mSphereMesh,
             lightMaterialHandle,
             placement,

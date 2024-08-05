@@ -114,6 +114,11 @@ int main(int argc, char* argv[]) {
     });
     boardPiece.addComponent<Transform>({});
     boardPiece.addComponent<SceneNode>({});
+    std::vector<Entity> boardPieces(20);
+    for(std::size_t i{0}; i < boardPieces.size(); ++i) {
+        boardPieces[i].copy(boardPiece);
+        boardPieces[i].getComponent<Placement>().mPosition.z -= 1.f + 1.f * i;
+    }
 
     FlyCamera camera {
         glm::vec3(0.f),
@@ -206,7 +211,13 @@ int main(int argc, char* argv[]) {
         camera.update(deltaTime);
         flashlight.getComponent<Placement>().mPosition = glm::vec4(camera.getPosition(), 1.f);
         flashlight.getComponent<Placement>().mOrientation = glm::quat_cast(camera.getRotationMatrix());
+        for(auto& piece: boardPieces) {
+            float xOffset { glm::sin(glm::radians(currentTicks/10.f + piece.getComponent<Placement>().mPosition.z * (360.f/boardPieces.size()))) };
+            piece.getComponent<Placement>().mPosition.x = xOffset;
+            gSystemManager.getSystem<SceneSystem>()->markDirty(piece.getID());
+        }
         gSystemManager.getSystem<SceneSystem>()->markDirty(flashlight.getID());
+
         gSystemManager.getSystem<SceneSystem>()->updateTransforms();
         gSystemManager.getSystem<RenderSystem>()->updateCameraMatrices(camera);
 
