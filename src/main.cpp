@@ -38,9 +38,11 @@ int main(int argc, char* argv[]) {
     gComponentManager.registerComponentArray<SceneNode>();
 
     Signature sceneSystemSignature {};
+
     sceneSystemSignature.set(gComponentManager.getComponentType<Transform>(), true);
     sceneSystemSignature.set(gComponentManager.getComponentType<SceneNode>(), true);
     sceneSystemSignature.set(gComponentManager.getComponentType<Placement>(), true);
+
     gSystemManager.registerSystem<RenderSystem>(Signature{});
     gSystemManager.registerSystem<SceneSystem>(sceneSystemSignature);
 
@@ -115,9 +117,20 @@ int main(int argc, char* argv[]) {
     boardPiece.addComponent<Transform>({});
     boardPiece.addComponent<SceneNode>({});
     std::vector<Entity> boardPieces(20);
+    EntityID parentEntity { boardPiece.getID() };
     for(std::size_t i{0}; i < boardPieces.size(); ++i) {
         boardPieces[i].copy(boardPiece);
-        boardPieces[i].getComponent<Placement>().mPosition.z -= 1.f + 1.f * i;
+
+        Placement& boardPiecePlacement { boardPieces[i].getComponent<Placement>() };
+        SceneNode& boardPieceSceneNode { boardPieces[i].getComponent<SceneNode>() };
+
+        boardPiecePlacement.mPosition.x = 0.f;
+        boardPiecePlacement.mPosition.y = 2.f;
+        boardPiecePlacement.mPosition.z = 0.f;
+        boardPiecePlacement.mOrientation = glm::rotate(boardPiecePlacement.mOrientation, glm::radians(360.f/(1+boardPieces.size())), {0.f, 0.f, -1.f});
+        boardPieceSceneNode.mParent = parentEntity;
+
+        parentEntity = boardPieces[i].getID();
     }
 
     FlyCamera camera {
@@ -193,6 +206,7 @@ int main(int argc, char* argv[]) {
         if(quit) break;
 
         Entity& flashlight { lightEntities[0] };
+        Entity& sunlight {lightEntities[2]};
 
         // update time related variables
         GLuint currentTicks { SDL_GetTicks() };
@@ -211,13 +225,14 @@ int main(int argc, char* argv[]) {
         camera.update(deltaTime);
         flashlight.getComponent<Placement>().mPosition = glm::vec4(camera.getPosition(), 1.f);
         flashlight.getComponent<Placement>().mOrientation = glm::quat_cast(camera.getRotationMatrix());
-        for(auto& piece: boardPieces) {
-            float xOffset { glm::sin(glm::radians(currentTicks/10.f + piece.getComponent<Placement>().mPosition.z * (360.f/boardPieces.size()))) };
-            piece.getComponent<Placement>().mPosition.x = xOffset;
+        gSystemManager.getSystem<SceneSystem>()->markDirty(flashlight.getID());
+        sunlight.getComponent<Placement>().mOrientation = glm::rotate(sunlight.getComponent<Placement>().mOrientation, deltaTime/10.f, {0.f, 1.f, 0.f});
+        gSystemManager.getSystem<SceneSystem>()->markDirty(sunlight.getID());
+        for(Entity& piece: boardPieces) {
+            auto& piecePlacement { piece.getComponent<Placement>() };
+            piecePlacement.mPosition.z = glm::sin(glm::radians(currentTicks/10.f + piece.getID()*45.f));
             gSystemManager.getSystem<SceneSystem>()->markDirty(piece.getID());
         }
-        gSystemManager.getSystem<SceneSystem>()->markDirty(flashlight.getID());
-
         gSystemManager.getSystem<SceneSystem>()->updateTransforms();
         gSystemManager.getSystem<RenderSystem>()->updateCameraMatrices(camera);
 
