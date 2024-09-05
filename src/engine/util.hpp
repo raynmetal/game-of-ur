@@ -5,4 +5,18 @@
 
 glm::mat4 buildModelMatrix(glm::vec4 position, glm::quat orientation, glm::vec3 scale = glm::vec3{1.f, 1.f, 1.f}); 
 
+class RangeMapperLinear {
+public:
+    RangeMapperLinear(
+        double inputLowerBound, double inputUpperBound,
+        double outputLowerBound, double outputUpperBound
+    );
+    double operator() (double value);
+private:
+    double mInputLowerBound;
+    double mInputUpperBound;
+    double mOutputLowerBound;
+    double mOutputUpperBound;
+};
+
 #endif
