@@ -3,14 +3,14 @@
 
 #include <SDL2/SDL.h>
 
-#include "util.hpp"
-#include "window_context_manager.hpp"
+#include "../util.hpp"
+#include "../window_context_manager.hpp"
 #include "input_system.hpp"
 
 bool hasValue(const InputIdentity& input, const AxisFilterType filter) {
-    uint8_t axisID { filter&AxisFilterMask::ID };
-    uint8_t axisSign { filter&AxisFilterMask::SIGN };
-    uint8_t axisDelta { filter&AxisFilterMask::CHANGE };
+    uint8_t axisID { static_cast<uint8_t>(filter&AxisFilterMask::ID) };
+    uint8_t axisSign { static_cast<uint8_t>(filter&AxisFilterMask::SIGN) };
+    uint8_t axisDelta { static_cast<uint8_t>(filter&AxisFilterMask::CHANGE) };
 
     return (
         input
@@ -22,10 +22,10 @@ bool hasValue(const InputIdentity& input, const AxisFilterType filter) {
             // supports negatives or represents a change
             || (
                 axisID > 0
-                && axisID <= input.mAttributes&N_AXES
+                && (axisID <= (input.mAttributes&N_AXES))
                 && (
-                    axisSign <= input.mAttributes&HAS_NEGATIVE
-                    || axisDelta <= input.mAttributes&HAS_CHANGE_VALUE
+                    (axisSign <= (input.mAttributes&HAS_NEGATIVE))
+                    || (axisDelta <= (input.mAttributes&HAS_CHANGE_VALUE))
                 )
             )
         )
@@ -61,22 +61,22 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                         case X_POS:
                             switch(inputEvent.type) {
                                 case SDL_MOUSEMOTION:
-                                    value = RangeMapperLinear{0.f, windowWidth, 0.f, 1.f}(inputEvent.motion.x);
+                                    value = RangeMapperLinear{0.f, static_cast<double>(windowWidth), 0.f, 1.f}(inputEvent.motion.x);
                                 break;
                                 case SDL_MOUSEBUTTONDOWN:
                                 case SDL_MOUSEBUTTONUP:
-                                    value = RangeMapperLinear{0.f, windowWidth, 0.f, 1.f}(inputEvent.button.x);
+                                    value = RangeMapperLinear{0.f, static_cast<double>(windowWidth), 0.f, 1.f}(inputEvent.button.x);
                                 break;
                             }
                         break;
                         case Y_POS:
                             switch(inputEvent.type) {
                                 case SDL_MOUSEMOTION:
-                                    value = RangeMapperLinear{0.f, windowHeight, 0.f, 1.f}(inputEvent.motion.y);
+                                    value = RangeMapperLinear{0.f, static_cast<double>(windowHeight), 0.f, 1.f}(inputEvent.motion.y);
                                 break;
                                 case SDL_MOUSEBUTTONDOWN:
                                 case SDL_MOUSEBUTTONUP:
-                                    value = RangeMapperLinear{0.f, windowHeight, 0.f, 1.f}(inputEvent.button.y);
+                                    value = RangeMapperLinear{0.f, static_cast<double>(windowHeight), 0.f, 1.f}(inputEvent.button.y);
                                 break;
                             }
                         break;
@@ -86,14 +86,14 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                         case X_CHANGE_NEG:
                         {
                             const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
-                            value = RangeMapperLinear{0.f, windowWidth, 0.f, 1.f}(sign * inputEvent.motion.xrel);
+                            value = RangeMapperLinear{0.f, static_cast<double>(windowWidth), 0.f, 1.f}(sign * inputEvent.motion.xrel);
                         }
                         break;
                         case Y_CHANGE_POS:
                         case Y_CHANGE_NEG:
                         {
                             const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
-                            value = RangeMapperLinear{0.f, windowHeight, 0.f, 1.f}(sign * inputEvent.motion.yrel);
+                            value = RangeMapperLinear{0.f, static_cast<double>(windowHeight), 0.f, 1.f}(sign * inputEvent.motion.yrel);
                         }
                         break;
 
@@ -107,15 +107,13 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                 case ControlType::MOTION:
                     switch(inputFilter.mAxisFilter) {
                         case X_CHANGE_POS:
-                        case X_CHANGE_NEG:
-                        {
+                        case X_CHANGE_NEG: {
                             const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
                             value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.wheel.x);
                         }
                         break;
                         case Y_CHANGE_POS:
-                        case Y_CHANGE_NEG:
-                        {
+                        case Y_CHANGE_NEG: {
                             const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
                             value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.wheel.y);
                         }
@@ -140,7 +138,7 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
         case DeviceType::CONTROLLER: {
             switch(inputFilter.mControl.mControlType) {
                 // controller touchpad events
-                case POINT:
+                case ControlType::POINT:
                     switch(inputFilter.mAxisFilter) {
                         case AxisFilter::SIMPLE:
                             value = inputEvent.ctouchpad.pressure;
@@ -157,12 +155,12 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                     }
                 break;
 
-                case BUTTON:
+                case ControlType::BUTTON:
                     assert(inputFilter.mAxisFilter == AxisFilter::SIMPLE);
                     value = inputEvent.cbutton.state;
                 break;
 
-                case AXIS:
+                case ControlType::AXIS:
                     switch(inputFilter.mAxisFilter) {
                         case X_POS:
                         case X_NEG: {
@@ -176,9 +174,9 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                     }
                 break;
 
-                case RADIO:
+                case ControlType::RADIO:
                     switch(inputFilter.mAxisFilter) {
-                        case X_POS:
+                        case AxisFilter::X_POS:
                             switch(inputEvent.jhat.value) {
                                 case SDL_HAT_RIGHT:
                                 case SDL_HAT_RIGHTDOWN:
@@ -190,7 +188,7 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                                 break;
                             }
                         break;
-                        case Y_POS:
+                        case AxisFilter::Y_POS:
                             switch(inputEvent.jhat.value) {
                                 case SDL_HAT_RIGHTUP:
                                 case SDL_HAT_UP:
@@ -202,7 +200,7 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                                 break;
                             }
                         break;
-                        case X_NEG:
+                        case AxisFilter::X_NEG:
                             switch(inputEvent.jhat.value) {
                                 case SDL_HAT_LEFTUP:
                                 case SDL_HAT_LEFT:
@@ -214,7 +212,7 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                                 break;
                             }
                         break;
-                        case Y_NEG:
+                        case AxisFilter::Y_NEG:
                             switch(inputEvent.jhat.value) {
                                 case SDL_HAT_LEFTDOWN:
                                 case SDL_HAT_DOWN:
@@ -232,7 +230,7 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                     }
                 break;
 
-                case MOTION:
+                case ControlType::MOTION:
                     switch(inputFilter.mAxisFilter) {
                         case X_CHANGE_POS:
                         case X_CHANGE_NEG: {
@@ -261,22 +259,22 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
         // Extract raw value from touch events
         case DeviceType::TOUCH:
             switch(inputFilter.mAxisFilter) {
-                case SIMPLE:
+                case AxisFilter::SIMPLE:
                     value = inputEvent.tfinger.pressure;
                 break;
-                case X_POS:
+                case AxisFilter::X_POS:
                     value = inputEvent.tfinger.x;
                 break;
-                case Y_POS:
+                case AxisFilter::Y_POS:
                     value = inputEvent.tfinger.y;
                 break;
-                case X_CHANGE_POS:
-                case X_CHANGE_NEG: {
+                case AxisFilter::X_CHANGE_POS:
+                case AxisFilter::X_CHANGE_NEG: {
                     const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
                     value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.tfinger.dx);
                 }
-                case Y_CHANGE_POS:
-                case Y_CHANGE_NEG: {
+                case AxisFilter::Y_CHANGE_POS:
+                case AxisFilter::Y_CHANGE_NEG: {
                     const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
                     value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.tfinger.dy);
                 }
@@ -289,12 +287,12 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
     return value;
 }
 
-std::vector<AxisFilter> deriveAxisFilters(ActionAttributesType attributes) {
+std::vector<AxisFilter> deriveAxisFilters(InputAttributesType attributes) {
     std::vector<AxisFilter> result {};
 
     if(attributes&HAS_BUTTON_VALUE) result.push_back(AxisFilter::SIMPLE);
 
-    for(AxisFilterType i{X_POS}; i <= attributes&N_AXES; ++i) {
+    for(AxisFilterType i{X_POS}; i <= (attributes&N_AXES); ++i) {
         result.push_back(static_cast<AxisFilter>(i));
 
         if(attributes&HAS_NEGATIVE) {
@@ -363,10 +361,9 @@ InputIdentity getInputIdentity(const SDL_Event& inputEvent) {
             inputIdentity.mDeviceType = DeviceType::KEYBOARD;
             inputIdentity.mControlType = ControlType::BUTTON;
         break;
-
         case SDL_FINGERUP:
         case SDL_FINGERDOWN:
-            inputIdentity.mAttributes = HAS_BUTTON_VALUE;
+            inputIdentity.mAttributes = InputAttributes::HAS_BUTTON_VALUE;
         case SDL_FINGERMOTION:
             inputIdentity.mAttributes |= (
                 (N_AXES & 2)
@@ -446,7 +443,7 @@ InputIdentity getInputIdentity(const SDL_Event& inputEvent) {
 }
 
 ActionContext& InputManager::operator[] (const std::string& actionContext) {
-    return mActionContexts[actionContext].first;
+    return mActionContexts.at(actionContext).first;
 }
 
 void InputManager::queueInput(const SDL_Event& inputEvent) {
@@ -455,17 +452,21 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
     InputIdentity inputIdentity { getInputIdentity(inputEvent) };
     assert(inputIdentity && "This event is not supported");
 
-    // Update the raw values of any input filters that are in use
+    // Update the raw values of any input filters that are in use and
+    // have changed this frame
     std::vector<InputFilter> updatedInputFilters {};
     for(AxisFilter axisFilter: deriveAxisFilters(inputIdentity.mAttributes)) {
         InputFilter inputFilter {inputIdentity, axisFilter};
         if(mRawInputState.find(inputFilter) != mRawInputState.end()) {
-            mRawInputState[inputFilter] = getRawValue(inputFilter, inputEvent);
-            updatedInputFilters.push_back(inputFilter);
+            double newValue { getRawValue(inputFilter, inputEvent) };
+            if(mRawInputState[inputFilter] != newValue || inputFilter.mAxisFilter&AxisFilterMask::CHANGE){
+                mRawInputState[inputFilter] = getRawValue(inputFilter, inputEvent);
+                updatedInputFilters.push_back(inputFilter);
+            }
         }
     }
 
-    // Apply filter changes to any mapped combination, adding input events
+    //  Apply filter changes to any mapped combination, adding input combo events
     // to the queue if the combo condition is fulfilled
     for(const InputFilter& filter: updatedInputFilters) {
         for(const InputCombo& combo: mInputFilterToCombos[filter]) {
@@ -473,60 +474,44 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
             bool modifier1Held { !combo.mModifier1 || mRawInputState[combo.mModifier1] >= mModifierThreshold };
             bool modifier2Held { !combo.mModifier2 || mRawInputState[combo.mModifier2] >= mModifierThreshold };
 
-            // Calculate new combo state parameters
+            // Prepare new combo state parameters
             const UnmappedInputValue previousComboState { mInputComboStates[combo] };
             UnmappedInputValue newComboState {};
             if(modifier1Held && modifier2Held) {
-                double mainControlState { mRawInputState[combo.mMainControl] };
-                if(combo.mInverted) mainControlState = 1.f - mainControlState;
-                float upperBound { combo.mInverted? 1.f - combo.mDeadzone: 1.f };
-                float lowerBound { combo.mInverted? 0.f: combo.mDeadzone };
-                mainControlState = RangeMapperLinear{ lowerBound, upperBound, 0.f, 1.f }(mainControlState);
-                newComboState.mStateValue = mainControlState;
+                const double upperBound { 1.f };
+                const double lowerBound { combo.mDeadzone };
+                const double threshold { combo.mTrigger == InputCombo::Trigger::ON_CHANGE? 0.f: combo.mThreshold };
+                newComboState.mValue= RangeMapperLinear{lowerBound, upperBound, 0.f, 1.f}(mRawInputState[combo.mMainControl]);
+                newComboState.mActivated = newComboState.mValue > threshold;
             } else {
-                newComboState.mStateValue = 0.f;
+                newComboState.mValue= 0.f;
+                newComboState.mActivated = false;
             }
-            newComboState.mChangeValue =  newComboState.mStateValue - previousComboState.mStateValue;
             newComboState.mTimestamp = inputEvent.common.timestamp;
-            newComboState.mActivated = false;
 
-            switch(combo.mTrigger) {
-                case InputCombo::Trigger::ON_PRESS:
-                    if(
-                        newComboState.mStateValue >= combo.mThreshold
-                        && previousComboState.mStateValue < combo.mThreshold
-                    ) {
-                        newComboState.mActivated = true;
-                        mUnmappedInputs.push(std::pair(combo, newComboState));
+            //  Add input to queue to be consumed by subscribed action contexts when value ...
+            if(
+                ( // ... just exceeded threshold
+                    combo.mTrigger == InputCombo::Trigger::ON_PRESS && newComboState.mActivated 
+                    && !previousComboState.mActivated
 
-                    } else if(
-                        newComboState.mStateValue < combo.mThreshold
-                        && previousComboState.mStateValue >= combo.mThreshold
-                    ) {
-                        mUnmappedInputs.push(std::pair(combo, newComboState));
-                    }
-                break;
-                case InputCombo::Trigger::ON_RELEASE:
-                    if(
-                        newComboState.mStateValue >= combo.mThreshold
-                        && previousComboState.mStateValue < combo.mThreshold
-                    ) {
-                        mUnmappedInputs.push(std::pair(combo, newComboState));
-                    } else if(
-                        newComboState.mStateValue < combo.mThreshold
-                        && previousComboState.mStateValue >= combo.mThreshold
-                    ) {
-                        newComboState.mActivated = true;
-                        mUnmappedInputs.push(std::pair(combo, newComboState));
-                    }
-                break;
-                case InputCombo::Trigger::ON_CHANGE:
-                    newComboState.mActivated = newComboState.mStateValue > 0.f;
-                    if(newComboState.mChangeValue) {
-                        mUnmappedInputs.push(std::pair(combo, newComboState));
-                    }
-                break;
-            }
+                ) || ( // ... just dropped below threshold
+                    combo.mTrigger == InputCombo::Trigger::ON_RELEASE
+                    && !newComboState.mActivated
+                    && previousComboState.mActivated
+
+                ) || ( // ... change just occurred
+                    combo.mTrigger == InputCombo::Trigger::ON_CHANGE
+                    && (
+                        // ... and input type is change
+                        (combo.mMainControl.mAxisFilter&AxisFilterMask::CHANGE && newComboState.mActivated)
+                        // ... or a state change occurred
+                        || (newComboState.mValue != previousComboState.mValue)
+                    )
+                )
+            ) {
+                mUnmappedInputs.push(std::pair(combo, newComboState));
+            } 
 
             // Update presently stored combo state
             mInputComboStates[combo] = newComboState;
@@ -537,10 +522,21 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
 void InputManager::registerActionContext(const std::string& name, ActionContextPriority priority) {
     assert(mActionContexts.find(name) == mActionContexts.end()
         && "An action context with this name has already been registered");
+    // mActionContexts.emplace(
+    //     std::piecewise_construct,
+    //     std::forward_as_tuple(name),
+    //     std::pair(std::forward_as_tuple(*this, name), priority)
+    // );
     mActionContexts.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(name),
-        std::forward_as_tuple(*this, name)
+        std::forward_as_tuple(
+            std::pair<ActionContext, ActionContextPriority>(
+                std::piecewise_construct,
+                std::forward_as_tuple(*this, name),
+                std::forward_as_tuple(priority)
+            )
+        )
     );
 }
 
@@ -550,7 +546,7 @@ void InputManager::unregisterActionContext(const std::string& actionContextName)
 
     {
         ActionContext& actionContext {
-            mActionContexts[actionContextName].first
+            mActionContexts.at(actionContextName).first
         };
         actionContext.unregisterInputBinds();
     }
@@ -576,11 +572,11 @@ void InputManager::dispatch(uint32_t targetTimeMillis) {
         for(const std::set<ActionContextName>& actionSet: mInputComboToActionContexts[inputPair.first]) {
             // each action in this priority level
             for(const ActionContextName& actionContextName: actionSet) {
-                ActionContext& actionContext{ mActionContexts[actionContextName].first };
+                ActionContext& actionContext{ mActionContexts.at(actionContextName).first };
                 if(actionContext.enabled()) {
                     actionContext.mapToAction(inputPair.second, inputPair.first);
                     updatedActionContexts.insert(actionContextName);
-                    allowPropagate = actionContext.allowPropagate();
+                    allowPropagate = actionContext.propagateAllowed();
                 }
                 if(!allowPropagate) break;
             }
@@ -594,20 +590,20 @@ void InputManager::dispatch(uint32_t targetTimeMillis) {
     // Let each updated context dispatch actions to their subscribed
     // action handlers
     for(const ActionContextName& name: updatedActionContexts) {
-        mActionContexts[name].first.dispatch();
+        mActionContexts.at(name).first.dispatch();
     }
 }
 
 void InputManager::registerInputCombo(const std::string& actionContext, const InputCombo& inputCombo) {
     assert(mActionContexts.find(actionContext) != mActionContexts.end() && "No action context with this name has been registered");
-    const ActionContextPriority& priority { mActionContexts[actionContext].second };
+    const ActionContextPriority& priority { mActionContexts.at(actionContext).second };
 
     // Add associated input filters to records that use them
-    std::array<const InputFilter&, 3> inputComboFilters {
-        inputCombo.mMainControl,
-        inputCombo.mModifier1,
-        inputCombo.mModifier2
-    };
+    std::array<const InputFilter, 3> inputComboFilters {{
+        {inputCombo.mMainControl},
+        {inputCombo.mModifier1},
+        {inputCombo.mModifier2}
+    }};
     for(const InputFilter& inputFilter: inputComboFilters) {
         mRawInputState.try_emplace(
             inputFilter,
@@ -628,21 +624,21 @@ void InputManager::unregisterInputCombo(const std::string& actionContext, const 
         been unregistered."
     );
 
-    ActionContextPriority contextPriority {mActionContexts[actionContext].second};
+    ActionContextPriority contextPriority {mActionContexts.at(actionContext).second};
     mInputComboToActionContexts[inputCombo][ActionContextPriority::TOTAL - 1 - contextPriority].erase(
         actionContext
     );
 
-    // See if there is any action context for which this
+    //  See if there is any action context for which this
     // input combo or any of its input filters must 
     // be retained
-    std::array<const InputFilter&, 3> inputComboFilters {
-        inputCombo.mMainControl,
-        inputCombo.mModifier1,
-        inputCombo.mModifier2,
-    };
+    std::array<const InputFilter, 3> inputComboFilters {{
+        {inputCombo.mMainControl},
+        {inputCombo.mModifier1},
+        {inputCombo.mModifier2},
+    }};
 
-    // Determine whether the combo is used by any other action 
+    //  Determine whether the combo is used by any other action 
     // context
     bool keepCombo { false };
     std::array<bool, 3> keepFilter { false, false, false};
@@ -656,19 +652,19 @@ void InputManager::unregisterInputCombo(const std::string& actionContext, const 
         }
     }
 
-    // If the combo is to be removed, see if any of its 
+    //  If the combo is to be removed, see if any of its 
     // associated input filters (corresponding to individual
     // controls) are in use
     if(!keepCombo) {
         for(std::size_t i{0}; i < inputComboFilters.size(); ++i) {
-            // Empty filter, and therefore does not require
+            //  Empty filter, and therefore does not require
             // processing
             if(!inputComboFilters[i]) {
                 keepFilter[i] = true;
                 continue;
             }
 
-            // A size greater than 1 indicates that there's at least
+            //  A size greater than 1 indicates that there's at least
             // one other combo (besides the one being deleted) using
             // this filter
             const std::set<InputCombo>& filterCombos { mInputFilterToCombos[inputComboFilters[i]] };
@@ -679,11 +675,11 @@ void InputManager::unregisterInputCombo(const std::string& actionContext, const 
     }
 
     if(!keepCombo) {
-        // Remove the segment keeping track of the latest processed 
+        //  Remove the segment keeping track of the latest processed 
         // value for this combo
         mInputComboStates.erase(inputCombo);
 
-        // Remove all events in the input queue that correspond
+        //  Remove all events in the input queue that correspond
         // to this input combination
         std::queue<std::pair<InputCombo, UnmappedInputValue>> newInputQueue {};
         while(!mUnmappedInputs.empty()) {
@@ -715,8 +711,8 @@ void InputManager::unregisterInputCombo(const std::string& actionContext, const 
 void InputManager::unregisterInputCombos(const std::string& actionContext){
     assert(mActionContexts.find(actionContext) != mActionContexts.end() && "No action context with this name has been registered");
 
-    // find all combos mapped to this action context
-    ActionContextPriority priority { mActionContexts[actionContext].second };
+    //  Find all combos mapped to this action context
+    ActionContextPriority priority { mActionContexts.at(actionContext).second };
     std::vector<InputCombo> combosToUnregister {};
     for(const auto& inputMapping: mInputComboToActionContexts) {
         if(inputMapping.second[priority].find(actionContext) != inputMapping.second[priority].end()) {
@@ -724,7 +720,7 @@ void InputManager::unregisterInputCombos(const std::string& actionContext){
         }
     }
 
-    // Remove the mapping between each found combo and the context
+    //  Remove the mapping between each found combo and the context
     for(const InputCombo& combo: combosToUnregister) {
         unregisterInputCombo(actionContext, combo);
     }

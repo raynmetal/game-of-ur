@@ -29,7 +29,7 @@ constexpr EntityID kMaxEntities { 30000 };
 to determine what components are available for an Entity, and what
 components are required by a System
 */
-using ComponentType = std::AxisFilter;
+using ComponentType = std::uint8_t;
 constexpr ComponentType kMaxComponents { 255 };
 using Signature = std::bitset<kMaxComponents>;
 
