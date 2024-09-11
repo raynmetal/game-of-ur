@@ -83,15 +83,14 @@ ActionData ActionContext::ApplyInput(const ActionDefinition& actionDefinition, c
     return newActionData;
 }
 
-void ActionContext::registerAction(const std::string& name, InputAttributes attributes) {
+void ActionContext::registerAction(const std::string& name, InputAttributesType attributes) {
     assert(mActions.find(ActionDefinition{.mName{name}}) == mActions.end() && "Another action with this name has already been registered");
     assert(
-        ((attributes&InputAttributes::HAS_CHANGE_VALUE && !(attributes&InputAttributes::HAS_STATE_VALUE))
-        || (!(attributes&InputAttributes::HAS_CHANGE_VALUE) && attributes&InputAttributes::HAS_STATE_VALUE))
+        !((attributes&InputAttributes::HAS_CHANGE_VALUE) && (attributes&InputAttributes::HAS_STATE_VALUE))
         && "Action may either have a change value or a state value but not both"
     );
 
-    ActionDefinition actionDefinition {name, attributes};
+    ActionDefinition actionDefinition { name, attributes };
     actionDefinition.mValueType = attributes&InputAttributes::HAS_CHANGE_VALUE? ActionValueType::CHANGE: ActionValueType::STATE;
     ActionData initialActionData { static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES) };
 
@@ -138,18 +137,26 @@ void ActionContext::registerInputBind(const std::string& forAction, AxisFilter t
     const ActionDefinition& actionDefinition { actionDefinitionIter->first };
     assert(
         ( // the axis indicated by onAxis must be one of the dimensions possessed by the action
-            static_cast<uint8_t>(targetAxis&AxisFilterMask::ID) <= static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES)
-        ) && ( // if onAxis is negative, then the action must support negative values
-            static_cast<uint8_t>(targetAxis&AxisFilterMask::SIGN) && static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::HAS_NEGATIVE)
+            ((static_cast<uint8_t>(targetAxis)&AxisFilterMask::ID) <= (static_cast<uint8_t>(actionDefinition.mAttributes)&InputAttributes::N_AXES))
+        ) && ( 
+            // Target axis isn't negative, ...
+            !(static_cast<uint8_t>(targetAxis)&AxisFilterMask::SIGN)
+            // ... or if it is, then ...
+            || (
+                // .. the action must support negative state values...
+                (static_cast<uint8_t>(actionDefinition.mAttributes)&InputAttributes::HAS_NEGATIVE)
+                // ... or support change values (which de facto support negative values).
+                || (static_cast<uint8_t>(actionDefinition.mAttributes)&InputAttributes::HAS_CHANGE_VALUE)
+            )
         )
         && "The axis specified is not among those available for this action"
     );
     assert(
         (
-            ((targetAxis&AxisFilterMask::CHANGE) && (actionDefinition.mValueType == ActionValueType::CHANGE))
-            || (!(targetAxis&AxisFilterMask::CHANGE) && (actionDefinition.mValueType == ActionValueType::STATE))
+            ((withInput.mMainControl.mAxisFilter&AxisFilterMask::CHANGE) && (actionDefinition.mValueType == ActionValueType::CHANGE))
+            || (!(withInput.mMainControl.mAxisFilter&AxisFilterMask::CHANGE) && (actionDefinition.mValueType == ActionValueType::STATE))
         )
-        && "Input source and input change must be Change types or State types"
+        && "Input filter type and action value type must both be the same, i.e., Change or State."
     );
 
     mInputBindToAction.emplace(withInput, std::pair<AxisFilter, ActionDefinition>{targetAxis, actionDefinition});
@@ -240,7 +247,7 @@ void ActionContext::dispatch() {
         std::vector<std::weak_ptr<IActionHandler>> handlersToUnregister {};
         for(auto handler: mActionHandlers[pendingAction.first]) {
             if(!handler.expired()) {
-                handler.lock()->handleAction(pendingAction.second);
+                handler.lock()->handleAction(pendingAction.second, pendingAction.first);
             } else {
                 handlersToUnregister.push_back(handler);
             }

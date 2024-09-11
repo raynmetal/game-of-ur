@@ -309,8 +309,7 @@ std::vector<AxisFilter> deriveAxisFilters(InputAttributesType attributes) {
 }
 
 InputIdentity getInputIdentity(const SDL_Event& inputEvent) {
-    InputIdentity inputIdentity;
-    inputIdentity.mControl = inputEvent.common.type;
+    InputIdentity inputIdentity {};
     switch(inputEvent.type) {
         /**
          * Mouse events
@@ -330,10 +329,10 @@ InputIdentity getInputIdentity(const SDL_Event& inputEvent) {
         break;
         case SDL_MOUSEMOTION:
             inputIdentity.mAttributes = (
-                (N_AXES & 2) 
-                | HAS_STATE_VALUE
-                | HAS_CHANGE_VALUE
-                | STATE_IS_LOCATION
+                (InputAttributes::N_AXES & 2) 
+                | InputAttributes::HAS_STATE_VALUE
+                | InputAttributes::HAS_CHANGE_VALUE
+                | InputAttributes::STATE_IS_LOCATION
             );
             inputIdentity.mDevice = inputEvent.motion.which;
             inputIdentity.mDeviceType = DeviceType::MOUSE;
@@ -436,7 +435,7 @@ InputIdentity getInputIdentity(const SDL_Event& inputEvent) {
             inputIdentity.mControlType = ControlType::POINT;
         break;
         default:
-            assert (false && "This event is unsupported");
+            // assert (false && "This event is unsupported");
         break;
     }
     return inputIdentity;
@@ -450,7 +449,8 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
     // variable storing the (internal) identity of the
     // control that created this event
     InputIdentity inputIdentity { getInputIdentity(inputEvent) };
-    assert(inputIdentity && "This event is not supported");
+    // assert(inputIdentity && "This event is not supported");
+    if(!inputIdentity) return;
 
     // Update the raw values of any input filters that are in use and
     // have changed this frame
@@ -605,11 +605,13 @@ void InputManager::registerInputCombo(const std::string& actionContext, const In
         {inputCombo.mModifier2}
     }};
     for(const InputFilter& inputFilter: inputComboFilters) {
-        mRawInputState.try_emplace(
-            inputFilter,
-            0.f
-        );
-        mInputFilterToCombos[inputFilter].insert(inputCombo);
+        if(inputFilter) {
+            mRawInputState.try_emplace(
+                inputFilter,
+                0.f
+            );
+            mInputFilterToCombos[inputFilter].insert(inputCombo);
+        }
     }
 
     // Add input combo to records that require it

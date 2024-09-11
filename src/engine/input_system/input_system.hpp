@@ -26,7 +26,7 @@ public:
         DEFAULT=2,
         HIGH=3,
         VERY_HIGH=4,
-        TOTAL=5
+        TOTAL=5,
     };
 
     /* 
@@ -131,7 +131,7 @@ public:
      * input that triggered it can be propagated to lower
      * precedence action contexts.
      */
-    virtual void handleAction(const ActionData& actionData) = 0;
+    virtual void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) = 0;
 };
 
 class ActionContext {
@@ -143,7 +143,7 @@ public:
     static ActionData ApplyInput(const ActionDefinition& actionDefinition, const ActionData& actionData, const AxisFilter targetAxis, const UnmappedInputValue& inputValue);
 
     // Creates an action of the same name and attributes
-    void registerAction(const std::string& name, InputAttributes attributes);
+    void registerAction(const std::string& name, InputAttributesType attributes);
     // Remove the action with this name
     void unregisterAction(const std::string& name);
 

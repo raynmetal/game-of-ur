@@ -21,6 +21,7 @@
 #include "engine/shapegen.hpp"
 #include "engine/render_system.hpp"
 #include "engine/scene_system.hpp"
+#include "engine/input_system/input_system.hpp"
 
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
@@ -30,6 +31,8 @@ void cleanup();
 
 int main(int argc, char* argv[]) {
     init();
+
+    InputManager inputManager {};
 
     gComponentManager.registerComponentArray<Placement>();
     gComponentManager.registerComponentArray<LightEmissionData>();
@@ -45,6 +48,87 @@ int main(int argc, char* argv[]) {
 
     gSystemManager.registerSystem<RenderSystem>(Signature{});
     gSystemManager.registerSystem<SceneSystem>(sceneSystemSignature);
+
+    // Create the camera action context, and define what actions are available to it
+    inputManager.registerActionContext("Camera");
+    inputManager["Camera"].registerAction(
+        "Rotate",
+        (2&InputAttributes::N_AXES)
+        | InputAttributes::HAS_CHANGE_VALUE
+        | InputAttributes::HAS_NEGATIVE
+    );
+    inputManager["Camera"].registerAction(
+        "ToggleControl",
+        InputAttributes::HAS_BUTTON_VALUE
+    );
+    InputIdentity mouseMotionControl {
+        .mAttributes {
+            (2&InputAttributes::N_AXES)
+            | InputAttributes::HAS_STATE_VALUE
+            | InputAttributes::HAS_CHANGE_VALUE
+            | InputAttributes::STATE_IS_LOCATION
+        },
+        .mDeviceType { DeviceType::MOUSE },
+        .mControlType { ControlType::POINT }
+    };
+
+    // Map input events to the camera actions just defined
+    inputManager["Camera"].registerInputBind(
+        "Rotate", AxisFilter::X_POS, // Action and target axis
+        InputCombo{ // Input combination and filter
+            .mMainControl {
+                .mControl { mouseMotionControl },
+                .mAxisFilter{AxisFilter::X_CHANGE_POS},
+            }, 
+            .mTrigger { InputCombo::Trigger::ON_CHANGE }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Rotate", AxisFilter::X_NEG, // Action and target axis
+        InputCombo{ // Input combination and filter
+            .mMainControl {
+                .mControl { mouseMotionControl },
+                .mAxisFilter{AxisFilter::X_CHANGE_NEG},
+            }, 
+            .mTrigger { InputCombo::Trigger::ON_CHANGE }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Rotate", AxisFilter::Y_POS,
+        InputCombo{ // Input combination and filter
+            .mMainControl {
+                .mControl { mouseMotionControl },
+                .mAxisFilter{AxisFilter::Y_CHANGE_POS},
+            }, 
+            .mTrigger { InputCombo::Trigger::ON_CHANGE }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Rotate", AxisFilter::Y_NEG,
+        InputCombo{ // Input combination and filter
+            .mMainControl {
+                .mControl { mouseMotionControl },
+                .mAxisFilter{AxisFilter::Y_CHANGE_NEG},
+            }, 
+            .mTrigger { InputCombo::Trigger::ON_CHANGE }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "ToggleControl", AxisFilter::SIMPLE,
+        InputCombo{
+            .mMainControl{
+                .mControl {
+                    .mAttributes { HAS_BUTTON_VALUE },
+                    .mControl { SDLK_1 },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter{AxisFilter::SIMPLE},
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS }
+        }
+    );
+
 
     const float sqrt2 { sqrt(2.f) };
     std::vector<Entity> lightEntities(3);
@@ -130,15 +214,14 @@ int main(int argc, char* argv[]) {
         boardPiecePlacement.mOrientation = glm::rotate(boardPiecePlacement.mOrientation, glm::radians(360.f/(1+boardPieces.size())), {0.f, 0.f, -1.f});
         boardPieceSceneNode.mParent = parentEntity;
 
+        // each board piece is the parent of the board piece made in
+        // the next iteration
         parentEntity = boardPieces[i].getID();
     }
 
-    FlyCamera camera {
-        glm::vec3(0.f),
-        0.f,
-        0.f,
-        0.f
-    };
+    std::shared_ptr<FlyCamera> camera { std::make_shared<FlyCamera>(FlyCamera {glm::vec3(0.f), 0.f, 0.f, 0.f}) };
+    inputManager["Camera"].registerActionHandler("Rotate", camera);
+    inputManager["Camera"].registerActionHandler("ToggleControl", camera);
 
     float exposure { 1.f };
     float gamma { 2.2f };
@@ -174,6 +257,7 @@ int main(int argc, char* argv[]) {
                 const std::size_t currScreenTexture { gSystemManager.getSystem<RenderSystem>()->getCurrentScreenTexture() };
                 gSystemManager.getSystem<RenderSystem>()->setScreenTexture(1 + currScreenTexture);
             }
+            inputManager.queueInput(event);
             // if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_PERIOD) {
             //     exposure += .1f;
             //     tonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
@@ -201,7 +285,7 @@ int main(int argc, char* argv[]) {
             //         "gamma", gamma 
             //     );
             // }
-            camera.processInput(event);
+            // camera.processInput(event);
         }
         if(quit) break;
 
@@ -221,10 +305,13 @@ int main(int argc, char* argv[]) {
             framerateCounter -= frameratePoll;
         }
 
+        // Send inputs, if any, to their various listeners
+        inputManager.dispatch(currentTicks);
+
         // update objects according to calculated delta
-        camera.update(deltaTime);
-        flashlight.getComponent<Placement>().mPosition = glm::vec4(camera.getPosition(), 1.f);
-        flashlight.getComponent<Placement>().mOrientation = glm::quat_cast(camera.getRotationMatrix());
+        camera->update(deltaTime);
+        flashlight.getComponent<Placement>().mPosition = glm::vec4(camera->getPosition(), 1.f);
+        flashlight.getComponent<Placement>().mOrientation = glm::quat_cast(camera->getRotationMatrix());
         gSystemManager.getSystem<SceneSystem>()->markDirty(flashlight.getID());
         sunlight.getComponent<Placement>().mOrientation = glm::rotate(sunlight.getComponent<Placement>().mOrientation, deltaTime/10.f, {0.f, 1.f, 0.f});
         gSystemManager.getSystem<SceneSystem>()->markDirty(sunlight.getID());
@@ -234,7 +321,7 @@ int main(int argc, char* argv[]) {
             gSystemManager.getSystem<SceneSystem>()->markDirty(piece.getID());
         }
         gSystemManager.getSystem<SceneSystem>()->updateTransforms();
-        gSystemManager.getSystem<RenderSystem>()->updateCameraMatrices(camera);
+        gSystemManager.getSystem<RenderSystem>()->updateCameraMatrices(*camera);
 
         GLenum error = glGetError();
         if(error!= GL_FALSE) {

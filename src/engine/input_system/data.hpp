@@ -168,7 +168,7 @@ enum class ActionValueType: uint8_t {
  */
 struct ActionDefinition {
     std::string mName {};
-    InputAttributes mAttributes {};
+    InputAttributesType mAttributes {};
     ActionValueType mValueType {};
 
     bool operator==(const ActionDefinition& other) const {

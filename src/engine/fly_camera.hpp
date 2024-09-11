@@ -9,14 +9,16 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "input_system/input_system.hpp"
 
-class FlyCamera {
+class FlyCamera: public IActionHandler {
 public:
     FlyCamera();
     FlyCamera(glm::vec3 position, float yaw, float pitch, float fov);
 
     void update(float deltaTime);
-    void processInput(const SDL_Event& event);
+    // Replaces the old handle action event
+    void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override;
 
     glm::vec3 getPosition() const;
     glm::vec3 getForward() const;

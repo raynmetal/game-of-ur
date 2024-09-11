@@ -92,67 +92,72 @@ glm::mat4 FlyCamera::getProjectionMatrix() const{
     return projectionMatrix;
 }
 
-void FlyCamera::processInput(const SDL_Event& event) {
-    //Toggle active if 1 is pressed
-    if(
-        event.type == SDL_KEYUP 
-        && event.key.keysym.sym == SDLK_1
-    ) {
+// void FlyCamera::processInput(const SDL_Event& event) {
+//     //Toggle active if 1 is pressed
+//     if(
+//         event.type == SDL_KEYUP 
+//         && event.key.keysym.sym == SDLK_1
+//     ) {
+//         setActive(!mActive);
+//         return;
+//     }
+
+//     // or exit early if this camera is disabled
+//     if (!mActive) return;
+
+void FlyCamera::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    if(actionDefinition.mName == "ToggleControl"){
         setActive(!mActive);
-        return;
     }
 
-    // or exit early if this camera is disabled
-    if (!mActive) return;
+    if(!mActive) return;
 
-    //Handle mouse movement
-    if(event.type == SDL_MOUSEMOTION) {
-        float dX { static_cast<float>(event.motion.xrel) };
-        float dY { static_cast<float>(event.motion.yrel) };
-        updateYaw(dX);
-        updatePitch(dY);
+    // Handle camera rotation command
+    if(actionDefinition.mName == "Rotate") {
+        updateYaw(actionData.mTwoAxisActionData.mValue.x);
+        updatePitch(actionData.mTwoAxisActionData.mValue.y);
         return;
     }
-    if(event.type == SDL_MOUSEWHEEL){
-        float dFOV { -static_cast<float>(event.wheel.y) };
-        updateFOV(dFOV);
-        return;
-    }
+    // if(event.type == SDL_MOUSEWHEEL){
+    //     float dFOV { -static_cast<float>(event.wheel.y) };
+    //     updateFOV(dFOV);
+    //     return;
+    // }
 
-    //Handle keydown
-    if(event.type == SDL_KEYDOWN){
-        switch(event.key.keysym.sym) {
-            case SDLK_w:
-                mVelocity.z = CAMERA_SPEED;
-            break;
-            case SDLK_a:
-                mVelocity.x = -CAMERA_SPEED;
-            break;
-            case SDLK_s:
-                mVelocity.z = -CAMERA_SPEED;
-            break;
-            case SDLK_d:
-                mVelocity.x = CAMERA_SPEED;
-            break;
-        }
-        return;
-    }
+    // //Handle keydown
+    // if(event.type == SDL_KEYDOWN){
+    //     switch(event.key.keysym.sym) {
+    //         case SDLK_w:
+    //             mVelocity.z = CAMERA_SPEED;
+    //         break;
+    //         case SDLK_a:
+    //             mVelocity.x = -CAMERA_SPEED;
+    //         break;
+    //         case SDLK_s:
+    //             mVelocity.z = -CAMERA_SPEED;
+    //         break;
+    //         case SDLK_d:
+    //             mVelocity.x = CAMERA_SPEED;
+    //         break;
+    //     }
+    //     return;
+    // }
 
-    // Handle keyup
-    if(event.type == SDL_KEYUP) {
-        switch(event.key.keysym.sym) {
-            // handle camera movements
-            case SDLK_w:
-            case SDLK_s:
-                mVelocity.z = 0.f;
-            break;
-            case SDLK_a:
-            case SDLK_d:
-                mVelocity.x = 0.f;
-            break;
-        }
-        return;
-    }
+    // // Handle keyup
+    // if(event.type == SDL_KEYUP) {
+    //     switch(event.key.keysym.sym) {
+    //         // handle camera movements
+    //         case SDLK_w:
+    //         case SDLK_s:
+    //             mVelocity.z = 0.f;
+    //         break;
+    //         case SDLK_a:
+    //         case SDLK_d:
+    //             mVelocity.x = 0.f;
+    //         break;
+    //     }
+    //     return;
+    // }
 }
 
 void FlyCamera::setActive(bool active) {
