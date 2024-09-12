@@ -52,11 +52,23 @@ struct InputIdentity {
     ControlType mControlType {ControlType::NA};
 
     bool operator==(const InputIdentity& other) const {
+        return !(*this < other) && !(other < *this);
+    }
+    bool operator<(const InputIdentity& other) const {
         return (
-            mDevice == other.mDevice 
-            && mControl == other.mControl
-            && mDeviceType == other.mDeviceType
-            && mControlType == other.mControlType
+            static_cast<uint8_t>(mDeviceType) < static_cast<uint8_t>(other.mDeviceType)
+            || (
+                mDeviceType == other.mDeviceType && (
+                    mDevice < other.mDevice
+                    || (
+                        mDevice == other.mDevice
+                        && (
+                            static_cast<uint8_t>(mControlType) < static_cast<uint8_t>(other.mControlType)
+                            || mControl < other.mControl
+                        )
+                    )
+                )
+            )
         );
     }
 
@@ -101,13 +113,24 @@ struct InputFilter {
 
     AxisFilterType mAxisFilter { 0x0 };
 
-    operator bool() const {
-        return mControl;
+    bool operator==(const InputFilter& other) const {
+        return !(*this < other) && !(other < *this);
     }
 
-    bool operator==(const InputFilter& other) const {
-        return other.mControl == mControl
-            && other.mAxisFilter == mAxisFilter;
+    bool operator<(const InputFilter& other) const {
+        return (
+            mControl < other.mControl
+            || (
+                mControl == other.mControl
+                && (
+                    mAxisFilter < other.mAxisFilter
+                )
+            )
+        );
+    }
+
+    operator bool() const {
+        return mControl;
     }
 };
 
@@ -140,11 +163,36 @@ struct InputCombo {
     }
 
     bool operator==(const InputCombo& other) const {
-        return mMainControl == other.mMainControl
-            && mModifier1 == other.mModifier1
-            && mModifier2 == other.mModifier2
-            && mTrigger == other.mTrigger
-            && mThreshold == other.mThreshold;
+        return !(*this < other) && !(other < *this);
+    }
+    bool operator<(const InputCombo& other) const {
+        return (
+            mMainControl < other.mMainControl
+            || (
+                mMainControl == other.mMainControl
+                && (
+                    mModifier1 < other.mModifier1
+                    || (
+                        mModifier1 == other.mModifier1
+                        && (
+                            mModifier2 < other.mModifier2
+                            || (
+                                mModifier2 == other.mModifier2 
+                                && (
+                                    static_cast<uint8_t>(mTrigger) < static_cast<uint8_t>(other.mTrigger)
+                                    || (
+                                        mTrigger == other.mTrigger 
+                                        && (
+                                            mThreshold < other.mThreshold
+                                        )
+                                    )
+                                )
+                            )
+                        )
+                    )
+                )
+            )
+        );
     }
 };
 
@@ -172,7 +220,10 @@ struct ActionDefinition {
     ActionValueType mValueType {};
 
     bool operator==(const ActionDefinition& other) const {
-        return mName == other.mName;
+        return !(mName < other.mName) && !(other.mName < mName);
+    }
+    bool operator<(const ActionDefinition& other) const {
+        return mName < other.mName;
     }
 };
 
@@ -219,27 +270,24 @@ union ActionData {
         ActionType::TWO_AXIS, ActionType::THREE_AXIS
     };
     ActionData(uint8_t nAxes): ActionData{ toType[nAxes] } {}
-    ActionData(ActionType actionType) {
-        switch(actionType) {
-            case ActionType::BUTTON:
-                *this = SimpleActionData{};
-            break;
-            case ActionType::ONE_AXIS:
-                *this = OneAxisActionData{};
-            break;
-            case ActionType::TWO_AXIS:
-                *this = TwoAxisActionData{};
-            break;
-            case ActionType::THREE_AXIS:
-                *this = ThreeAxisActionData{};
-            break;
-        }
+    ActionData(ActionType actionType): mCommonData{ .mType{actionType} } {
+        // Regardless of the type, all the data that corresponds
+        // to the action value should be initialized with 0
+        mThreeAxisActionData.mValue = glm::vec3{0.f};
     }
-    ActionData(): mSimpleData{ SimpleActionData{} }  {}
-    ActionData(SimpleActionData simpleData): mSimpleData { simpleData } {}
-    ActionData(OneAxisActionData oneAxisActionData): mOneAxisActionData { oneAxisActionData } {}
-    ActionData(TwoAxisActionData twoAxisActionData): mTwoAxisActionData { twoAxisActionData } {}
-    ActionData(ThreeAxisActionData threeAxisActionData): mThreeAxisActionData{ threeAxisActionData } {}
+    ActionData(): ActionData{ ActionType::BUTTON }  {}
+    ActionData(SimpleActionData simpleData): ActionData{ActionType::BUTTON} {
+        mSimpleData = simpleData;
+    }
+    ActionData(OneAxisActionData oneAxisActionData): ActionData{ActionType::ONE_AXIS} {
+        mOneAxisActionData = oneAxisActionData;
+    }
+    ActionData(TwoAxisActionData twoAxisActionData): ActionData{ActionType::TWO_AXIS} {
+        mTwoAxisActionData = twoAxisActionData;
+    }
+    ActionData(ThreeAxisActionData threeAxisActionData): ActionData{ActionType::THREE_AXIS} {
+        mThreeAxisActionData = threeAxisActionData;
+    }
 
     CommonActionData mCommonData;
     SimpleActionData mSimpleData;
@@ -282,10 +330,11 @@ namespace std {
     struct hash<InputCombo> {
         size_t operator() (const InputCombo& inputBind) const {
             return (
-                ((hash<InputFilter>{}(inputBind.mMainControl)
+                (((hash<InputFilter>{}(inputBind.mMainControl)
                 ^ (hash<InputFilter>{}(inputBind.mModifier1) << 1) >> 1)
                 ^ (hash<InputFilter>{}(inputBind.mModifier2) << 1) >> 1)
-                ^ (hash<InputCombo::Trigger>{}(inputBind.mTrigger) << 1)
+                ^ (hash<InputCombo::Trigger>{}(inputBind.mTrigger) << 1) >> 1)
+                ^ (hash<float>{}(inputBind.mThreshold) << 1)
             );
         }
     };

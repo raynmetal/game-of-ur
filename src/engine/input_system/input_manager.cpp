@@ -129,7 +129,7 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
 
         // Extract raw value from keyboard events
         case DeviceType::KEYBOARD: {
-            assert(inputFilter.mAxisFilter == AxisFilter::SIMPLE && "Invalid keyboard axis filter, keyboards only support `AxisFilter::SIMPLE`");
+           assert(inputFilter.mAxisFilter == AxisFilter::SIMPLE && "Invalid keyboard axis filter, keyboards only support `AxisFilter::SIMPLE`");
             value = inputEvent.key.state;
         }
         break;
@@ -460,12 +460,13 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
         if(mRawInputState.find(inputFilter) != mRawInputState.end()) {
             double newValue { getRawValue(inputFilter, inputEvent) };
             if(mRawInputState[inputFilter] != newValue || inputFilter.mAxisFilter&AxisFilterMask::CHANGE){
-                mRawInputState[inputFilter] = getRawValue(inputFilter, inputEvent);
+                mRawInputState[inputFilter] = newValue;
                 updatedInputFilters.push_back(inputFilter);
             }
         }
     }
 
+    std::unordered_map<InputCombo, UnmappedInputValue> finalComboStates {};
     //  Apply filter changes to any mapped combination, adding input combo events
     // to the queue if the combo condition is fulfilled
     for(const InputFilter& filter: updatedInputFilters) {
@@ -492,7 +493,8 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
             //  Add input to queue to be consumed by subscribed action contexts when value ...
             if(
                 ( // ... just exceeded threshold
-                    combo.mTrigger == InputCombo::Trigger::ON_PRESS && newComboState.mActivated 
+                    combo.mTrigger == InputCombo::Trigger::ON_PRESS
+                    && newComboState.mActivated 
                     && !previousComboState.mActivated
 
                 ) || ( // ... just dropped below threshold
@@ -505,7 +507,8 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
                     && (
                         // ... and input type is change
                         (combo.mMainControl.mAxisFilter&AxisFilterMask::CHANGE && newComboState.mActivated)
-                        // ... or a state change occurred
+                        // ... or a state change occurred (and therefore the new state should 
+                        // be forwarded)
                         || (newComboState.mValue != previousComboState.mValue)
                     )
                 )
@@ -514,8 +517,12 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
             } 
 
             // Update presently stored combo state
-            mInputComboStates[combo] = newComboState;
+            finalComboStates[combo] = newComboState;
         }
+    }
+
+    for(const auto& comboValuePair: finalComboStates) {
+        mInputComboStates[comboValuePair.first] = comboValuePair.second;
     }
 }
 
@@ -610,7 +617,8 @@ void InputManager::registerInputCombo(const std::string& actionContext, const In
                 inputFilter,
                 0.f
             );
-            mInputFilterToCombos[inputFilter].insert(inputCombo);
+            // TODO: only one of multiple combos gets mapped to a filter. We need all of them.
+            mInputFilterToCombos[inputFilter].emplace(inputCombo);
         }
     }
 

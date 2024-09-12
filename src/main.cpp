@@ -34,6 +34,17 @@ int main(int argc, char* argv[]) {
 
     InputManager inputManager {};
 
+    InputIdentity mouseMotionControl {
+        .mAttributes {
+            (2&InputAttributes::N_AXES)
+            | InputAttributes::HAS_STATE_VALUE
+            | InputAttributes::HAS_CHANGE_VALUE
+            | InputAttributes::STATE_IS_LOCATION
+        },
+        .mDeviceType { DeviceType::MOUSE },
+        .mControlType { ControlType::POINT }
+    };
+
     gComponentManager.registerComponentArray<Placement>();
     gComponentManager.registerComponentArray<LightEmissionData>();
     gComponentManager.registerComponentArray<ModelHandle>();
@@ -55,30 +66,29 @@ int main(int argc, char* argv[]) {
         "Rotate",
         (2&InputAttributes::N_AXES)
         | InputAttributes::HAS_CHANGE_VALUE
+    );
+    inputManager["Camera"].registerAction(
+        "Move",
+        (2&InputAttributes::N_AXES)
+        | InputAttributes::HAS_STATE_VALUE
         | InputAttributes::HAS_NEGATIVE
     );
     inputManager["Camera"].registerAction(
         "ToggleControl",
         InputAttributes::HAS_BUTTON_VALUE
     );
-    InputIdentity mouseMotionControl {
-        .mAttributes {
-            (2&InputAttributes::N_AXES)
-            | InputAttributes::HAS_STATE_VALUE
-            | InputAttributes::HAS_CHANGE_VALUE
-            | InputAttributes::STATE_IS_LOCATION
-        },
-        .mDeviceType { DeviceType::MOUSE },
-        .mControlType { ControlType::POINT }
-    };
-
+    inputManager["Camera"].registerAction(
+        "UpdateFOV",
+        (1&InputAttributes::N_AXES)
+        | InputAttributes::HAS_CHANGE_VALUE
+    );
     // Map input events to the camera actions just defined
     inputManager["Camera"].registerInputBind(
         "Rotate", AxisFilter::X_POS, // Action and target axis
         InputCombo{ // Input combination and filter
             .mMainControl {
                 .mControl { mouseMotionControl },
-                .mAxisFilter{AxisFilter::X_CHANGE_POS},
+                .mAxisFilter{ AxisFilter::X_CHANGE_POS },
             }, 
             .mTrigger { InputCombo::Trigger::ON_CHANGE }
         }
@@ -88,7 +98,7 @@ int main(int argc, char* argv[]) {
         InputCombo{ // Input combination and filter
             .mMainControl {
                 .mControl { mouseMotionControl },
-                .mAxisFilter{AxisFilter::X_CHANGE_NEG},
+                .mAxisFilter{ AxisFilter::X_CHANGE_NEG },
             }, 
             .mTrigger { InputCombo::Trigger::ON_CHANGE }
         }
@@ -98,8 +108,8 @@ int main(int argc, char* argv[]) {
         InputCombo{ // Input combination and filter
             .mMainControl {
                 .mControl { mouseMotionControl },
-                .mAxisFilter{AxisFilter::Y_CHANGE_POS},
-            }, 
+                .mAxisFilter{ AxisFilter::Y_CHANGE_POS },
+            },
             .mTrigger { InputCombo::Trigger::ON_CHANGE }
         }
     );
@@ -108,8 +118,8 @@ int main(int argc, char* argv[]) {
         InputCombo{ // Input combination and filter
             .mMainControl {
                 .mControl { mouseMotionControl },
-                .mAxisFilter{AxisFilter::Y_CHANGE_NEG},
-            }, 
+                .mAxisFilter{ AxisFilter::Y_CHANGE_NEG },
+            },
             .mTrigger { InputCombo::Trigger::ON_CHANGE }
         }
     );
@@ -128,7 +138,156 @@ int main(int argc, char* argv[]) {
             .mTrigger { InputCombo::Trigger::ON_PRESS }
         }
     );
-
+    inputManager["Camera"].registerInputBind(
+        "Move", AxisFilter::X_POS,
+        InputCombo {
+            .mMainControl {
+                .mControl{
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_d },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter{ AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Move", AxisFilter::X_POS,
+        InputCombo {
+            .mMainControl {
+                .mControl{
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_d },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter{ AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_RELEASE }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Move", AxisFilter::X_NEG,
+        InputCombo {
+            .mMainControl {
+                .mControl{
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_a },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter{ AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Move", AxisFilter::X_NEG,
+        InputCombo {
+            .mMainControl {
+                .mControl{
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_a },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter{ AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_RELEASE }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Move", AxisFilter::Y_POS,
+        InputCombo {
+            .mMainControl {
+                .mControl{
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_w },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter{ AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Move", AxisFilter::Y_POS,
+        InputCombo {
+            .mMainControl {
+                .mControl{
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_w },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter{ AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_RELEASE}
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Move", AxisFilter::Y_NEG,
+        InputCombo {
+            .mMainControl {
+                .mControl {
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_s },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter{ AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "Move", AxisFilter::Y_NEG,
+        InputCombo {
+            .mMainControl {
+                .mControl {
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_s },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter{ AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_RELEASE }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "UpdateFOV", AxisFilter::X_POS,
+        InputCombo {
+            .mMainControl {
+                .mControl {
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_COMMA },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter { AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS }
+        }
+    );
+    inputManager["Camera"].registerInputBind(
+        "UpdateFOV", AxisFilter::X_NEG,
+        InputCombo {
+            .mMainControl {
+                .mControl {
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_PERIOD },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter { AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS }
+        }
+    );
 
     const float sqrt2 { sqrt(2.f) };
     std::vector<Entity> lightEntities(3);
@@ -220,8 +379,11 @@ int main(int argc, char* argv[]) {
     }
 
     std::shared_ptr<FlyCamera> camera { std::make_shared<FlyCamera>(FlyCamera {glm::vec3(0.f), 0.f, 0.f, 0.f}) };
+    camera->setLookSensitivity(20.f);
     inputManager["Camera"].registerActionHandler("Rotate", camera);
     inputManager["Camera"].registerActionHandler("ToggleControl", camera);
+    inputManager["Camera"].registerActionHandler("Move", camera);
+    inputManager["Camera"].registerActionHandler("UpdateFOV", camera);
 
     float exposure { 1.f };
     float gamma { 2.2f };
@@ -333,6 +495,7 @@ int main(int argc, char* argv[]) {
 
         gSystemManager.getSystem<RenderSystem>()->execute();
     }
+
     // ... and then die
     cleanup();
     return 0;

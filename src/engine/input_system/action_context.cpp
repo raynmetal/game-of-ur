@@ -4,7 +4,7 @@
 
 ActionData ActionContext::ApplyInput(const ActionDefinition& actionDefinition, const ActionData& actionData, const AxisFilter targetAxis, const UnmappedInputValue& inputValue) {
     // write action state into the actionData variable
-    const int valueSign { targetAxis&AxisFilterMask::SIGN? -1: 1 };
+    const float valueSign { targetAxis&AxisFilterMask::SIGN? -1.f: 1.f };
     const double newValue { valueSign * inputValue.mValue };
     ActionData newActionData{ actionData };
     newActionData.mCommonData.mTimestamp = inputValue.mTimestamp;
@@ -26,7 +26,12 @@ ActionData ActionContext::ApplyInput(const ActionDefinition& actionDefinition, c
                 && static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES) >= static_cast<uint8_t>(AxisFilter::X_POS)
                 && "Action must support change values or state values and have one or more axes"
             );
-            if(actionDefinition.mValueType == ActionValueType::STATE) {
+            if(
+                actionDefinition.mValueType == ActionValueType::STATE
+                // affect only if the old value and the new one belong to the 
+                // same axis (or is 0.f)
+                && valueSign * actionData.mOneAxisActionData.mValue >= 0.f
+            ) {
                 newActionData.mOneAxisActionData.mValue = newValue;
             } else if (actionDefinition.mValueType == ActionValueType::CHANGE) {
                 newActionData.mOneAxisActionData.mValue += newValue;
@@ -41,7 +46,10 @@ ActionData ActionContext::ApplyInput(const ActionDefinition& actionDefinition, c
                 && static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES) >= static_cast<uint8_t>(AxisFilter::Y_POS)
                 && "Action must support change values or state values and have two or more axes"
             );
-            if(actionDefinition.mValueType == ActionValueType::STATE) {
+            if(
+                actionDefinition.mValueType == ActionValueType::STATE
+                && valueSign * actionData.mTwoAxisActionData.mValue.y >= 0.f
+            ) {
                 newActionData.mTwoAxisActionData.mValue.y = newValue;
             } else if (actionDefinition.mValueType == ActionValueType::CHANGE) {
                 newActionData.mTwoAxisActionData.mValue.y += newValue;
@@ -56,7 +64,10 @@ ActionData ActionContext::ApplyInput(const ActionDefinition& actionDefinition, c
                 && (static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES) == static_cast<uint8_t>(AxisFilter::Z_POS))
                 && "Action must support change or state values and must have three axes"
             );
-            if(actionDefinition.mValueType== ActionValueType::STATE) {
+            if(
+                actionDefinition.mValueType== ActionValueType::STATE
+                && valueSign * actionData.mThreeAxisActionData.mValue.z >= 0.f
+            ) {
                 newActionData.mThreeAxisActionData.mValue.z = newValue;
             } else if (actionDefinition.mValueType == ActionValueType::CHANGE) {
                 newActionData.mThreeAxisActionData.mValue.z += newValue;
@@ -71,12 +82,15 @@ ActionData ActionContext::ApplyInput(const ActionDefinition& actionDefinition, c
     // Normalize/clamp non-location action states with magnitudes greater than 1.f.
     if(
         newActionData.mCommonData.mType != ActionType::BUTTON
+        // Change values are kept as is
         && !(actionDefinition.mAttributes&InputAttributes::HAS_CHANGE_VALUE)
         // location states are kept at their full range (otherwise we'd miss ~1/3rd of
         // the window)
         && !(actionDefinition.mAttributes&InputAttributes::STATE_IS_LOCATION)
-        && newActionData.mThreeAxisActionData.mValue.length() > 1.f
+        && glm::length(newActionData.mThreeAxisActionData.mValue) > 1.f
     ) {
+        // NOTE: in order for this to work, we need action data to guarantee
+        // that unused dimensions have a value of 0.f
         newActionData.mThreeAxisActionData.mValue = glm::normalize(newActionData.mThreeAxisActionData.mValue);
     }
 
@@ -151,14 +165,6 @@ void ActionContext::registerInputBind(const std::string& forAction, AxisFilter t
         )
         && "The axis specified is not among those available for this action"
     );
-    assert(
-        (
-            ((withInput.mMainControl.mAxisFilter&AxisFilterMask::CHANGE) && (actionDefinition.mValueType == ActionValueType::CHANGE))
-            || (!(withInput.mMainControl.mAxisFilter&AxisFilterMask::CHANGE) && (actionDefinition.mValueType == ActionValueType::STATE))
-        )
-        && "Input filter type and action value type must both be the same, i.e., Change or State."
-    );
-
     mInputBindToAction.emplace(withInput, std::pair<AxisFilter, ActionDefinition>{targetAxis, actionDefinition});
     mActionToInputBinds[actionDefinition].emplace(withInput);
     mInputManager.registerInputCombo(mName, withInput);
@@ -220,10 +226,13 @@ void ActionContext::mapToAction(const UnmappedInputValue& inputValue, const Inpu
     const ActionDefinition& actionDefinition { mActions.find(comboToActionIter->second.second)->first};
     const AxisFilter& axisFilter { comboToActionIter->second.first };
 
-    // Get data from the front of the queue if this input happens 
-    // to be a component of the same action. Otherwise, construct a
-    // fresh actionData struct
-    ActionData actionData { static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES) };
+    // Action state values should be retrieved from memory, while change 
+    // values should be made fresh
+    ActionData actionData { 
+        (actionDefinition.mAttributes&InputAttributes::HAS_CHANGE_VALUE)?
+        ActionData { static_cast<uint8_t>(actionDefinition.mAttributes&N_AXES) }:
+        mActions[actionDefinition] 
+    };
     if(
         !mPendingTriggeredActions.empty()
         && actionDefinition == mPendingTriggeredActions.back().first

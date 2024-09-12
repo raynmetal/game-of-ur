@@ -116,48 +116,13 @@ void FlyCamera::handleAction(const ActionData& actionData, const ActionDefinitio
     if(actionDefinition.mName == "Rotate") {
         updateYaw(actionData.mTwoAxisActionData.mValue.x);
         updatePitch(actionData.mTwoAxisActionData.mValue.y);
-        return;
+    } else if (actionDefinition.mName == "Move") {
+        mVelocity.x = CAMERA_SPEED * actionData.mTwoAxisActionData.mValue.x;
+        mVelocity.z = CAMERA_SPEED * actionData.mTwoAxisActionData.mValue.y;
+    } else if (actionDefinition.mName == "UpdateFOV") {
+        float dFOV { static_cast<float>(-actionData.mOneAxisActionData.mValue) };
+        updateFOV(dFOV);
     }
-    // if(event.type == SDL_MOUSEWHEEL){
-    //     float dFOV { -static_cast<float>(event.wheel.y) };
-    //     updateFOV(dFOV);
-    //     return;
-    // }
-
-    // //Handle keydown
-    // if(event.type == SDL_KEYDOWN){
-    //     switch(event.key.keysym.sym) {
-    //         case SDLK_w:
-    //             mVelocity.z = CAMERA_SPEED;
-    //         break;
-    //         case SDLK_a:
-    //             mVelocity.x = -CAMERA_SPEED;
-    //         break;
-    //         case SDLK_s:
-    //             mVelocity.z = -CAMERA_SPEED;
-    //         break;
-    //         case SDLK_d:
-    //             mVelocity.x = CAMERA_SPEED;
-    //         break;
-    //     }
-    //     return;
-    // }
-
-    // // Handle keyup
-    // if(event.type == SDL_KEYUP) {
-    //     switch(event.key.keysym.sym) {
-    //         // handle camera movements
-    //         case SDLK_w:
-    //         case SDLK_s:
-    //             mVelocity.z = 0.f;
-    //         break;
-    //         case SDLK_a:
-    //         case SDLK_d:
-    //             mVelocity.x = 0.f;
-    //         break;
-    //     }
-    //     return;
-    // }
 }
 
 void FlyCamera::setActive(bool active) {
@@ -193,7 +158,7 @@ void FlyCamera::updateYaw(float dYaw) {
 }
 
 void FlyCamera::updateFOV(float dFOV) {
-    mFOV += mZoomSensitivity + dFOV;
+    mFOV += mZoomSensitivity * dFOV;
     if(mFOV > MAX_FOV) mFOV = MAX_FOV;
     else if(mFOV < MIN_FOV) mFOV = MIN_FOV;
 }
