@@ -82,6 +82,21 @@ int main(int argc, char* argv[]) {
         (1&InputAttributes::N_AXES)
         | InputAttributes::HAS_CHANGE_VALUE
     );
+
+    // Create an action context for render controls
+    inputManager.registerActionContext("Graphics");
+    inputManager["Graphics"].registerAction(
+        "UpdateGamma",
+        (1&InputAttributes::N_AXES)
+        | InputAttributes::HAS_CHANGE_VALUE
+    );
+    inputManager["Graphics"].registerAction(
+        "UpdateExposure",
+        (1&InputAttributes::N_AXES)
+        | InputAttributes::HAS_CHANGE_VALUE
+    );
+
+
     // Map input events to the camera actions just defined
     inputManager["Camera"].registerInputBind(
         "Rotate", AxisFilter::X_POS, // Action and target axis
@@ -289,6 +304,68 @@ int main(int argc, char* argv[]) {
         }
     );
 
+    // Map input events to render system controls
+    inputManager["Graphics"].registerInputBind(
+        "UpdateGamma", AxisFilter::X_NEG,
+        InputCombo {
+            .mMainControl {
+                .mControl {
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_j },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter { AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS}
+        }
+    );
+    inputManager["Graphics"].registerInputBind(
+        "UpdateGamma", AxisFilter::X_POS,
+        InputCombo {
+            .mMainControl {
+                .mControl {
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_k },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter { AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS}
+        }
+    );
+    inputManager["Graphics"].registerInputBind(
+        "UpdateExposure", AxisFilter::X_NEG,
+        InputCombo {
+            .mMainControl {
+                .mControl {
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_u },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter { AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS}
+        }
+    );
+    inputManager["Graphics"].registerInputBind(
+        "UpdateExposure", AxisFilter::X_POS,
+        InputCombo {
+            .mMainControl {
+                .mControl {
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_i },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter { AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS}
+        }
+    );
+
     const float sqrt2 { sqrt(2.f) };
     std::vector<Entity> lightEntities(3);
 
@@ -384,6 +461,8 @@ int main(int argc, char* argv[]) {
     inputManager["Camera"].registerActionHandler("ToggleControl", camera);
     inputManager["Camera"].registerActionHandler("Move", camera);
     inputManager["Camera"].registerActionHandler("UpdateFOV", camera);
+    inputManager["Graphics"].registerActionHandler("UpdateGamma", gSystemManager.getSystem<RenderSystem>());
+    inputManager["Graphics"].registerActionHandler("UpdateExposure", gSystemManager.getSystem<RenderSystem>());
 
     float exposure { 1.f };
     float gamma { 2.2f };

@@ -6,12 +6,13 @@
 #include <string>
 #include <array>
 
+#include "input_system/input_system.hpp"
 #include "simple_ecs.hpp"
 #include "shapegen.hpp"
 #include "render_stage.hpp"
 #include "fly_camera.hpp"
 
-class RenderSystem: public System {
+class RenderSystem: public System,  public IActionHandler {
 public:
     class LightQueue: public System {
     public:
@@ -30,8 +31,12 @@ public:
 
     void updateCameraMatrices(const FlyCamera& camera);
 
+    void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override;
+
     /* Set the texture to be rendered to the screen by its index */
     void setScreenTexture (std::size_t n);
+    void setGamma(float gamma);
+    void setExposure(float exposure);
     std::size_t getCurrentScreenTexture ();
 
 private:
@@ -46,6 +51,12 @@ private:
     BlurRenderStage mBlurRenderStage;
     TonemappingRenderStage mTonemappingRenderStage;
     ScreenRenderStage mScreenRenderStage;
+
+    float mGamma { 2.f };
+    float mExposure { 1.f };
+
+    float mGammaStep { .1f };
+    float mExposureStep { .1f };
 };
 
 #endif

@@ -12,6 +12,11 @@
 
 #include "render_system.hpp"
 
+constexpr float MAX_GAMMA  { 3.f };
+constexpr float MIN_GAMMA { 1.6f };
+constexpr float MAX_EXPOSURE { 15.f };
+constexpr float MIN_EXPOSURE { 0.f };
+
 RenderSystem::RenderSystem():
     mGeometryRenderStage { "src/shader/geometryShader.json" },
     mLightingRenderStage { "src/shader/lightingShader.json" },
@@ -25,7 +30,6 @@ RenderSystem::RenderSystem():
     lightQueueSignature.set(gComponentManager.getComponentType<LightEmissionData>(), true);
 
     Signature opaqueObjectQueueSignature {};
-    // opaqueObjectQueueSignature.set(gComponentManager.getComponentType<Placement>(), true);
     opaqueObjectQueueSignature.set(gComponentManager.getComponentType<Transform>(), true);
     opaqueObjectQueueSignature.set(gComponentManager.getComponentType<ModelHandle>(), true);
 
@@ -86,6 +90,10 @@ RenderSystem::RenderSystem():
     mTonemappingRenderStage.attachTexture("litScene", mLightingRenderStage.getRenderTarget("litScene"));
     mTonemappingRenderStage.attachTexture("bloomEffect", mBlurRenderStage.getRenderTarget("pingBuffer"));
     mScreenRenderStage.attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+
+    // Set initial configuration for the tonemapper
+    setGamma(mGamma);
+    setExposure(mExposure);
 
     // Functions containing a set of asserts, ensuring that valid connections have
     // been made between the rendering stages
@@ -176,5 +184,36 @@ void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage) {
                 entityTransform.mModelMatrix:
                 buildModelMatrix(placement.mPosition, {}, placement.mScale)
         });
+    }
+}
+
+void RenderSystem::setGamma(float gamma) {
+    if(gamma > MAX_GAMMA) gamma = MAX_GAMMA;
+    else if (gamma < MIN_GAMMA) gamma = MIN_GAMMA;
+
+    mTonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
+        "gamma", gamma
+    );
+
+    mGamma = gamma;
+}
+
+void RenderSystem::setExposure(float exposure) {
+    if(exposure > MAX_EXPOSURE) exposure = MAX_EXPOSURE;
+    else if (exposure < MIN_EXPOSURE) exposure = MIN_EXPOSURE;
+
+    mTonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
+        "exposure", exposure
+    );
+
+    mExposure = exposure;
+}
+
+void RenderSystem::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    if(actionDefinition.mName == "UpdateGamma") {
+        setGamma(mGamma + actionData.mOneAxisActionData.mValue*mGammaStep);
+    }
+    else if(actionDefinition.mName == "UpdateExposure") {
+        setExposure(mExposure + actionData.mOneAxisActionData.mValue*mExposureStep);
     }
 }
