@@ -106,8 +106,8 @@ RenderSystem::RenderSystem():
     glClearColor(0.f, 0.f, 0.f, 1.f);
 }
 
-void RenderSystem::setScreenTexture(std::size_t n) {
-    mCurrentScreenTexture = n % mScreenTextures.size();
+void RenderSystem::renderNextTexture() {
+    mCurrentScreenTexture = (mCurrentScreenTexture + 1) % mScreenTextures.size();
     mScreenRenderStage.attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
 }
 
@@ -215,5 +215,8 @@ void RenderSystem::handleAction(const ActionData& actionData, const ActionDefini
     }
     else if(actionDefinition.mName == "UpdateExposure") {
         setExposure(mExposure + actionData.mOneAxisActionData.mValue*mExposureStep);
+    }
+    else if(actionDefinition.mName == "RenderNextTexture") {
+        renderNextTexture();
     }
 }

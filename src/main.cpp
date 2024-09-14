@@ -60,6 +60,14 @@ int main(int argc, char* argv[]) {
     gSystemManager.registerSystem<RenderSystem>(Signature{});
     gSystemManager.registerSystem<SceneSystem>(sceneSystemSignature);
 
+    // TODO: Reimplement the camera through the system manager. There's no real reason,
+    // with scene node and placement components and any new component types we might create,
+    // for it to be doing its own thing here.
+    std::shared_ptr<FlyCamera> camera { std::make_shared<FlyCamera>(FlyCamera {glm::vec3(0.f), 0.f, 0.f, 0.f}) };
+
+    // TODO: Move all input registration and scene setup code elsewhere and have them read, hopefully, from
+    // some kind of plaintext config file
+
     // Create the camera action context, and define what actions are available to it
     inputManager.registerActionContext("Camera");
     inputManager["Camera"].registerAction(
@@ -94,6 +102,10 @@ int main(int argc, char* argv[]) {
         "UpdateExposure",
         (1&InputAttributes::N_AXES)
         | InputAttributes::HAS_CHANGE_VALUE
+    );
+    inputManager["Graphics"].registerAction(
+        "RenderNextTexture",
+        InputAttributes::HAS_BUTTON_VALUE
     );
 
 
@@ -365,6 +377,21 @@ int main(int argc, char* argv[]) {
             .mTrigger { InputCombo::Trigger::ON_PRESS}
         }
     );
+    inputManager["Graphics"].registerInputBind(
+        "RenderNextTexture", AxisFilter::SIMPLE,
+        InputCombo {
+            .mMainControl {
+                .mControl {
+                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
+                    .mControl { SDLK_TAB },
+                    .mDeviceType { DeviceType::KEYBOARD },
+                    .mControlType { ControlType::BUTTON },
+                },
+                .mAxisFilter { AxisFilter::SIMPLE },
+            },
+            .mTrigger { InputCombo::Trigger::ON_PRESS }
+        }
+    );
 
     const float sqrt2 { sqrt(2.f) };
     std::vector<Entity> lightEntities(3);
@@ -455,7 +482,6 @@ int main(int argc, char* argv[]) {
         parentEntity = boardPieces[i].getID();
     }
 
-    std::shared_ptr<FlyCamera> camera { std::make_shared<FlyCamera>(FlyCamera {glm::vec3(0.f), 0.f, 0.f, 0.f}) };
     camera->setLookSensitivity(20.f);
     inputManager["Camera"].registerActionHandler("Rotate", camera);
     inputManager["Camera"].registerActionHandler("ToggleControl", camera);
@@ -463,9 +489,7 @@ int main(int argc, char* argv[]) {
     inputManager["Camera"].registerActionHandler("UpdateFOV", camera);
     inputManager["Graphics"].registerActionHandler("UpdateGamma", gSystemManager.getSystem<RenderSystem>());
     inputManager["Graphics"].registerActionHandler("UpdateExposure", gSystemManager.getSystem<RenderSystem>());
-
-    float exposure { 1.f };
-    float gamma { 2.2f };
+    inputManager["Graphics"].registerActionHandler("RenderNextTexture", gSystemManager.getSystem<RenderSystem>());
 
     gSystemManager.getSystem<SceneSystem>()->rebuildGraph();
     gSystemManager.getSystem<SceneSystem>()->updateTransforms();
@@ -485,53 +509,23 @@ int main(int argc, char* argv[]) {
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
+            // TODO: We probably want to locate this elsewhere? I'm not sure. Let's see.
             if(
-                event.type == SDL_QUIT || (
-                    event.type == SDL_KEYUP
-                    && event.key.keysym.sym == SDLK_ESCAPE
-                )
+                event.type == SDL_QUIT
             ) {
                 quit = true;
                 break;
             }
-            if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_TAB) {
-                const std::size_t currScreenTexture { gSystemManager.getSystem<RenderSystem>()->getCurrentScreenTexture() };
-                gSystemManager.getSystem<RenderSystem>()->setScreenTexture(1 + currScreenTexture);
+
+            else {
+                inputManager.queueInput(event);
             }
-            inputManager.queueInput(event);
-            // if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_PERIOD) {
-            //     exposure += .1f;
-            //     tonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
-            //         "exposure", exposure
-            //     );
-            // }
-            // if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_COMMA) {
-            //     if (exposure < .1f) exposure = 0.f;
-            //     else exposure -= .1f; 
-            //     tonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
-            //         "exposure", exposure
-            //     );
-            // }
-            // if (event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_j) {
-            //     gamma -= .1f;
-            //     if(gamma < 1.6f) gamma = 1.6f;
-            //     tonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
-            //         "gamma", gamma 
-            //     );
-            // }
-            // else if(event.type == SDL_KEYUP && event.key.keysym.sym == SDLK_k) {
-            //     gamma += .1f;
-            //     if(gamma > 3.f) gamma = 3.f;
-            //     tonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
-            //         "gamma", gamma 
-            //     );
-            // }
-            // camera.processInput(event);
         }
         if(quit) break;
 
+        // Get references to the entities I'm going to frequently update
         Entity& flashlight { lightEntities[0] };
-        Entity& sunlight {lightEntities[2]};
+        Entity& sunlight { lightEntities[2] };
 
         // update time related variables
         GLuint currentTicks { SDL_GetTicks() };

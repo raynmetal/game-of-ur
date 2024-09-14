@@ -33,8 +33,8 @@ public:
 
     void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override;
 
-    /* Set the texture to be rendered to the screen by its index */
-    void setScreenTexture (std::size_t n);
+    /* Set the texture to be rendered to the screen by its relative index */
+    void renderNextTexture ();
     void setGamma(float gamma);
     void setExposure(float exposure);
     std::size_t getCurrentScreenTexture ();
