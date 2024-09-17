@@ -10,6 +10,8 @@
 #include <unordered_map>
 #include <set>
 
+#include "util.hpp"
+
 /* 
   See Austin Morlan's implementation of a simple ECS, where entities are
 simple indices into various component arrays, each of which are kept tightly
@@ -22,7 +24,7 @@ packed:
 class from Morlan's implementation
 */
 using EntityID = std::uint64_t;
-constexpr EntityID kMaxEntities { 30000 };
+constexpr EntityID kMaxEntities { 300000 };
 
 /*
   A simple integer, used as an index into the Signature bitset
@@ -48,16 +50,26 @@ public:
 };
 
 template<typename T>
+class Interpolator {
+public:
+    T operator() (const T& previousState, const T& nextState, float simulationProgress=1.f) const;
+private:
+    RangeMapperLinear mProgressLimits {0.f, 1.f, 0.f, 1.f};
+};
+
+template<typename T>
 class ComponentArray : public IComponentArray {
 public:
-    void addComponent(EntityID entityID, T component);
+    void addComponent(EntityID entityID, const T& component);
     void removeComponent(EntityID entityID);
-    T& getComponent(EntityID entityID);
+    T getComponent(EntityID entityID, float simulationProgress=1.f) const;
+    void updateComponent(EntityID entityID, const T& newValue);
     virtual void handleEntityDestroyed(EntityID entityID) override;
     virtual void copyComponent(EntityID to, EntityID from) override;
 
 private:
-    std::vector<T> mComponents {};
+    std::vector<T> mComponentsNext {};
+    std::vector<T> mComponentsPrevious {};
     std::unordered_map<EntityID, std::size_t> mEntityToComponentIndex {};
     std::unordered_map<std::size_t, EntityID> mComponentToEntity {};
 };
@@ -73,13 +85,16 @@ public:
     Signature getSignature(EntityID entityID);
 
     template<typename T>
-    void addComponent(EntityID entityID, T component);
+    void addComponent(EntityID entityID, const T& component);
 
     template<typename T>
     void removeComponent(EntityID entityID);
 
     template<typename T>
-    T& getComponent(EntityID entityID);
+    T getComponent(EntityID entityID, float simulationProgress=1.f) const;
+
+    template<typename T>
+    void updateComponent(EntityID entityID, const T& newValue);
 
     template<typename T>
     void copyComponent(EntityID to, EntityID from);
@@ -96,10 +111,10 @@ private:
     std::unordered_map<EntityID, Signature> mEntityToSignature {};
 
     template<typename T>
-    std::shared_ptr<ComponentArray<T>> getComponentArray() {
+    std::shared_ptr<ComponentArray<T>> getComponentArray() const {
         const std::size_t componentHash { typeid(T).hash_code() };
         assert(mHashToComponentType.find(componentHash) != mHashToComponentType.end() && "This component type has not been registered");
-        return std::dynamic_pointer_cast<ComponentArray<T>>(mHashToComponentArray[componentHash]);
+        return std::dynamic_pointer_cast<ComponentArray<T>>(mHashToComponentArray.at(componentHash));
     }
 };
 
@@ -173,7 +188,10 @@ public:
     void removeComponent();
 
     template<typename T> 
-    T& getComponent();
+    T getComponent(float simulationProgress=1.f) const;
+
+    template<typename T>
+    void updateComponent(const T& newValue);
 
     template<typename T>
     void enableSystem();
@@ -191,12 +209,20 @@ private:
 };
 
 template<typename T>
-void ComponentArray<T>::addComponent(EntityID entityID, T component) {
+T Interpolator<T>::operator() (const T& previousState, const T& nextState, float simulationProgress) const {
+    // Clamp progress to acceptable values
+    simulationProgress = mProgressLimits(simulationProgress);
+    return simulationProgress * nextState + (1.f - simulationProgress) * previousState;
+}
+
+template<typename T>
+void ComponentArray<T>::addComponent(EntityID entityID, const T& component) {
     assert(mEntityToComponentIndex.find(entityID) == mEntityToComponentIndex.end() && "Component already added for this entity");
 
-    std::size_t newComponentID { mComponents.size() };
+    std::size_t newComponentID { mComponentsNext.size() };
 
-    mComponents.push_back(component);
+    mComponentsNext.push_back(component);
+    mComponentsPrevious.push_back(component);
     mEntityToComponentIndex[entityID] = newComponentID;
     mComponentToEntity[newComponentID] = entityID;
 }
@@ -206,11 +232,12 @@ void ComponentArray<T>::removeComponent(EntityID entityID) {
     assert(mEntityToComponentIndex.find(entityID) != mEntityToComponentIndex.end());
 
     const std::size_t removedComponentIndex { mEntityToComponentIndex[entityID] };
-    const std::size_t lastComponentIndex { mComponents.size() - 1 };
+    const std::size_t lastComponentIndex { mComponentsNext.size() - 1 };
     const std::size_t lastComponentEntity { mComponentToEntity[lastComponentIndex] };
 
     // store last component in the removed components place
-    mComponents[removedComponentIndex] = mComponents[lastComponentIndex];
+    mComponentsNext[removedComponentIndex] = mComponentsNext[lastComponentIndex];
+    mComponentsNext[removedComponentIndex] = mComponentsPrevious[lastComponentIndex];
     // map the last component's entity to its new index
     mEntityToComponentIndex[lastComponentEntity] = removedComponentIndex;
     // map the removed component's index to the last entity
@@ -218,16 +245,26 @@ void ComponentArray<T>::removeComponent(EntityID entityID) {
 
     // erase all traces of the removed entity's component and other
     // invalid references
-    mComponents.pop_back();
+    mComponentsNext.pop_back();
+    mComponentsPrevious.pop_back();
     mEntityToComponentIndex.erase(entityID);
     mComponentToEntity.erase(lastComponentIndex);
 }
 
 template <typename T>
-T& ComponentArray<T>::getComponent(EntityID entityID) {
+T ComponentArray<T>::getComponent(EntityID entityID, float simulationProgress) const {
+    static Interpolator<T> interpolator{};
     assert(mEntityToComponentIndex.find(entityID) != mEntityToComponentIndex.end());
     std::size_t componentID { mEntityToComponentIndex.at(entityID) };
-    return mComponents[componentID];
+    return interpolator(mComponentsPrevious[componentID], mComponentsNext[componentID], simulationProgress);
+}
+
+template <typename T>
+void ComponentArray<T>::updateComponent(EntityID entityID, const T& newComponent) {
+    assert(mEntityToComponentIndex.find(entityID) != mEntityToComponentIndex.end());
+    std::size_t componentID { mEntityToComponentIndex.at(entityID) };
+    mComponentsPrevious[componentID] = mComponentsNext[componentID];
+    mComponentsNext[componentID] = newComponent;
 }
 
 template <typename T>
@@ -241,10 +278,13 @@ template <typename T>
 void ComponentArray<T>::copyComponent(EntityID to, EntityID from) {
     if(mEntityToComponentIndex.find(from) != mEntityToComponentIndex.end()) {
         if(mEntityToComponentIndex.find(to) == mEntityToComponentIndex.end()) {
-            addComponent(to, mComponents[mEntityToComponentIndex[from]]);
+            // create a local copy of the component as container may be reallocated
+            T componentValue { mComponentsNext[mEntityToComponentIndex[from]] };
+            addComponent(to, componentValue); 
         } else {
-            mComponents[mEntityToComponentIndex[to]] = mComponents[mEntityToComponentIndex[from]];
+            mComponentsNext[mEntityToComponentIndex[to]] = mComponentsNext[mEntityToComponentIndex[from]]; // overwriting existing values is fine
         }
+        mComponentsPrevious[mEntityToComponentIndex[to]] = mComponentsPrevious[mEntityToComponentIndex[from]];
     }
 }
 
@@ -267,7 +307,7 @@ ComponentType ComponentManager::getComponentType() {
 }
 
 template<typename T>
-void ComponentManager::addComponent(EntityID entityID, T component) {
+void ComponentManager::addComponent(EntityID entityID, const T& component) {
     getComponentArray<T>()->addComponent(entityID, component);
     mEntityToSignature[entityID].set(getComponentType<T>(), true);
 }
@@ -279,8 +319,13 @@ void ComponentManager::removeComponent(EntityID entityID) {
 }
 
 template<typename T>
-T& ComponentManager::getComponent(EntityID entityID) {
-    return getComponentArray<T>()->getComponent(entityID);
+T ComponentManager::getComponent(EntityID entityID, float simulationProgress) const {
+    return getComponentArray<T>()->getComponent(entityID, simulationProgress);
+}
+
+template<typename T>
+void ComponentManager::updateComponent(EntityID entityID, const T& newValue) {
+    getComponentArray<T>()->updateComponent(entityID, newValue);
 }
 
 template <typename T>
@@ -325,8 +370,13 @@ void Entity::addComponent(const T& component) {
 }
 
 template<typename T>
-T& Entity::getComponent() {
-    return gComponentManager.getComponent<T>(mID);
+T Entity::getComponent(float simulationProgress) const {
+    return gComponentManager.getComponent<T>(mID, simulationProgress);
+}
+
+template<typename T>
+void Entity::updateComponent(const T& newValue) {
+    gComponentManager.updateComponent<T>(mID, newValue);
 }
 
 template <typename T>

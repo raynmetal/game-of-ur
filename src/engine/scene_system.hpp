@@ -47,4 +47,39 @@ private:
     bool cycleDetected(EntityID entityID);
 };
 
+template<>
+inline Placement Interpolator<Placement>::operator() (
+    const Placement& previousState, const Placement& nextState,
+    float simulationProgress
+) const {
+    simulationProgress = mProgressLimits(simulationProgress);
+    return {
+        .mPosition{ (1.f - simulationProgress) * previousState.mPosition + simulationProgress * nextState.mPosition },
+        .mOrientation{ glm::slerp(previousState.mOrientation, nextState.mOrientation, simulationProgress) },
+        .mScale{ (1.f - simulationProgress) * previousState.mScale + simulationProgress * nextState.mScale }
+    };
+}
+
+template<>
+inline Transform Interpolator<Transform>::operator() (
+    const Transform& previousState, const Transform& nextState,
+    float simulationProgress
+) const {
+    simulationProgress = mProgressLimits(simulationProgress);
+    return {
+        previousState.mModelMatrix * (1.f - simulationProgress)
+        + nextState.mModelMatrix * (simulationProgress)
+    };
+}
+
+template<>
+inline SceneNode Interpolator<SceneNode>::operator() (
+    const SceneNode& previousState, const SceneNode& nextState,
+    float simulationProgress
+) const {
+    // Once a node has been reparented, there's no reason
+    // to think about the old parent
+    return nextState;
+}
+
 #endif

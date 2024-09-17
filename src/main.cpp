@@ -26,6 +26,8 @@
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
 
+const GLuint kSimulationStep{ 1000/30 };
+
 void init();
 void cleanup();
 
@@ -468,8 +470,8 @@ int main(int argc, char* argv[]) {
     for(std::size_t i{0}; i < boardPieces.size(); ++i) {
         boardPieces[i].copy(boardPiece);
 
-        Placement& boardPiecePlacement { boardPieces[i].getComponent<Placement>() };
-        SceneNode& boardPieceSceneNode { boardPieces[i].getComponent<SceneNode>() };
+        Placement boardPiecePlacement { boardPieces[i].getComponent<Placement>() };
+        SceneNode boardPieceSceneNode { boardPieces[i].getComponent<SceneNode>() };
 
         boardPiecePlacement.mPosition.x = 0.f;
         boardPiecePlacement.mPosition.y = 2.f;
@@ -480,6 +482,8 @@ int main(int argc, char* argv[]) {
         // each board piece is the parent of the board piece made in
         // the next iteration
         parentEntity = boardPieces[i].getID();
+        boardPieces[i].updateComponent<Placement>(boardPiecePlacement);
+        boardPieces[i].updateComponent<SceneNode>(boardPieceSceneNode);
     }
 
     camera->setLookSensitivity(20.f);
@@ -496,6 +500,13 @@ int main(int argc, char* argv[]) {
 
     //Timing related variables
     GLuint previousTicks { SDL_GetTicks() };
+    GLuint simulationTicks { previousTicks };
+
+    //Current frame
+    GLuint simFrame {0};
+    GLuint renderFrame {0};
+    
+    //Framerate measuring variables
     float framerate {0.f};
     const float frameratePoll {1.f};
     float framerateCounter {0.f};
@@ -522,6 +533,7 @@ int main(int argc, char* argv[]) {
             }
         }
         if(quit) break;
+        ++renderFrame;
 
         // Get references to the entities I'm going to frequently update
         Entity& flashlight { lightEntities[0] };
@@ -529,43 +541,54 @@ int main(int argc, char* argv[]) {
 
         // update time related variables
         GLuint currentTicks { SDL_GetTicks() };
+
+        // Apply simulation updates, if possible
+        while(currentTicks - simulationTicks >= kSimulationStep) {
+            ++simFrame;
+            simulationTicks += kSimulationStep;
+
+            // Send inputs, if any, to their various listeners
+            inputManager.dispatch(simulationTicks);
+
+            // update objects according to calculated delta
+            camera->update(kSimulationStep/1000.f);
+            Placement flashlightPlacement { flashlight.getComponent<Placement>() };
+            Placement sunlightPlacement { sunlight.getComponent<Placement>() };
+            flashlightPlacement.mPosition = glm::vec4(camera->getPosition(), 1.f);
+            flashlightPlacement.mOrientation = glm::quat_cast(camera->getRotationMatrix());
+            sunlightPlacement.mOrientation = glm::rotate(sunlight.getComponent<Placement>().mOrientation, kSimulationStep/(1000.f*10.f), {0.f, 1.f, 0.f});
+            flashlight.updateComponent<Placement>(flashlightPlacement);
+            sunlight.updateComponent<Placement>(sunlightPlacement);
+            gSystemManager.getSystem<SceneSystem>()->markDirty(flashlight.getID());
+            gSystemManager.getSystem<SceneSystem>()->markDirty(sunlight.getID());
+            for(Entity& piece: boardPieces) {
+                Placement piecePlacement { piece.getComponent<Placement>() };
+                piecePlacement.mPosition.z = glm::sin(glm::radians(currentTicks/10.f + piece.getID()*45.f));
+                piece.updateComponent<Placement>(piecePlacement);
+                gSystemManager.getSystem<SceneSystem>()->markDirty(piece.getID());
+            }
+        }
+
+        // Measure average framerate, biased towards previously measured framerate
         float deltaTime {
             (currentTicks - previousTicks)/1000.f
         };
         previousTicks = currentTicks;
         framerate = framerate * .8f + .2f/(deltaTime > .0001f? deltaTime: .0001f);
         framerateCounter += deltaTime;
-        if(framerateCounter > frameratePoll) {
+        while(framerateCounter > frameratePoll) {
             std::cout << "Framerate: " << framerate << " fps\n";
             framerateCounter -= frameratePoll;
         }
 
-        // Send inputs, if any, to their various listeners
-        inputManager.dispatch(currentTicks);
+        // Calculate progress towards the next simulation step
+        const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / kSimulationStep };
+        std::cout << "Frame " << renderFrame << ", Simulation Frame " << simFrame << " -- Progress to next sim frame: " << simulationProgress*100.f << "%\n";
+        std::cout << "Framerate: " << framerate << " fps\n";
 
-        // update objects according to calculated delta
-        camera->update(deltaTime);
-        flashlight.getComponent<Placement>().mPosition = glm::vec4(camera->getPosition(), 1.f);
-        flashlight.getComponent<Placement>().mOrientation = glm::quat_cast(camera->getRotationMatrix());
-        gSystemManager.getSystem<SceneSystem>()->markDirty(flashlight.getID());
-        sunlight.getComponent<Placement>().mOrientation = glm::rotate(sunlight.getComponent<Placement>().mOrientation, deltaTime/10.f, {0.f, 1.f, 0.f});
-        gSystemManager.getSystem<SceneSystem>()->markDirty(sunlight.getID());
-        for(Entity& piece: boardPieces) {
-            auto& piecePlacement { piece.getComponent<Placement>() };
-            piecePlacement.mPosition.z = glm::sin(glm::radians(currentTicks/10.f + piece.getID()*45.f));
-            gSystemManager.getSystem<SceneSystem>()->markDirty(piece.getID());
-        }
+        // Render a frame
         gSystemManager.getSystem<SceneSystem>()->updateTransforms();
         gSystemManager.getSystem<RenderSystem>()->updateCameraMatrices(*camera);
-
-        GLenum error = glGetError();
-        if(error!= GL_FALSE) {
-            glewGetErrorString(error);
-            std::cout << "Error occurred during mesh attribute setting: "  << error
-                << ":" << glewGetErrorString(error) << std::endl;
-            throw error;
-        }
-
         gSystemManager.getSystem<RenderSystem>()->execute();
     }
 

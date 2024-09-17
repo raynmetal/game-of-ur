@@ -24,25 +24,26 @@ void SceneSystem::updateTransforms() {
             if(currentEntity != kMaxEntities){
                 currentSceneNode = gComponentManager.getComponent<SceneNode>(currentEntity);
 
-                Placement& currentPlacement { gComponentManager.getComponent<Placement>(currentEntity) };
-                Transform& currentTransform { gComponentManager.getComponent<Transform>(currentEntity) };
+                Placement currentPlacement { gComponentManager.getComponent<Placement>(currentEntity) };
                 Transform parentTransform { 
                     currentSceneNode.mParent != kMaxEntities? 
                         gComponentManager.getComponent<Transform>(currentSceneNode.mParent):
                         Transform{ glm::mat4{1.f} }
                 };
 
-                currentTransform = {
-                    (currentSceneNode.mRelativeTo == RelativeTo::Parent?
-                        parentTransform.mModelMatrix:
-                        glm::mat4{ 1.f }
-                    )
-                    * buildModelMatrix(
-                        currentPlacement.mPosition,
-                        currentPlacement.mOrientation,
-                        currentPlacement.mScale
-                    )
-                };
+                gComponentManager.updateComponent<Transform>(currentEntity, 
+                    {
+                        (currentSceneNode.mRelativeTo == RelativeTo::Parent?
+                            parentTransform.mModelMatrix:
+                            glm::mat4{ 1.f }
+                        )
+                        * buildModelMatrix(
+                            currentPlacement.mPosition,
+                            currentPlacement.mOrientation,
+                            currentPlacement.mScale
+                        )
+                    }
+                );
             
             // Otherwise, we just want to push all the root node's 
             // children onto the stack
@@ -72,10 +73,9 @@ void SceneSystem::rebuildGraph() {
     for(EntityID currEntity: getEnabledEntities()) {
         assert(!cycleDetected(currEntity) && "A cycle was detected in this graph.");
 
-        // Retrieve references to this node (and its parents') scene
-        // nodes
-        SceneNode& currSceneNode { gComponentManager.getComponent<SceneNode>(currEntity) };
-        SceneNode& parentSceneNode {
+        // Retrieve this entity's and its parent's scene node
+        SceneNode currSceneNode { gComponentManager.getComponent<SceneNode>(currEntity) };
+        SceneNode parentSceneNode {
             currSceneNode.mParent == kMaxEntities? mRootNode :
                 gComponentManager.getComponent<SceneNode>(currSceneNode.mParent)
         };
@@ -98,6 +98,14 @@ void SceneSystem::rebuildGraph() {
 
         // Connect this node to its parent
         parentSceneNode.mChildren.emplace(currEntity);
+
+        // Update the parent and child
+        if(currSceneNode.mParent == kMaxEntities) {
+            mRootNode = parentSceneNode;
+        } else {
+            gComponentManager.updateComponent<SceneNode>(currSceneNode.mParent, parentSceneNode);
+        }
+        gComponentManager.updateComponent<SceneNode>(currEntity, currSceneNode);
     }
 }
 
@@ -109,24 +117,25 @@ void SceneSystem::markDirty(EntityID entity) {
 
     // Find a dirty predecessor if it exists
     while(currEntity != kMaxEntities && mComputeTransformQueue.find(currEntity) == mComputeTransformQueue.end()) {
-        SceneNode& currSceneNode { gComponentManager.getComponent<SceneNode>(currEntity) };
+        SceneNode currSceneNode { gComponentManager.getComponent<SceneNode>(currEntity) };
         currEntity = currSceneNode.mParent;
     }
-    if(mComputeTransformQueue.find(currEntity) != mComputeTransformQueue.end()) {
+    if(mComputeTransformQueue.find(currEntity) != mComputeTransformQueue.end()) { // dirty predecessor found
         topmostDirtyEntity = currEntity;
     }
     mComputeTransformQueue.emplace(topmostDirtyEntity);
 
-    // Nothing more needs to be done if we found a dirty ancestor
+    // Nothing more needs to be done if we found a dirty ancestor. This entity was due an update
+    // anyway.
     if(topmostDirtyEntity != currEntity) return;
 
-    // Remove children from the dirty queue if they were
-    // present there.
+    // Remove children from the dirty queue, just in case they were marked dirty
+    // before this entity was
     std::stack<EntityID> descendants { {entity} };
     while(!descendants.empty()) {
         currEntity = descendants.top();
         descendants.pop();
-        SceneNode& currSceneNode { currEntity != kMaxEntities?
+        SceneNode currSceneNode { currEntity != kMaxEntities?
             gComponentManager.getComponent<SceneNode>(currEntity):
             mRootNode
         };
@@ -135,7 +144,6 @@ void SceneSystem::markDirty(EntityID entity) {
             descendants.push(child);
         }
     }
-
 }
 
 bool SceneSystem::cycleDetected(EntityID entityID) {
@@ -145,7 +153,7 @@ bool SceneSystem::cycleDetected(EntityID entityID) {
     while(mValidatedEntities.find(currentEntity) == mValidatedEntities.end() && currentEntity != kMaxEntities) {
         assert(getEnabledEntities().find(entityID) != getEnabledEntities().end() && "This entity is not managed by the scene system");
 
-        const SceneNode& currentSceneNode { gComponentManager.getComponent<SceneNode>(entityID) };
+        const SceneNode currentSceneNode { gComponentManager.getComponent<SceneNode>(entityID) };
 
         // if this node entity has already been visited, we've found a cycle
         if(visitedEntities.find(currentEntity) != visitedEntities.end()) return true;

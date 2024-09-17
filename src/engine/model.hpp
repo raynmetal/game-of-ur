@@ -14,6 +14,7 @@
 #include <assimp/material.h>
 
 #include "vertex.hpp"
+#include "simple_ecs.hpp"
 #include "mesh_manager.hpp"
 #include "texture_manager.hpp"
 #include "shader_program_manager.hpp"
@@ -106,5 +107,14 @@ private:
 
 friend class ResourceManager<StaticModel>;
 };
+
+template<>
+inline ResourceHandle<StaticModel> Interpolator<ResourceHandle<StaticModel>>::operator() (
+    const ResourceHandle<StaticModel>& previousState,
+    const ResourceHandle<StaticModel>& nextState,
+    float simulationProgress
+) const {
+    return nextState;
+}
 
 #endif

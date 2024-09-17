@@ -11,6 +11,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "simple_ecs.hpp"
 #include "mesh_manager.hpp"
 #include "shapegen.hpp"
 #include "resource_manager.hpp"
@@ -80,5 +81,24 @@ private:
     std::vector<LightPackedData> mLightData;
 };
 
+template<>
+inline LightEmissionData Interpolator<LightEmissionData>::operator() (
+    const LightEmissionData& previousState,
+    const LightEmissionData& nextState,
+    float simulationProgress
+) const {
+    simulationProgress = mProgressLimits(simulationProgress);
+    LightEmissionData interpolatedState { previousState };
+
+    interpolatedState.mDiffuseColor += simulationProgress * (nextState.mDiffuseColor - previousState.mDiffuseColor);
+    interpolatedState.mSpecularColor += simulationProgress * (nextState.mSpecularColor - previousState.mSpecularColor);
+    interpolatedState.mAmbientColor += simulationProgress * (nextState.mAmbientColor - previousState.mAmbientColor);
+    interpolatedState.mDecayLinear += simulationProgress * (nextState.mDecayLinear - previousState.mDecayLinear);
+    interpolatedState.mDecayQuadratic += simulationProgress * (nextState.mDecayQuadratic - previousState.mDecayQuadratic);
+    interpolatedState.mCosCutoffInner += simulationProgress * (nextState.mCosCutoffInner - previousState.mCosCutoffInner);
+    interpolatedState.mCosCutoffOuter += simulationProgress * (nextState.mCosCutoffOuter - previousState.mCosCutoffOuter);
+
+    return interpolatedState;
+}
 
 #endif

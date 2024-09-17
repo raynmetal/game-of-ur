@@ -24,7 +24,7 @@ RangeMapperLinear::RangeMapperLinear(
     // within double's range
 }
 
-double RangeMapperLinear::operator() (double value) {
+double RangeMapperLinear::operator() (double value) const {
     // clamp the value to the input range
     if(value > mInputUpperBound) value = mInputUpperBound;
     else if(value < mInputLowerBound) value = mInputLowerBound;

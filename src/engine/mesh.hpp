@@ -10,6 +10,7 @@
 #include "resource_manager.hpp"
 #include <assimp/scene.h>
 
+#include "simple_ecs.hpp"
 #include "vertex.hpp"
 
 /* 
@@ -112,5 +113,14 @@ private:
 
 friend class ResourceManager<BuiltinMesh>;
 };
+
+template<>
+inline ResourceHandle<BuiltinMesh> Interpolator<ResourceHandle<BuiltinMesh>>::operator() (
+    const ResourceHandle<BuiltinMesh>& previousState,
+    const ResourceHandle<BuiltinMesh>& nextState,
+    float simulationProgress
+) const {
+    return nextState;
+}
 
 #endif

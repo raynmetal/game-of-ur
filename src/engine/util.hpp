@@ -11,7 +11,7 @@ public:
         double inputLowerBound, double inputUpperBound,
         double outputLowerBound, double outputUpperBound
     );
-    double operator() (double value);
+    double operator() (double value) const;
 private:
     double mInputLowerBound;
     double mInputUpperBound;
