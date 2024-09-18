@@ -16,18 +16,18 @@ class RenderSystem: public System,  public IActionHandler {
 public:
     class LightQueue: public System {
     public:
-        void enqueueTo(BaseRenderStage& renderStage);
+        void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
     private:
         MeshHandle mSphereMesh { generateSphereMesh(10, 5) };
         MaterialHandle mLightMaterial{};
     };
     class OpaqueQueue: public System {
     public:
-        void enqueueTo(BaseRenderStage& renderStage);
+        void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
     };
 
     RenderSystem();
-    void execute();
+    void execute(float simulationProgress);
 
     void updateCameraMatrices(const FlyCamera& camera);
 

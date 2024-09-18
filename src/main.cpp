@@ -465,6 +465,7 @@ int main(int argc, char* argv[]) {
     });
     boardPiece.addComponent<Transform>({});
     boardPiece.addComponent<SceneNode>({});
+    gSystemManager.getSystem<SceneSystem>()->markDirty(boardPiece.getID());
     std::vector<Entity> boardPieces(20);
     EntityID parentEntity { boardPiece.getID() };
     for(std::size_t i{0}; i < boardPieces.size(); ++i) {
@@ -551,7 +552,6 @@ int main(int argc, char* argv[]) {
             inputManager.dispatch(simulationTicks);
 
             // update objects according to calculated delta
-            camera->update(kSimulationStep/1000.f);
             Placement flashlightPlacement { flashlight.getComponent<Placement>() };
             Placement sunlightPlacement { sunlight.getComponent<Placement>() };
             flashlightPlacement.mPosition = glm::vec4(camera->getPosition(), 1.f);
@@ -563,35 +563,35 @@ int main(int argc, char* argv[]) {
             gSystemManager.getSystem<SceneSystem>()->markDirty(sunlight.getID());
             for(Entity& piece: boardPieces) {
                 Placement piecePlacement { piece.getComponent<Placement>() };
-                piecePlacement.mPosition.z = glm::sin(glm::radians(currentTicks/10.f + piece.getID()*45.f));
+                piecePlacement.mPosition.z = glm::sin(glm::radians(simulationTicks/10.f + piece.getID()*45.f));
                 piece.updateComponent<Placement>(piecePlacement);
                 gSystemManager.getSystem<SceneSystem>()->markDirty(piece.getID());
             }
         }
+        // Calculate progress towards the next simulation step
+        const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / kSimulationStep };
 
         // Measure average framerate, biased towards previously measured framerate
         float deltaTime {
             (currentTicks - previousTicks)/1000.f
         };
         previousTicks = currentTicks;
-        framerate = framerate * .8f + .2f/(deltaTime > .0001f? deltaTime: .0001f);
+        const float framerateBias { .8f };
+        framerate = framerate * (framerateBias) + (1.f - framerateBias)/(deltaTime > .0001f? deltaTime: .0001f);
         framerateCounter += deltaTime;
         while(framerateCounter > frameratePoll) {
+            std::cout << "Frame " << renderFrame << ", Simulation Frame " << simFrame << " -- Progress to next sim frame: " << simulationProgress*100.f << "%\n";
             std::cout << "Framerate: " << framerate << " fps\n";
             framerateCounter -= frameratePoll;
         }
 
-        // Calculate progress towards the next simulation step
-        const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / kSimulationStep };
-        std::cout << "Frame " << renderFrame << ", Simulation Frame " << simFrame << " -- Progress to next sim frame: " << simulationProgress*100.f << "%\n";
-        std::cout << "Framerate: " << framerate << " fps\n";
-
         // Render a frame
+
+        camera->update(deltaTime);
         gSystemManager.getSystem<SceneSystem>()->updateTransforms();
         gSystemManager.getSystem<RenderSystem>()->updateCameraMatrices(*camera);
-        gSystemManager.getSystem<RenderSystem>()->execute();
+        gSystemManager.getSystem<RenderSystem>()->execute(simulationProgress);
     }
-
     // ... and then die
     cleanup();
     return 0;

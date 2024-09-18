@@ -133,12 +133,12 @@ std::size_t RenderSystem::getCurrentScreenTexture() {
     return mCurrentScreenTexture;
 }
 
-void RenderSystem::execute() {
+void RenderSystem::execute(float simulationProgress) {
     // Execute each rendering stage in its proper order
-    gSystemManager.getSystem<OpaqueQueue>()->enqueueTo(mGeometryRenderStage);
+    gSystemManager.getSystem<OpaqueQueue>()->enqueueTo(mGeometryRenderStage, simulationProgress);
     mGeometryRenderStage.execute();
 
-    gSystemManager.getSystem<LightQueue>()->enqueueTo(mLightingRenderStage);
+    gSystemManager.getSystem<LightQueue>()->enqueueTo(mLightingRenderStage, simulationProgress);
     mLightingRenderStage.execute();
 
     mBlurRenderStage.execute();
@@ -148,11 +148,11 @@ void RenderSystem::execute() {
     WindowContextManager::getInstance().swapBuffers();
 }
 
-void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage) {
+void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
     for(EntityID entity: getEnabledEntities()) {
-        Placement placement { gComponentManager.getComponent<Placement>(entity) };
+        Placement placement { gComponentManager.getComponent<Placement>(entity, simulationProgress) };
         ModelHandle modelHandle { gComponentManager.getComponent<ModelHandle>(entity) };
-        Transform entityTransform { gComponentManager.getComponent<Transform>(entity) };
+        Transform entityTransform { gComponentManager.getComponent<Transform>(entity, simulationProgress) };
         const std::vector<MeshHandle>& meshList { modelHandle.getResource().getMeshHandles() };
         const std::vector<MaterialHandle>& materialList { modelHandle.getResource().getMaterialHandles() };
 
@@ -167,14 +167,14 @@ void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage) {
     }
 }
 
-void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage) {
+void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
     MaterialHandle lightMaterialHandle { 
         MaterialManager::getInstance().getResourceHandle("lightMaterial")
     };
     for(EntityID entity: getEnabledEntities()) {
-        Transform entityTransform { gComponentManager.getComponent<Transform>(entity)};
-        Placement placement { gComponentManager.getComponent<Placement>(entity) };
-        LightEmissionData lightEmissionData { gComponentManager.getComponent<LightEmissionData>(entity) };
+        Transform entityTransform { gComponentManager.getComponent<Transform>(entity, simulationProgress)};
+        Placement placement { gComponentManager.getComponent<Placement>(entity, simulationProgress) };
+        LightEmissionData lightEmissionData { gComponentManager.getComponent<LightEmissionData>(entity, simulationProgress) };
         renderStage.submitToRenderQueue(LightRenderUnit {
             mSphereMesh,
             lightMaterialHandle,
