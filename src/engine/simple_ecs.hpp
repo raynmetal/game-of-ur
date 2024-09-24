@@ -35,17 +35,16 @@ using ComponentType = std::uint8_t;
 constexpr ComponentType kMaxComponents { 255 };
 using Signature = std::bitset<kMaxComponents>;
 
-class System;
+class BaseSystem;
 class SystemManager;
 class ComponentManager;
 class Entity;
-
-extern ComponentManager gComponentManager;
-extern SystemManager gSystemManager;
+class SimpleECS;
 
 class IComponentArray {
 public:
     virtual void handleEntityDestroyed(EntityID entityID) = 0;
+    virtual void handleFrameEnd() = 0;
     virtual void copyComponent(EntityID to, EntityID from) = 0;
 };
 
@@ -57,30 +56,50 @@ private:
     RangeMapperLinear mProgressLimits {0.f, 1.f, 0.f, 1.f};
 };
 
+class Entity;
+
+class ComponentManager;
+
 template<typename T>
 class ComponentArray : public IComponentArray {
 public:
+private:
     void addComponent(EntityID entityID, const T& component);
+    /**
+     * Removes the component associated with a specific entity, maintaining
+     * packing but not order.
+     */
     void removeComponent(EntityID entityID);
     T getComponent(EntityID entityID, float simulationProgress=1.f) const;
     void updateComponent(EntityID entityID, const T& newValue);
     virtual void handleEntityDestroyed(EntityID entityID) override;
+    virtual void handleFrameEnd() override;
     virtual void copyComponent(EntityID to, EntityID from) override;
 
-private:
     std::vector<T> mComponentsNext {};
     std::vector<T> mComponentsPrevious {};
     std::unordered_map<EntityID, std::size_t> mEntityToComponentIndex {};
     std::unordered_map<std::size_t, EntityID> mComponentToEntity {};
+friend class ComponentManager;
 };
 
 class ComponentManager {
 public:
+private:
+    ComponentManager() = default;
+
     template<typename T> 
     void registerComponentArray();
 
     template<typename T>
-    ComponentType getComponentType();
+    std::shared_ptr<ComponentArray<T>> getComponentArray() const {
+        const std::size_t componentHash { typeid(T).hash_code() };
+        assert(mHashToComponentType.find(componentHash) != mHashToComponentType.end() && "This component type has not been registered");
+        return std::dynamic_pointer_cast<ComponentArray<T>>(mHashToComponentArray.at(componentHash));
+    }
+
+    template<typename T>
+    ComponentType getComponentType() const; 
 
     Signature getSignature(EntityID entityID);
 
@@ -103,44 +122,76 @@ public:
 
     void handleEntityDestroyed(EntityID entityID);
 
+    void handleFrameEnd();
+
     void unregisterAll();
 
-private:
     std::unordered_map<std::size_t, ComponentType> mHashToComponentType {};
     std::unordered_map<std::size_t, std::shared_ptr<IComponentArray>> mHashToComponentArray {};
     std::unordered_map<EntityID, Signature> mEntityToSignature {};
 
-    template<typename T>
-    std::shared_ptr<ComponentArray<T>> getComponentArray() const {
-        const std::size_t componentHash { typeid(T).hash_code() };
-        assert(mHashToComponentType.find(componentHash) != mHashToComponentType.end() && "This component type has not been registered");
-        return std::dynamic_pointer_cast<ComponentArray<T>>(mHashToComponentArray.at(componentHash));
-    }
+friend class SimpleECS;
 };
 
-class System {
+class BaseSystem {
 public:
-    virtual ~System() = default;
+    virtual ~BaseSystem() = default;
 
-    void enableEntity(EntityID entityID);
-    void disableEntity(EntityID entityID);
+protected:
+    BaseSystem() = default;
+    const std::set<EntityID>& getEnabledEntities();
+
+    template <typename TComponent, typename TSystem>
+    TComponent getComponent(EntityID entityID, float progress=1.f) const;
+
+    template <typename TComponent, typename TSystem>
+    void updateComponent(EntityID entityID, const TComponent& component);
+
+    bool isEnabled(EntityID entityID) const;
+    bool isRegistered(EntityID entityID) const;
+
+private:
     void addEntity(EntityID entityID, bool enabled=true);
     void removeEntity(EntityID entityID);
 
-    bool isEnabled(EntityID entityID);
+    void enableEntity(EntityID entityID);
+    void disableEntity(EntityID entityID);
 
-protected:
-    const std::set<EntityID>& getEnabledEntities();
+    virtual void onCreated(){};
+    virtual void onDestroyed(){};
+    virtual void onEntityEnabled(EntityID entityID){};
+    virtual void onEntityDisabled(EntityID entityID){};
+    virtual void onEntityUpdated(EntityID entityID){};
 
-private:
     std::set<EntityID> mEnabledEntities {};
     std::set<EntityID> mDisabledEntities {};
+
+friend class SystemManager;
+friend class SimpleECS;
+};
+
+template<typename TSystemDerived>
+class System: public BaseSystem {
+protected:
+    template<typename TComponent>
+    TComponent getComponent(EntityID entityID, float progress=1.f) {
+        return BaseSystem::getComponent<TComponent, TSystemDerived>(entityID, progress);
+    }
+
+    template<typename TComponent>
+    void updateComponent(EntityID entityID, const TComponent& component) {
+        BaseSystem::updateComponent<TComponent, TSystemDerived>(entityID, component);
+    }
+private:
 };
 
 class SystemManager {
 public:
+private: 
+    SystemManager() = default;
+
     template<typename TSystem>
-    void registerSystem(Signature signature);
+    void registerSystem(const Signature& signature);
 
     void unregisterAll();
 
@@ -160,35 +211,105 @@ public:
 
     void handleEntityDestroyed(EntityID entityID);
 
-private:
+    void handleEntityUpdated(EntityID entityID, ComponentType updatedComponentType);
+
+    template<typename TSystem>
+    void handleEntityUpdatedBySystem(EntityID entityID, ComponentType updatedComponentType);
+
     std::unordered_map<std::size_t, Signature> mHashToSignature {};
-    std::unordered_map<std::size_t, std::shared_ptr<System>> mHashToSystem {};
+    std::unordered_map<std::size_t, std::shared_ptr<BaseSystem>> mHashToSystem {};
+
+friend class SimpleECS;
+friend class BaseSystem;
+};
+
+class SimpleECS {
+public:
+    template<typename ...TComponent>
+    static void registerComponentTypes();
+
+    template<typename TSystem, typename ...TComponents>
+    static void registerSystem();
+
+    template<typename TSystem>
+    static std::shared_ptr<TSystem> getSystem();
+
+    template<typename ...TComponents>
+    static Entity createEntity(TComponents&& ...components);
+
+    static void cleanup();
+
+    static void endFrame();
+
+private:
+    static SimpleECS& getInstance();
+
+    SimpleECS() = default;
+
+    void copyComponents(EntityID to, EntityID from);
+
+    template<typename ...TComponents>
+    Entity privateCreateEntity(TComponents...components);
+
+    void destroyEntity(EntityID entityID);
+
+    template<typename TSystem>
+    void enableEntity(EntityID entityID);
+
+    template<typename TSystem>
+    void disableEntity(EntityID entityID);
+
+    template<typename TComponent>
+    void addComponent(EntityID entityID, const TComponent& component);
+
+    template<typename TComponent>
+    TComponent getComponent(EntityID entityID, float simulationProgress=1.f) const;
+
+    template<typename TComponent, typename TSystem>
+    TComponent getComponent(EntityID entityID, float simulationProgress=1.f) const;
+
+    template<typename TComponent>
+    void updateComponent(EntityID entityID, const TComponent& newValue);
+
+    template<typename TComponent, typename TSystem>
+    void updateComponent(EntityID entityID, const TComponent& newValue);
+
+    template<typename TComponent>
+    void removeComponent(EntityID entityID);
+
+    void removeComponentsAll(EntityID entityID);
+
+    ComponentManager mComponentManager {};
+    SystemManager mSystemManager {};
+
+    std::vector<EntityID> mDeletedIDs {};
+    EntityID mNextEntity {};
+
+friend class Entity;
+friend class BaseSystem;
 };
 
 class Entity {
 public:
-
-    Entity();
-
     Entity(const Entity& other);
-    Entity(Entity&& other);
+    Entity(Entity&& other) noexcept;
     Entity& operator=(const Entity& other);
-    Entity& operator=(Entity&& other);
+    Entity& operator=(Entity&& other) noexcept;
 
     ~Entity();
 
     inline EntityID getID() { return mID; };
 
-    Entity& copy(const Entity& other);
+    void copy(const Entity& other);
 
-    template<typename T> 
-    void addComponent(const T& component);
+    template<typename TComponent> 
+    void addComponent(const TComponent& component);
 
-    template<typename T> 
+    template<typename TComponent> 
     void removeComponent();
 
-    template<typename T> 
-    T getComponent(float simulationProgress=1.f) const;
+    template<typename TComponent> 
+    TComponent getComponent(float simulationProgress=1.f) const;
 
     template<typename T>
     void updateComponent(const T& newValue);
@@ -200,13 +321,12 @@ public:
     void disableSystem();
 
 private:
+    Entity(EntityID entityID): mID{ entityID } {};
     EntityID mID;
 
-    static std::vector<EntityID> sDeletedIDs;
-    static EntityID sNextEntity;
-
-    void createEntity();
+friend class SimpleECS;
 };
+
 
 template<typename T>
 T Interpolator<T>::operator() (const T& previousState, const T& nextState, float simulationProgress) const {
@@ -237,7 +357,7 @@ void ComponentArray<T>::removeComponent(EntityID entityID) {
 
     // store last component in the removed components place
     mComponentsNext[removedComponentIndex] = mComponentsNext[lastComponentIndex];
-    mComponentsNext[removedComponentIndex] = mComponentsPrevious[lastComponentIndex];
+    mComponentsPrevious[removedComponentIndex] = mComponentsPrevious[lastComponentIndex];
     // map the last component's entity to its new index
     mEntityToComponentIndex[lastComponentEntity] = removedComponentIndex;
     // map the removed component's index to the last entity
@@ -274,6 +394,13 @@ void ComponentArray<T>::handleEntityDestroyed(EntityID entityID) {
     }
 }
 
+template<typename TComponent>
+void ComponentArray<TComponent>::handleFrameEnd() {
+    for(std::size_t i{0}; i < mComponentsNext.size(); ++i) {
+        mComponentsPrevious[i] = mComponentsNext[i];
+    }
+}
+
 template <typename T>
 void ComponentArray<T>::copyComponent(EntityID to, EntityID from) {
     if(mEntityToComponentIndex.find(from) != mEntityToComponentIndex.end()) {
@@ -300,10 +427,10 @@ void ComponentManager::registerComponentArray() {
 }
 
 template<typename T>
-ComponentType ComponentManager::getComponentType() {
+ComponentType ComponentManager::getComponentType() const {
     const std::size_t componentHash { typeid(T).hash_code() };
     assert(mHashToComponentType.find(componentHash) != mHashToComponentType.end() && "Component type has not been registered");
-    return mHashToComponentType[componentHash];
+    return mHashToComponentType.at(componentHash);
 }
 
 template<typename T>
@@ -335,12 +462,14 @@ void ComponentManager::copyComponent(EntityID to, EntityID from) {
     mEntityToSignature[to].set(getComponentType<T>(), true);
 }
 
-template<typename T>
-void SystemManager::registerSystem(Signature signature) {
-    std::size_t systemHash {typeid(T).hash_code()};
+template<typename TSystem>
+void SystemManager::registerSystem(const Signature& signature) {
+    std::size_t systemHash {typeid(TSystem).hash_code()};
     assert(mHashToSignature.find(systemHash) == mHashToSignature.end() && "System has already been registered");
+
     mHashToSignature[systemHash] = signature;
-    mHashToSystem.insert_or_assign(systemHash, std::make_shared<T>());
+    mHashToSystem.insert_or_assign(systemHash, std::make_shared<TSystem>());
+    mHashToSystem[systemHash]->onCreated();
 }
 
 template<typename T>
@@ -362,38 +491,34 @@ void SystemManager::disableEntity(EntityID entityID) {
     mHashToSystem[systemHash]->disableEntity(entityID);
 }
 
-template <typename T>
-void Entity::addComponent(const T& component) {
-    gComponentManager.addComponent<T>(mID, component);
-    Signature signature { gComponentManager.getSignature(mID) };
-    gSystemManager.handleEntitySignatureChanged(mID, signature);
+template <typename TComponent>
+void Entity::addComponent(const TComponent& component) {
+    SimpleECS::getInstance().addComponent<TComponent>(mID, component);
 }
 
-template<typename T>
-T Entity::getComponent(float simulationProgress) const {
-    return gComponentManager.getComponent<T>(mID, simulationProgress);
+template<typename TComponent>
+TComponent Entity::getComponent(float simulationProgress) const {
+    return SimpleECS::getInstance().getComponent<TComponent>(mID, simulationProgress);
 }
 
 template<typename T>
 void Entity::updateComponent(const T& newValue) {
-    gComponentManager.updateComponent<T>(mID, newValue);
+    SimpleECS::getInstance().updateComponent<T>(mID, newValue);
 }
 
 template <typename T>
 void Entity::removeComponent() {
-    gComponentManager.removeComponent<T>(mID);
-    Signature signature { gComponentManager.getSignature(mID) };
-    gSystemManager.handleEntitySignatureChanged(mID, signature);
+    SimpleECS::getInstance().removeComponent<T>(mID);
 }
 
 template <typename T>
 void Entity::enableSystem() {
-    gSystemManager.enableEntity<T>(mID);
+    SimpleECS::getInstance().enableEntity<T>(mID);
 }
 
 template <typename T>
 void Entity::disableSystem() {
-    gSystemManager.disableEntity<T>(mID);
+    SimpleECS::getInstance().disableEntity<T>(mID);
 }
 
 template <typename TSystem>
@@ -401,5 +526,137 @@ bool SystemManager::isEnabled(EntityID entityID) {
     const std::size_t systemHash { typeid(TSystem).hash_code() };
     return mHashToSystem[systemHash]->isEnabled(entityID);
 }
+
+template<typename ...TComponents>
+Entity SimpleECS::privateCreateEntity(TComponents...components) {
+    assert((mNextEntity < kMaxEntities || !mDeletedIDs.empty()) && "Max number of entities reached");
+
+    EntityID nextID;
+    if(!mDeletedIDs.empty()){
+        nextID = mDeletedIDs.back();
+        mDeletedIDs.pop_back();
+    } else {
+        nextID = mNextEntity++;
+    }
+
+    Entity entity { nextID };
+
+    (addComponent<TComponents>(nextID, components), ...);
+    return entity;
+}
+
+template<typename TComponent>
+void SimpleECS::addComponent(EntityID entityID, const TComponent& component) {
+    assert(entityID < kMaxEntities && "Cannot add a component to an entity that does not exist");
+    mComponentManager.addComponent<TComponent>(entityID, component);
+    Signature signature { mComponentManager.getSignature(entityID) };
+    mSystemManager.handleEntitySignatureChanged(entityID, signature);
+}
+
+template<typename TComponent>
+void SimpleECS::removeComponent(EntityID entityID) {
+    mComponentManager.removeComponent<TComponent>(entityID);
+    Signature signature { mComponentManager.getSignature(entityID) };
+    mSystemManager.handleEntitySignatureChanged(entityID, signature);
+}
+
+template<typename TSystem>
+void SimpleECS::enableEntity(EntityID entityID) {
+    mSystemManager.enableEntity<TSystem>(entityID);
+}
+
+template<typename TSystem>
+void SimpleECS::disableEntity(EntityID entityID) {
+    mSystemManager.disableEntity<TSystem>(entityID);
+}
+
+template<typename TComponent>
+TComponent SimpleECS::getComponent(EntityID entityID, float progress) const {
+    return mComponentManager.getComponent<TComponent>(entityID, progress);
+}
+
+template<typename TComponent, typename TSystem>
+TComponent SimpleECS::getComponent(EntityID entityID, float progress) const {
+    assert(
+        (
+            mSystemManager.mHashToSignature.at(typeid(TSystem).hash_code())
+                .test(mComponentManager.getComponentType<TComponent>())
+        )
+        && "This system cannot access this kind of component"
+    );
+    return getComponent<TComponent>(entityID, progress);
+}
+
+
+template<typename TComponent>
+void SimpleECS::updateComponent(EntityID entityID, const TComponent& newValue) {
+    mComponentManager.updateComponent<TComponent>(entityID, newValue);
+    mSystemManager.handleEntityUpdated(entityID, mComponentManager.getComponentType<TComponent>());
+}
+
+template<typename TComponent, typename TSystem>
+void SimpleECS::updateComponent(EntityID entityID, const TComponent& newValue) {
+     assert(
+        (
+            mSystemManager.mHashToSignature.at(typeid(TSystem).hash_code())
+                .test(mComponentManager.getComponentType<TComponent>())
+        )
+        && "This system cannot access this kind of component"
+    );
+    mComponentManager.updateComponent<TComponent>(entityID, newValue);
+    mSystemManager.handleEntityUpdatedBySystem<TSystem>(entityID, mComponentManager.getComponentType<TComponent>());
+}
+
+template<typename ...TComponent>
+void SimpleECS::registerComponentTypes() {
+    ((getInstance().mComponentManager.registerComponentArray<TComponent>()),...);
+}
+
+template<typename TSystem, typename ...TComponents>
+void SimpleECS::registerSystem() {
+    Signature signature {
+        (
+            (0x1u << getInstance().mComponentManager.getComponentType<TComponents>()) 
+            | ... | 0x0u
+        )
+    };
+    getInstance().mSystemManager.registerSystem<TSystem>(signature);
+}
+
+template<typename ...TComponents>
+Entity SimpleECS::createEntity(TComponents&&...components) {
+    return getInstance().privateCreateEntity<TComponents...>(components...);
+}
+
+template<typename TSystem>
+std::shared_ptr<TSystem> SimpleECS::getSystem() {
+    return getInstance().mSystemManager.getSystem<TSystem>();
+}
+
+template<typename TComponent, typename TSystem>
+TComponent BaseSystem::getComponent(EntityID entityID, float progress) const {
+    return SimpleECS::getInstance().getComponent<TComponent, TSystem>(entityID, progress);
+}
+
+template<typename TComponent, typename TSystem>
+void BaseSystem::updateComponent(EntityID entityID, const TComponent& component) {
+    SimpleECS::getInstance().updateComponent<TComponent, TSystem>(entityID, component);
+}
+
+template<typename TSystem>
+void SystemManager::handleEntityUpdatedBySystem(EntityID entityID, ComponentType updatedComponentType) {
+    std::size_t originatingSystemHash { typeid(TSystem).hash_code() };
+    for(auto& pair: mHashToSignature) {
+        // suppress update callback from the system that caused this update
+        if(pair.first == originatingSystemHash) continue;
+
+        Signature& systemSignature { pair.second };
+        if(systemSignature.test(updatedComponentType)){
+            BaseSystem& system { *(mHashToSystem[pair.first]).get() };
+            system.onEntityUpdated(entityID);
+        }
+    }
+}
+
 
 #endif

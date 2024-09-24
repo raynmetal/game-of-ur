@@ -7,23 +7,6 @@
 #include <assimp/Importer.hpp>
 
 class WindowContextManager {
-    /*
-    Initializes SDL and OpenGL contexts, creates an SDL window 
-    and stores a reference to it
-    */
-    WindowContextManager(GLuint windowWidth, GLuint windowHeight);
-    /* Uses default copy constructor */
-    WindowContextManager(WindowContextManager& other) = default;
-    /* Uses default copy assignment */
-    WindowContextManager& operator=(WindowContextManager& other) = default;
-
-    SDL_Window* mpSDLWindow;
-    SDL_GLContext mpGLContext;
-    Assimp::Importer* mpAssetImporter;
-
-    GLuint mWindowWidth;
-    GLuint mWindowHeight;
-
 public:
     /* Deletes SDL and GL contexts */
     ~WindowContextManager();
@@ -46,6 +29,24 @@ public:
     SDL_Window* getSDLWindow() const;
     /*Accessor for asset importer*/
     Assimp::Importer* getAssetImporter() const;
+
+private:
+    /*
+    Initializes SDL and OpenGL contexts, creates an SDL window 
+    and stores a reference to it
+    */
+    WindowContextManager(GLuint windowWidth, GLuint windowHeight);
+    /* Uses default copy constructor */
+    WindowContextManager(WindowContextManager& other) = default;
+    /* Uses default copy assignment */
+    WindowContextManager& operator=(WindowContextManager& other) = default;
+
+    SDL_Window* mpSDLWindow;
+    SDL_GLContext mpGLContext;
+    Assimp::Importer* mpAssetImporter;
+
+    GLuint mWindowWidth;
+    GLuint mWindowHeight;
 };
 
 #endif

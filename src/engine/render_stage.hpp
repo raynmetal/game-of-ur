@@ -22,18 +22,8 @@
 */
 
 struct OpaqueRenderUnit {
-    OpaqueRenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, Placement placement)
-    :
-        mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle }, 
-        mModelMatrix{ buildModelMatrix(placement.mPosition, placement.mOrientation, placement.mScale) },
-        mPlacement { placement }
-    {
-        setSortKey();
-    }
-
-    OpaqueRenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, Placement placement, glm::mat4 modelMatrix):
-        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, 
-        mModelMatrix{modelMatrix}, mPlacement {placement}
+    OpaqueRenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, glm::mat4 modelMatrix):
+        mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, mModelMatrix{modelMatrix}
     {
         setSortKey();
     }
@@ -46,7 +36,6 @@ struct OpaqueRenderUnit {
     MeshHandle mMeshHandle;
     MaterialHandle mMaterialHandle;
     glm::mat4 mModelMatrix;
-    Placement mPlacement;
 
     void setSortKey() {
         std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(mMeshHandle.getName())) };

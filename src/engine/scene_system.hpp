@@ -11,9 +11,10 @@
 
 #include "simple_ecs.hpp"
 
-enum class RelativeTo:int {
-    Parent=0,
-    World=1,
+enum class RelativeTo : uint8_t {
+    PARENT=0,
+    WORLD=1,
+    CAMERA=2,
 };
 
 struct Placement {
@@ -28,23 +29,26 @@ struct Transform {
 
 struct SceneNode {
     EntityID mParent { kMaxEntities };
-    RelativeTo mRelativeTo { RelativeTo::Parent };
+    RelativeTo mRelativeTo { RelativeTo::PARENT };
     std::string mName {""};
     std::set<EntityID> mChildren {};
 };
 
-class SceneSystem: public System {
+class SceneSystem: public System<SceneSystem>{
 public:
     void rebuildGraph();
     void markDirty(EntityID entity);
     void updateTransforms();
 
 private:
+    bool cycleDetected(EntityID entityID);
+    void onEntityUpdated(EntityID entityID) override;
+    void onEntityEnabled(EntityID entityID) override;
+
     SceneNode mRootNode {};
     std::set<EntityID> mComputeTransformQueue {};
     std::set<EntityID> mValidatedEntities {};
 
-    bool cycleDetected(EntityID entityID);
 };
 
 template<>

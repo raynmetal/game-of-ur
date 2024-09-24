@@ -22,18 +22,18 @@ void SceneSystem::updateTransforms() {
 
             // If the present entity is a real entity, update its transform
             if(currentEntity != kMaxEntities){
-                currentSceneNode = gComponentManager.getComponent<SceneNode>(currentEntity);
+                currentSceneNode = getComponent<SceneNode>(currentEntity);
 
-                Placement currentPlacement { gComponentManager.getComponent<Placement>(currentEntity) };
+                Placement currentPlacement { getComponent<Placement>(currentEntity) };
                 Transform parentTransform { 
                     currentSceneNode.mParent != kMaxEntities? 
-                        gComponentManager.getComponent<Transform>(currentSceneNode.mParent):
+                        getComponent<Transform>(currentSceneNode.mParent):
                         Transform{ glm::mat4{1.f} }
                 };
 
-                gComponentManager.updateComponent<Transform>(currentEntity, 
+                updateComponent<Transform>(currentEntity, 
                     {
-                        (currentSceneNode.mRelativeTo == RelativeTo::Parent?
+                        (currentSceneNode.mRelativeTo == RelativeTo::PARENT?
                             parentTransform.mModelMatrix:
                             glm::mat4{ 1.f }
                         )
@@ -74,10 +74,10 @@ void SceneSystem::rebuildGraph() {
         assert(!cycleDetected(currEntity) && "A cycle was detected in this graph.");
 
         // Retrieve this entity's and its parent's scene node
-        SceneNode currSceneNode { gComponentManager.getComponent<SceneNode>(currEntity) };
+        SceneNode currSceneNode { getComponent<SceneNode>(currEntity) };
         SceneNode parentSceneNode {
             currSceneNode.mParent == kMaxEntities? mRootNode :
-                gComponentManager.getComponent<SceneNode>(currSceneNode.mParent)
+                getComponent<SceneNode>(currSceneNode.mParent)
         };
 
         // Flush this entity's list of children (as it may contain references to
@@ -103,9 +103,9 @@ void SceneSystem::rebuildGraph() {
         if(currSceneNode.mParent == kMaxEntities) {
             mRootNode = parentSceneNode;
         } else {
-            gComponentManager.updateComponent<SceneNode>(currSceneNode.mParent, parentSceneNode);
+            updateComponent<SceneNode>(currSceneNode.mParent, parentSceneNode);
         }
-        gComponentManager.updateComponent<SceneNode>(currEntity, currSceneNode);
+        updateComponent<SceneNode>(currEntity, currSceneNode);
     }
 }
 
@@ -117,7 +117,7 @@ void SceneSystem::markDirty(EntityID entity) {
 
     // Find a dirty predecessor if it exists
     while(currEntity != kMaxEntities && mComputeTransformQueue.find(currEntity) == mComputeTransformQueue.end()) {
-        SceneNode currSceneNode { gComponentManager.getComponent<SceneNode>(currEntity) };
+        SceneNode currSceneNode { getComponent<SceneNode>(currEntity) };
         currEntity = currSceneNode.mParent;
     }
     if(mComputeTransformQueue.find(currEntity) != mComputeTransformQueue.end()) { // dirty predecessor found
@@ -136,7 +136,7 @@ void SceneSystem::markDirty(EntityID entity) {
         currEntity = descendants.top();
         descendants.pop();
         SceneNode currSceneNode { currEntity != kMaxEntities?
-            gComponentManager.getComponent<SceneNode>(currEntity):
+            getComponent<SceneNode>(currEntity):
             mRootNode
         };
         for(EntityID child: currSceneNode.mChildren) {
@@ -153,7 +153,7 @@ bool SceneSystem::cycleDetected(EntityID entityID) {
     while(mValidatedEntities.find(currentEntity) == mValidatedEntities.end() && currentEntity != kMaxEntities) {
         assert(getEnabledEntities().find(entityID) != getEnabledEntities().end() && "This entity is not managed by the scene system");
 
-        const SceneNode currentSceneNode { gComponentManager.getComponent<SceneNode>(entityID) };
+        const SceneNode currentSceneNode { getComponent<SceneNode>(entityID) };
 
         // if this node entity has already been visited, we've found a cycle
         if(visitedEntities.find(currentEntity) != visitedEntities.end()) return true;
@@ -168,4 +168,11 @@ bool SceneSystem::cycleDetected(EntityID entityID) {
 
     mValidatedEntities.insert(visitedEntities.begin(), visitedEntities.end());
     return false;
+}
+
+void SceneSystem::onEntityEnabled(EntityID entityID) {
+    markDirty(entityID);
+}
+void SceneSystem::onEntityUpdated(EntityID entityID) {
+    markDirty(entityID);
 }

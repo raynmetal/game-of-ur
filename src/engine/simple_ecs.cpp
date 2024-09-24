@@ -4,61 +4,37 @@
 
 #include "simple_ecs.hpp"
 
-SystemManager gSystemManager {};
-ComponentManager gComponentManager {};
-
-std::vector<EntityID> Entity::sDeletedIDs{};
-EntityID Entity::sNextEntity{ 0 };
-
-Entity::Entity() {
-    createEntity();
-}
-
 Entity::~Entity() {
-    if(mID == kMaxEntities) return;
-
-    sDeletedIDs.push_back(mID);
-    gSystemManager.handleEntityDestroyed(mID);
-    gComponentManager.handleEntityDestroyed(mID);
+    SimpleECS::getInstance().destroyEntity(mID);
 }
 
-Entity::Entity(const Entity& other) {
-    createEntity();
-    if(other.mID == kMaxEntities) return;
-
-    gComponentManager.copyComponents(mID, other.mID);
-    const Signature& signature { gComponentManager.getSignature(mID) };
-    gSystemManager.handleEntitySignatureChanged(mID, signature);
+Entity::Entity(const Entity& other): Entity { SimpleECS::getInstance().privateCreateEntity() } {
+    SimpleECS::getInstance().copyComponents(mID, other.mID);
 }
 
-Entity::Entity(Entity&& other) {
+Entity::Entity(Entity&& other) noexcept {
     mID = other.mID;
     other.mID = kMaxEntities;
 }
-
 
 Entity& Entity::operator=(const Entity& other) {
     if(&other == this) return *this;
+    assert(mID < kMaxEntities && "This entity does not have a valid entity ID and cannot be copied to");
 
-    sDeletedIDs.push_back(mID);
-    gSystemManager.handleEntityDestroyed(mID);
-    gComponentManager.handleEntityDestroyed(mID);
+    // Clear existing components
+    SimpleECS::getInstance().removeComponentsAll(mID);
 
-    createEntity();
-    if(other.mID == kMaxEntities) return *this;
-    gComponentManager.copyComponents(mID, other.mID);
-    const Signature& signature { gComponentManager.getSignature(mID) };
-    gSystemManager.handleEntitySignatureChanged(mID, signature);
-
+    // Copy components from other, if it is a valid entity
+    if(other.mID != kMaxEntities) {
+        SimpleECS::getInstance().copyComponents(mID, other.mID);
+    }
     return *this;
 }
 
-Entity& Entity::operator=(Entity&& other) {
+Entity& Entity::operator=(Entity&& other) noexcept {
     if(&other == this) return *this;
 
-    sDeletedIDs.push_back(mID);
-    gSystemManager.handleEntityDestroyed(mID);
-    gComponentManager.handleEntityDestroyed(mID);
+    SimpleECS::getInstance().destroyEntity(mID);
 
     mID = other.mID;
     other.mID = kMaxEntities;
@@ -66,21 +42,7 @@ Entity& Entity::operator=(Entity&& other) {
     return *this;
 }
 
-void Entity::createEntity() {
-   assert((sNextEntity < kMaxEntities || !sDeletedIDs.empty()) && "Max number of entities reached");
-
-    std::uint32_t nextID;
-    if(!sDeletedIDs.empty()){
-        nextID = sDeletedIDs.back();
-        sDeletedIDs.pop_back();
-    } else {
-        nextID = sNextEntity++;
-    }
-
-    mID = nextID;
-}
-
-void System::enableEntity(EntityID entityID) {
+void BaseSystem::enableEntity(EntityID entityID) {
     assert(
         (
             mEnabledEntities.find(entityID) != mEnabledEntities.end()
@@ -91,17 +53,14 @@ void System::enableEntity(EntityID entityID) {
     mEnabledEntities.insert(entityID);
 }
 
-Entity& Entity::copy(const Entity& other) {
-    if(other.mID == kMaxEntities) return *this;
+void Entity::copy(const Entity& other) {
+    assert(mID < kMaxEntities && "This entity does not have a valid entity ID and cannot be copied to");
+    if(other.mID == kMaxEntities) return;
 
-    gComponentManager.copyComponents(mID, other.mID);
-    const Signature& signature { gComponentManager.getSignature(mID) };
-    gSystemManager.handleEntitySignatureChanged(mID, signature);
-
-    return *this;
+    SimpleECS::getInstance().copyComponents(mID, other.mID);
 }
 
-void System::disableEntity(EntityID entityID) {
+void BaseSystem::disableEntity(EntityID entityID) {
     assert(
         (
             mEnabledEntities.find(entityID) != mEnabledEntities.end()
@@ -112,7 +71,7 @@ void System::disableEntity(EntityID entityID) {
     mDisabledEntities.insert(entityID);
 }
 
-void System::addEntity(EntityID entityID, bool enabled) {
+void BaseSystem::addEntity(EntityID entityID, bool enabled) {
     if(
         mEnabledEntities.find(entityID) != mEnabledEntities.end()
         || mDisabledEntities.find(entityID) != mDisabledEntities.end()
@@ -125,40 +84,65 @@ void System::addEntity(EntityID entityID, bool enabled) {
     }
 }
 
-void System::removeEntity(EntityID entityID) {
+void BaseSystem::removeEntity(EntityID entityID) {
     mEnabledEntities.erase(entityID);
     mDisabledEntities.erase(entityID);
 }
 
-const std::set<EntityID>& System::getEnabledEntities() {
+const std::set<EntityID>& BaseSystem::getEnabledEntities() {
     return mEnabledEntities;
 }
 
-bool System::isEnabled(EntityID entityID) {
-    assert(
-        (
-            mEnabledEntities.find(entityID) != mEnabledEntities.end()
-            || mDisabledEntities.find(entityID) != mDisabledEntities.end()
-        ) && "This system does not apply to this entity"
-    );
-
+bool BaseSystem::isEnabled(EntityID entityID) const {
     return mEnabledEntities.find(entityID) != mEnabledEntities.end();
 }
 
+bool BaseSystem::isRegistered(EntityID entityID) const {
+    return (
+        mEnabledEntities.find(entityID) != mEnabledEntities.end()
+        || mDisabledEntities.find(entityID) != mDisabledEntities.end()
+    );
+}
+
+
 void SystemManager::handleEntitySignatureChanged(EntityID entityID, Signature signature) {
     for(auto& pair: mHashToSignature) {
+        const std::size_t systemHash { pair.first };
         const Signature& systemSignature { pair.second };
-        if((signature & systemSignature) == systemSignature) {
-            mHashToSystem[pair.first]->addEntity(entityID);
-        } else {
-            mHashToSystem[pair.first]->removeEntity(entityID);
+        BaseSystem& system { *(mHashToSystem[systemHash].get()) };
+
+        if(
+            (signature&systemSignature) == systemSignature && !system.isRegistered(entityID)
+        ) {
+            system.addEntity(entityID, true);
+            system.onEntityEnabled(entityID);
+        } else if(
+            (signature&systemSignature) != systemSignature && system.isRegistered(entityID) 
+        ) {
+            system.disableEntity(entityID);
+            system.onEntityDisabled(entityID);
+            system.removeEntity(entityID);
         }
     }
 }
 
 void SystemManager::handleEntityDestroyed(EntityID entityID) {
     for(auto& pair: mHashToSystem) {
-        pair.second->removeEntity(entityID);
+        if(pair.second->isRegistered(entityID)) {
+            pair.second->disableEntity(entityID);
+            pair.second->onEntityDisabled(entityID);
+            pair.second->removeEntity(entityID);
+        }
+    }
+}
+
+void SystemManager::handleEntityUpdated(EntityID entityID, ComponentType updatedComponentType) {
+    for(auto& pair: mHashToSignature) {
+        Signature& systemSignature { pair.second };
+        if(systemSignature.test(updatedComponentType)){
+            BaseSystem& system { *(mHashToSystem[pair.first]).get() };
+            system.onEntityUpdated(entityID);
+        }
     }
 }
 
@@ -190,6 +174,9 @@ void ComponentManager::handleEntityDestroyed(EntityID entityID) {
 }
 
 void SystemManager::unregisterAll() {
+    for(auto& pair: mHashToSystem) {
+        pair.second->onDestroyed();
+    }
     mHashToSystem.clear();
     mHashToSignature.clear();
 }
@@ -198,4 +185,44 @@ void ComponentManager::unregisterAll() {
     mHashToComponentArray.clear();
     mHashToComponentType.clear();
     mEntityToSignature.clear();
+}
+
+SimpleECS& SimpleECS::getInstance() {
+    static SimpleECS instance {};
+    return instance;
+}
+
+void SimpleECS::removeComponentsAll(EntityID entityID) {
+    mComponentManager.handleEntityDestroyed(entityID);
+    mSystemManager.handleEntityDestroyed(entityID);
+}
+
+void SimpleECS::destroyEntity(EntityID entityID) {
+    if(entityID == kMaxEntities) return;
+
+    removeComponentsAll(entityID);
+    mDeletedIDs.push_back(entityID);
+}
+
+void ComponentManager::handleFrameEnd() {
+    for(auto& pair: mHashToComponentArray) {
+        // copy "Next" buffer into "Previous" buffer
+        pair.second->handleFrameEnd();
+    }
+}
+
+void SimpleECS::copyComponents(EntityID to, EntityID from) {
+    if(from == kMaxEntities) return;
+    mComponentManager.copyComponents(to, from);
+    const Signature& signature { mComponentManager.getSignature(to) };
+    mSystemManager.handleEntitySignatureChanged(to, signature);
+}
+
+void SimpleECS::endFrame() {
+    getInstance().mComponentManager.handleFrameEnd();
+}
+
+void SimpleECS::cleanup() {
+    getInstance().mComponentManager.unregisterAll();
+    getInstance().mSystemManager.unregisterAll();
 }

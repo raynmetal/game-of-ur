@@ -47,20 +47,9 @@ int main(int argc, char* argv[]) {
         .mControlType { ControlType::POINT }
     };
 
-    gComponentManager.registerComponentArray<Placement>();
-    gComponentManager.registerComponentArray<LightEmissionData>();
-    gComponentManager.registerComponentArray<ModelHandle>();
-    gComponentManager.registerComponentArray<Transform>();
-    gComponentManager.registerComponentArray<SceneNode>();
-
-    Signature sceneSystemSignature {};
-
-    sceneSystemSignature.set(gComponentManager.getComponentType<Transform>(), true);
-    sceneSystemSignature.set(gComponentManager.getComponentType<SceneNode>(), true);
-    sceneSystemSignature.set(gComponentManager.getComponentType<Placement>(), true);
-
-    gSystemManager.registerSystem<RenderSystem>(Signature{});
-    gSystemManager.registerSystem<SceneSystem>(sceneSystemSignature);
+    SimpleECS::registerComponentTypes<Placement, LightEmissionData, ModelHandle, Transform, SceneNode>();
+    SimpleECS::registerSystem<RenderSystem>();
+    SimpleECS::registerSystem<SceneSystem, Transform, SceneNode, Placement>();
 
     // TODO: Reimplement the camera through the system manager. There's no real reason,
     // with scene node and placement components and any new component types we might create,
@@ -396,80 +385,92 @@ int main(int argc, char* argv[]) {
     );
 
     const float sqrt2 { sqrt(2.f) };
-    std::vector<Entity> lightEntities(3);
+    std::vector<Entity> lightEntities {
+        { // Flashlight
+            SimpleECS::createEntity<LightEmissionData, Placement, Transform, SceneNode>(
+                LightEmissionData::MakeSpotLight(
+                    4.f,
+                    13.f,
+                    glm::vec3(2.f),
+                    glm::vec3(4.f),
+                    glm::vec3(.3f),
+                    .07f,
+                    .03f           
+                ),
+                {
+                    glm::vec4(glm::vec3(0.f), 1.f),
+                    glm::quat(),
+                    glm::vec3{1.f}
+                }, 
+                {},
+                {}
+            )
+        },
+        { // Weak point light
+            SimpleECS::createEntity<LightEmissionData, Placement, Transform, SceneNode>(
+                {
+                    LightEmissionData::MakePointLight(
+                        glm::vec3(2.f, 0.6f, 1.2f),
+                        glm::vec3(3.1f, 1.04f, .32f),
+                        glm::vec3(0.1f, 0.01f, 0.03f),
+                        .07f,
+                        .02f
+                    )
+                },
+                {
+                    glm::vec4{0.f, 1.5f, -1.f, 1.f},
+                    glm::quat{},
+                    glm::vec3{1.f}
+                },
+                {},
+                {}
+            )
+        },
+        { // Sunlight
+            SimpleECS::createEntity<LightEmissionData, Placement, Transform, SceneNode> (
+                {
+                    LightEmissionData::MakeDirectionalLight(
+                        glm::vec3{20.f},
+                        glm::vec3{20.f},
+                        glm::vec3{.4f}
+                    )                   
+                },
+                {
+                    glm::vec4{glm::vec3(0.f), 1.f},
+                    glm::quat { glm::vec3 {
+                        glm::radians(-20.f), // pitch
+                        glm::radians(180.f), // yaw
+                        glm::radians(0.f) // roll
+                    }},
+                    glm::vec3{sqrt2, sqrt2, 1.f}
+                },
+                {},
+                {}
+            )
+        }
+    };
+    for(int i{0}; i < 2; ++i) {
+        Placement placement { lightEntities[i].getComponent<Placement>() };
+        placement.mScale = glm::vec3 { lightEntities[i].getComponent<LightEmissionData>().mRadius };
+        lightEntities[i].updateComponent<Placement>(placement);
+    }
 
-    //build spotlight
-    lightEntities[0].addComponent<LightEmissionData>(
-        LightEmissionData::MakeSpotLight(
-            4.f,
-            13.f,
-            glm::vec3(2.f),
-            glm::vec3(4.f),
-            glm::vec3(.3f),
-            .07f,
-            .03f           
+    Entity boardPiece { 
+        SimpleECS::createEntity<ModelHandle, Placement, Transform, SceneNode>(
+            ModelManager::getInstance().registerResource(
+                "data/models/Generic Board Piece.obj", 
+                {"data/models/Generic Board Piece.obj"}
+            ),
+            {{0.f, -1.f, -1.f, 1.f}},
+            {},
+            {}
         )
-    );
-    lightEntities[0].addComponent<Placement>({
-        glm::vec4(glm::vec3(0.f), 1.f),
-        glm::quat(),
-        glm::vec3(lightEntities[0].getComponent<LightEmissionData>().mRadius)
-    });
-    lightEntities[0].addComponent<Transform>({});
-    lightEntities[0].addComponent<SceneNode>({});
+    };
 
-    // build point light
-    lightEntities[1].addComponent<LightEmissionData>(
-        LightEmissionData::MakePointLight(
-            glm::vec3(2.f, 0.6f, 1.2f),
-            glm::vec3(3.1f, 1.04f, .32f),
-            glm::vec3(0.1f, 0.01f, 0.03f),
-            .07f,
-            .02f
-        )
-    );
-    lightEntities[1].addComponent<Placement>({
-        glm::vec4{0.f, 1.5f, -1.f, 1.f},
-        glm::quat{},
-        glm::vec3{lightEntities[1].getComponent<LightEmissionData>().mRadius}
-    });
-    lightEntities[1].addComponent<Transform>({});
-    lightEntities[1].addComponent<SceneNode>({});
-
-    // build directional (sun) light
-    lightEntities[2].addComponent<LightEmissionData>(
-        LightEmissionData::MakeDirectionalLight(
-            glm::vec3{20.f},
-            glm::vec3{20.f},
-            glm::vec3{.4f}
-        )
-    );
-    lightEntities[2].addComponent<Placement>({
-        glm::vec4{glm::vec3(0.f), 1.f},
-        glm::quat { glm::vec3 {
-            glm::radians(-20.f), // pitch
-            glm::radians(180.f), // yaw
-            glm::radians(0.f) // roll
-        }},
-        glm::vec3{sqrt2, sqrt2, 1.f}
-    });
-    lightEntities[2].addComponent<Transform>({});
-    lightEntities[2].addComponent<SceneNode>({});
-
-    Entity boardPiece {};
-    boardPiece.addComponent<ModelHandle>(
-        ModelManager::getInstance().registerResource("data/models/Generic Board Piece.obj", {"data/models/Generic Board Piece.obj"})
-    );
-    boardPiece.addComponent<Placement>({
-        {0.f, -1.f, -1.f, 1.f}
-    });
-    boardPiece.addComponent<Transform>({});
-    boardPiece.addComponent<SceneNode>({});
-    gSystemManager.getSystem<SceneSystem>()->markDirty(boardPiece.getID());
-    std::vector<Entity> boardPieces(20);
+    std::vector<Entity> boardPieces{};
     EntityID parentEntity { boardPiece.getID() };
-    for(std::size_t i{0}; i < boardPieces.size(); ++i) {
-        boardPieces[i].copy(boardPiece);
+    for(std::size_t i{0}; i < 20; ++i) {
+        boardPieces.push_back(boardPiece);
 
         Placement boardPiecePlacement { boardPieces[i].getComponent<Placement>() };
         SceneNode boardPieceSceneNode { boardPieces[i].getComponent<SceneNode>() };
@@ -477,14 +478,15 @@ int main(int argc, char* argv[]) {
         boardPiecePlacement.mPosition.x = 0.f;
         boardPiecePlacement.mPosition.y = 2.f;
         boardPiecePlacement.mPosition.z = 0.f;
-        boardPiecePlacement.mOrientation = glm::rotate(boardPiecePlacement.mOrientation, glm::radians(360.f/(1+boardPieces.size())), {0.f, 0.f, -1.f});
+        boardPiecePlacement.mOrientation = glm::rotate(boardPiecePlacement.mOrientation, glm::radians(360.f/(1+20)), {0.f, 0.f, -1.f});
         boardPieceSceneNode.mParent = parentEntity;
+
+        boardPieces[i].updateComponent<Placement>(boardPiecePlacement);
+        boardPieces[i].updateComponent<SceneNode>(boardPieceSceneNode);
 
         // each board piece is the parent of the board piece made in
         // the next iteration
         parentEntity = boardPieces[i].getID();
-        boardPieces[i].updateComponent<Placement>(boardPiecePlacement);
-        boardPieces[i].updateComponent<SceneNode>(boardPieceSceneNode);
     }
 
     camera->setLookSensitivity(20.f);
@@ -492,12 +494,12 @@ int main(int argc, char* argv[]) {
     inputManager["Camera"].registerActionHandler("ToggleControl", camera);
     inputManager["Camera"].registerActionHandler("Move", camera);
     inputManager["Camera"].registerActionHandler("UpdateFOV", camera);
-    inputManager["Graphics"].registerActionHandler("UpdateGamma", gSystemManager.getSystem<RenderSystem>());
-    inputManager["Graphics"].registerActionHandler("UpdateExposure", gSystemManager.getSystem<RenderSystem>());
-    inputManager["Graphics"].registerActionHandler("RenderNextTexture", gSystemManager.getSystem<RenderSystem>());
+    inputManager["Graphics"].registerActionHandler("UpdateGamma", SimpleECS::getSystem<RenderSystem>());
+    inputManager["Graphics"].registerActionHandler("UpdateExposure", SimpleECS::getSystem<RenderSystem>());
+    inputManager["Graphics"].registerActionHandler("RenderNextTexture", SimpleECS::getSystem<RenderSystem>());
 
-    gSystemManager.getSystem<SceneSystem>()->rebuildGraph();
-    gSystemManager.getSystem<SceneSystem>()->updateTransforms();
+    SimpleECS::getSystem<SceneSystem>()->rebuildGraph();
+    SimpleECS::getSystem<SceneSystem>()->updateTransforms();
 
     //Timing related variables
     GLuint previousTicks { SDL_GetTicks() };
@@ -559,13 +561,10 @@ int main(int argc, char* argv[]) {
             sunlightPlacement.mOrientation = glm::rotate(sunlight.getComponent<Placement>().mOrientation, kSimulationStep/(1000.f*10.f), {0.f, 1.f, 0.f});
             flashlight.updateComponent<Placement>(flashlightPlacement);
             sunlight.updateComponent<Placement>(sunlightPlacement);
-            gSystemManager.getSystem<SceneSystem>()->markDirty(flashlight.getID());
-            gSystemManager.getSystem<SceneSystem>()->markDirty(sunlight.getID());
             for(Entity& piece: boardPieces) {
                 Placement piecePlacement { piece.getComponent<Placement>() };
                 piecePlacement.mPosition.z = glm::sin(glm::radians(simulationTicks/10.f + piece.getID()*45.f));
                 piece.updateComponent<Placement>(piecePlacement);
-                gSystemManager.getSystem<SceneSystem>()->markDirty(piece.getID());
             }
         }
         // Calculate progress towards the next simulation step
@@ -586,12 +585,12 @@ int main(int argc, char* argv[]) {
         }
 
         // Render a frame
-
         camera->update(deltaTime);
-        gSystemManager.getSystem<SceneSystem>()->updateTransforms();
-        gSystemManager.getSystem<RenderSystem>()->updateCameraMatrices(*camera);
-        gSystemManager.getSystem<RenderSystem>()->execute(simulationProgress);
+        SimpleECS::getSystem<SceneSystem>()->updateTransforms();
+        SimpleECS::getSystem<RenderSystem>()->updateCameraMatrices(*camera);
+        SimpleECS::getSystem<RenderSystem>()->execute(simulationProgress);
     }
+
     // ... and then die
     cleanup();
     return 0;
@@ -617,7 +616,6 @@ void init() {
 }
 
 void cleanup() {
-    gSystemManager.unregisterAll();
-    gComponentManager.unregisterAll();
+    SimpleECS::cleanup();
     Material::Clear();
 }

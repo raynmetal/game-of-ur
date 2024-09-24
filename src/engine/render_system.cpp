@@ -17,24 +17,9 @@ constexpr float MIN_GAMMA { 1.6f };
 constexpr float MAX_EXPOSURE { 15.f };
 constexpr float MIN_EXPOSURE { 0.f };
 
-RenderSystem::RenderSystem():
-    mGeometryRenderStage { "src/shader/geometryShader.json" },
-    mLightingRenderStage { "src/shader/lightingShader.json" },
-    mBlurRenderStage { "src/shader/gaussianblurShader.json" },
-    mTonemappingRenderStage { "src/shader/tonemappingShader.json" },
-    mScreenRenderStage { "src/shader/screenShader.json" }
-{
-    Signature lightQueueSignature {};
-    lightQueueSignature.set(gComponentManager.getComponentType<Placement>(), true);
-    lightQueueSignature.set(gComponentManager.getComponentType<Transform>(), true);
-    lightQueueSignature.set(gComponentManager.getComponentType<LightEmissionData>(), true);
-
-    Signature opaqueObjectQueueSignature {};
-    opaqueObjectQueueSignature.set(gComponentManager.getComponentType<Transform>(), true);
-    opaqueObjectQueueSignature.set(gComponentManager.getComponentType<ModelHandle>(), true);
-
-    gSystemManager.registerSystem<LightQueue>(lightQueueSignature);
-    gSystemManager.registerSystem<OpaqueQueue>(opaqueObjectQueueSignature);
+void RenderSystem::onCreated() {
+    SimpleECS::registerSystem<LightQueue, Placement, Transform, LightEmissionData>();
+    SimpleECS::registerSystem<OpaqueQueue, Transform, ModelHandle>();
 
     mGeometryRenderStage.setup();
     mLightingRenderStage.setup();
@@ -135,10 +120,10 @@ std::size_t RenderSystem::getCurrentScreenTexture() {
 
 void RenderSystem::execute(float simulationProgress) {
     // Execute each rendering stage in its proper order
-    gSystemManager.getSystem<OpaqueQueue>()->enqueueTo(mGeometryRenderStage, simulationProgress);
+    SimpleECS::getSystem<OpaqueQueue>()->enqueueTo(mGeometryRenderStage, simulationProgress);
     mGeometryRenderStage.execute();
 
-    gSystemManager.getSystem<LightQueue>()->enqueueTo(mLightingRenderStage, simulationProgress);
+    SimpleECS::getSystem<LightQueue>()->enqueueTo(mLightingRenderStage, simulationProgress);
     mLightingRenderStage.execute();
 
     mBlurRenderStage.execute();
@@ -150,9 +135,8 @@ void RenderSystem::execute(float simulationProgress) {
 
 void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
     for(EntityID entity: getEnabledEntities()) {
-        Placement placement { gComponentManager.getComponent<Placement>(entity, simulationProgress) };
-        ModelHandle modelHandle { gComponentManager.getComponent<ModelHandle>(entity) };
-        Transform entityTransform { gComponentManager.getComponent<Transform>(entity, simulationProgress) };
+        ModelHandle modelHandle { getComponent<ModelHandle>(entity) };
+        Transform entityTransform { getComponent<Transform>(entity, simulationProgress) };
         const std::vector<MeshHandle>& meshList { modelHandle.getResource().getMeshHandles() };
         const std::vector<MaterialHandle>& materialList { modelHandle.getResource().getMaterialHandles() };
 
@@ -160,7 +144,6 @@ void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float si
             renderStage.submitToRenderQueue({
                 meshList[i],
                 materialList[i],
-                placement,
                 entityTransform.mModelMatrix
             });
         }
@@ -172,9 +155,9 @@ void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float sim
         MaterialManager::getInstance().getResourceHandle("lightMaterial")
     };
     for(EntityID entity: getEnabledEntities()) {
-        Transform entityTransform { gComponentManager.getComponent<Transform>(entity, simulationProgress)};
-        Placement placement { gComponentManager.getComponent<Placement>(entity, simulationProgress) };
-        LightEmissionData lightEmissionData { gComponentManager.getComponent<LightEmissionData>(entity, simulationProgress) };
+        Transform entityTransform { getComponent<Transform>(entity, simulationProgress)};
+        Placement placement { getComponent<Placement>(entity, simulationProgress) };
+        LightEmissionData lightEmissionData { getComponent<LightEmissionData>(entity, simulationProgress) };
         renderStage.submitToRenderQueue(LightRenderUnit {
             mSphereMesh,
             lightMaterialHandle,

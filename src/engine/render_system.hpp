@@ -12,21 +12,20 @@
 #include "render_stage.hpp"
 #include "fly_camera.hpp"
 
-class RenderSystem: public System,  public IActionHandler {
+class RenderSystem: public System<RenderSystem>,  public IActionHandler {
 public:
-    class LightQueue: public System {
+    class LightQueue: public System<LightQueue>{
     public:
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
     private:
         MeshHandle mSphereMesh { generateSphereMesh(10, 5) };
         MaterialHandle mLightMaterial{};
     };
-    class OpaqueQueue: public System {
+    class OpaqueQueue: public System<OpaqueQueue> {
     public:
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
     };
 
-    RenderSystem();
     void execute(float simulationProgress);
 
     void updateCameraMatrices(const FlyCamera& camera);
@@ -40,17 +39,18 @@ public:
     std::size_t getCurrentScreenTexture ();
 
 private:
+    void onCreated() override;
 
     std::size_t mCurrentScreenTexture {0};
     std::vector<TextureHandle> mScreenTextures {};
     GLuint mMatrixUniformBufferIndex {0};
     GLuint mMatrixUniformBufferBinding {0};
 
-    GeometryRenderStage mGeometryRenderStage;
-    LightingRenderStage mLightingRenderStage;
-    BlurRenderStage mBlurRenderStage;
-    TonemappingRenderStage mTonemappingRenderStage;
-    ScreenRenderStage mScreenRenderStage;
+    GeometryRenderStage mGeometryRenderStage { "src/shader/geometryShader.json" };
+    LightingRenderStage mLightingRenderStage { "src/shader/lightingShader.json" };
+    BlurRenderStage mBlurRenderStage { "src/shader/gaussianblurShader.json" };
+    TonemappingRenderStage mTonemappingRenderStage { "src/shader/tonemappingShader.json" };
+    ScreenRenderStage mScreenRenderStage { "src/shader/screenShader.json" };
 
     float mGamma { 2.f };
     float mExposure { 1.f };
