@@ -47,10 +47,6 @@ int main(int argc, char* argv[]) {
         .mControlType { ControlType::POINT }
     };
 
-    SimpleECS::registerComponentTypes<Placement, LightEmissionData, ModelHandle, Transform, SceneNode>();
-    SimpleECS::registerSystem<RenderSystem>();
-    SimpleECS::registerSystem<SceneSystem, Transform, SceneNode, Placement>();
-
     // TODO: Reimplement the camera through the system manager. There's no real reason,
     // with scene node and placement components and any new component types we might create,
     // for it to be doing its own thing here.
@@ -160,7 +156,7 @@ int main(int argc, char* argv[]) {
         "Move", AxisFilter::X_POS,
         InputCombo {
             .mMainControl {
-                .mControl{
+                .mControl {
                     .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
                     .mControl { SDLK_d },
                     .mDeviceType { DeviceType::KEYBOARD },
@@ -395,13 +391,13 @@ int main(int argc, char* argv[]) {
                     glm::vec3(4.f),
                     glm::vec3(.3f),
                     .07f,
-                    .03f           
+                    .03f
                 ),
                 {
                     glm::vec4(glm::vec3(0.f), 1.f),
                     glm::quat(),
                     glm::vec3{1.f}
-                }, 
+                },
                 {},
                 {}
             )
@@ -433,7 +429,7 @@ int main(int argc, char* argv[]) {
                         glm::vec3{20.f},
                         glm::vec3{20.f},
                         glm::vec3{.4f}
-                    )                   
+                    )
                 },
                 {
                     glm::vec4{glm::vec3(0.f), 1.f},
@@ -501,15 +497,15 @@ int main(int argc, char* argv[]) {
     SimpleECS::getSystem<SceneSystem>()->rebuildGraph();
     SimpleECS::getSystem<SceneSystem>()->updateTransforms();
 
-    //Timing related variables
-    GLuint previousTicks { SDL_GetTicks() };
-    GLuint simulationTicks { previousTicks };
+    // Timing related variables
+    uint32_t previousTicks { SDL_GetTicks() };
+    uint32_t simulationTicks { previousTicks };
 
-    //Current frame
-    GLuint simFrame {0};
-    GLuint renderFrame {0};
+    // Current frame
+    GLuint simFrame { 0 };
+    GLuint renderFrame { 0 };
     
-    //Framerate measuring variables
+    // Framerate measuring variables
     float framerate {0.f};
     const float frameratePoll {1.f};
     float framerateCounter {0.f};
@@ -586,9 +582,11 @@ int main(int argc, char* argv[]) {
 
         // Render a frame
         camera->update(deltaTime);
-        SimpleECS::getSystem<SceneSystem>()->updateTransforms();
+        ApploopEventDispatcher::preRenderStep(simulationProgress);
         SimpleECS::getSystem<RenderSystem>()->updateCameraMatrices(*camera);
         SimpleECS::getSystem<RenderSystem>()->execute(simulationProgress);
+
+        SimpleECS::endFrame();
     }
 
     // ... and then die
@@ -613,6 +611,10 @@ void init() {
     MeshManager::getInstance();
     FramebufferManager::getInstance();
     ModelManager::getInstance();
+
+    SimpleECS::registerComponentTypes<Placement, LightEmissionData, ModelHandle, Transform, SceneNode>();
+    SimpleECS::registerSystem<SceneSystem, Transform, SceneNode, Placement>();
+    SimpleECS::registerSystem<RenderSystem>();
 }
 
 void cleanup() {

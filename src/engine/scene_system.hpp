@@ -10,6 +10,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "simple_ecs.hpp"
+#include "apploop_events.hpp"
 
 enum class RelativeTo : uint8_t {
     PARENT=0,
@@ -41,14 +42,24 @@ public:
     void updateTransforms();
 
 private:
+    class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
+    public:
+        ApploopEventHandler(){}
+        inline void initializeEventHandler(SceneSystem* pSystem){ mSystem = pSystem; }
+    private:
+        void onPreRenderStep(float simulationProgress) override;
+        SceneSystem* mSystem;
+    };
     bool cycleDetected(EntityID entityID);
     void onEntityUpdated(EntityID entityID) override;
     void onEntityEnabled(EntityID entityID) override;
 
     SceneNode mRootNode {};
+    std::shared_ptr<ApploopEventHandler> mApploopEventHandler { ApploopEventHandler::registerHandler(this) };
     std::set<EntityID> mComputeTransformQueue {};
     std::set<EntityID> mValidatedEntities {};
 
+friend class SceneSystem::ApploopEventHandler;
 };
 
 template<>
@@ -81,7 +92,7 @@ inline SceneNode Interpolator<SceneNode>::operator() (
     const SceneNode& previousState, const SceneNode& nextState,
     float simulationProgress
 ) const {
-    // Once a node has been reparented, there's no reason
+    // Once a scene node has been reparented, there's no reason
     // to think about the old parent
     return nextState;
 }

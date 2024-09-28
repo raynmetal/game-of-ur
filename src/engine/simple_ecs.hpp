@@ -43,9 +43,10 @@ class SimpleECS;
 
 class IComponentArray {
 public:
-    virtual void handleEntityDestroyed(EntityID entityID) = 0;
+    virtual ~IComponentArray()=default;
+    virtual void handleEntityDestroyed(EntityID entityID)=0;
     virtual void handleFrameEnd() = 0;
-    virtual void copyComponent(EntityID to, EntityID from) = 0;
+    virtual void copyComponent(EntityID to, EntityID from)=0;
 };
 
 template<typename T>

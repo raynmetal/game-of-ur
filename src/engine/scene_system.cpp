@@ -176,3 +176,7 @@ void SceneSystem::onEntityEnabled(EntityID entityID) {
 void SceneSystem::onEntityUpdated(EntityID entityID) {
     markDirty(entityID);
 }
+
+void SceneSystem::ApploopEventHandler::onPreRenderStep(float simulationProgress) {
+    mSystem->updateTransforms();
+}
