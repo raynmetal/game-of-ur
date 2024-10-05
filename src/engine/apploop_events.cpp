@@ -6,13 +6,13 @@ ApploopEventDispatcher& ApploopEventDispatcher::getInstance() {
     return instance;
 }
 
-void ApploopEventDispatcher::registerTimelineEventHandler(std::weak_ptr<InternalApploopEventHandler> timelineEventHandler) {
+void ApploopEventDispatcher::INTERNAL_registerTimelineEventHandler_(std::weak_ptr<INTERNAL_ApploopEventHandler_> timelineEventHandler) {
     getInstance().mHandlers.insert(timelineEventHandler);
 }
 
 void ApploopEventDispatcher::simulationStep(uint32_t simulationTimestep) {
     ApploopEventDispatcher& caller { getInstance() };
-    std::set<std::weak_ptr<InternalApploopEventHandler>, std::owner_less<std::weak_ptr<InternalApploopEventHandler>>> eraseables {};
+    std::set<std::weak_ptr<INTERNAL_ApploopEventHandler_>, std::owner_less<std::weak_ptr<INTERNAL_ApploopEventHandler_>>> eraseables {};
     for(auto& handler: caller.mHandlers) {
         if(handler.expired()) {
             eraseables.insert(handler);
@@ -26,9 +26,25 @@ void ApploopEventDispatcher::simulationStep(uint32_t simulationTimestep) {
     }
 }
 
+void ApploopEventDispatcher::postSimulationStep(float simulationProgress) {
+    ApploopEventDispatcher& caller { getInstance() };
+    std::set<std::weak_ptr<INTERNAL_ApploopEventHandler_>, std::owner_less<std::weak_ptr<INTERNAL_ApploopEventHandler_>>> eraseables {};   
+    for(auto& handler: caller.mHandlers) {
+        if(handler.expired()) {
+            eraseables.insert(handler);
+            continue;
+        }
+        handler.lock()->onPostSimulationStep(simulationProgress);
+    }
+
+    for(auto& eraseable: eraseables) {
+        caller.mHandlers.erase(eraseable);
+    }
+}
+
 void ApploopEventDispatcher::preRenderStep(float simulationProgress) {
     ApploopEventDispatcher& caller { getInstance() };
-    std::set<std::weak_ptr<InternalApploopEventHandler>, std::owner_less<std::weak_ptr<InternalApploopEventHandler>>> eraseables {};
+    std::set<std::weak_ptr<INTERNAL_ApploopEventHandler_>, std::owner_less<std::weak_ptr<INTERNAL_ApploopEventHandler_>>> eraseables {};
     for(auto& handler: caller.mHandlers) {
         if(handler.expired()) {
             eraseables.emplace(handler);
@@ -44,7 +60,7 @@ void ApploopEventDispatcher::preRenderStep(float simulationProgress) {
 
 void ApploopEventDispatcher::postRenderStep(float simulationProgress) {
     ApploopEventDispatcher& caller { getInstance() };
-    std::set<std::weak_ptr<InternalApploopEventHandler>, std::owner_less<std::weak_ptr<InternalApploopEventHandler>>> eraseables {};
+    std::set<std::weak_ptr<INTERNAL_ApploopEventHandler_>, std::owner_less<std::weak_ptr<INTERNAL_ApploopEventHandler_>>> eraseables {};
     for(auto& handler: caller.mHandlers) {
         if(handler.expired()) {
             eraseables.emplace(handler);
@@ -57,4 +73,3 @@ void ApploopEventDispatcher::postRenderStep(float simulationProgress) {
         caller.mHandlers.erase(eraseable);
     }
 }
-

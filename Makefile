@@ -14,7 +14,7 @@ RM := rm -rf
 CP := cp -f
 endif
 
-SRCS := src/main.cpp src/engine/util.cpp src/engine/simple_ecs.cpp src/engine/shader_program.cpp src/engine/light.cpp src/engine/window_context_manager.cpp src/engine/fly_camera.cpp src/engine/texture.cpp src/engine/mesh.cpp src/engine/material.cpp src/engine/model.cpp src/engine/shapegen.cpp src/engine/framebuffer.cpp src/engine/instance.cpp src/engine/render_stage.cpp src/engine/render_system.cpp src/engine/scene_system.cpp src/engine/input_system/input_manager.cpp src/engine/input_system/action_context.cpp src/engine/apploop_events.cpp
+SRCS := src/main.cpp src/engine/util.cpp src/engine/simple_ecs.cpp src/engine/shader_program.cpp src/engine/light.cpp src/engine/window_context_manager.cpp src/engine/fly_camera.cpp src/engine/texture.cpp src/engine/mesh.cpp src/engine/material.cpp src/engine/model.cpp src/engine/shapegen.cpp src/engine/framebuffer.cpp src/engine/instance.cpp src/engine/render_stage.cpp src/engine/render_system.cpp src/engine/scene_system.cpp src/engine/input_system/input_manager.cpp src/engine/input_system/action_context.cpp src/engine/apploop_events.cpp src/engine/sim_system.cpp
 
 CC := g++
 

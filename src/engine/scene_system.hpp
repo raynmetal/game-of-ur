@@ -35,7 +35,7 @@ struct SceneNode {
     std::set<EntityID> mChildren {};
 };
 
-class SceneSystem: public System<SceneSystem>{
+class SceneSystem: public System<SceneSystem> {
 public:
     void rebuildGraph();
     void markDirty(EntityID entity);

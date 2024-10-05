@@ -7,6 +7,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "engine/sim_system.hpp"
 #include "engine/simple_ecs.hpp"
 #include "engine/fly_camera.hpp"
 #include "engine/window_context_manager.hpp"
@@ -562,9 +563,11 @@ int main(int argc, char* argv[]) {
                 piecePlacement.mPosition.z = glm::sin(glm::radians(simulationTicks/10.f + piece.getID()*45.f));
                 piece.updateComponent<Placement>(piecePlacement);
             }
+            ApploopEventDispatcher::simulationStep(kSimulationStep);
         }
         // Calculate progress towards the next simulation step
         const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / kSimulationStep };
+        ApploopEventDispatcher::postSimulationStep(simulationProgress);
 
         // Measure average framerate, biased towards previously measured framerate
         float deltaTime {
@@ -582,9 +585,11 @@ int main(int argc, char* argv[]) {
 
         // Render a frame
         camera->update(deltaTime);
+
         ApploopEventDispatcher::preRenderStep(simulationProgress);
         SimpleECS::getSystem<RenderSystem>()->updateCameraMatrices(*camera);
         SimpleECS::getSystem<RenderSystem>()->execute(simulationProgress);
+        ApploopEventDispatcher::postRenderStep(simulationProgress);
 
         SimpleECS::endFrame();
     }
@@ -612,8 +617,9 @@ void init() {
     FramebufferManager::getInstance();
     ModelManager::getInstance();
 
-    SimpleECS::registerComponentTypes<Placement, LightEmissionData, ModelHandle, Transform, SceneNode>();
+    SimpleECS::registerComponentTypes<Placement, LightEmissionData, ModelHandle, Transform, SceneNode, SimSystem::SimCore>();
     SimpleECS::registerSystem<SceneSystem, Transform, SceneNode, Placement>();
+    SimpleECS::registerSystem<SimSystem, SimSystem::SimCore>();
     SimpleECS::registerSystem<RenderSystem>();
 }
 
