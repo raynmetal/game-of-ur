@@ -212,10 +212,10 @@ private:
 
     void handleEntityDestroyed(EntityID entityID);
 
-    void handleEntityUpdated(EntityID entityID, ComponentType updatedComponentType);
+    void handleEntityUpdated(EntityID entityID, Signature signature);
 
     template<typename TSystem>
-    void handleEntityUpdatedBySystem(EntityID entityID, ComponentType updatedComponentType);
+    void handleEntityUpdatedBySystem(EntityID entityID, Signature signature);
 
     std::unordered_map<std::size_t, Signature> mHashToSignature {};
     std::unordered_map<std::size_t, std::shared_ptr<BaseSystem>> mHashToSystem {};
@@ -236,7 +236,7 @@ public:
     static std::shared_ptr<TSystem> getSystem();
 
     template<typename ...TComponents>
-    static Entity createEntity(TComponents&& ...components);
+    static Entity createEntity(TComponents...components);
 
     static void cleanup();
 
@@ -592,7 +592,7 @@ TComponent SimpleECS::getComponent(EntityID entityID, float progress) const {
 template<typename TComponent>
 void SimpleECS::updateComponent(EntityID entityID, const TComponent& newValue) {
     mComponentManager.updateComponent<TComponent>(entityID, newValue);
-    mSystemManager.handleEntityUpdated(entityID, mComponentManager.getComponentType<TComponent>());
+    mSystemManager.handleEntityUpdated(entityID, mComponentManager.getSignature(entityID));
 }
 
 template<typename TComponent, typename TSystem>
@@ -605,7 +605,7 @@ void SimpleECS::updateComponent(EntityID entityID, const TComponent& newValue) {
         && "This system cannot access this kind of component"
     );
     mComponentManager.updateComponent<TComponent>(entityID, newValue);
-    mSystemManager.handleEntityUpdatedBySystem<TSystem>(entityID, mComponentManager.getComponentType<TComponent>());
+    mSystemManager.handleEntityUpdatedBySystem<TSystem>(entityID, mComponentManager.getSignature(entityID));
 }
 
 template<typename ...TComponent>
@@ -625,7 +625,7 @@ void SimpleECS::registerSystem() {
 }
 
 template<typename ...TComponents>
-Entity SimpleECS::createEntity(TComponents&&...components) {
+Entity SimpleECS::createEntity(TComponents...components) {
     return getInstance().privateCreateEntity<TComponents...>(components...);
 }
 
@@ -645,14 +645,14 @@ void BaseSystem::updateComponent(EntityID entityID, const TComponent& component)
 }
 
 template<typename TSystem>
-void SystemManager::handleEntityUpdatedBySystem(EntityID entityID, ComponentType updatedComponentType) {
+void SystemManager::handleEntityUpdatedBySystem(EntityID entityID, Signature signature) {
     std::size_t originatingSystemHash { typeid(TSystem).hash_code() };
     for(auto& pair: mHashToSignature) {
         // suppress update callback from the system that caused this update
         if(pair.first == originatingSystemHash) continue;
 
         Signature& systemSignature { pair.second };
-        if(systemSignature.test(updatedComponentType)){
+        if((systemSignature & signature) == systemSignature){
             BaseSystem& system { *(mHashToSystem[pair.first]).get() };
             system.onEntityUpdated(entityID);
         }

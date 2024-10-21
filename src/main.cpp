@@ -6,10 +6,11 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <glm/gtx/string_cast.hpp>
 
 #include "engine/sim_system.hpp"
 #include "engine/simple_ecs.hpp"
-#include "engine/fly_camera.hpp"
+#include "app/fly_camera.hpp"
 #include "engine/window_context_manager.hpp"
 #include "engine/texture_manager.hpp"
 #include "engine/shader_program_manager.hpp"
@@ -48,10 +49,10 @@ int main(int argc, char* argv[]) {
         .mControlType { ControlType::POINT }
     };
 
-    // TODO: Reimplement the camera through the system manager. There's no real reason,
-    // with scene node and placement components and any new component types we might create,
-    // for it to be doing its own thing here.
-    std::shared_ptr<FlyCamera> camera { std::make_shared<FlyCamera>(FlyCamera {glm::vec3(0.f), 0.f, 0.f, 0.f}) };
+    std::shared_ptr<SimObject> camera { 
+        SimpleECS::getSystem<SimSystem>()->createSimObject<Placement, Transform, CameraProperties, SceneNode>({}, {}, {}, {}) 
+    };
+    camera->addComponent<FlyCamera>();
 
     // TODO: Move all input registration and scene setup code elsewhere and have them read, hopefully, from
     // some kind of plaintext config file
@@ -400,7 +401,7 @@ int main(int argc, char* argv[]) {
                     glm::vec3{1.f}
                 },
                 {},
-                {}
+                { .mParent{ camera->getEntityID() } }
             )
         },
         { // Weak point light
@@ -486,17 +487,13 @@ int main(int argc, char* argv[]) {
         parentEntity = boardPieces[i].getID();
     }
 
-    camera->setLookSensitivity(20.f);
-    inputManager["Camera"].registerActionHandler("Rotate", camera);
-    inputManager["Camera"].registerActionHandler("ToggleControl", camera);
-    inputManager["Camera"].registerActionHandler("Move", camera);
-    inputManager["Camera"].registerActionHandler("UpdateFOV", camera);
+    inputManager["Camera"].registerActionHandler("Rotate", std::shared_ptr<FlyCamera>(camera, &(camera->getComponent<FlyCamera>())));
+    inputManager["Camera"].registerActionHandler("ToggleControl", std::shared_ptr<FlyCamera>(camera, &(camera->getComponent<FlyCamera>())));
+    inputManager["Camera"].registerActionHandler("Move", std::shared_ptr<FlyCamera>(camera, &(camera->getComponent<FlyCamera>())));
+    inputManager["Camera"].registerActionHandler("UpdateFOV", std::shared_ptr<FlyCamera>(camera, &(camera->getComponent<FlyCamera>())));
     inputManager["Graphics"].registerActionHandler("UpdateGamma", SimpleECS::getSystem<RenderSystem>());
     inputManager["Graphics"].registerActionHandler("UpdateExposure", SimpleECS::getSystem<RenderSystem>());
     inputManager["Graphics"].registerActionHandler("RenderNextTexture", SimpleECS::getSystem<RenderSystem>());
-
-    SimpleECS::getSystem<SceneSystem>()->rebuildGraph();
-    SimpleECS::getSystem<SceneSystem>()->updateTransforms();
 
     // Timing related variables
     uint32_t previousTicks { SDL_GetTicks() };
@@ -517,6 +514,7 @@ int main(int argc, char* argv[]) {
     bool quit {false};
     glEnable(GL_FRAMEBUFFER_SRGB);
 
+    ApploopEventDispatcher::applicationStart();
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
@@ -536,8 +534,8 @@ int main(int argc, char* argv[]) {
         ++renderFrame;
 
         // Get references to the entities I'm going to frequently update
-        Entity& flashlight { lightEntities[0] };
         Entity& sunlight { lightEntities[2] };
+        Entity& flashlight { lightEntities[0] };
 
         // update time related variables
         GLuint currentTicks { SDL_GetTicks() };
@@ -551,12 +549,8 @@ int main(int argc, char* argv[]) {
             inputManager.dispatch(simulationTicks);
 
             // update objects according to calculated delta
-            Placement flashlightPlacement { flashlight.getComponent<Placement>() };
             Placement sunlightPlacement { sunlight.getComponent<Placement>() };
-            flashlightPlacement.mPosition = glm::vec4(camera->getPosition(), 1.f);
-            flashlightPlacement.mOrientation = glm::quat_cast(camera->getRotationMatrix());
             sunlightPlacement.mOrientation = glm::rotate(sunlight.getComponent<Placement>().mOrientation, kSimulationStep/(1000.f*10.f), {0.f, 1.f, 0.f});
-            flashlight.updateComponent<Placement>(flashlightPlacement);
             sunlight.updateComponent<Placement>(sunlightPlacement);
             for(Entity& piece: boardPieces) {
                 Placement piecePlacement { piece.getComponent<Placement>() };
@@ -580,19 +574,21 @@ int main(int argc, char* argv[]) {
         while(framerateCounter > frameratePoll) {
             std::cout << "Frame " << renderFrame << ", Simulation Frame " << simFrame << " -- Progress to next sim frame: " << simulationProgress*100.f << "%\n";
             std::cout << "Framerate: " << framerate << " fps\n";
+
+            std::cout << "flashlight parent entity: " << flashlight.getComponent<SceneNode>().mParent << "\n";
+            std::cout << "flashlight model matrix: \n" << glm::to_string(flashlight.getComponent<Transform>().mModelMatrix) << "\n";
+
             framerateCounter -= frameratePoll;
         }
 
         // Render a frame
-        camera->update(deltaTime);
-
         ApploopEventDispatcher::preRenderStep(simulationProgress);
-        SimpleECS::getSystem<RenderSystem>()->updateCameraMatrices(*camera);
         SimpleECS::getSystem<RenderSystem>()->execute(simulationProgress);
         ApploopEventDispatcher::postRenderStep(simulationProgress);
 
         SimpleECS::endFrame();
     }
+    ApploopEventDispatcher::applicationEnd();
 
     // ... and then die
     cleanup();
@@ -617,10 +613,11 @@ void init() {
     FramebufferManager::getInstance();
     ModelManager::getInstance();
 
-    SimpleECS::registerComponentTypes<Placement, LightEmissionData, ModelHandle, Transform, SceneNode, SimSystem::SimCore>();
+    SimpleECS::registerComponentTypes<Placement, LightEmissionData, ModelHandle, Transform, SceneNode, SimSystem::SimCore, CameraProperties>();
     SimpleECS::registerSystem<SceneSystem, Transform, SceneNode, Placement>();
     SimpleECS::registerSystem<SimSystem, SimSystem::SimCore>();
-    SimpleECS::registerSystem<RenderSystem>();
+    SimpleECS::registerSystem<CameraSystem, Transform, CameraProperties>();
+    SimpleECS::registerSystem<RenderSystem, CameraProperties>();
 }
 
 void cleanup() {

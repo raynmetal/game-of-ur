@@ -10,7 +10,6 @@
 #include "simple_ecs.hpp"
 #include "shapegen.hpp"
 #include "render_stage.hpp"
-#include "fly_camera.hpp"
 
 class RenderSystem: public System<RenderSystem>,  public IActionHandler {
 public:
@@ -28,7 +27,7 @@ public:
 
     void execute(float simulationProgress);
 
-    void updateCameraMatrices(const FlyCamera& camera);
+    void updateCameraMatrices(float simulationProgress);
 
     void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override;
 
@@ -43,6 +42,7 @@ private:
 
     std::size_t mCurrentScreenTexture {0};
     std::vector<TextureHandle> mScreenTextures {};
+    EntityID mActiveCamera {};
     GLuint mMatrixUniformBufferIndex {0};
     GLuint mMatrixUniformBufferBinding {0};
 

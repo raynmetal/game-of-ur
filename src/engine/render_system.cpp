@@ -6,7 +6,7 @@
 
 #include "light.hpp"
 #include "window_context_manager.hpp"
-#include "fly_camera.hpp"
+#include "camera_system.hpp"
 #include "render_stage.hpp"
 #include "model_manager.hpp"
 
@@ -36,6 +36,7 @@ void RenderSystem::onCreated() {
     lightMaterialHandle.getResource().updateIntProperty("screenWidth", 800);
     lightMaterialHandle.getResource().updateIntProperty("screenHeight", 600);
 
+    mActiveCamera = *(getEnabledEntities().begin());
     // Set up a uniform buffer for shared matrices
     glGenBuffers(1, &mMatrixUniformBufferIndex);
     glBindBuffer(GL_UNIFORM_BUFFER, mMatrixUniformBufferIndex);
@@ -96,20 +97,21 @@ void RenderSystem::renderNextTexture() {
     mScreenRenderStage.attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
 }
 
-void RenderSystem::updateCameraMatrices(const FlyCamera& camera) {
+void RenderSystem::updateCameraMatrices(float simulationProgress) {
+    CameraProperties cameraProps { getComponent<CameraProperties>(mActiveCamera, simulationProgress) };
     // Send shared matrices to the uniform buffer
     glBindBuffer(GL_UNIFORM_BUFFER, mMatrixUniformBufferIndex);
         glBufferSubData(
             GL_UNIFORM_BUFFER,
             0,
             sizeof(glm::mat4),
-            glm::value_ptr(camera.getProjectionMatrix())
+            glm::value_ptr(cameraProps.mProjectionMatrix)
         );
         glBufferSubData(
             GL_UNIFORM_BUFFER,
             sizeof(glm::mat4),
             sizeof(glm::mat4),
-            glm::value_ptr(camera.getViewMatrix())
+            glm::value_ptr(cameraProps.mViewMatrix)
         );
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
@@ -119,6 +121,10 @@ std::size_t RenderSystem::getCurrentScreenTexture() {
 }
 
 void RenderSystem::execute(float simulationProgress) {
+    mActiveCamera = *(getEnabledEntities().begin());
+
+    updateCameraMatrices(simulationProgress);
+
     // Execute each rendering stage in its proper order
     SimpleECS::getSystem<OpaqueQueue>()->enqueueTo(mGeometryRenderStage, simulationProgress);
     mGeometryRenderStage.execute();

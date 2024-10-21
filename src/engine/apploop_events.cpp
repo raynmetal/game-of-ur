@@ -10,6 +10,36 @@ void ApploopEventDispatcher::INTERNAL_registerTimelineEventHandler_(std::weak_pt
     getInstance().mHandlers.insert(timelineEventHandler);
 }
 
+void ApploopEventDispatcher::applicationStart() {
+    ApploopEventDispatcher& caller { getInstance() };
+    std::set<std::weak_ptr<INTERNAL_ApploopEventHandler_>, std::owner_less<std::weak_ptr<INTERNAL_ApploopEventHandler_>>> eraseables {};
+    for(auto& handler: caller.mHandlers) {
+        if(handler.expired()) {
+            eraseables.insert(handler);
+            continue;
+        }
+        handler.lock()->onApplicationStart();
+    }
+    for(auto& eraseable: eraseables) {
+        caller.mHandlers.erase(eraseable);
+    }
+}
+
+void ApploopEventDispatcher::applicationEnd() {
+    ApploopEventDispatcher& caller { getInstance() };
+    std::set<std::weak_ptr<INTERNAL_ApploopEventHandler_>, std::owner_less<std::weak_ptr<INTERNAL_ApploopEventHandler_>>> eraseables {};
+    for(auto& handler: caller.mHandlers) {
+        if(handler.expired()) {
+            eraseables.insert(handler);
+            continue;
+        }
+        handler.lock()->onApplicationEnd();
+    }
+    for(auto& eraseable: eraseables) {
+        caller.mHandlers.erase(eraseable);
+    }
+}
+
 void ApploopEventDispatcher::simulationStep(uint32_t simulationTimestep) {
     ApploopEventDispatcher& caller { getInstance() };
     std::set<std::weak_ptr<INTERNAL_ApploopEventHandler_>, std::owner_less<std::weak_ptr<INTERNAL_ApploopEventHandler_>>> eraseables {};

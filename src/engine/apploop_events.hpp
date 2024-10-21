@@ -10,10 +10,12 @@ class INTERNAL_ApploopEventHandler_;
 
 class ApploopEventDispatcher {
 public:
+    static void applicationStart();
     static void simulationStep(uint32_t simulationTimestep);
     static void postSimulationStep(float simulationProgress);
     static void preRenderStep(float simulationProgress);
     static void postRenderStep(float simulationProgress);
+    static void applicationEnd();
     static void INTERNAL_registerTimelineEventHandler_(std::weak_ptr<INTERNAL_ApploopEventHandler_> timelineEventHandler);
 private:
     ApploopEventDispatcher(){};
@@ -32,10 +34,12 @@ public:
     ~INTERNAL_ApploopEventHandler_() = default;
     INTERNAL_ApploopEventHandler_(Private) {}
 private:
+    virtual void onApplicationStart() {}
     virtual void onSimulationStep(uint32_t simulationTimestep) {}
     virtual void onPostSimulationStep(float simulationProgress) {}
     virtual void onPreRenderStep(float simulationProgress) {}
     virtual void onPostRenderStep(float simulationProgress) {}
+    virtual void onApplicationEnd() {}
 
 friend class ApploopEventDispatcher;
 };

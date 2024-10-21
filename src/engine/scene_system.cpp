@@ -180,3 +180,8 @@ void SceneSystem::onEntityUpdated(EntityID entityID) {
 void SceneSystem::ApploopEventHandler::onPreRenderStep(float simulationProgress) {
     mSystem->updateTransforms();
 }
+
+void SceneSystem::ApploopEventHandler::onApplicationStart() {
+    mSystem->rebuildGraph();
+    mSystem->updateTransforms();
+}

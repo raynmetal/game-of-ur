@@ -1,8 +1,6 @@
 #include "sim_system.hpp"
 
-void SimSystem::ApploopEventHandler::onSimulationStep(uint32_t simulationTicks) {
-    uint32_t deltaSimTimeMillis{ simulationTicks - mSimulationTicks};
-    mSimulationTicks = simulationTicks;
+void SimSystem::ApploopEventHandler::onSimulationStep(uint32_t deltaSimTimeMillis) {
     for(EntityID entity: mSystem->getEnabledEntities()) {
         reinterpret_cast<SimObject*>(mSystem->getComponent<SimCore>(entity).mSimObject)->update(deltaSimTimeMillis);
     }
@@ -42,4 +40,8 @@ void SimObject::update(uint32_t deltaSimTimeMillis) {
     for(auto& pair: *mSimComponents) {
         pair.second->update(deltaSimTimeMillis);
     }
+}
+
+EntityID SimObject::getEntityID() const {
+    return mEntity->getID();
 }

@@ -14,8 +14,8 @@
 
 enum class RelativeTo : uint8_t {
     PARENT=0,
-    WORLD=1,
-    CAMERA=2,
+    // WORLD=1,
+    // CAMERA=2,
 };
 
 struct Placement {
@@ -30,7 +30,7 @@ struct Transform {
 
 struct SceneNode {
     EntityID mParent { kMaxEntities };
-    RelativeTo mRelativeTo { RelativeTo::PARENT };
+    RelativeTo mRelativeTo { RelativeTo::PARENT }; // TODO: this does nothing yet
     std::string mName {""};
     std::set<EntityID> mChildren {};
 };
@@ -48,6 +48,7 @@ private:
         inline void initializeEventHandler(SceneSystem* pSystem){ mSystem = pSystem; }
     private:
         void onPreRenderStep(float simulationProgress) override;
+        void onApplicationStart() override;
         SceneSystem* mSystem;
     };
     bool cycleDetected(EntityID entityID);

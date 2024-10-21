@@ -136,10 +136,10 @@ void SystemManager::handleEntityDestroyed(EntityID entityID) {
     }
 }
 
-void SystemManager::handleEntityUpdated(EntityID entityID, ComponentType updatedComponentType) {
+void SystemManager::handleEntityUpdated(EntityID entityID, Signature signature) {
     for(auto& pair: mHashToSignature) {
         Signature& systemSignature { pair.second };
-        if(systemSignature.test(updatedComponentType)){
+        if((systemSignature & signature) == systemSignature){
             BaseSystem& system { *(mHashToSystem[pair.first]).get() };
             system.onEntityUpdated(entityID);
         }

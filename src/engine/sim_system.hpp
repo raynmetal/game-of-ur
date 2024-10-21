@@ -26,12 +26,11 @@ public:
     private:
         void onSimulationStep(uint32_t simulationTicks) override;
         SimSystem* mSystem;
-        uint32_t mSimulationTicks {};
     friend class SimSystem;
     };
 
     template <typename ...TCoreComponentArgs>
-    std::shared_ptr<SimObject> createSimObject(TCoreComponentArgs &&... coreComponentArgs);
+    std::shared_ptr<SimObject> createSimObject(TCoreComponentArgs ... coreComponentArgs);
 
 private:
     std::shared_ptr<SimSystem::ApploopEventHandler> mApploopEventHandler { SimSystem::ApploopEventHandler::registerHandler(this) };
@@ -44,6 +43,8 @@ friend class SimSystem::ApploopEventHandler;
  */
 class SimObject {
 public:
+    template <typename ...TCoreComponentArgs>
+    SimObject(void* fake, TCoreComponentArgs ... coreComponentArgs);
 
     SimObject(const SimObject& other) = delete;
     SimObject(SimObject&& other);
@@ -60,14 +61,13 @@ public:
     template <typename TSimComponent>
     void removeComponent();
 
-private:
-    template <typename ...TCoreComponentArgs>
-    SimObject(void* fake, TCoreComponentArgs &&... coreComponentArgs);
+    EntityID getEntityID() const;
 
+private:
     Entity& getEntity();
     void update(uint32_t deltaSimTimeMillis);
 
-    std::unique_ptr<Entity> mEntity { std::make_unique<Entity>(SimpleECS::createEntity( SimSystem::SimCore{this} )) };
+    std::unique_ptr<Entity> mEntity { nullptr };
     std::unique_ptr<std::unordered_map<std::size_t, std::unique_ptr<SimComponent>>> mSimComponents { nullptr };
 
 friend class SimSystem;
@@ -109,7 +109,7 @@ friend class SimObject;
 };
 
 template <typename ...TCoreComponentArgs>
-std::shared_ptr<SimObject> SimSystem::createSimObject(TCoreComponentArgs &&... coreComponentArgs) {
+std::shared_ptr<SimObject> SimSystem::createSimObject(TCoreComponentArgs ... coreComponentArgs) {
     return std::make_shared<SimObject>(nullptr, coreComponentArgs...);
 }
 
@@ -118,7 +118,7 @@ void SimObject::addComponent(TSimComponentArgs &&... simComponentArgs) {
     std::size_t componentHash { typeid(TSimComponent).hash_code() };
     constexpr bool isDerivedFromSimComponent { std::is_base_of<SimComponent, TSimComponent>::value };
     static_assert(isDerivedFromSimComponent && "Component object must be a subclass of SimComponent");
-    mSimComponents->try_emplace(componentHash, std::make_unique<TSimComponent>( *this,  simComponentArgs... ));
+    mSimComponents->try_emplace(componentHash, std::make_unique<TSimComponent>( this,  simComponentArgs... ));
 }
 
 template <typename TSimComponent>
@@ -130,7 +130,7 @@ bool SimObject::hasComponent() {
 template <typename TSimComponent>
 TSimComponent& SimObject::getComponent() {
     std::size_t componentHash { typeid(TSimComponent).hash_code() };
-    return *(std::static_pointer_cast<TSimComponent>(mSimComponents->at(componentHash)));
+    return *(static_cast<TSimComponent*>(mSimComponents->at(componentHash).get()));
 }
 
 template <typename TSimComponent>
@@ -140,9 +140,9 @@ void SimObject::removeComponent() {
 }
 
 template<typename ...TCoreComponents>
-SimObject::SimObject(void*, TCoreComponents &&... coreComponents) :
-    mEntity{ std::make_unique(SimpleECS::createEntity(SimSystem::SimCore { this }, coreComponents...)) }
+SimObject::SimObject(void*, TCoreComponents ... coreComponents)
 {
+    mEntity = std::unique_ptr<Entity>(new Entity { SimpleECS::createEntity(SimSystem::SimCore { .mSimObject {this} }, coreComponents...)} );
     mSimComponents = std::make_unique<std::unordered_map<std::size_t, std::unique_ptr<SimComponent>>>();
 }
 
