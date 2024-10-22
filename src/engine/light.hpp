@@ -72,7 +72,7 @@ static InstanceLayout LightInstanceLayout {{
 
 class LightInstanceAllocator : public BaseInstanceAllocator {
 public:
-    LightInstanceAllocator(const std::vector<LightEmissionData>& lightEmissionDataList, const std::vector<Placement>& lightPlacementList);
+    LightInstanceAllocator(const std::vector<LightEmissionData>& lightEmissionDataList, const std::vector<glm::mat4>& lightModelMatrices);
 
 protected:
     virtual void upload() override;

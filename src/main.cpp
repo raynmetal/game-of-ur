@@ -535,7 +535,6 @@ int main(int argc, char* argv[]) {
 
         // Get references to the entities I'm going to frequently update
         Entity& sunlight { lightEntities[2] };
-        Entity& flashlight { lightEntities[0] };
 
         // update time related variables
         GLuint currentTicks { SDL_GetTicks() };
@@ -574,9 +573,6 @@ int main(int argc, char* argv[]) {
         while(framerateCounter > frameratePoll) {
             std::cout << "Frame " << renderFrame << ", Simulation Frame " << simFrame << " -- Progress to next sim frame: " << simulationProgress*100.f << "%\n";
             std::cout << "Framerate: " << framerate << " fps\n";
-
-            std::cout << "flashlight parent entity: " << flashlight.getComponent<SceneNode>().mParent << "\n";
-            std::cout << "flashlight model matrix: \n" << glm::to_string(flashlight.getComponent<Transform>().mModelMatrix) << "\n";
 
             framerateCounter -= frameratePoll;
         }

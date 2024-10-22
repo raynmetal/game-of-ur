@@ -46,10 +46,9 @@ struct OpaqueRenderUnit {
 };
 
 struct LightRenderUnit {
-    LightRenderUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const Placement& placement, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
+    LightRenderUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
         mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle },
         mModelMatrix{ modelMatrix },
-        mPlacement { placement },
         mLightAttributes { lightEmissionData }
     {
         setSortKey();
@@ -63,7 +62,6 @@ struct LightRenderUnit {
     MeshHandle mMeshHandle;
     MaterialHandle mMaterialHandle;
     glm::mat4 mModelMatrix;
-    Placement mPlacement;
     LightEmissionData mLightAttributes;
 
     void setSortKey() {

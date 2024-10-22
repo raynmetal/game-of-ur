@@ -18,7 +18,7 @@ constexpr float MAX_EXPOSURE { 15.f };
 constexpr float MIN_EXPOSURE { 0.f };
 
 void RenderSystem::onCreated() {
-    SimpleECS::registerSystem<LightQueue, Placement, Transform, LightEmissionData>();
+    SimpleECS::registerSystem<LightQueue, Transform, LightEmissionData>();
     SimpleECS::registerSystem<OpaqueQueue, Transform, ModelHandle>();
 
     mGeometryRenderStage.setup();
@@ -36,6 +36,8 @@ void RenderSystem::onCreated() {
     lightMaterialHandle.getResource().updateIntProperty("screenWidth", 800);
     lightMaterialHandle.getResource().updateIntProperty("screenHeight", 600);
 
+    // TODO: Make it so that we can control which camera is used by the render
+    // system, and what portion of the screen it renders to
     mActiveCamera = *(getEnabledEntities().begin());
     // Set up a uniform buffer for shared matrices
     glGenBuffers(1, &mMatrixUniformBufferIndex);
@@ -162,16 +164,12 @@ void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float sim
     };
     for(EntityID entity: getEnabledEntities()) {
         Transform entityTransform { getComponent<Transform>(entity, simulationProgress)};
-        Placement placement { getComponent<Placement>(entity, simulationProgress) };
         LightEmissionData lightEmissionData { getComponent<LightEmissionData>(entity, simulationProgress) };
         renderStage.submitToRenderQueue(LightRenderUnit {
             mSphereMesh,
             lightMaterialHandle,
-            placement,
             lightEmissionData,
-            lightEmissionData.mType != LightEmissionData::directional?
-                entityTransform.mModelMatrix:
-                buildModelMatrix(placement.mPosition, {}, placement.mScale)
+            entityTransform.mModelMatrix
         });
     }
 }

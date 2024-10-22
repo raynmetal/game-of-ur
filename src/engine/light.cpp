@@ -1,5 +1,4 @@
 
-#include <iostream>
 #include <cmath>
 #include <cassert>
 
@@ -63,22 +62,19 @@ LightEmissionData LightEmissionData::MakeSpotLight(float innerAngle, float outer
     };
 }
 
-LightInstanceAllocator::LightInstanceAllocator(const std::vector<LightEmissionData>& lightEmissionDataList, const std::vector<Placement>& lightPlacementDataList)
+LightInstanceAllocator::LightInstanceAllocator(const std::vector<LightEmissionData>& lightEmissionDataList, const std::vector<glm::mat4>& lightModelMatrices)
 :
     BaseInstanceAllocator { LightInstanceLayout },  mLightData {}
 {
-    assert(lightEmissionDataList.size() == lightPlacementDataList.size() && "One to one mapping between emission and placement required");
+    assert(lightEmissionDataList.size() == lightModelMatrices.size() && "One to one mapping between emission and placement required");
     mLightData.resize(lightEmissionDataList.size());
     for(std::size_t i{0}; i < lightEmissionDataList.size(); ++i) {
-        // TODO: fix this light orientation hack
-        glm::quat lightOrientation {lightPlacementDataList[i].mOrientation};
-        lightOrientation.x *= -1;
-        lightOrientation.y *= -1;
-        lightOrientation.z *= -1;
-        mLightData[i].first.first = lightPlacementDataList[i].mPosition;
+        mLightData[i].first.first = lightModelMatrices[i] * glm::vec4(0.f, 0.f, 0.f, 1.f);
         mLightData[i].first.second = (
-            glm::mat4_cast(lightOrientation)
-            * glm::vec4(0.f, 0.f, -1.f, 0.f) // Orientation relative to the -Z axis
+            glm::normalize(
+                lightModelMatrices[i]
+                * glm::vec4(0.f, 0.f, -1.f, 0.f) // new direction of the local -Z axis
+            )
         );
         mLightData[i].second = lightEmissionDataList[i];
     }

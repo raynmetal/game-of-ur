@@ -246,13 +246,11 @@ void LightingRenderStage::execute() {
         while(!mLightQueue.empty()) {
             std::vector<glm::mat4> modelMatrices {};
             std::vector<LightEmissionData> lightEmissionList {};
-            std::vector<Placement> lightPlacementList{};
 
             LightRenderUnit first {mLightQueue.top()};
             mLightQueue.pop();
 
             modelMatrices.push_back(first.mModelMatrix);
-            lightPlacementList.push_back(first.mPlacement);
             lightEmissionList.push_back(first.mLightAttributes);
 
             while(
@@ -264,7 +262,6 @@ void LightingRenderStage::execute() {
                 mLightQueue.pop();
 
                 modelMatrices.push_back(renderLightUnit.mModelMatrix);
-                lightPlacementList.push_back(renderLightUnit.mPlacement);
                 lightEmissionList.push_back(renderLightUnit.mLightAttributes);
             }
 
@@ -293,7 +290,7 @@ void LightingRenderStage::execute() {
                     {"position", LOCATION_POSITION, 4, GL_FLOAT}
                 }});
                 BuiltinModelMatrixAllocator modelMatrixAllocator{ modelMatrices };
-                LightInstanceAllocator lightInstanceAllocator{ lightEmissionList, lightPlacementList };
+                LightInstanceAllocator lightInstanceAllocator{ lightEmissionList, modelMatrices };
                 modelMatrixAllocator.bind(BuiltinModelMatrixLayout);
                 lightInstanceAllocator.bind({{
                     {"attrLightPlacement.mPosition", RUNTIME, 4, GL_FLOAT},
