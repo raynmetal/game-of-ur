@@ -61,6 +61,15 @@ public:
     template <typename TSimComponent>
     void removeComponent();
 
+    template <typename TCoreComponent>
+    void addCoreComponent(const TCoreComponent& initialComponentValue);
+    template <typename TCoreComponent>
+    TCoreComponent getCoreComponent();
+    template <typename TCoreComponent>
+    void updateCoreComponent(const TCoreComponent& coreComponent);
+    template <typename TCoreComponent>
+    void removeCoreComponent();
+
     EntityID getEntityID() const;
 
 private:
@@ -103,6 +112,7 @@ protected:
     template <typename TSimComponent>
     void removeComponent();
 
+    EntityID getEntityID() const;
 private:
     SimObject* mSimObject;
 friend class SimObject;
@@ -168,22 +178,42 @@ bool SimComponent::hasComponent() {
 
 template <typename TCoreComponent>
 TCoreComponent SimComponent::getCoreComponent() {
-    return mSimObject->getEntity().getComponent<TCoreComponent>();
+    return mSimObject->getCoreComponent<TCoreComponent>();
 }
 
 template <typename TCoreComponent>
 void SimComponent::addCoreComponent(const TCoreComponent& initialComponentValue) {
-    mSimObject->getEntity().addComponent(initialComponentValue);
+    mSimObject->addCoreComponent(initialComponentValue);
 }
 
 template <typename TCoreComponent>
 void SimComponent::updateCoreComponent(const TCoreComponent& componentValue) {
-    mSimObject->getEntity().updateComponent(componentValue);
+    mSimObject->updateCoreComponent(componentValue);
 }
 
 template <typename TCoreComponent>
 void SimComponent::removeCoreComponent() {
-    mSimObject->getEntity().removeComponent<TCoreComponent>();
+    mSimObject->removeCoreComponent<TCoreComponent>();
+}
+
+template <typename TCoreComponent>
+TCoreComponent SimObject::getCoreComponent() {
+    return getEntity().getComponent<TCoreComponent>();
+}
+
+template <typename TCoreComponent>
+void SimObject::addCoreComponent(const TCoreComponent& initialComponentValue) {
+    getEntity().addComponent(initialComponentValue);
+}
+
+template <typename TCoreComponent>
+void SimObject::updateCoreComponent(const TCoreComponent& componentValue) {
+    getEntity().updateComponent(componentValue);
+}
+
+template <typename TCoreComponent>
+void SimObject::removeCoreComponent() {
+    getEntity().removeComponent<TCoreComponent>();
 }
 
 template<>

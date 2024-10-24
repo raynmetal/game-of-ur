@@ -10,20 +10,18 @@
 
 #include "engine/sim_system.hpp"
 #include "engine/simple_ecs.hpp"
-#include "app/fly_camera.hpp"
 #include "engine/window_context_manager.hpp"
-#include "engine/texture_manager.hpp"
-#include "engine/shader_program_manager.hpp"
-#include "engine/framebuffer_manager.hpp"
 #include "engine/mesh_manager.hpp"
 #include "engine/material_manager.hpp"
 #include "engine/model_manager.hpp"
 #include "engine/light.hpp"
-#include "engine/render_stage.hpp"
-#include "engine/shapegen.hpp"
 #include "engine/render_system.hpp"
 #include "engine/scene_system.hpp"
 #include "engine/input_system/input_system.hpp"
+
+#include "app/fly_camera.hpp"
+#include "app/back_and_forth.hpp"
+#include "app/revolve.hpp"
 
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
@@ -383,9 +381,11 @@ int main(int argc, char* argv[]) {
     );
 
     const float sqrt2 { sqrt(2.f) };
-    std::vector<Entity> lightEntities {
+    std::vector<std::shared_ptr<SimObject>> lightEntities {
         { // Flashlight
-            SimpleECS::createEntity<LightEmissionData, Placement, Transform, SceneNode>(
+            SimpleECS::getSystem<SimSystem>()->createSimObject<
+                LightEmissionData, Placement, Transform, SceneNode
+            >(
                 LightEmissionData::MakeSpotLight(
                     4.f,
                     13.f,
@@ -401,11 +401,13 @@ int main(int argc, char* argv[]) {
                     glm::vec3{1.f}
                 },
                 {},
-                { .mParent{ camera->getEntityID() } }
+                // Make the flashlight a child of the camera's scene node so that 
+                // it moves along with the camera
+                { .mParent{ camera->getEntityID() } } 
             )
         },
         { // Weak point light
-            SimpleECS::createEntity<LightEmissionData, Placement, Transform, SceneNode>(
+            SimpleECS::getSystem<SimSystem>()->createSimObject<LightEmissionData, Placement, Transform, SceneNode>(
                 {
                     LightEmissionData::MakePointLight(
                         glm::vec3(2.f, 0.6f, 1.2f),
@@ -425,7 +427,7 @@ int main(int argc, char* argv[]) {
             )
         },
         { // Sunlight
-            SimpleECS::createEntity<LightEmissionData, Placement, Transform, SceneNode> (
+            SimpleECS::getSystem<SimSystem>()->createSimObject<LightEmissionData, Placement, Transform, SceneNode> (
                 {
                     LightEmissionData::MakeDirectionalLight(
                         glm::vec3{20.f},
@@ -448,15 +450,16 @@ int main(int argc, char* argv[]) {
         }
     };
     for(int i{0}; i < 2; ++i) {
-        Placement placement { lightEntities[i].getComponent<Placement>() };
-        placement.mScale = glm::vec3 { lightEntities[i].getComponent<LightEmissionData>().mRadius };
-        lightEntities[i].updateComponent<Placement>(placement);
+        Placement placement { lightEntities[i]->getCoreComponent<Placement>() };
+        placement.mScale = glm::vec3 { lightEntities[i]->getCoreComponent<LightEmissionData>().mRadius };
+        lightEntities[i]->updateCoreComponent<Placement>(placement);
     }
+    lightEntities[2]->addComponent<Revolve>(); // make sunlight revolve
 
-    Entity boardPiece { 
-        SimpleECS::createEntity<ModelHandle, Placement, Transform, SceneNode>(
+    std::shared_ptr<SimObject> boardPiece  {
+        SimpleECS::getSystem<SimSystem>()->createSimObject<ModelHandle, Placement, Transform, SceneNode> (
             ModelManager::getInstance().registerResource(
-                "data/models/Generic Board Piece.obj", 
+                "data/models/Generic Board Piece.obj",
                 {"data/models/Generic Board Piece.obj"}
             ),
             {{0.f, -1.f, -1.f, 1.f}},
@@ -464,27 +467,32 @@ int main(int argc, char* argv[]) {
             {}
         )
     };
+    boardPiece->addComponent<BackAndForth>();
 
-    std::vector<Entity> boardPieces{};
-    EntityID parentEntity { boardPiece.getID() };
+    std::vector<std::shared_ptr<SimObject>> boardPieces(20, nullptr);
+    EntityID parentEntity { boardPiece->getEntityID() };
+
     for(std::size_t i{0}; i < 20; ++i) {
-        boardPieces.push_back(boardPiece);
+        boardPieces[i] = SimpleECS::getSystem<SimSystem>()->createSimObject<ModelHandle, Placement, Transform, SceneNode>(
+            boardPiece->getCoreComponent<ModelHandle>(),
+            boardPiece->getCoreComponent<Placement>(),
+            boardPiece->getCoreComponent<Transform>(),
+            SceneNode { .mParent { parentEntity } }
+        );
+        boardPieces[i]->addComponent<BackAndForth>();
 
-        Placement boardPiecePlacement { boardPieces[i].getComponent<Placement>() };
-        SceneNode boardPieceSceneNode { boardPieces[i].getComponent<SceneNode>() };
+        Placement boardPiecePlacement { boardPieces[i]->getCoreComponent<Placement>() };
 
         boardPiecePlacement.mPosition.x = 0.f;
         boardPiecePlacement.mPosition.y = 2.f;
         boardPiecePlacement.mPosition.z = 0.f;
         boardPiecePlacement.mOrientation = glm::rotate(boardPiecePlacement.mOrientation, glm::radians(360.f/(1+20)), {0.f, 0.f, -1.f});
-        boardPieceSceneNode.mParent = parentEntity;
 
-        boardPieces[i].updateComponent<Placement>(boardPiecePlacement);
-        boardPieces[i].updateComponent<SceneNode>(boardPieceSceneNode);
+        boardPieces[i]->updateCoreComponent<Placement>(boardPiecePlacement);
 
         // each board piece is the parent of the board piece made in
         // the next iteration
-        parentEntity = boardPieces[i].getID();
+        parentEntity = boardPieces[i]->getEntityID();
     }
 
     inputManager["Camera"].registerActionHandler("Rotate", std::shared_ptr<FlyCamera>(camera, &(camera->getComponent<FlyCamera>())));
@@ -533,9 +541,6 @@ int main(int argc, char* argv[]) {
         if(quit) break;
         ++renderFrame;
 
-        // Get references to the entities I'm going to frequently update
-        Entity& sunlight { lightEntities[2] };
-
         // update time related variables
         GLuint currentTicks { SDL_GetTicks() };
 
@@ -548,14 +553,6 @@ int main(int argc, char* argv[]) {
             inputManager.dispatch(simulationTicks);
 
             // update objects according to calculated delta
-            Placement sunlightPlacement { sunlight.getComponent<Placement>() };
-            sunlightPlacement.mOrientation = glm::rotate(sunlight.getComponent<Placement>().mOrientation, kSimulationStep/(1000.f*10.f), {0.f, 1.f, 0.f});
-            sunlight.updateComponent<Placement>(sunlightPlacement);
-            for(Entity& piece: boardPieces) {
-                Placement piecePlacement { piece.getComponent<Placement>() };
-                piecePlacement.mPosition.z = glm::sin(glm::radians(simulationTicks/10.f + piece.getID()*45.f));
-                piece.updateComponent<Placement>(piecePlacement);
-            }
             ApploopEventDispatcher::simulationStep(kSimulationStep);
         }
         // Calculate progress towards the next simulation step

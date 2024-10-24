@@ -45,3 +45,8 @@ void SimObject::update(uint32_t deltaSimTimeMillis) {
 EntityID SimObject::getEntityID() const {
     return mEntity->getID();
 }
+
+EntityID SimComponent::getEntityID() const {
+    return mSimObject->getEntityID();
+}
+
