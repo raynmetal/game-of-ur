@@ -4,123 +4,81 @@
 #include <vector>
 #include <map>
 #include <queue>
+#include <memory>
 
 #include <GL/glew.h>
 
-#include "resource_manager.hpp"
 #include <assimp/scene.h>
+
+#include "resource_database.hpp"
 
 #include "simple_ecs.hpp"
 #include "vertex.hpp"
 
-/* 
-A class whose main purpose is to store geometry-related information.
-*/
-class BaseMesh: IResource {
+/**
+ *  A class whose current main purpose is to store geometry related info, and to
+ * upload it to GPU memory when requested
+ */
+class StaticMesh: public Resource<StaticMesh> {
 public:
-    /*
-    Initializer for the mesh class
-    */
-    BaseMesh(const VertexLayout& vertexLayout);
+    StaticMesh(const std::vector<BuiltinVertexData>& mVertices, const std::vector<GLuint>& mElements, GLuint vertexBuffer=0, GLuint elementBuffer=0, bool isUploaded=false);
 
-    /*
-    Mesh class destructor
-    */
-    virtual ~BaseMesh();
+    StaticMesh(const StaticMesh& other);
+    StaticMesh& operator=(const StaticMesh& other);
 
-    /* move constructor */
-    BaseMesh(BaseMesh&& other);
-    /* copy constructor */
-    BaseMesh(const BaseMesh& other);
+    StaticMesh(StaticMesh&& other);
+    StaticMesh& operator=(StaticMesh&& other);
 
-    /* move assignment */
-    BaseMesh& operator=(BaseMesh&& other);
-    /* copy assignment */
-    BaseMesh& operator=(const BaseMesh& other);
+    ~StaticMesh();
 
-    VertexLayout getVertexLayout() const;
-
-    virtual GLuint getElementCount() = 0;
-
-    // Bind the VAO associated with this mesh. If it hasn't been 
-    // created yet, calls upload, then binds the VAO
-    void bind(const VertexLayout& shaderVertexLayout);
-
-    // Unbind the VAO associated with this mesh. as simple as binding
-    // vertex array 0
-    void unbind();
-
-    bool isUploaded() { return mUploaded; }
-
-protected:
-    // uploads vertex data to the GPU, and sets up a corresponding VBO,
-    // VAO, and EBO
-    virtual void upload() = 0;
-
-    GLuint mVertexBufferIndex { 0 };
-    GLuint mElementBufferIndex { 0 };
-
-protected:
-
-    bool mUploaded { false };
-
-    // deletes vertex data corresponding to this mesh from the GPU. Should unset
-    // mUploaded once done
-    void unload();
-
-    // Sets attribute pointers per the data contained in 
-    // the vertex layout.
-    void setAttributePointers(const VertexLayout& shaderVertexLayout, std::size_t startingOffset = 0);
-
-
-    void _upload();
-
-    VertexLayout mVertexLayout;
-
-    /* 
-    Destroys the GPU resources used by this object
-    */
-    virtual void destroyResource() override;
-
-    /*
-    Removes references to GPU allocated resources without destroying the
-    resources themselves
-    */
-    virtual void releaseResource() override;
-};
-
-class BuiltinMesh : public BaseMesh {
-public:
-    BuiltinMesh(aiMesh* const pAiMesh);
-    BuiltinMesh(
-        const std::vector<BuiltinVertexData>& vertices={}, 
-        const std::vector<GLuint>& elements={}
-    );
-
-    virtual GLuint getElementCount() {
+    GLuint getElementCount() {
         return mElements.size();
     }
 
-protected:
-    virtual void upload() override;
+    void bind(const VertexLayout& shaderVertexLayout);
+    void unbind();
+
+    VertexLayout getVertexLayout() const;
+    inline static std::string getName() { return "StaticMesh"; }
 
 private:
+
+    void setAttributePointers(const VertexLayout& shaderVertexLayout, std::size_t startingOffset=0);
+
     std::vector<BuiltinVertexData> mVertices {};
     std::vector<GLuint> mElements {};
 
-    virtual void destroyResource() override {BaseMesh::destroyResource();}
-    virtual void releaseResource() override {BaseMesh::releaseResource();}
+    VertexLayout mVertexLayout;
+    bool mIsUploaded { false };
 
-friend class ResourceManager<BuiltinMesh>;
+    GLuint mVertexBuffer { 0 };
+    GLuint mElementBuffer { 0 };
+
+    void upload();
+    void unload();
+    void destroyResource();
+    void releaseResource();
 };
 
 template<>
-inline ResourceHandle<BuiltinMesh> Interpolator<ResourceHandle<BuiltinMesh>>::operator() (
-    const ResourceHandle<BuiltinMesh>& previousState,
-    const ResourceHandle<BuiltinMesh>& nextState,
+inline std::shared_ptr<StaticMesh> Interpolator<std::shared_ptr<StaticMesh>>::operator() (
+    const std::shared_ptr<StaticMesh>& previousState,
+    const std::shared_ptr<StaticMesh>& nextState,
     float simulationProgress
 ) const {
     return nextState;
 }
+
+class StaticMeshFromDescription: public ResourceFactoryMethod<StaticMesh, StaticMeshFromDescription> {
+public:
+    StaticMeshFromDescription():
+    ResourceFactoryMethod<StaticMesh, StaticMeshFromDescription>{0}
+    {}
+
+    inline static std::string getName(){ return "fromDescription"; }
+
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+};
 
 #endif

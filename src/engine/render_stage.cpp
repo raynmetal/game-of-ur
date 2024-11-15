@@ -1,19 +1,29 @@
 #include <iostream>
-#include "texture_manager.hpp"
-#include "shader_program_manager.hpp"
-#include "framebuffer_manager.hpp"
+
+#include "resource_database.hpp"
+#include "texture.hpp"
+#include "shader_program.hpp"
+#include "framebuffer.hpp"
 #include "light.hpp"
 
 #include "render_stage.hpp"
 
 BaseRenderStage::BaseRenderStage(
     const std::string& shaderFilepath
-) : mShaderHandle {
-        ShaderProgramManager::getInstance().registerResource(
-            shaderFilepath, {shaderFilepath}
-        )
-    }
+) : mShaderHandle {nullptr}
 {
+    if(!ResourceDatabase::hasResourceDescription(shaderFilepath)){
+        nlohmann::json shaderDescription {
+            {"name", shaderFilepath},
+            {"type", ShaderProgram::getName()},
+            {"method", ShaderProgramFromFile::getName()},
+            {"parameters", {
+                {"path", shaderFilepath}
+            }}
+        };
+        ResourceDatabase::addResourceDescription(shaderDescription);
+    }
+    mShaderHandle = ResourceDatabase::getResource<ShaderProgram>(shaderFilepath);
     glGenVertexArrays(1, &mVertexArrayObject);
 }
 
@@ -31,34 +41,34 @@ BaseOffscreenRenderStage::BaseOffscreenRenderStage(
 
 void BaseRenderStage::attachMesh(
     const std::string& name,
-    const MeshHandle& meshHandle
+    std::shared_ptr<StaticMesh> meshHandle
 ) {
     mMeshAttachments.insert_or_assign(name, meshHandle);
 }
 
-MeshHandle BaseRenderStage::getMesh(const std::string& name) {
+std::shared_ptr<StaticMesh> BaseRenderStage::getMesh(const std::string& name) {
     return mMeshAttachments.at(name);
 }
 
 void BaseRenderStage::attachTexture(
     const std::string& name,
-    const TextureHandle& textureHandle
+    std::shared_ptr<Texture> textureHandle
 ) {
     mTextureAttachments.insert_or_assign(name, textureHandle);
 }
 
-TextureHandle BaseRenderStage::getTexture(const std::string& name) {
+std::shared_ptr<Texture> BaseRenderStage::getTexture(const std::string& name) {
     return mTextureAttachments.at(name);
 }
 
 void BaseRenderStage::attachMaterial(
     const std::string& name,
-    const MaterialHandle& materialHandle
+    std::shared_ptr<Material> materialHandle
 ) {
     mMaterialAttachments.insert_or_assign(name, materialHandle);
 }
 
-MaterialHandle BaseRenderStage::getMaterial(const std::string& name) {
+std::shared_ptr<Material> BaseRenderStage::getMaterial(const std::string& name) {
     return mMaterialAttachments.at(name);
 }
 
@@ -71,37 +81,63 @@ void BaseRenderStage::submitToRenderQueue(LightRenderUnit renderLightUnit) {
 }
 
 void BaseOffscreenRenderStage::declareRenderTarget(const std::string& name, unsigned int index) {
-    assert(index < mFramebufferHandle.getResource().getColorBufferHandles().size());
+    assert(index < mFramebufferHandle->getColorBufferHandles().size());
     mRenderTargets.insert_or_assign(name, index);
 }
 
-TextureHandle BaseOffscreenRenderStage::getRenderTarget(const std::string& name) {
-    return mFramebufferHandle.getResource().getColorBufferHandles()[mRenderTargets.at(name)];
+std::shared_ptr<Texture> BaseOffscreenRenderStage::getRenderTarget(const std::string& name) {
+    return mFramebufferHandle->getColorBufferHandles()[mRenderTargets.at(name)];
 }
 
 void GeometryRenderStage::setup() {
-    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
-        "geometryFramebuffer",
-        {
-            // TODO: Where do we get window dimensions from? Hardcoded for now
-            {800, 600},
-            3,
-            {
-                ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4},
-                ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4},
-                ColorBufferDefinition{.mDataType=GL_UNSIGNED_BYTE, .mComponentCount=4},
-            },
-            true
-        }
-    );
+    if(!ResourceDatabase::hasResourceDescription("geometryFramebuffer")) {
+        nlohmann::json framebufferDescription {
+            {"name", "geometryFramebuffer"},
+            {"type", Framebuffer::getName()},
+            {"method", FramebufferFromDescription::getName()},
+            {"parameters", {
+                {"nColorAttachments", 3},
+                {"dimensions", {
+                    800, 600
+                }},
+                {"useRBO", true },
+                {"colorBufferDefinitions",{
+                    colorBufferDefinitionToJSON({
+                        .mDataType=GL_FLOAT,
+                        .mComponentCount=4
+                    }),
+                    colorBufferDefinitionToJSON({
+                        .mDataType=GL_FLOAT,
+                        .mComponentCount=4
+                    }),
+                    colorBufferDefinitionToJSON({
+                        .mDataType=GL_UNSIGNED_BYTE,
+                        .mComponentCount=4
+                    })
+                }},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(framebufferDescription);
+    }
+    mFramebufferHandle = ResourceDatabase::getResource<Framebuffer>("geometryFramebuffer");
+
     declareRenderTarget("geometryPosition", 0);
     declareRenderTarget("geometryNormal", 1);
     declareRenderTarget("geometryAlbedoSpecular", 2);
-    mShaderHandle.getResource().use();
-    mShaderHandle.getResource().setUniformBlock("Matrices", 0);
-    TextureHandle plainWhite {TextureManager::getInstance().registerResource(
-        "PlainWhite", {}
-    )};
+
+    mShaderHandle->use();
+    mShaderHandle->setUniformBlock("Matrices", 0);
+    if(!ResourceDatabase::hasResourceDescription("PlainWhite")) {
+        ResourceDatabase::addResourceDescription({
+            {"name", "PlainWhite"},
+            {"type", Texture::getName()},
+            {"method", TextureFromColorBufferDefinition::getName()},
+            {"parameters", 
+                colorBufferDefinitionToJSON(ColorBufferDefinition{})
+            }
+        });
+    }
+    std::shared_ptr<Texture> plainWhite = ResourceDatabase::getResource<Texture>("PlainWhite");
     Material::RegisterTextureHandleProperty("textureAlbedo", plainWhite);
     Material::RegisterTextureHandleProperty("textureSpecular", plainWhite);
     Material::RegisterTextureHandleProperty("textureNormal", plainWhite);
@@ -115,8 +151,8 @@ void GeometryRenderStage::validate() {
     /*
      * Three colour buffers corresponding to position, normal, albedospec (for now)
      */
-    assert(3 == mFramebufferHandle.getResource().getColorBufferHandles().size());
-    assert(mFramebufferHandle.getResource().hasRBO());
+    assert(3 == mFramebufferHandle->getColorBufferHandles().size());
+    assert(mFramebufferHandle->hasRBO());
     /*
      * TODO: more geometry pass related assertions
      */
@@ -124,8 +160,8 @@ void GeometryRenderStage::validate() {
 }
 
 void GeometryRenderStage::execute() {
-    mShaderHandle.getResource().use();
-    mFramebufferHandle.getResource().bind();
+    mShaderHandle->use();
+    mFramebufferHandle->bind();
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glDisable(GL_BLEND);
@@ -156,67 +192,80 @@ void GeometryRenderStage::execute() {
             }
 
             // TODO: what is this mVertexArrayObject good for anyway, now?
-            mShaderHandle.getResource().use();
+            mShaderHandle->use();
             glBindVertexArray(mVertexArrayObject);
-                first.mMeshHandle.getResource().bind(vertexLayout);
+                first.mMeshHandle->bind(vertexLayout);
                 BuiltinModelMatrixAllocator modelMatrixAllocator{instanceData};
                 modelMatrixAllocator.bind(BuiltinModelMatrixLayout);
 
 
-                mShaderHandle.getResource().setUFloat(
+                mShaderHandle->setUFloat(
                     "uMaterial.mSpecularExponent",
-                    first.mMaterialHandle.getResource().getFloatProperty("specularExponent")
+                    first.mMaterialHandle->getFloatProperty("specularExponent")
                 );
 
-                first.mMaterialHandle.getResource().getTextureProperty("textureAlbedo").getResource().bind(0);
-                mShaderHandle.getResource().setUInt("uMaterial.mTextureAlbedo", 0);
-                mShaderHandle.getResource().setUBool(
+                first.mMaterialHandle->getTextureProperty("textureAlbedo")->bind(0);
+                mShaderHandle->setUInt("uMaterial.mTextureAlbedo", 0);
+                mShaderHandle->setUBool(
                     "uMaterial.mUsingAlbedoMap",
-                    first.mMaterialHandle.getResource().getIntProperty("usesTextureAlbedo")
+                    first.mMaterialHandle->getIntProperty("usesTextureAlbedo")
                 );
 
-                first.mMaterialHandle.getResource().getTextureProperty("textureSpecular").getResource().bind(1);
-                mShaderHandle.getResource().setUInt("uMaterial.mTextureSpecular", 1);
-                mShaderHandle.getResource().setUBool(
+                first.mMaterialHandle->getTextureProperty("textureSpecular")->bind(1);
+                mShaderHandle->setUInt("uMaterial.mTextureSpecular", 1);
+                mShaderHandle->setUBool(
                     "uMaterial.mUsingSpecularMap",
-                    first.mMaterialHandle.getResource().getIntProperty("usesTextureSpecular")
+                    first.mMaterialHandle->getIntProperty("usesTextureSpecular")
                 );
 
-                first.mMaterialHandle.getResource().getTextureProperty("textureNormal").getResource().bind(2);
-                mShaderHandle.getResource().setUInt("uMaterial.mTextureNormal", 2);
-                mShaderHandle.getResource().setUBool(
+                first.mMaterialHandle->getTextureProperty("textureNormal")->bind(2);
+                mShaderHandle->setUInt("uMaterial.mTextureNormal", 2);
+                mShaderHandle->setUBool(
                     "uMaterial.mUsingNormalMap", 
-                    first.mMaterialHandle.getResource().getIntProperty("usesTextureNormal")
+                    first.mMaterialHandle->getIntProperty("usesTextureNormal")
                 );
 
                 glDrawElementsInstanced(
-                    GL_TRIANGLES, first.mMeshHandle.getResource().getElementCount(),
+                    GL_TRIANGLES, first.mMeshHandle->getElementCount(),
                     GL_UNSIGNED_INT, nullptr, instanceData.size()
                 );
             glBindVertexArray(0);
         }
 
-    mFramebufferHandle.getResource().unbind();
+    mFramebufferHandle->unbind();
 }
 
 void LightingRenderStage::setup() {
-    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
-        "lightingFramebuffer",
-        {
-            {800, 600},
-            2,
-            {
-                ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4},
-                ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4}
-            },
-            true
-        }
-    );
-
+    if(!ResourceDatabase::hasResourceDescription("lightingFramebuffer")) {
+        nlohmann::json framebufferDescription {
+            {"name", "lightingFramebuffer"},
+            {"type", Framebuffer::getName()},
+            {"method", FramebufferFromDescription::getName()},
+            {"parameters", {
+                {"nColorAttachments", 2},
+                {"dimensions", {
+                    800, 600
+                }},
+                {"useRBO", true },
+                {"colorBufferDefinitions",{
+                    colorBufferDefinitionToJSON({
+                        .mDataType=GL_FLOAT,
+                        .mComponentCount=4
+                    }),
+                    colorBufferDefinitionToJSON({
+                        .mDataType=GL_FLOAT,
+                        .mComponentCount=4
+                    }),
+                }},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(framebufferDescription);
+    }
+    mFramebufferHandle = ResourceDatabase::getResource<Framebuffer>("lightingFramebuffer");
     declareRenderTarget("litScene", 0);
     declareRenderTarget("brightCutoff", 1);
-    mShaderHandle.getResource().use();
-    mShaderHandle.getResource().setUniformBlock("Matrices", 0);
+    mShaderHandle->use();
+    mShaderHandle->setUniformBlock("Matrices", 0);
 
     Material::RegisterFloatProperty("brightCutoff", 1.f);
     Material::RegisterIntProperty("screenWidth", 800);
@@ -227,16 +276,16 @@ void LightingRenderStage::validate() {
     assert(mTextureAttachments.find("positionMap") != mTextureAttachments.end());
     assert(mTextureAttachments.find("normalMap") != mTextureAttachments.end());
     assert(mTextureAttachments.find("albedoSpecularMap") != mTextureAttachments.end());
-    assert(mFramebufferHandle.getResource().hasRBO());
-    assert(mFramebufferHandle.getResource().getColorBufferHandles().size() >= 1);
+    assert(mFramebufferHandle->hasRBO());
+    assert(mFramebufferHandle->getColorBufferHandles().size() >= 1);
     /*
      * TODO: more assertions related to the lighting stage
      */
 }
 
 void LightingRenderStage::execute() {
-    mShaderHandle.getResource().use();
-    mFramebufferHandle.getResource().bind();
+    mShaderHandle->use();
+    mFramebufferHandle->bind();
         glDisable(GL_FRAMEBUFFER_SRGB);
         glDisable(GL_DEPTH_TEST);
         glEnable(GL_BLEND);
@@ -266,27 +315,27 @@ void LightingRenderStage::execute() {
             }
 
 
-            mShaderHandle.getResource().use();
+            mShaderHandle->use();
             std::vector<std::string> gBufferAliases {
                 {"positionMap"}, {"normalMap"}, {"albedoSpecularMap"}
             };
             for(int i{0}; i < 3; ++i) {
-                mTextureAttachments.at(gBufferAliases[i]).getResource().bind(i);
+                mTextureAttachments.at(gBufferAliases[i])->bind(i);
             }
-            mShaderHandle.getResource().setUInt("uGeometryPositionMap", 0);
-            mShaderHandle.getResource().setUInt("uGeometryNormalMap", 1);
-            mShaderHandle.getResource().setUInt("uGeometryAlbedoSpecMap", 2);
-            mShaderHandle.getResource().setUInt(
+            mShaderHandle->setUInt("uGeometryPositionMap", 0);
+            mShaderHandle->setUInt("uGeometryNormalMap", 1);
+            mShaderHandle->setUInt("uGeometryAlbedoSpecMap", 2);
+            mShaderHandle->setUInt(
                 "uScreenWidth",
-                first.mMaterialHandle.getResource().getIntProperty("screenWidth")
+                first.mMaterialHandle->getIntProperty("screenWidth")
             );
-            mShaderHandle.getResource().setUInt(
+            mShaderHandle->setUInt(
                 "uScreenHeight",
-                first.mMaterialHandle.getResource().getIntProperty("screenHeight")
+                first.mMaterialHandle->getIntProperty("screenHeight")
             );
 
             glBindVertexArray(mVertexArrayObject);
-                first.mMeshHandle.getResource().bind(VertexLayout{{
+                first.mMeshHandle->bind(VertexLayout{{
                     {"position", LOCATION_POSITION, 4, GL_FLOAT}
                 }});
                 BuiltinModelMatrixAllocator modelMatrixAllocator{ modelMatrices };
@@ -306,38 +355,65 @@ void LightingRenderStage::execute() {
                     {"attrLightEmission.mCosCutoffOuter", RUNTIME, 1, GL_FLOAT}
                 }});
                 glDrawElementsInstanced(
-                    GL_TRIANGLES, first.mMeshHandle.getResource().getElementCount(), 
+                    GL_TRIANGLES, first.mMeshHandle->getElementCount(), 
                     GL_UNSIGNED_INT, nullptr, lightEmissionList.size()
                 );
             glBindVertexArray(0);
         }
-    mFramebufferHandle.getResource().unbind();
+    mFramebufferHandle->unbind();
 }
 
 void BlurRenderStage::setup() {
-    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
-        "bloomFramebuffer",
-        {
-            {800, 600},
-            2,
-            {
-                ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4},
-                ColorBufferDefinition{.mDataType=GL_FLOAT, .mComponentCount=4}
-            },
-            false
-        }
-    );
+    if(!ResourceDatabase::hasResourceDescription("bloomFramebuffer")) {
+        nlohmann::json framebufferDescription {
+            {"name", "bloomFramebuffer"},
+            {"type", Framebuffer::getName()},
+            {"method", FramebufferFromDescription::getName()},
+            {"parameters", {
+                {"nColorAttachments", 2},
+                {"dimensions", {
+                    800, 600
+                }},
+                {"useRBO", false},
+                {"colorBufferDefinitions",{
+                    colorBufferDefinitionToJSON({
+                        .mDataType=GL_FLOAT,
+                        .mComponentCount=4
+                    }),
+                    colorBufferDefinitionToJSON({
+                        .mDataType=GL_FLOAT,
+                        .mComponentCount=4
+                    }),
+                }},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(framebufferDescription);
+    }
+    if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
+        nlohmann::json rectangleMeshDefinition {
+            {"name", "screenRectangleMesh"},
+            {"type", StaticMesh::getName()},
+            {"method", StaticMeshRectangleDimensions::getName()},
+            {"parameters", {
+                {"width", 2.f},
+                {"height", 2.f},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
+    }
+    mFramebufferHandle = ResourceDatabase::getResource<Framebuffer>("bloomFramebuffer");
+
     declareRenderTarget("pingBuffer", 0);
     declareRenderTarget("pongBuffer", 1);
-    attachMesh("screenMesh", generateRectangleMesh());
+    attachMesh("screenMesh", ResourceDatabase::getResource<StaticMesh>("screenRectangleMesh"));
     attachMaterial("screenMaterial",
-        MaterialManager::getInstance().registerResource("", {})
+        std::make_shared<Material>()
     );
     Material::RegisterIntProperty("nBlurPasses", 12);
 }
 
 void BlurRenderStage::validate() {
-    assert(2 == mFramebufferHandle.getResource().getColorBufferHandles().size());
+    assert(2 == mFramebufferHandle->getColorBufferHandles().size());
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("unblurredImage") != mTextureAttachments.end());
     /*
@@ -346,8 +422,8 @@ void BlurRenderStage::validate() {
 }
 
 void BlurRenderStage::execute() {
-    mShaderHandle.getResource().use();
-    mFramebufferHandle.getResource().bind();
+    mShaderHandle->use();
+    mFramebufferHandle->bind();
         const std::vector<GLenum> drawbufferEnums {
             {GL_COLOR_ATTACHMENT0},
             {GL_COLOR_ATTACHMENT1}
@@ -359,58 +435,81 @@ void BlurRenderStage::execute() {
         glClear(GL_COLOR_BUFFER_BIT);
 
         const int nPasses {  mMaterialAttachments
-            .at("screenMaterial").getResource().getIntProperty("nBlurPasses")
+            .at("screenMaterial")->getIntProperty("nBlurPasses")
         };
-        mTextureAttachments.at("unblurredImage").getResource().bind(0);
-        mShaderHandle.getResource().setUInt("uGenericTexture", 0);
-        mShaderHandle.getResource().setUBool("uHorizontal", false);
-        MeshHandle screenMeshHandle { mMeshAttachments.at("screenMesh") };
+        mTextureAttachments.at("unblurredImage")->bind(0);
+        mShaderHandle->setUInt("uGenericTexture", 0);
+        mShaderHandle->setUBool("uHorizontal", false);
+        std::shared_ptr<StaticMesh> screenMeshHandle { mMeshAttachments.at("screenMesh") };
 
         // In the first pass, draw to the pong buffer, then 
         // alternate between ping and pong
-        std::vector<TextureHandle> pingpongBuffers {
-            mFramebufferHandle.getResource().getColorBufferHandles()
+        std::vector<std::shared_ptr<Texture>> pingpongBuffers {
+            mFramebufferHandle->getColorBufferHandles()
         };
 
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
         // Blur our image along one axis
         glBindVertexArray(mVertexArrayObject);
-            screenMeshHandle.getResource().bind({{
+            screenMeshHandle->bind({{
                 {"position", LOCATION_POSITION, 4, GL_FLOAT},
                 {"UV1", LOCATION_UV1, 2, GL_FLOAT}
             }});
             for(int i{0}; i < nPasses; ++i) {
                 glDrawElements(
-                    GL_TRIANGLES, screenMeshHandle.getResource().getElementCount(), 
+                    GL_TRIANGLES, screenMeshHandle->getElementCount(), 
                     GL_UNSIGNED_INT, nullptr
                 );
 
                 // Prepare for the next pass, flipping color buffers
                 // and axis
-                pingpongBuffers[(1+i)%2].getResource().bind(0);
-                mShaderHandle.getResource().setUBool("uHorizontal", (1+i)%2);
+                pingpongBuffers[(1+i)%2]->bind(0);
+                mShaderHandle->setUBool("uHorizontal", (1+i)%2);
                 glDrawBuffer(GL_COLOR_ATTACHMENT0 + i%2);
             }
         glBindVertexArray(0);
-    mFramebufferHandle.getResource().unbind();
+    mFramebufferHandle->unbind();
 }
 
 void TonemappingRenderStage::setup() {
-    mFramebufferHandle = FramebufferManager::getInstance().registerResource(
-        "tonemappingFramebuffer",
-        {
-            {800, 600},
-            1,
-            {
-                {.mDataType=GL_UNSIGNED_BYTE, .mComponentCount=4}
-            },
-            true
-        }
-    );
+    if(!ResourceDatabase::hasResourceDescription("tonemappingFramebuffer")) {
+        nlohmann::json framebufferDescription {
+            {"name", "tonemappingFramebuffer"},
+            {"type", Framebuffer::getName()},
+            {"method", FramebufferFromDescription::getName()},
+            {"parameters", {
+                {"nColorAttachments", 1},
+                {"dimensions", {
+                    800, 600
+                }},
+                {"useRBO", false},
+                {"colorBufferDefinitions",{
+                    colorBufferDefinitionToJSON({
+                        .mDataType=GL_UNSIGNED_BYTE,
+                        .mComponentCount=4
+                    }),
+                }},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(framebufferDescription);
+    }
+    if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
+        nlohmann::json rectangleMeshDefinition {
+            {"name", "screenRectangleMesh"},
+            {"type", StaticMesh::getName()},
+            {"method", StaticMeshRectangleDimensions::getName()},
+            {"parameters", {
+                {"width", 2.f},
+                {"height", 2.f},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
+    }
+    mFramebufferHandle = ResourceDatabase::getResource<Framebuffer>("tonemappingFramebuffer");
     declareRenderTarget("tonemappedScene", 0);
-    attachMesh("screenMesh", generateRectangleMesh());
+    attachMesh("screenMesh", ResourceDatabase::getResource<StaticMesh>("screenRectangleMesh"));
     attachMaterial("screenMaterial",
-        MaterialManager::getInstance().registerResource("", {})
+        std::make_shared<Material>()
     );
 
     Material::RegisterFloatProperty("exposure", 1.f);
@@ -422,56 +521,68 @@ void TonemappingRenderStage::validate() {
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("litScene") != mTextureAttachments.end());
     assert(mTextureAttachments.find("bloomEffect") != mTextureAttachments.end());
-    assert(mFramebufferHandle.getResource().getColorBufferHandles().size() >= 1);
-
+    assert(mFramebufferHandle->getColorBufferHandles().size() >= 1);
 }
 
 void TonemappingRenderStage::execute() {
-    mShaderHandle.getResource().use();
-    MaterialHandle screenMaterial {getMaterial("screenMaterial")};
+    mShaderHandle->use();
+    std::shared_ptr<Material> screenMaterial {getMaterial("screenMaterial")};
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
     glClear(GL_COLOR_BUFFER_BIT);
-    mFramebufferHandle.getResource().bind();
-        mTextureAttachments.at("litScene").getResource().bind(0);
-        mTextureAttachments.at("bloomEffect").getResource().bind(1);
-        mShaderHandle.getResource().setUInt("uGenericTexture", 0);
-        mShaderHandle.getResource().setUInt("uGenericTexture1", 1);
-        mShaderHandle.getResource().setUFloat("uExposure", 
-            screenMaterial.getResource().getFloatProperty("exposure")
+    mFramebufferHandle->bind();
+        mTextureAttachments.at("litScene")->bind(0);
+        mTextureAttachments.at("bloomEffect")->bind(1);
+        mShaderHandle->setUInt("uGenericTexture", 0);
+        mShaderHandle->setUInt("uGenericTexture1", 1);
+        mShaderHandle->setUFloat("uExposure", 
+            screenMaterial->getFloatProperty("exposure")
         );
-        mShaderHandle.getResource().setUFloat("uGamma", 
-            screenMaterial.getResource().getFloatProperty("gamma")
+        mShaderHandle->setUFloat("uGamma", 
+            screenMaterial->getFloatProperty("gamma")
         );
-        mShaderHandle.getResource().setUInt("uCombine", 
-            screenMaterial.getResource().getIntProperty("combine")
+        mShaderHandle->setUInt("uCombine", 
+            screenMaterial->getIntProperty("combine")
         );
         glBindVertexArray(mVertexArrayObject);
-            mMeshAttachments.at("screenMesh").getResource().bind({{
+            mMeshAttachments.at("screenMesh")->bind({{
                 {"position", LOCATION_POSITION, 4, GL_FLOAT},
                 {"UV1", LOCATION_UV1, 2, GL_FLOAT}
             }});
             glDrawElementsInstanced(
                 GL_TRIANGLES,
-                mMeshAttachments.at("screenMesh").getResource().getElementCount(),
+                mMeshAttachments.at("screenMesh")->getElementCount(),
                 GL_UNSIGNED_INT,
                 nullptr,
                 1
             );
         glBindVertexArray(0);
-    mFramebufferHandle.getResource().unbind();
+    mFramebufferHandle->unbind();
 }
 
 void ScreenRenderStage::setup() {
-    attachMesh("screenMesh", generateRectangleMesh());
+    if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
+        nlohmann::json rectangleMeshDefinition {
+            {"name", "screenRectangleMesh"},
+            {"type", StaticMesh::getName()},
+            {"method", StaticMeshRectangleDimensions::getName()},
+            {"parameters", {
+                {"width", 2.f},
+                {"height", 2.f},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
+    }
+    attachMesh("screenMesh", ResourceDatabase::getResource<StaticMesh>("screenRectangleMesh"));
 }
+
 void ScreenRenderStage::validate() {
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("renderSource") != mTextureAttachments.end());
 }
 
 void ScreenRenderStage::execute() {
-    mShaderHandle.getResource().use();
+    mShaderHandle->use();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_BLEND);
     // glDisable(GL_FRAMEBUFFER_SRGB);
@@ -479,16 +590,16 @@ void ScreenRenderStage::execute() {
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVertexArrayObject);
-        mTextureAttachments.at("renderSource").getResource().bind(0);
-        mShaderHandle.getResource().setUInt("uGenericTexture", 0);
-        mMeshAttachments.at("screenMesh").getResource().bind({{
+        mTextureAttachments.at("renderSource")->bind(0);
+        mShaderHandle->setUInt("uGenericTexture", 0);
+        mMeshAttachments.at("screenMesh")->bind({{
             {"position", LOCATION_POSITION, 4, GL_FLOAT},
             {"color", LOCATION_COLOR, 4, GL_FLOAT},
             {"UV1", LOCATION_UV1, 2, GL_FLOAT}
         }});
         glDrawElementsInstanced(
             GL_TRIANGLES,
-            mMeshAttachments.at("screenMesh").getResource().getElementCount(),
+            mMeshAttachments.at("screenMesh")->getElementCount(),
             GL_UNSIGNED_INT,
             nullptr,
             1

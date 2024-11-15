@@ -3,6 +3,7 @@
 
 #include <string>
 #include <glm/glm.hpp>
+#include <nlohmann/json.hpp>
 
 enum DefaultAttributeLocation {
     LOCATION_POSITION=0,
@@ -106,6 +107,103 @@ struct BuiltinVertexData {
     glm::vec2 mUV3;
 };
 
+inline BuiltinVertexData jsonToBuiltinVertexData(const nlohmann::json& vertexParameters) {
+    BuiltinVertexData builtinVertexData {
+        .mPosition { 
+            vertexParameters.at("position").at(0).get<float>(),
+            vertexParameters.at("position").at(1).get<float>(),
+            vertexParameters.at("position").at(2).get<float>(),
+            vertexParameters.at("position").at(3).get<float>()
+        },
+        .mNormal {
+            vertexParameters.at("normal").at(0).get<float>(),
+            vertexParameters.at("normal").at(1).get<float>(),
+            vertexParameters.at("normal").at(2).get<float>(),
+            vertexParameters.at("normal").at(3).get<float>(),
+        },
+        .mTangent {
+            vertexParameters.at("tangent").at(0).get<float>(),
+            vertexParameters.at("tangent").at(1).get<float>(),
+            vertexParameters.at("tangent").at(2).get<float>(),
+            vertexParameters.at("tangent").at(3).get<float>(),
+        },
+        .mColor {
+            vertexParameters.at("color").at(0).get<float>(),
+            vertexParameters.at("color").at(1).get<float>(),
+            vertexParameters.at("color").at(2).get<float>(),
+            vertexParameters.at("color").at(3).get<float>(),
+        },
+        .mUV1 {
+            vertexParameters.at("uv1").at(0).get<float>(),
+            vertexParameters.at("uv1").at(1).get<float>(),
+        },
+        .mUV2 {
+            vertexParameters.at("uv2").at(0).get<float>(),
+            vertexParameters.at("uv2").at(1).get<float>(),
+        },
+        .mUV3 {
+            vertexParameters.at("uv3").at(0).get<float>(),
+            vertexParameters.at("uv3").at(1).get<float>(),
+        }
+    };
+    return builtinVertexData;
+}
+
+inline nlohmann::json builtinVertexDataToJSON(const BuiltinVertexData& builtinVertexData) {
+    nlohmann::json vertexParameters {
+        {"position", 
+            { 
+                builtinVertexData.mPosition.x,
+                builtinVertexData.mPosition.y,
+                builtinVertexData.mPosition.z,
+                builtinVertexData.mPosition.w
+            }
+        },
+        {"normal",
+            {
+                builtinVertexData.mNormal.x,
+                builtinVertexData.mNormal.y,
+                builtinVertexData.mNormal.z,
+                builtinVertexData.mNormal.w,
+            }
+        },
+        {"tangent",
+            {
+                builtinVertexData.mTangent.x,
+                builtinVertexData.mTangent.y,
+                builtinVertexData.mTangent.z,
+                builtinVertexData.mTangent.w,
+            }
+        },
+        {"color",
+            {
+                builtinVertexData.mColor.r,
+                builtinVertexData.mColor.g,
+                builtinVertexData.mColor.b,
+                builtinVertexData.mColor.a,
+            }
+        },
+        {"uv1",
+            {
+                builtinVertexData.mUV1.s,
+                builtinVertexData.mUV1.t,
+            }
+        },
+        {"uv2",
+            {
+                builtinVertexData.mUV2.s,
+                builtinVertexData.mUV2.t,
+            }
+        },
+        {"uv3",
+            {
+                builtinVertexData.mUV3.s,
+                builtinVertexData.mUV3.t,
+            }
+        }
+    };
+    return vertexParameters;
+}
 
 static VertexLayout BuiltinVertexLayout {
     {

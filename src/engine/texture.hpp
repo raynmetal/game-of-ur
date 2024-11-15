@@ -5,8 +5,9 @@
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
+#include <nlohmann/json.hpp>
 
-#include "resource_manager.hpp"
+#include "resource_database.hpp"
 
 struct ColorBufferDefinition {
     glm::vec2 mDimensions {800, 600};
@@ -19,22 +20,17 @@ struct ColorBufferDefinition {
     bool mUsesWebColors { false };
 };
 
+ColorBufferDefinition jsonToColorBufferDefinition(const nlohmann::json& methodParameters);
+nlohmann::json colorBufferDefinitionToJSON(const ColorBufferDefinition& colorBufferDefinition);
 
-class Texture : public IResource {
+class Texture : public Resource<Texture> {
 public:
-    /* Load texture directly from file */
-    Texture(const std::string& filepath);
+    Texture(
+        GLuint textureID,
+        const ColorBufferDefinition& colorBufferDefinition,
+        const std::string& filepath=""
+    );    /*Copy construction*/
 
-    /*
-    Generates the texture described by the arguments
-    */
-    Texture(ColorBufferDefinition definition);
-
-    /* Load an empty texture object, with an mID of 0 indicating
-    that there is no texture here */
-    Texture();
-
-    /*Copy construction*/
     Texture(const Texture& other);
     /*Copy assignment*/
     Texture& operator=(const Texture& other);
@@ -47,14 +43,6 @@ public:
     /*Destructor belonging to latest subclass*/
     virtual ~Texture();
 
-    /* basic load and allocate function */
-    bool loadFromFile(
-        const std::string& filepath, 
-        const ColorBufferDefinition& colorBufferDefinition = {
-            .mDataType { GL_UNSIGNED_BYTE },
-            .mUsesWebColors { true }
-        }
-    );
     /* basic deallocate function */
     virtual void free();
 
@@ -72,6 +60,10 @@ public:
     /* get texture height */
     GLint getHeight() const;
 
+    inline static std::string getName() { return "Texture"; }
+
+    ColorBufferDefinition getColorBufferDefinition() { return mColorBufferDefinition; }
+
 protected:
     void copyImage(const Texture& other);
 
@@ -86,11 +78,25 @@ protected:
     GLenum externalFormat();
 
     /* destroys (OpenGL managed) texture tied to this object */
-    void destroyResource() override;
+    void destroyResource();
     /* removes references to (OpenGL managed) texture tied to this object */
-    void releaseResource() override;
+    void releaseResource();
+};
 
-friend class ResourceManager<Texture>;
+class TextureFromFile: public ResourceFactoryMethod<Texture, TextureFromFile> {
+public:
+    TextureFromFile(): ResourceFactoryMethod<Texture, TextureFromFile> {0} {}
+    inline static std::string getName() { return "fromFile"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+};
+
+class TextureFromColorBufferDefinition: public ResourceFactoryMethod<Texture, TextureFromColorBufferDefinition> {
+public:
+    TextureFromColorBufferDefinition(): ResourceFactoryMethod<Texture, TextureFromColorBufferDefinition> {0} {}
+    inline static std::string getName() { return "fromDescription"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };
 
 #endif

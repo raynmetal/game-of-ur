@@ -11,72 +11,33 @@
 #include <assimp/postprocess.h>
 
 #include "window_context_manager.hpp"
-#include "material_manager.hpp"
-#include "texture_manager.hpp"
-#include "shader_program_manager.hpp"
-#include "mesh_manager.hpp"
+#include "material.hpp"
+#include "texture.hpp"
+#include "shader_program.hpp"
+#include "mesh.hpp"
 #include "vertex.hpp"
 #include "model.hpp"
 
-StaticModel::StaticModel() {
-}
+void processAssimpNode(aiNode* node, const aiScene* pAiScene, std::vector<std::shared_ptr<StaticMesh>>& meshHandles, std::vector<std::shared_ptr<Material>>& materialHandles);
+std::vector<std::shared_ptr<Texture>> loadAssimpTextures(aiMaterial* pAiMaterial, aiTextureType textureType);
+void processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene, std::vector<std::shared_ptr<StaticMesh>>& meshHandles, std::vector<std::shared_ptr<Material>>& materialHandles);
+std::shared_ptr<StaticMesh> buildMesh(aiMesh* pAiMesh);
 
-StaticModel::StaticModel(const std::vector<BuiltinVertexData>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureHandle>& textureHandles) :
-    StaticModel()
+StaticModel::StaticModel(const std::vector<std::shared_ptr<StaticMesh>>& meshHandles, const std::vector<std::shared_ptr<Material>>& materialHandles):
+Resource<StaticModel>{0},
+mMeshHandles { meshHandles },
+mMaterialHandles { materialHandles }
 {
-    mpHierarchyRoot = new StaticModel::TreeNode {};
-    mpHierarchyRoot->mMeshIndices.push_back(0);
-
-    mMaterialHandles.push_back(
-        MaterialManager::getInstance().registerResource(
-            "",
-            {}
-        )
-    );
-
-    mMeshHandles.push_back(
-        MeshManager::getInstance().registerResource(
-            "",
-            BuiltinMesh{ vertices, elements }
-        )
+    assert(meshHandles.size() > 0 && meshHandles.size() == materialHandles.size()
+        && "Every mesh in the mesh list must have its corresponding material in the material list"
     );
 }
-
-StaticModel::StaticModel(const MeshHandle& meshHandle) : StaticModel() {
-    mpHierarchyRoot = new StaticModel::TreeNode {};
-    mpHierarchyRoot->mMeshIndices.push_back(0);
-    mMaterialHandles.push_back(
-        MaterialManager::getInstance().registerResource("", {})
-    );
-    mMeshHandles.push_back(meshHandle);
-}
-
-StaticModel::StaticModel(const std::string& filepath): StaticModel() {
-    Assimp::Importer* pImporter { WindowContextManager::getInstance().getAssetImporter() };
-    const aiScene* pAiScene {
-        pImporter->ReadFile(
-            filepath,
-            aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace
-        )
-    };
-
-    if(
-        !pAiScene 
-        || (pAiScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
-        || !(pAiScene->mRootNode)
-    ) {
-        std::cout << "ERROR::ASSIMP:: " << pImporter->GetErrorString() << std::endl;
-        return;
-    }
-
-    mpHierarchyRoot = processAssimpNode(nullptr, pAiScene->mRootNode, pAiScene);
-}
-
 StaticModel::~StaticModel() {
     free();
 }
-
-StaticModel::StaticModel(StaticModel&& other) {
+StaticModel::StaticModel(StaticModel&& other):
+Resource<StaticModel>{0}
+{
     stealResources(other);
 }
 StaticModel& StaticModel::operator=(StaticModel&& other) {
@@ -88,8 +49,9 @@ StaticModel& StaticModel::operator=(StaticModel&& other) {
 
     return *this;
 }
-
-StaticModel::StaticModel(const StaticModel& other) {
+StaticModel::StaticModel(const StaticModel& other):
+Resource<StaticModel>{0}
+{
     copyResources(other);
 }
 StaticModel& StaticModel::operator=(const StaticModel& other) {
@@ -101,99 +63,132 @@ StaticModel& StaticModel::operator=(const StaticModel& other) {
 
     return *this;
 }
-
-
-std::vector<MeshHandle> StaticModel::getMeshHandles() const { return mMeshHandles; }
-std::vector<MaterialHandle> StaticModel::getMaterialHandles() const { return mMaterialHandles; }
-
+std::vector<std::shared_ptr<StaticMesh>> StaticModel::getMeshHandles() const { return mMeshHandles; }
+std::vector<std::shared_ptr<Material>> StaticModel::getMaterialHandles() const { return mMaterialHandles; }
 void StaticModel::free() {
     mMeshHandles.clear();
     mMaterialHandles.clear();
-    deleteTree(mpHierarchyRoot);
-    mpHierarchyRoot = nullptr;
 }
-
 void StaticModel::stealResources(StaticModel& other) {
     std::swap(mMeshHandles, other.mMeshHandles);
-
-    mMaterialHandles = other.mMaterialHandles;
-    mpHierarchyRoot = other.mpHierarchyRoot;
+    std::swap(mMaterialHandles, other.mMaterialHandles);
 
     // Prevent other from destroying our resources when its
     // destructor is called
     other.releaseResource();
 }
-
 void StaticModel::copyResources(const StaticModel& other) {
     mMeshHandles = other.mMeshHandles;
     mMaterialHandles = other.mMaterialHandles;
-    mpHierarchyRoot = copyTree(other.mpHierarchyRoot);
 }
-
-void StaticModel::deleteTree(StaticModel::TreeNode* pRootNode) {
-    if(!pRootNode) return;
-
-    for(StaticModel::TreeNode* pChild : pRootNode->mpChildren) {
-        deleteTree(pChild);
-    }
-
-    delete pRootNode;
+void StaticModel::destroyResource() {
+    free();
 }
+void StaticModel::releaseResource() {}
 
-StaticModel::TreeNode* StaticModel::copyTree(const StaticModel::TreeNode* pRootNode, StaticModel::TreeNode* pParentNode) {
-    if(!pRootNode) return nullptr;
-    StaticModel::TreeNode* pNewRootNode {
-        new StaticModel::TreeNode {
-            pRootNode->mMeshIndices,
-            pParentNode
-        }
+StaticModelFromFile::StaticModelFromFile():
+ResourceFactoryMethod<StaticModel, StaticModelFromFile>{0}
+{}
+
+std::shared_ptr<IResource> StaticModelFromFile::createResource(const nlohmann::json& methodParameters) {
+    std::string modelPath { methodParameters.at("path").get<std::string>() };
+
+    Assimp::Importer* pImporter { WindowContextManager::getInstance().getAssetImporter() };
+    const aiScene* pAiScene {
+        pImporter->ReadFile(
+            modelPath,
+            aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace
+        )
     };
-    for(StaticModel::TreeNode* pChild : pRootNode->mpChildren) {
-        pNewRootNode->mpChildren.push_back(
-            copyTree(pChild, pNewRootNode)
-        );
+
+    if(
+        !pAiScene 
+        || (pAiScene->mFlags & AI_SCENE_FLAGS_INCOMPLETE)
+        || !(pAiScene->mRootNode)
+    ) {
+        std::cout << "ERROR::ASSIMP:: " << pImporter->GetErrorString() << std::endl;
     }
-    return pNewRootNode;
+    assert(pAiScene && !(pAiScene->mFlags&AI_SCENE_FLAGS_INCOMPLETE) && pAiScene->mRootNode
+        && "Could not read model file"
+    );
+
+    std::vector<std::shared_ptr<StaticMesh>> meshHandles {};
+    std::vector<std::shared_ptr<Material>> materialHandles{};
+    processAssimpNode(pAiScene->mRootNode, pAiScene, meshHandles, materialHandles);
+    assert(meshHandles.size() > 0 && meshHandles.size() == materialHandles.size() &&
+        "There must be as many materials as there are meshes"
+    );
+
+    return std::make_shared<StaticModel>(meshHandles, materialHandles);
 }
 
-StaticModel::TreeNode* StaticModel::processAssimpNode(StaticModel::TreeNode* pParentNode, aiNode* pAiNode, const aiScene* pAiScene) {
-    StaticModel::TreeNode* pNewNode {
-        new StaticModel::TreeNode {
-            {},
-            pParentNode
-        }
-    };
+void processAssimpNode(aiNode* pAiNode, const aiScene* pAiScene, std::vector<std::shared_ptr<StaticMesh>>& meshHandles, std::vector<std::shared_ptr<Material>>& materialHandles) {
     for(std::size_t  i{0}; i < pAiNode->mNumMeshes; ++i) {
         aiMesh* pAiMesh {
             pAiScene->mMeshes[pAiNode->mMeshes[i]]
         };
-        int meshIndex { static_cast<int>(mMeshHandles.size()) };
-        processAssimpMesh(pAiMesh, pAiScene);
-        pNewNode->mMeshIndices.push_back(meshIndex);
+        processAssimpMesh(pAiMesh, pAiScene, meshHandles, materialHandles);
     }
 
     for(std::size_t i{0}; i < pAiNode->mNumChildren; ++i) {
-        pNewNode->mpChildren.push_back(
-            processAssimpNode(pNewNode, pAiNode->mChildren[i], pAiScene)
-        );
+        processAssimpNode(pAiNode->mChildren[i], pAiScene, meshHandles, materialHandles);
     }
-    return pNewNode;
 }
 
-void StaticModel::processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene) {
+std::shared_ptr<StaticMesh> buildMesh(aiMesh* pAiMesh) {
+    std::vector<BuiltinVertexData> vertices {};
+    std::vector<GLuint> elements {};
+    nlohmann::json meshDescription {
+        {"vertices", nlohmann::json::array()},
+        {"elements", nlohmann::json::array()},
+    };
+    for (std::size_t i{0}; i < pAiMesh->mNumVertices; ++i) {
+        // TODO: make fetching vertex data more robust. There is no
+        // guarantee that a mesh will contain vertex colours or
+        // texture sampling coordinates
+        vertices.push_back({
+            { // position
+                pAiMesh->mVertices[i].x,
+                pAiMesh->mVertices[i].y,
+                pAiMesh->mVertices[i].z,
+                1.f
+            },
+            { // normal
+                pAiMesh->mNormals[i].x,
+                pAiMesh->mNormals[i].y,
+                pAiMesh->mNormals[i].z,
+                0.f
+            },
+            { // tangent
+                pAiMesh->mTangents[i].x,
+                pAiMesh->mTangents[i].y,
+                pAiMesh->mTangents[i].z,
+                0.f
+            },
+            { 1.f, 1.f, 1.f, 1.f },
+            {
+                pAiMesh->mTextureCoords[0][i].x,
+                pAiMesh->mTextureCoords[0][i].y
+            }
+        });
+    }
 
-    std::vector<TextureHandle> textureHandles;
+    for(std::size_t i{0}; i < pAiMesh->mNumFaces; ++i) {
+        aiFace face = pAiMesh->mFaces[i];
+        for(std::size_t elementIndex{0}; elementIndex < face.mNumIndices; ++elementIndex) {
+            elements.push_back(face.mIndices[elementIndex]);
+        }
+    }
+    return std::make_shared<StaticMesh>(vertices, elements);
+}
 
-    mMeshHandles.push_back(
-        MeshManager::getInstance().registerResource(
-            "",
-            BuiltinMesh{ pAiMesh }
-        )
-    );
-    mMaterialHandles.push_back(
-        MaterialManager::getInstance().registerResource(
-            "", {}
-        )
+void processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene, std::vector<std::shared_ptr<StaticMesh>>& meshHandles, std::vector<std::shared_ptr<Material>>& materialHandles) {
+
+    std::vector<std::shared_ptr<Texture>> textureHandles {};
+
+    meshHandles.push_back(buildMesh(pAiMesh));
+    materialHandles.push_back(
+        std::make_shared<Material>()
     );
 
     // Load textures
@@ -204,47 +199,47 @@ void StaticModel::processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene) {
 
         // TODO: Make associating textures with their respective material
         // props more elegant somehow?
-        std::vector<TextureHandle> textureHandlesAlbedo {
+        std::vector<std::shared_ptr<Texture>> textureHandlesAlbedo {
             loadAssimpTextures(pAiMaterial, aiTextureType_DIFFUSE)
         };
-        std::vector<TextureHandle> textureHandlesNormal {
+        std::vector<std::shared_ptr<Texture>> textureHandlesNormal {
             loadAssimpTextures(pAiMaterial, aiTextureType_NORMALS)
         };
-        std::vector<TextureHandle> textureHandlesSpecular {
+        std::vector<std::shared_ptr<Texture>> textureHandlesSpecular {
             loadAssimpTextures(pAiMaterial, aiTextureType_SPECULAR)
         };
 
         if(!textureHandlesAlbedo.empty()) {
-            mMaterialHandles.back().getResource().updateTextureProperty(
+            materialHandles.back()->updateTextureProperty(
                 "textureAlbedo", textureHandlesAlbedo.back()
             );
-            mMaterialHandles.back().getResource().updateIntProperty(
+            materialHandles.back()->updateIntProperty(
                 "usesTextureAlbedo", true
             );
         }
         if(!textureHandlesNormal.empty()) {
-            mMaterialHandles.back().getResource().updateTextureProperty(
+            materialHandles.back()->updateTextureProperty(
                 "textureNormal", textureHandlesNormal.back()
             );
-            mMaterialHandles.back().getResource().updateIntProperty(
+            materialHandles.back()->updateIntProperty(
                 "usesTextureNormal", true
             );
         }
         if(!textureHandlesSpecular.empty()) {
-            mMaterialHandles.back().getResource().updateTextureProperty(
+            materialHandles.back()->updateTextureProperty(
                 "textureSpecular", textureHandlesSpecular.back()
             );
-            mMaterialHandles.back().getResource().updateIntProperty(
+            materialHandles.back()->updateIntProperty(
                 "usesTextureSpecular", true
             );
         }
     }
 }
 
-std::vector<TextureHandle> StaticModel::loadAssimpTextures(aiMaterial* pAiMaterial, aiTextureType textureType) {
+std::vector<std::shared_ptr<Texture>> loadAssimpTextures(aiMaterial* pAiMaterial, aiTextureType textureType) {
     // build up a list of texture pointers, adding textures
     // to this model if it isn't already present
-    std::vector<TextureHandle> textureHandles {};
+    std::vector<std::shared_ptr<Texture>> textureHandles {};
     std::size_t textureCount {
         pAiMaterial->GetTextureCount(
             textureType
@@ -255,22 +250,23 @@ std::vector<TextureHandle> StaticModel::loadAssimpTextures(aiMaterial* pAiMateri
         aiString aiTextureName;
         pAiMaterial->GetTexture(textureType, i, &aiTextureName);
         std::string textureName { aiTextureName.C_Str() };
+
+        if(!ResourceDatabase::hasResourceDescription(textureName)){
+            nlohmann::json textureDescription {
+                {"name", textureName},
+                {"type", Texture::getName()},
+                {"method", TextureFromFile::getName()},
+                {"parameters", {
+                    {"path", textureName}
+                }}
+            };
+            ResourceDatabase::addResourceDescription(textureDescription);
+        }
+        
         textureHandles.push_back(
-            TextureManager::getInstance().registerResource(
-                textureName, Texture(textureName)
-            )
+            ResourceDatabase::getResource<Texture>(textureName)
         );
     }
 
     return textureHandles;
-}
-
-void StaticModel::destroyResource() {
-    free();
-}
-
-void StaticModel::releaseResource() {
-    // Prevent this from destroying its resources when its
-    // destructor is called. 
-    mpHierarchyRoot = nullptr;
 }

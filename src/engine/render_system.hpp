@@ -9,16 +9,18 @@
 #include "input_system/input_system.hpp"
 #include "simple_ecs.hpp"
 #include "shapegen.hpp"
+#include "material.hpp"
 #include "render_stage.hpp"
 
 class RenderSystem: public System<RenderSystem>,  public IActionHandler {
 public:
     class LightQueue: public System<LightQueue>{
     public:
+        LightQueue();
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
     private:
-        MeshHandle mSphereMesh { generateSphereMesh(10, 5) };
-        MaterialHandle mLightMaterial{};
+        std::shared_ptr<StaticMesh> mSphereMesh { nullptr };
+        std::shared_ptr<Material> mLightMaterial{ std::make_shared<Material>() };
     };
     class OpaqueQueue: public System<OpaqueQueue> {
     public:
@@ -41,7 +43,8 @@ private:
     void onCreated() override;
 
     std::size_t mCurrentScreenTexture {0};
-    std::vector<TextureHandle> mScreenTextures {};
+    std::vector<std::shared_ptr<Texture>> mScreenTextures {};
+    std::shared_ptr<Material> mLightMaterialHandle {nullptr};
     EntityID mActiveCamera {};
     GLuint mMatrixUniformBufferIndex {0};
     GLuint mMatrixUniformBufferBinding {0};

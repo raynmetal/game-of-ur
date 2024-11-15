@@ -11,10 +11,9 @@
 #include "engine/sim_system.hpp"
 #include "engine/simple_ecs.hpp"
 #include "engine/window_context_manager.hpp"
-#include "engine/mesh_manager.hpp"
-#include "engine/material_manager.hpp"
-#include "engine/model_manager.hpp"
+#include "engine/resource_database.hpp"
 #include "engine/light.hpp"
+#include "engine/model.hpp"
 #include "engine/render_system.hpp"
 #include "engine/scene_system.hpp"
 #include "engine/input_system/input_system.hpp"
@@ -455,13 +454,18 @@ int main(int argc, char* argv[]) {
         lightEntities[i]->updateCoreComponent<Placement>(placement);
     }
     lightEntities[2]->addComponent<Revolve>(); // make sunlight revolve
+    ResourceDatabase::addResourceDescription({
+        {"name", "boardPieceModel"},
+        {"type", StaticModel::getName()},
+        {"method", StaticModelFromFile::getName()},
+        {"parameters", {
+            {"path", "data/models/Generic Board Piece.obj"},
+        }}
+    });
 
     std::shared_ptr<SimObject> boardPiece  {
-        SimpleECS::getSystem<SimSystem>()->createSimObject<ModelHandle, Placement, Transform, SceneNode> (
-            ModelManager::getInstance().registerResource(
-                "data/models/Generic Board Piece.obj",
-                {"data/models/Generic Board Piece.obj"}
-            ),
+        SimpleECS::getSystem<SimSystem>()->createSimObject<std::shared_ptr<StaticModel>, Placement, Transform, SceneNode> (
+            ResourceDatabase::getResource<StaticModel>("boardPieceModel"),
             {{0.f, -1.f, -1.f, 1.f}},
             {},
             {}
@@ -473,8 +477,8 @@ int main(int argc, char* argv[]) {
     EntityID parentEntity { boardPiece->getEntityID() };
 
     for(std::size_t i{0}; i < 20; ++i) {
-        boardPieces[i] = SimpleECS::getSystem<SimSystem>()->createSimObject<ModelHandle, Placement, Transform, SceneNode>(
-            boardPiece->getCoreComponent<ModelHandle>(),
+        boardPieces[i] = SimpleECS::getSystem<SimSystem>()->createSimObject<std::shared_ptr<StaticModel>, Placement, Transform, SceneNode>(
+            boardPiece->getCoreComponent<std::shared_ptr<StaticModel>>(),
             boardPiece->getCoreComponent<Placement>(),
             boardPiece->getCoreComponent<Transform>(),
             SceneNode { .mParent { parentEntity } }
@@ -598,15 +602,10 @@ void init() {
     // The framebuffer resource manager depends on the texture resource manager existing (especially 
     // during destruction at end of program.) Instantiate these managers in reverse order of their
     // dependence
-    TextureManager::getInstance();
-    ShaderProgramManager::getInstance();
-    MaterialManager::getInstance();
+    ResourceDatabase::getInstance();
     Material::Init();
-    MeshManager::getInstance();
-    FramebufferManager::getInstance();
-    ModelManager::getInstance();
 
-    SimpleECS::registerComponentTypes<Placement, LightEmissionData, ModelHandle, Transform, SceneNode, SimSystem::SimCore, CameraProperties>();
+    SimpleECS::registerComponentTypes<Placement, LightEmissionData, std::shared_ptr<StaticModel>, Transform, SceneNode, SimSystem::SimCore, CameraProperties>();
     SimpleECS::registerSystem<SceneSystem, Transform, SceneNode, Placement>();
     SimpleECS::registerSystem<SimSystem, SimSystem::SimCore>();
     SimpleECS::registerSystem<CameraSystem, Transform, CameraProperties>();

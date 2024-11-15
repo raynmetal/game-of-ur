@@ -1,13 +1,30 @@
 #ifndef ZOSHAPEGEN_H
 #define ZOSHAPEGEN_H
 
-#include "model.hpp"
+#include <memory>
+#include <nlohmann/json.hpp>
+
+#include "resource_database.hpp"
 #include "mesh.hpp"
-#include "mesh_manager.hpp"
-#include "model_manager.hpp"
 
-MeshHandle generateSphereMesh(int nLatitude, int nMeridian);
+class StaticMeshSphereLatLong: public ResourceFactoryMethod<StaticMesh, StaticMeshSphereLatLong> {
+public:
+    StaticMeshSphereLatLong():
+    ResourceFactoryMethod<StaticMesh, StaticMeshSphereLatLong>{0}
+    {}
+    inline static std::string getName() { return "sphereLatLong"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+};
 
-MeshHandle generateRectangleMesh(float width=2.f, float height=2.f);
+class StaticMeshRectangleDimensions: public ResourceFactoryMethod<StaticMesh, StaticMeshRectangleDimensions> {
+public:
+    StaticMeshRectangleDimensions():
+    ResourceFactoryMethod<StaticMesh, StaticMeshRectangleDimensions>{0}
+    {}
+    inline static std::string getName() { return "rectangleDimensions"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+};
 
 #endif

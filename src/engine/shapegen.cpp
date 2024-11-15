@@ -3,14 +3,29 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
+#include "resource_database.hpp"
 #include "vertex.hpp"
 #include "mesh.hpp"
-#include "model_manager.hpp"
-#include "mesh_manager.hpp"
-#include "model.hpp"
 #include "shapegen.hpp"
 
-MeshHandle generateSphereMesh(int nLatitude, int nMeridian)  {
+std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian);
+std::shared_ptr<StaticMesh> generateRectangleMesh(float width=2.f, float height=2.f);
+
+std::shared_ptr<IResource> StaticMeshSphereLatLong::createResource(const nlohmann::json& methodParameters) {
+    return generateSphereMesh(
+        methodParameters.at("nLatitudes").get<uint32_t>(),
+        methodParameters.at("nMeridians").get<uint32_t>()
+    );
+}
+
+std::shared_ptr<IResource> StaticMeshRectangleDimensions::createResource(const nlohmann::json& methodParameters) {
+    return generateRectangleMesh(
+        methodParameters.at("width").get<float>(),
+        methodParameters.at("height").get<float>()
+    );
+}
+
+std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian)  {
     assert(nLatitude >= 1);
     assert(nMeridian >= 2);
 
@@ -86,20 +101,10 @@ MeshHandle generateSphereMesh(int nLatitude, int nMeridian)  {
         previousBaseIndex = currentBaseIndex;
     }
 
-    std::string meshName {
-        "_generated_sphere__nLat_"
-        + std::to_string(nLatitude)
-        + "__nMer_"
-        + std::to_string(nMeridian)
-    };
-
-    return MeshManager::getInstance().registerResource(
-        meshName,
-        BuiltinMesh{ vertices, elements }
-    );
+    return std::make_shared<StaticMesh>(vertices, elements);
 }
 
-MeshHandle generateRectangleMesh(float width, float height) {
+std::shared_ptr<StaticMesh> generateRectangleMesh(float width, float height) {
     assert(width > 0.f);
     assert(height > 0.f);
 
@@ -138,16 +143,5 @@ MeshHandle generateRectangleMesh(float width, float height) {
         {0}, {3}, {2}
     };
 
-    std::string meshName {
-        "_generated_rectangle__width_"
-        + std::to_string(width)
-        + "__height_"
-        + std::to_string(height)
-    };
-
-    return MeshManager::getInstance().registerResource(
-        meshName,
-        BuiltinMesh { vertices, elements }
-    );
+    return std::make_shared<StaticMesh>(vertices, elements);
 }
-

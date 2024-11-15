@@ -7,69 +7,91 @@
 
 #include <glm/glm.hpp>
 
-#include "texture_manager.hpp"
 #include "vertex.hpp"
-
 #include "mesh.hpp"
 
-BaseMesh::BaseMesh(
-    const VertexLayout& vertexLayout
+StaticMesh::StaticMesh(
+    const std::vector<BuiltinVertexData>& vertices,
+    const std::vector<GLuint>& elements,
+    GLuint vertexBuffer,
+    GLuint elementBuffer,
+    bool isUploaded
 ) :
-    mVertexLayout{ vertexLayout }
+Resource<StaticMesh> {0},
+mVertices { vertices },
+mElements { elements },
+mVertexLayout{ BuiltinVertexLayout },
+mIsUploaded { isUploaded },
+mVertexBuffer { vertexBuffer },
+mElementBuffer  { elementBuffer }
 {}
 
-BaseMesh::~BaseMesh() {
+StaticMesh::~StaticMesh() {
     destroyResource();
 }
 
-BaseMesh::BaseMesh(BaseMesh&& other):
-    mVertexBufferIndex { other.mVertexBufferIndex },
-    mElementBufferIndex { other.mElementBufferIndex },
-    mUploaded { other.mUploaded },
-    mVertexLayout { other.mVertexLayout }
+StaticMesh::StaticMesh(StaticMesh&& other):
+Resource<StaticMesh> {0},
+mVertices { other.mVertices },
+mElements { other.mElements },
+mVertexLayout { BuiltinVertexLayout },
+mIsUploaded { other.mIsUploaded },
+mVertexBuffer{ other.mVertexBuffer },
+mElementBuffer{ other.mElementBuffer }
 {
     // Prevent other from removing our resources when its destructor is called
     other.releaseResource();
 }
 
-BaseMesh::BaseMesh(const BaseMesh& other):
-    mVertexLayout { other.mVertexLayout }
-{
-    mVertexLayout = other.mVertexLayout;
-}
+StaticMesh::StaticMesh(const StaticMesh& other):
+Resource<StaticMesh> {0},
+mVertices { other.mVertices },
+mElements { other.mElements },
+mVertexLayout { BuiltinVertexLayout },
+mIsUploaded { false },
+mVertexBuffer { 0 },
+mElementBuffer { 0 }
+{}
 
-BaseMesh& BaseMesh::operator=(BaseMesh&& other) {
+StaticMesh& StaticMesh::operator=(StaticMesh&& other) {
     if(&other == this) 
         return *this;
 
     destroyResource();
 
-    mVertexBufferIndex = other.mVertexBufferIndex;
-    mElementBufferIndex = other.mElementBufferIndex;
-    mUploaded = other.mUploaded;
+    mVertices = other.mVertices;
+    mElements = other.mElements;
+    mIsUploaded = other.mIsUploaded;
+    mVertexBuffer = other.mVertexBuffer;
+    mElementBuffer = other.mElementBuffer;
 
     other.releaseResource();
 
     return *this;
 }
 
-BaseMesh& BaseMesh::operator=(const BaseMesh& other) {
+StaticMesh& StaticMesh::operator=(const StaticMesh& other) {
     if(&other == this) 
         return *this;
     
     destroyResource();
-    mVertexLayout = other.mVertexLayout;
+
+    mVertices = other.mVertices;
+    mElements = other.mElements;
+    mIsUploaded = false;
+    mVertexBuffer = 0;
+    mElementBuffer = 0;
 
     return *this;
 }
 
-void BaseMesh::bind(const VertexLayout& shaderVertexLayout) {
-    if(!mUploaded) {
-        _upload();
+void StaticMesh::bind(const VertexLayout& shaderVertexLayout) {
+    if(!mIsUploaded) {
+        upload();
     }
-    assert(mUploaded);
-    glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferIndex);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBufferIndex);
+    assert(mIsUploaded);
+    glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
         setAttributePointers(shaderVertexLayout);
         GLenum error = glGetError();
         if(error!= GL_FALSE) {
@@ -80,8 +102,34 @@ void BaseMesh::bind(const VertexLayout& shaderVertexLayout) {
         }
 }
 
-void BaseMesh::setAttributePointers(const VertexLayout& shaderVertexLayout, std::size_t startingOffset) {
-    assert(mUploaded);
+void StaticMesh::upload() {
+    if(mIsUploaded) return;
+    //   TODO: somehow have the base class take care of more of the memory 
+    // management? Regardless of the type of vertex data, so long as we have
+    // a pointer to the underlying array, there's no reason we shouldn't
+    // be able to upload data in the base class rather than leaving it to
+    // the subclass
+    //   Not sure how we can achieve this.
+
+    // Generate names for our vertex, element, and array buffers
+    glGenBuffers(1, &mVertexBuffer);
+    glGenBuffers(1, &mElementBuffer);
+
+    // Set up the buffer objects for this mesh
+    glBindBuffer(GL_ARRAY_BUFFER, mVertexBuffer);
+        glBufferData(GL_ARRAY_BUFFER, mVertices.size() * sizeof(BuiltinVertexData), mVertices.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBuffer);
+        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mElements.size() * sizeof(GLuint), mElements.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    assert(mVertexBuffer);
+    assert(mElementBuffer);
+    mIsUploaded = true;
+}
+
+void StaticMesh::setAttributePointers(const VertexLayout& shaderVertexLayout, std::size_t startingOffset) {
+    assert(mIsUploaded);
     assert(shaderVertexLayout.isSubsetOf(mVertexLayout));
 
     const std::size_t stride { mVertexLayout.computeStride() };
@@ -134,117 +182,90 @@ void BaseMesh::setAttributePointers(const VertexLayout& shaderVertexLayout, std:
     assert(shaderVertexAttributeIndex == shaderAttributeDescList.size());
 }
 
-void BaseMesh::unbind() {
+void StaticMesh::unbind() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 }
 
-void BaseMesh::_upload() {
-    if(mUploaded) return;
+void StaticMesh::unload() {
+    if(!mIsUploaded) return;
 
-    upload();
-    assert(mVertexBufferIndex);
-    assert(mElementBufferIndex);
-    mUploaded = true;
+    glDeleteBuffers(1, &mVertexBuffer);
+    mVertexBuffer = 0;
+    glDeleteBuffers(1, &mElementBuffer);
+    mElementBuffer = 0;
+
+    mIsUploaded = false;
 }
 
-void BaseMesh::unload() {
-    if(!mUploaded) return;
-
-    glDeleteBuffers(1, &mVertexBufferIndex);
-    mVertexBufferIndex = 0;
-    glDeleteBuffers(1, &mElementBufferIndex);
-    mElementBufferIndex = 0;
-
-    mUploaded = false;
-}
-
-void BaseMesh::destroyResource() {
+void StaticMesh::destroyResource() {
     unload();
 }
 
-void BaseMesh::releaseResource() {
-    if(!mUploaded) return;
+void StaticMesh::releaseResource() {
+    if(!mIsUploaded) return;
 
-    mVertexBufferIndex = 0;
-    mElementBufferIndex = 0;
+    mVertexBuffer = 0;
+    mElementBuffer = 0;
 
-    mUploaded = false;
+    mIsUploaded = false;
 }
 
-VertexLayout BaseMesh::getVertexLayout() const {
+VertexLayout StaticMesh::getVertexLayout() const {
     return mVertexLayout;
 }
 
-BuiltinMesh::BuiltinMesh(aiMesh* pAiMesh) 
-: BaseMesh{BuiltinVertexLayout} 
-{
-    for (std::size_t i{0}; i < pAiMesh->mNumVertices; ++i) {
-        // TODO: make fetching vertex data more robust. There is no
-        // guarantee that a mesh will contain vertex colours or
-        // texture sampling coordinates
-        mVertices.push_back({
-            { // position
-                pAiMesh->mVertices[i].x,
-                pAiMesh->mVertices[i].y,
-                pAiMesh->mVertices[i].z,
-                1.f
-            },
-            { // normal
-                pAiMesh->mNormals[i].x,
-                pAiMesh->mNormals[i].y,
-                pAiMesh->mNormals[i].z,
-                0.f
-            },
-            { // tangent
-                pAiMesh->mTangents[i].x,
-                pAiMesh->mTangents[i].y,
-                pAiMesh->mTangents[i].z,
-                0.f
-            },
-            { 1.f, 1.f, 1.f, 1.f },
-            {
-                pAiMesh->mTextureCoords[0][i].x,
-                pAiMesh->mTextureCoords[0][i].y
-            }
-        });
+std::shared_ptr<IResource> StaticMeshFromDescription::createResource(const nlohmann::json& methodParameters) {
+    std::vector<BuiltinVertexData> vertices {};
+    std::vector<GLuint> elements {};
+    for(const nlohmann::json& vertexParameters: methodParameters.at("vertices").get<std::vector<nlohmann::json>>()) {
+        vertices.push_back(jsonToBuiltinVertexData(vertexParameters));
     }
-
-    for(std::size_t i{0}; i < pAiMesh->mNumFaces; ++i) {
-        aiFace face = pAiMesh->mFaces[i];
-        for(std::size_t elementIndex{0}; elementIndex < face.mNumIndices; ++elementIndex) {
-            mElements.push_back(face.mIndices[elementIndex]);
-        }
+    for(GLuint element: methodParameters.at("elements").get<std::vector<GLuint>>()) {
+        elements.push_back(element);
     }
+    return std::make_shared<StaticMesh>(vertices, elements);
 }
 
-BuiltinMesh::BuiltinMesh(
-    const std::vector<BuiltinVertexData>& vertices,
-    const std::vector<GLuint>& elements
-) : BaseMesh{BuiltinVertexLayout}, mVertices {vertices}, mElements {elements}
-{}
+// BuiltinMesh::BuiltinMesh(aiMesh* pAiMesh) 
+// : BaseMesh{ BuiltinVertexLayout } 
+// {
+//     for (std::size_t i{0}; i < pAiMesh->mNumVertices; ++i) {
+//         // TODO: make fetching vertex data more robust. There is no
+//         // guarantee that a mesh will contain vertex colours or
+//         // texture sampling coordinates
+//         mVertices.push_back({
+//             { // position
+//                 pAiMesh->mVertices[i].x,
+//                 pAiMesh->mVertices[i].y,
+//                 pAiMesh->mVertices[i].z,
+//                 1.f
+//             },
+//             { // normal
+//                 pAiMesh->mNormals[i].x,
+//                 pAiMesh->mNormals[i].y,
+//                 pAiMesh->mNormals[i].z,
+//                 0.f
+//             },
+//             { // tangent
+//                 pAiMesh->mTangents[i].x,
+//                 pAiMesh->mTangents[i].y,
+//                 pAiMesh->mTangents[i].z,
+//                 0.f
+//             },
+//             { 1.f, 1.f, 1.f, 1.f },
+//             {
+//                 pAiMesh->mTextureCoords[0][i].x,
+//                 pAiMesh->mTextureCoords[0][i].y
+//             }
+//         });
+//     }
 
+//     for(std::size_t i{0}; i < pAiMesh->mNumFaces; ++i) {
+//         aiFace face = pAiMesh->mFaces[i];
+//         for(std::size_t elementIndex{0}; elementIndex < face.mNumIndices; ++elementIndex) {
+//             mElements.push_back(face.mIndices[elementIndex]);
+//         }
+//     }
+// }
 
-void BuiltinMesh::upload() {
-    // Nop if already uploaded
-    if(isUploaded()) return;
-
-    //   TODO: somehow have the base class take care of more of the memory 
-    // management? Regardless of the type of vertex data, so long as we have
-    // a pointer to the underlying array, there's no reason we shouldn't
-    // be able to upload data in the base class rather than leaving it to
-    // the subclass
-    //   Not sure how we can achieve this.
-
-    // Generate names for our vertex, element, and array buffers
-    glGenBuffers(1, &mVertexBufferIndex);
-    glGenBuffers(1, &mElementBufferIndex);
-
-    // Set up the buffer objects for this mesh
-    glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferIndex);
-        glBufferData(GL_ARRAY_BUFFER, mVertices.size() * sizeof(BuiltinVertexData), mVertices.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mElementBufferIndex);
-        glBufferData(GL_ELEMENT_ARRAY_BUFFER, mElements.size() * sizeof(GLuint), mElements.data(), GL_STATIC_DRAW);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}

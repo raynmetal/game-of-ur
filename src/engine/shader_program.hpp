@@ -7,30 +7,13 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-#include "resource_manager.hpp"
+#include "resource_database.hpp"
 
-class ShaderProgram: IResource {
+class ShaderProgram: public Resource<ShaderProgram> {
 public:
-    /*
-    Empty constructor that does nothing
-    */
-    ShaderProgram() = default;
+    inline static std::string getName() { return "ShaderProgram"; }
 
-    /*
-    A constructor that reads and compiles a shader program 
-    from vertex and fragment shader files
-    */
-    ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths);
-    /*
-    A constructor that reads and compiles a shader program
-    from vertex, geometry, and fragment shader files
-    */
-    ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths);
-    /*
-    A constructor that reads and compiles a shader program
-    from its JSON definition at the specified path
-    */
-    ShaderProgram(const std::string& programJSONPath);
+    ShaderProgram(GLuint program);
 
     /*
     Shader destructor; deletes shader from memory
@@ -41,20 +24,14 @@ public:
     ShaderProgram(const ShaderProgram& other) = delete;
     /* Shader copy assignment */
     ShaderProgram& operator=(const ShaderProgram& other) = delete;
+
     /* Shader move constructor */
     ShaderProgram(ShaderProgram&& other) noexcept;
     /* Shader move assignment */
     ShaderProgram& operator=(ShaderProgram&& other) noexcept;
 
-    /* build shader using a set of vertex and fragment sources */
-    void buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths);
-    /* build shader using a set of vertex, fragment, and geometry sources */
-    void buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths);
-
     /* Activate this shader */
     void use() const;
-    /* Retrieve the build status of this shader*/
-    bool getBuildSuccess() const;
 
     //utility attrib array functions
     GLint getLocationAttribArray(const std::string& name) const;
@@ -83,10 +60,17 @@ private:
     void releaseResource();
 
     // program ID
-    GLuint mID {};
-    bool mBuildState { false };
+    GLuint mID;
+};
 
-friend class ResourceManager<ShaderProgram>;
+class ShaderProgramFromFile: public ResourceFactoryMethod<ShaderProgram, ShaderProgramFromFile> {
+public:
+    ShaderProgramFromFile():
+    ResourceFactoryMethod<ShaderProgram, ShaderProgramFromFile> {0}
+    {}
+    inline static std::string getName() { return "fromFile"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };
 
 #endif

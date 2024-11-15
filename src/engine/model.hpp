@@ -15,11 +15,11 @@
 
 #include "vertex.hpp"
 #include "simple_ecs.hpp"
-#include "mesh_manager.hpp"
-#include "texture_manager.hpp"
-#include "shader_program_manager.hpp"
-#include "material_manager.hpp"
-#include "resource_manager.hpp"
+#include "mesh.hpp"
+#include "texture.hpp"
+#include "shader_program.hpp"
+#include "material.hpp"
+#include "resource_database.hpp"
 
 /*
  * A class that
@@ -28,23 +28,10 @@
  *  c) Stores the hierarchical relationship between the meshes
  *  d) Stores material properties used by shaders for each mesh
  */
-class StaticModel : IResource {
+class StaticModel : public Resource<StaticModel>{
 public:
-    struct TreeNode {
-        std::vector<GLint> mMeshIndices {};
-
-        TreeNode* mpParent {nullptr};
-        std::vector<TreeNode*> mpChildren {};
-    };
-
-    StaticModel();
-
-    /* Load a model from the specified file path */
-    StaticModel(const std::string& filepath);
-    /* Create a mesh out of a list of textures and vertices, store them in this model */
-    StaticModel(const std::vector<BuiltinVertexData>& vertices, const std::vector<GLuint>& elements, const std::vector<TextureHandle>& textureHandles);
-    /* Create a model with a single mesh */
-    StaticModel(const MeshHandle& meshHandle);
+    inline static std::string getName() { return "StaticModel"; }
+    StaticModel(const std::vector<std::shared_ptr<StaticMesh>>& meshHandles, const std::vector<std::shared_ptr<Material>>& materialHandles);
 
     /* Model destructor */
     ~StaticModel();
@@ -59,22 +46,18 @@ public:
     /* Copy assignment */
     StaticModel& operator=(const StaticModel& other);
 
-    std::vector<MeshHandle> getMeshHandles() const;
-    std::vector<MaterialHandle> getMaterialHandles() const;
+    std::vector<std::shared_ptr<StaticMesh>> getMeshHandles() const;
+    std::vector<std::shared_ptr<Material>> getMaterialHandles() const;
 
 private:
     /*
      * Meshes that make up this model
      */
-    std::vector<MeshHandle> mMeshHandles {};
+    std::vector<std::shared_ptr<StaticMesh>> mMeshHandles {};
     /*
      * The materials that correspond to each mesh on this model
      */
-    std::vector<MaterialHandle> mMaterialHandles {};
-    /*
-     * Root node leading to full hierarchy (of meshes)
-     */
-    TreeNode* mpHierarchyRoot {nullptr};
+    std::vector<std::shared_ptr<Material>> mMaterialHandles {};
 
     /* 
      * Utility method for destroying resources associated with
@@ -94,27 +77,26 @@ private:
      */
     void copyResources(const StaticModel& other);
 
-    void deleteTree(StaticModel::TreeNode* pRootNode);
-    TreeNode* copyTree(const TreeNode* pRootNode, StaticModel::TreeNode* pParentNode=nullptr);
-
-    TreeNode* processAssimpNode(TreeNode* pParentNode, aiNode* pAiNode, const aiScene* pAiScene);
-    void processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene);
-
-    std::vector<TextureHandle> loadAssimpTextures(aiMaterial* pAiMaterial, aiTextureType textureType);
-
-    void destroyResource() override;
-    void releaseResource() override;
-
-friend class ResourceManager<StaticModel>;
+    void destroyResource();
+    void releaseResource();
 };
 
 template<>
-inline ResourceHandle<StaticModel> Interpolator<ResourceHandle<StaticModel>>::operator() (
-    const ResourceHandle<StaticModel>& previousState,
-    const ResourceHandle<StaticModel>& nextState,
+inline std::shared_ptr<StaticModel> Interpolator<std::shared_ptr<StaticModel>>::operator() (
+    const std::shared_ptr<StaticModel>& previousState,
+    const std::shared_ptr<StaticModel>& nextState,
     float simulationProgress
 ) const {
     return nextState;
 }
+
+class StaticModelFromFile: public ResourceFactoryMethod<StaticModel, StaticModelFromFile> {
+public:
+    StaticModelFromFile();
+    inline static std::string getName() { return "fromFile"; }
+
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+};
 
 #endif

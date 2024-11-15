@@ -1,21 +1,26 @@
 #ifndef ZOFRAMEBUFFER_H
 #define ZOFRAMEBUFFER_H
+
 #include <vector>
+#include <memory>
 
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-#include "texture_manager.hpp"
-#include "resource_manager.hpp"
+#include "texture.hpp"
+#include "resource_database.hpp"
 
-
-class Framebuffer : IResource {
+class Framebuffer : public Resource<Framebuffer> {
 public:
-    Framebuffer() = default;
-
-    /* Creates a framebuffer with some number of color attachments and color buffers which it manages, optionally 
+    /* Creates a framebuffer with some number of color attachments and color buffers which it manages, optionally
     allowing the user to create an RBO for it */
-    Framebuffer(glm::vec2 dimensions, GLuint nColorAttachments, std::vector<ColorBufferDefinition> colorBufferDefinitions, bool useRBO);
+    Framebuffer(
+        GLuint framebuffer,
+        glm::vec2 dimensions,
+        GLuint nColorAttachments,
+        std::vector<std::shared_ptr<Texture>> colorBuffers,
+        GLuint rbo
+    );
 
     /*Framebuffer destructor, calls destroyResource */
     ~Framebuffer();
@@ -29,10 +34,8 @@ public:
     /* move assignment operator */
     Framebuffer& operator=(Framebuffer&& other);
 
-    void initialize(glm::vec2 dimensions, GLuint nColorAttachments, std::vector<ColorBufferDefinition> colorBufferDefinitions, bool useRBO);
-
     /* returns a vector of handles to this framebuffer's textures */
-    std::vector<TextureHandle> getColorBufferHandles();
+    std::vector<std::shared_ptr<Texture>> getColorBufferHandles();
 
     /* command to bind this framebuffer */
     void bind();
@@ -43,21 +46,31 @@ public:
 
     bool hasRBO();
 
+    inline static std::string getName() { return "Framebuffer"; }
+
 private:
     GLuint mID {};
     GLuint mRBO {};
     GLuint mNColorAttachments {};
     glm::vec2 mDimensions {};
-    std::vector<ColorBufferDefinition> mColorBufferDefinitions {};
-    std::vector<TextureHandle> mTextureHandles {};
+    std::vector<std::shared_ptr<Texture>> mTextureHandles {};
 
     void destroyResource();
     void releaseResource();
 
     void copyResource(const Framebuffer& other);
     void stealResource(Framebuffer& other);
+};
 
-friend class ResourceManager<Framebuffer>;
+class FramebufferFromDescription: public ResourceFactoryMethod<Framebuffer, FramebufferFromDescription> {
+public:
+    FramebufferFromDescription(): 
+        ResourceFactoryMethod<Framebuffer,FramebufferFromDescription>{0} 
+    {}
+
+    static std::string getName() { return "fromDescription"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParams) override;
 };
 
 #endif

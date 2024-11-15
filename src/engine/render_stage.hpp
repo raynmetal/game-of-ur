@@ -5,13 +5,13 @@
 #include <map>
 #include <queue>
 
-#include "texture_manager.hpp"
-#include "shader_program_manager.hpp"
-#include "framebuffer_manager.hpp"
-#include "mesh_manager.hpp"
-#include "material_manager.hpp"
+#include "texture.hpp"
+#include "shader_program.hpp"
+#include "framebuffer.hpp"
+#include "mesh.hpp"
+#include "material.hpp"
 #include "instance.hpp"
-#include "model_manager.hpp"
+#include "model.hpp"
 #include "light.hpp"
 #include "util.hpp"
 
@@ -22,7 +22,7 @@
 */
 
 struct OpaqueRenderUnit {
-    OpaqueRenderUnit(MeshHandle meshHandle, MaterialHandle materialHandle, glm::mat4 modelMatrix):
+    OpaqueRenderUnit(std::shared_ptr<StaticMesh> meshHandle,std::shared_ptr<Material> materialHandle, glm::mat4 modelMatrix):
         mMeshHandle{meshHandle}, mMaterialHandle{materialHandle}, mModelMatrix{modelMatrix}
     {
         setSortKey();
@@ -33,20 +33,20 @@ struct OpaqueRenderUnit {
     }
 
     std::uint32_t mSortKey {};
-    MeshHandle mMeshHandle;
-    MaterialHandle mMaterialHandle;
+    std::shared_ptr<StaticMesh> mMeshHandle;
+    std::shared_ptr<Material> mMaterialHandle;
     glm::mat4 mModelMatrix;
 
     void setSortKey() {
-        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(mMeshHandle.getName())) };
-        std::uint32_t materialHash { static_cast<uint32_t>(std::hash<std::string>{}(mMaterialHandle.getName()))};
+        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<StaticMesh*>{}(mMeshHandle.get())) };
+        std::uint32_t materialHash { static_cast<uint32_t>(std::hash<Material*>{}(mMaterialHandle.get()))};
         mSortKey |= (meshHash << ((sizeof(uint32_t)/2)*8)) & 0xFFFF0000;
         mSortKey |= (materialHash << 0) & 0x0000FFFF;
     }
 };
 
 struct LightRenderUnit {
-    LightRenderUnit(const MeshHandle& meshHandle, const MaterialHandle& materialHandle, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
+    LightRenderUnit(std::shared_ptr<StaticMesh> meshHandle, std::shared_ptr<Material> materialHandle, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
         mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle },
         mModelMatrix{ modelMatrix },
         mLightAttributes { lightEmissionData }
@@ -59,14 +59,14 @@ struct LightRenderUnit {
     }
 
     std::uint32_t mSortKey {};
-    MeshHandle mMeshHandle;
-    MaterialHandle mMaterialHandle;
+    std::shared_ptr<StaticMesh> mMeshHandle;
+    std::shared_ptr<Material> mMaterialHandle;
     glm::mat4 mModelMatrix;
     LightEmissionData mLightAttributes;
 
     void setSortKey() {
-        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<std::string>{}(mMeshHandle.getName())) };
-        std::uint32_t materialHash { static_cast<uint32_t>(std::hash<std::string>{}(mMaterialHandle.getName()))};
+        std::uint32_t meshHash { static_cast<uint32_t>(std::hash<StaticMesh*>{}(mMeshHandle.get())) };
+        std::uint32_t materialHash { static_cast<uint32_t>(std::hash<Material*>{}(mMaterialHandle.get()))};
         mSortKey |= (meshHash << ((sizeof(uint32_t)/2)*8)) & 0xFFFF0000;
         mSortKey |= (materialHash << 0) & 0x0000FFFF;
     }
@@ -87,23 +87,23 @@ public:
     virtual void validate() = 0;
     virtual void execute() = 0;
 
-    void attachTexture(const std::string& name, const TextureHandle& textureHandle);
-    void attachMesh(const std::string& name, const MeshHandle& meshHandle);
-    void attachMaterial(const std::string& name, const MaterialHandle& materialHandle);
+    void attachTexture(const std::string& name, std::shared_ptr<Texture> textureHandle);
+    void attachMesh(const std::string& name, std::shared_ptr<StaticMesh> meshHandle);
+    void attachMaterial(const std::string& name, std::shared_ptr<Material> materialHandle);
 
-    TextureHandle getTexture(const std::string& name);
-    MeshHandle getMesh(const std::string& name);
-    MaterialHandle getMaterial(const std::string& name);
+    std::shared_ptr<Texture> getTexture(const std::string& name);
+    std::shared_ptr<StaticMesh> getMesh(const std::string& name);
+    std::shared_ptr<Material> getMaterial(const std::string& name);
 
     void submitToRenderQueue(OpaqueRenderUnit renderUnit);
     void submitToRenderQueue(LightRenderUnit lightRenderUnit);
 protected:
     GLuint mVertexArrayObject {};
-    ShaderProgramHandle mShaderHandle;
+    std::shared_ptr<ShaderProgram> mShaderHandle;
 
-    std::map<std::string, TextureHandle> mTextureAttachments {};
-    std::map<std::string, MeshHandle> mMeshAttachments {};
-    std::map<std::string, MaterialHandle> mMaterialAttachments {};
+    std::map<std::string, std::shared_ptr<Texture>> mTextureAttachments {};
+    std::map<std::string, std::shared_ptr<StaticMesh>> mMeshAttachments {};
+    std::map<std::string, std::shared_ptr<Material>> mMaterialAttachments {};
 
     std::priority_queue<OpaqueRenderUnit> mOpaqueMeshQueue {};
     std::priority_queue<LightRenderUnit> mLightQueue {};
@@ -118,10 +118,10 @@ public:
     virtual void execute() = 0;
 
     void declareRenderTarget(const std::string& name, unsigned int index);
-    TextureHandle getRenderTarget(const std::string& name);
+    std::shared_ptr<Texture> getRenderTarget(const std::string& name);
 
 protected:
-    FramebufferHandle mFramebufferHandle;
+    std::shared_ptr<Framebuffer> mFramebufferHandle;
     std::map<std::string, unsigned int> mRenderTargets {};
 };
 

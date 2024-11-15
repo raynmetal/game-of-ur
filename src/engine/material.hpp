@@ -8,15 +8,17 @@
 
 #include <GL/glew.h>
 
-#include "resource_manager.hpp"
-#include "texture_manager.hpp"
+#include "texture.hpp"
+#include "resource_database.hpp"
 
-class Material : IResource {
+class Material : public Resource<Material> {
 public:
     virtual ~Material();
     Material();
+
     Material(const Material& other);
     Material(Material&& other);
+
     Material& operator=(const Material& other);
     Material& operator=(Material&& other);
     
@@ -31,14 +33,16 @@ public:
     glm::vec2 getVec2Property(const std::string& name);
     void updateVec4Property(const std::string& name, const glm::vec4& value);
     glm::vec4 getVec4Property(const std::string& name);
-    void updateTextureProperty(const std::string& name, const TextureHandle& value);
-    TextureHandle getTextureProperty(const std::string& name);
+    void updateTextureProperty(const std::string& name, std::shared_ptr<Texture> value);
+    std::shared_ptr<Texture> getTextureProperty(const std::string& name);
 
     static void RegisterFloatProperty(const std::string& name, float defaultValue);
     static void RegisterIntProperty(const std::string& name, int defaultValue);
     static void RegisterVec4Property(const std::string& name, const glm::vec4& defaultValue);
     static void RegisterVec2Property(const std::string& name, const glm::vec2& defaultValue);
-    static void RegisterTextureHandleProperty(const std::string& name, const TextureHandle& defaultValue);
+    static void RegisterTextureHandleProperty(const std::string& name, std::shared_ptr<Texture> defaultValue);
+
+    inline static std::string getName() { return "Material"; }
 
     static void Init();
 
@@ -52,12 +56,22 @@ private:
     std::map<std::string, int> mIntProperties {};
     std::map<std::string, glm::vec4> mVec4Properties {};
     std::map<std::string, glm::vec2> mVec2Properties {};
-    std::map<std::string, TextureHandle> mTextureProperties {};
+    std::map<std::string, std::shared_ptr<Texture>> mTextureProperties {};
 
-    virtual void destroyResource() override;
-    virtual void releaseResource() override;
+    void destroyResource();
+    void releaseResource();
+};
 
-friend class ResourceManager<Material>;
+class MaterialFromDescription: public ResourceFactoryMethod<Material, MaterialFromDescription> {
+public:
+
+    MaterialFromDescription():
+    ResourceFactoryMethod<Material, MaterialFromDescription> {0}
+    {}
+    inline static std::string getName() { return "fromDescription"; }
+
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };
 
 #endif

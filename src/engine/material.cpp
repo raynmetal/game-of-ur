@@ -8,17 +8,23 @@
 Material* Material::defaultMaterial { nullptr };
 
 Material::~Material() { destroyResource(); }
-Material::Material() {}
+
+Material::Material(): Resource<Material>{0} {}
+
 Material::Material(const Material& other):
-    mFloatProperties{other.mFloatProperties}, mIntProperties{other.mIntProperties},
-    mVec4Properties{other.mVec4Properties}, mVec2Properties{other.mVec2Properties},
-    mTextureProperties{other.mTextureProperties}
+Resource<Material> {0},
+mFloatProperties{other.mFloatProperties}, mIntProperties{other.mIntProperties},
+mVec4Properties{other.mVec4Properties}, mVec2Properties{other.mVec2Properties},
+mTextureProperties{other.mTextureProperties}
 {}
+
 Material::Material(Material&& other):
-    mFloatProperties{other.mFloatProperties}, mIntProperties{other.mIntProperties},
-    mVec4Properties{other.mVec4Properties}, mVec2Properties{other.mVec2Properties},
-    mTextureProperties{other.mTextureProperties}
+Resource<Material> {0},
+mFloatProperties{other.mFloatProperties}, mIntProperties{other.mIntProperties},
+mVec4Properties{other.mVec4Properties}, mVec2Properties{other.mVec2Properties},
+mTextureProperties{other.mTextureProperties}
 { other.releaseResource(); }
+
 Material& Material::operator=(const Material& other) {
     if(this == &other) return *this;
     mFloatProperties = other.mFloatProperties;
@@ -75,17 +81,20 @@ void Material::updateVec4Property(const std::string& name, const glm::vec4& valu
     assert(Material::defaultMaterial && Material::defaultMaterial->mVec4Properties.find(name) != Material::defaultMaterial->mVec4Properties.end());
     mVec4Properties[name] = value;
 }
+
 glm::vec4 Material::getVec4Property(const std::string& name) {
     assert(Material::defaultMaterial && Material::defaultMaterial->mVec4Properties.find(name) != Material::defaultMaterial->mVec4Properties.end());
     if(mVec4Properties.find(name) != mVec4Properties.end())
         return mVec4Properties[name];
     return Material::defaultMaterial->mVec4Properties[name];
 }
-void Material::updateTextureProperty(const std::string& name, const TextureHandle& value) {
+
+void Material::updateTextureProperty(const std::string& name, std::shared_ptr<Texture> value) {
     assert(Material::defaultMaterial && Material::defaultMaterial->mTextureProperties.find(name) != Material::defaultMaterial->mTextureProperties.end());
     mTextureProperties[name] = value;
 }
-TextureHandle Material::getTextureProperty(const std::string& name) {
+
+std::shared_ptr<Texture> Material::getTextureProperty(const std::string& name) {
     assert(Material::defaultMaterial && Material::defaultMaterial->mTextureProperties.find(name) != Material::defaultMaterial->mTextureProperties.end());
     if(mTextureProperties.find(name) != mTextureProperties.end())
         return mTextureProperties[name];
@@ -104,7 +113,7 @@ void Material::RegisterVec4Property(const std::string& name, const glm::vec4& de
 void Material::RegisterVec2Property(const std::string& name, const glm::vec2& defaultValue) {
     Material::defaultMaterial->mVec2Properties[name] = defaultValue;
 }
-void Material::RegisterTextureHandleProperty(const std::string& name, const TextureHandle& defaultValue) {
+void Material::RegisterTextureHandleProperty(const std::string& name, std::shared_ptr<Texture> defaultValue) {
     Material::defaultMaterial->mTextureProperties[name] = defaultValue;
 }
 
@@ -131,4 +140,45 @@ void Material::releaseResource() {
     mVec2Properties.clear();
     mVec4Properties.clear();
     mTextureProperties.clear();
+}
+
+std::shared_ptr<IResource> MaterialFromDescription::createResource(const nlohmann::json& methodParameters) {
+    std::shared_ptr<Material> material {std::make_shared<Material>()};
+    for(const nlohmann::json& property: methodParameters.at("properties").get<std::vector<nlohmann::json>>()) {
+        std::string propertyName { property.at("name").get<std::string>() };
+        std::string propertyType { property.at("type").get<std::string>() };
+
+        if(propertyType == "float") {
+            float value { property.at("value").get<float>() };
+            material->updateFloatProperty(propertyName, value);
+
+        } else if (propertyType == "int") {
+            int value { property.at("value").get<int>() };
+            material->updateIntProperty(propertyName, value);
+
+        } else if (propertyType == "vec2") {
+            glm::vec2 value {
+                property.at("value").at(0).get<float>(), property.at("value").at(1).get<float>()
+            };
+            material->updateVec2Property(propertyName, value);
+
+        } else if (propertyType == "vec4") {
+            glm::vec4 value {
+                property.at("value").at(0).get<float>(), property.at("value").at(1).get<float>(),
+                property.at("value").at(2).get<float>(), property.at("value").at(3).get<float>()
+            };
+            material->updateVec4Property(propertyName, value);
+
+        } else if (propertyType == "texture") {
+            std::shared_ptr<Texture> value { ResourceDatabase::getResource<Texture>(
+                property.at("value").get<std::string>()
+            )};
+            material->updateTextureProperty(propertyName, value);
+
+        } else {
+            assert(false && ("No material property type of the name " + propertyType + " is known.").c_str());
+        }
+    }
+
+    return material;
 }

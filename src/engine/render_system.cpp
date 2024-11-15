@@ -1,14 +1,16 @@
 #include <array>
 
 #include <glm/glm.hpp>
+#include <nlohmann/json.hpp>
 
+#include "resource_database.hpp"
+#include "window_context_manager.hpp"
 #include "simple_ecs.hpp"
 
 #include "light.hpp"
-#include "window_context_manager.hpp"
 #include "camera_system.hpp"
 #include "render_stage.hpp"
-#include "model_manager.hpp"
+#include "model.hpp"
 
 #include "render_system.hpp"
 
@@ -17,9 +19,25 @@ constexpr float MIN_GAMMA { 1.6f };
 constexpr float MAX_EXPOSURE { 15.f };
 constexpr float MIN_EXPOSURE { 0.f };
 
+RenderSystem::LightQueue::LightQueue() {
+    if(!ResourceDatabase::hasResourceDescription("sphereLight-10lat-5long")) {
+        nlohmann::json sphereLightDescription {
+            {"name", "sphereLight-10lat-5long"},
+            {"type", StaticMesh::getName()},
+            {"method", StaticMeshSphereLatLong::getName()},
+            {"parameters", {
+                {"nLatitudes", 10},
+                {"nMeridians", 5}
+            }}
+        };
+        ResourceDatabase::addResourceDescription(sphereLightDescription);
+    }
+    mSphereMesh = ResourceDatabase::getResource<StaticMesh>("sphereLight-10lat-5long");
+}
+
 void RenderSystem::onCreated() {
     SimpleECS::registerSystem<LightQueue, Transform, LightEmissionData>();
-    SimpleECS::registerSystem<OpaqueQueue, Transform, ModelHandle>();
+    SimpleECS::registerSystem<OpaqueQueue, Transform, std::shared_ptr<StaticModel>>();
 
     mGeometryRenderStage.setup();
     mLightingRenderStage.setup();
@@ -27,14 +45,20 @@ void RenderSystem::onCreated() {
     mTonemappingRenderStage.setup();
     mScreenRenderStage.setup();
 
-    MaterialHandle lightMaterialHandle {
-        MaterialManager::getInstance().registerResource(
-            "lightMaterial",
-            {}
-        )
-    };
-    lightMaterialHandle.getResource().updateIntProperty("screenWidth", 800);
-    lightMaterialHandle.getResource().updateIntProperty("screenHeight", 600);
+    if(!ResourceDatabase::hasResourceDescription("lightMaterial")) {
+        nlohmann::json lightMaterialDescription{
+            {"name", "lightMaterial"},
+            {"type", Material::getName()},
+            {"method", MaterialFromDescription::getName()},
+            {"parameters", {
+                {"properties", nlohmann::json::array()},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(lightMaterialDescription);
+    }
+    mLightMaterialHandle = ResourceDatabase::getResource<Material>("lightMaterial");
+    mLightMaterialHandle->updateIntProperty("screenWidth", 800);
+    mLightMaterialHandle->updateIntProperty("screenHeight", 600);
 
     // TODO: Make it so that we can control which camera is used by the render
     // system, and what portion of the screen it renders to
@@ -143,10 +167,10 @@ void RenderSystem::execute(float simulationProgress) {
 
 void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
     for(EntityID entity: getEnabledEntities()) {
-        ModelHandle modelHandle { getComponent<ModelHandle>(entity) };
+        std::shared_ptr<StaticModel> modelHandle { getComponent<std::shared_ptr<StaticModel>>(entity) };
         Transform entityTransform { getComponent<Transform>(entity, simulationProgress) };
-        const std::vector<MeshHandle>& meshList { modelHandle.getResource().getMeshHandles() };
-        const std::vector<MaterialHandle>& materialList { modelHandle.getResource().getMaterialHandles() };
+        const std::vector<std::shared_ptr<StaticMesh>>& meshList { modelHandle->getMeshHandles() };
+        const std::vector<std::shared_ptr<Material>>& materialList { modelHandle->getMaterialHandles() };
 
         for(std::size_t i{0}; i < meshList.size(); ++i) {
             renderStage.submitToRenderQueue({
@@ -159,8 +183,8 @@ void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float si
 }
 
 void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
-    MaterialHandle lightMaterialHandle { 
-        MaterialManager::getInstance().getResourceHandle("lightMaterial")
+    std::shared_ptr<Material> lightMaterialHandle { 
+        ResourceDatabase::getResource<Material>("lightMaterial")
     };
     for(EntityID entity: getEnabledEntities()) {
         Transform entityTransform { getComponent<Transform>(entity, simulationProgress)};
@@ -178,7 +202,7 @@ void RenderSystem::setGamma(float gamma) {
     if(gamma > MAX_GAMMA) gamma = MAX_GAMMA;
     else if (gamma < MIN_GAMMA) gamma = MIN_GAMMA;
 
-    mTonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
+    mTonemappingRenderStage.getMaterial("screenMaterial")->updateFloatProperty(
         "gamma", gamma
     );
 
@@ -189,7 +213,7 @@ void RenderSystem::setExposure(float exposure) {
     if(exposure > MAX_EXPOSURE) exposure = MAX_EXPOSURE;
     else if (exposure < MIN_EXPOSURE) exposure = MIN_EXPOSURE;
 
-    mTonemappingRenderStage.getMaterial("screenMaterial").getResource().updateFloatProperty(
+    mTonemappingRenderStage.getMaterial("screenMaterial")->updateFloatProperty(
         "exposure", exposure
     );
 

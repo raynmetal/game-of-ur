@@ -17,156 +17,16 @@
 
 GLint loadAndCompileShader(const std::vector<std::string>& shaderPaths, GLuint& shaderID, GLuint shaderType);
 void freeProgram(GLuint programID);
+GLuint buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths);
+GLuint buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths);
 
-ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths) {
-    buildProgram(vertexPaths, fragmentPaths);
+ShaderProgram::ShaderProgram(GLuint program):
+Resource<ShaderProgram>{0},
+mID { program }
+{
+    assert(mID && "Must be the mID of a shader program tracked by OpenGL");
 }
 
-void ShaderProgram::buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths){
-    GLuint vertexShader;
-    GLuint fragmentShader;
-    mBuildState = false;
-
-    if(loadAndCompileShader(vertexPaths, vertexShader, GL_VERTEX_SHADER) != GL_TRUE) return;
-    if(loadAndCompileShader(fragmentPaths, fragmentShader, GL_FRAGMENT_SHADER) != GL_TRUE){
-        glDeleteShader(vertexShader);
-        return;
-    }
-
-    //Create a shader program
-    GLint success {};
-    freeProgram(mID);
-    mID = glCreateProgram();
-    glAttachShader(mID, vertexShader);
-    glAttachShader(mID, fragmentShader);
-    glLinkProgram(mID);
-
-    //Clean up (now unnecessary) shader objects
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
-    //Report failure, if it occurred
-    glGetProgramiv(mID, GL_LINK_STATUS, &success);
-    if(success != GL_TRUE) {
-        char infoLog[4096];
-        glGetProgramInfoLog(mID, 4096, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-            << infoLog << std::endl;
-        glDeleteProgram(mID);
-        mID = 0;
-        throw std::invalid_argument("Could not link vertex and fragment shaders.");
-    }
-
-    // Store build success
-    mBuildState = true;
-    return;
-}
-
-ShaderProgram::ShaderProgram(const std::string& programJSONPath) {
-    std::ifstream jsonFileStream;
-
-    // Load parent shader program definition
-    jsonFileStream.open(programJSONPath);
-    nlohmann::json programJSON{ nlohmann::json::parse(jsonFileStream) };
-    jsonFileStream.close();
-    nlohmann::json::iterator endIter { programJSON[0].end() };
-    nlohmann::json::iterator typeIter { programJSON[0].find("type") };
-    if(typeIter == endIter || *typeIter != "shader/program") {
-        throw std::invalid_argument("Shader program JSON file " + programJSONPath + " is not of type \"shader/program\".");
-    }
-    std::cout << programJSON << std::endl;
-    nlohmann::json::iterator vertexIter { programJSON[0].find("vertexShader") };
-    nlohmann::json::iterator fragmentIter { programJSON[0].find("fragmentShader") };
-    if(vertexIter == endIter || fragmentIter == endIter) {
-        throw std::invalid_argument("Shader program JSON file " + programJSONPath + " does not contain appropriate fragment or vertex shader definitions.");
-    }
-    std::filesystem::path programPath { programJSONPath };
-    std::filesystem::path parentDirectory { programPath.parent_path() };
-    std::filesystem::path vertexJSONPath { parentDirectory / std::string(*vertexIter) };
-    std::filesystem::path fragmentJSONPath { parentDirectory / std::string(*fragmentIter) };
-
-    // load vertex shader definition
-    std::vector<std::string> vertexSources {};
-    jsonFileStream.open(vertexJSONPath.string());
-    nlohmann::json vertexJSON { nlohmann::json::parse(jsonFileStream) };
-    jsonFileStream.close();
-    typeIter = vertexJSON[0].find("type");
-    if(typeIter == vertexJSON[0].end() || *typeIter != "shader/vertex") {
-        throw std::invalid_argument("Vertex shader JSON file " + vertexJSONPath.string() + " is not of type \"shader/vertex\".");
-    }
-    std::filesystem::path vertexJSONDirectory { vertexJSONPath.parent_path() };
-    for(std::string source : vertexJSON[0]["sources"]) {
-        vertexSources.push_back((vertexJSONDirectory / source).string());
-    }
-
-    // load fragment shader definition
-    std::vector<std::string> fragmentSources {};
-    jsonFileStream.open(fragmentJSONPath.string());
-    nlohmann::json fragmentJSON { nlohmann::json::parse(jsonFileStream) };
-    jsonFileStream.close();
-    typeIter = fragmentJSON[0].find("type");
-    if(typeIter == fragmentJSON[0].end() || *typeIter != "shader/fragment") {
-        throw std::invalid_argument("Fragment shader JSON file " + fragmentJSONPath.string() + " is not of type \"shader/fragment\".");
-    }
-    std::filesystem::path fragmentJSONDirectory { fragmentJSONPath.parent_path() };
-    for(std::string source : fragmentJSON[0]["sources"]) {
-        fragmentSources.push_back((fragmentJSONDirectory / source).string());
-    }
-
-    buildProgram(vertexSources, fragmentSources);
-}
-
-
-ShaderProgram::ShaderProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) {
-    buildProgram(vertexPaths, fragmentPaths, geometryPaths);
-}
-
-void ShaderProgram::buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) {
-    GLuint vertexShader {};
-    GLuint fragmentShader {};
-    GLuint geometryShader {};
-    mBuildState = false;
-
-    if(loadAndCompileShader(vertexPaths, vertexShader, GL_VERTEX_SHADER) != GL_TRUE) return;
-    if(loadAndCompileShader(fragmentPaths, fragmentShader, GL_FRAGMENT_SHADER) != GL_TRUE) {
-        glDeleteShader(vertexShader);
-        return;
-    }
-    if(loadAndCompileShader(geometryPaths, geometryShader, GL_GEOMETRY_SHADER) != GL_TRUE) {
-        glDeleteShader(vertexShader);
-        glDeleteShader(fragmentShader);
-        return;
-    }
-
-    //Create a shader program
-    GLint success {};
-    char infoLog[512];   
-    freeProgram(mID);
-    mID = glCreateProgram();
-    glAttachShader(mID, vertexShader);
-    glAttachShader(mID, fragmentShader);
-    glAttachShader(mID, geometryShader);
-    glLinkProgram(mID);
-
-    //Clean up (now unnecessary) shader objects
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-    glDeleteShader(geometryShader);
-
-    //Report failure, if it occurred
-    glGetProgramiv(mID, GL_LINK_STATUS, &success);
-    if(success != GL_TRUE) {
-        glGetProgramInfoLog(mID, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
-            << infoLog << std::endl;
-        glDeleteProgram(mID);
-        mID = 0;
-        return;
-    }
-
-    // Store build success
-    mBuildState = true;
-}
 
 GLint loadAndCompileShader(const std::vector<std::string>& shaderPaths, GLuint& shaderID, GLuint shaderType) {
     //Read shader text
@@ -235,8 +95,8 @@ ShaderProgram::~ShaderProgram() {
 }
 
 ShaderProgram::ShaderProgram(ShaderProgram&& other) noexcept :
-    mID {other.mID},
-    mBuildState{other.mBuildState}
+Resource<ShaderProgram>{0},
+mID {other.mID}
 {
     // Prevent other from destroying resource 
     // when its destructor is called
@@ -252,7 +112,6 @@ ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept {
 
     //Copy other
     mID = other.mID;
-    mBuildState = other.mBuildState;
 
     //Prevent other from destroying moved resource when its
     //destructor is called
@@ -263,7 +122,6 @@ ShaderProgram& ShaderProgram::operator=(ShaderProgram&& other) noexcept {
 
 GLuint ShaderProgram::getProgramID() const { return mID; }
 void ShaderProgram::use() const { glUseProgram(mID); }
-bool ShaderProgram::getBuildSuccess() const { return mBuildState; }
 
 GLint ShaderProgram::getLocationAttribArray(const std::string& name) const {
     return glGetAttribLocation(mID, name.c_str());
@@ -364,10 +222,153 @@ void freeProgram(GLuint programID) {
 void ShaderProgram::destroyResource() {
     freeProgram(mID);
     mID = 0;
-    mBuildState = false;
 }
 
 void ShaderProgram::releaseResource() {
     mID = 0;
-    mBuildState = false;
+}
+
+std::shared_ptr<IResource> ShaderProgramFromFile::createResource(const nlohmann::json& methodParameters) {
+    GLuint shaderProgram { 0 };
+    std::ifstream jsonFileStream;
+    std::string programJSONPath { methodParameters.at("path").get<std::string>() };
+
+    // Load parent shader program definition
+    jsonFileStream.open(programJSONPath);
+    nlohmann::json programJSON{ nlohmann::json::parse(jsonFileStream) };
+    jsonFileStream.close();
+    nlohmann::json::iterator endIter { programJSON[0].end() };
+    nlohmann::json::iterator typeIter { programJSON[0].find("type") };
+    if(typeIter == endIter || *typeIter != "shader/program") {
+        throw std::invalid_argument("Shader program JSON file " + programJSONPath + " is not of type \"shader/program\".");
+    }
+    nlohmann::json::iterator vertexIter { programJSON[0].find("vertexShader") };
+    nlohmann::json::iterator fragmentIter { programJSON[0].find("fragmentShader") };
+    if(vertexIter == endIter || fragmentIter == endIter) {
+        throw std::invalid_argument("Shader program JSON file " + programJSONPath + " does not contain appropriate fragment or vertex shader definitions.");
+    }
+    std::filesystem::path programPath { programJSONPath };
+    std::filesystem::path parentDirectory { programPath.parent_path() };
+    std::filesystem::path vertexJSONPath { parentDirectory / std::string(*vertexIter) };
+    std::filesystem::path fragmentJSONPath { parentDirectory / std::string(*fragmentIter) };
+
+    // load vertex shader definition
+    std::vector<std::string> vertexSources {};
+    jsonFileStream.open(vertexJSONPath.string());
+    nlohmann::json vertexJSON { nlohmann::json::parse(jsonFileStream) };
+    jsonFileStream.close();
+    typeIter = vertexJSON[0].find("type");
+    if(typeIter == vertexJSON[0].end() || *typeIter != "shader/vertex") {
+        throw std::invalid_argument("Vertex shader JSON file " + vertexJSONPath.string() + " is not of type \"shader/vertex\".");
+    }
+    std::filesystem::path vertexJSONDirectory { vertexJSONPath.parent_path() };
+    for(std::string source : vertexJSON[0]["sources"]) {
+        vertexSources.push_back((vertexJSONDirectory / source).string());
+    }
+
+    // load fragment shader definition
+    std::vector<std::string> fragmentSources {};
+    jsonFileStream.open(fragmentJSONPath.string());
+    nlohmann::json fragmentJSON { nlohmann::json::parse(jsonFileStream) };
+    jsonFileStream.close();
+    typeIter = fragmentJSON[0].find("type");
+    if(typeIter == fragmentJSON[0].end() || *typeIter != "shader/fragment") {
+        throw std::invalid_argument("Fragment shader JSON file " + fragmentJSONPath.string() + " is not of type \"shader/fragment\".");
+    }
+    std::filesystem::path fragmentJSONDirectory { fragmentJSONPath.parent_path() };
+    for(std::string source : fragmentJSON[0]["sources"]) {
+        fragmentSources.push_back((fragmentJSONDirectory / source).string());
+    }
+
+    shaderProgram = buildProgram(vertexSources, fragmentSources);
+    assert(shaderProgram && "failed to load or compile the shader program");
+    return std::make_shared<ShaderProgram>(shaderProgram);
+}
+
+GLuint buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths, const std::vector<std::string>& geometryPaths) {
+    GLuint shaderProgram {};
+    GLuint vertexShader {};
+    GLuint fragmentShader {};
+    GLuint geometryShader {};
+
+    bool vShaderCompiled { GL_TRUE ==loadAndCompileShader(vertexPaths, vertexShader, GL_VERTEX_SHADER) };
+    assert(vShaderCompiled && "Could not compile vertex shader");
+    bool fShaderCompiled { GL_TRUE == loadAndCompileShader(fragmentPaths, fragmentShader, GL_FRAGMENT_SHADER) };
+    if(!fShaderCompiled ) {
+        glDeleteShader(vertexShader);
+    }
+    assert(fShaderCompiled && "Could not compile fragment shader");
+    bool gShaderCompiled { GL_TRUE == loadAndCompileShader(geometryPaths, geometryShader, GL_GEOMETRY_SHADER) };
+    if(!gShaderCompiled) {
+        glDeleteShader(vertexShader);
+        glDeleteShader(fragmentShader);
+    }
+    assert(gShaderCompiled && "Could not compile geometry shader");
+
+    //Create a shader program
+    GLint success {};
+    char infoLog[512];   
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glAttachShader(shaderProgram, geometryShader);
+    glLinkProgram(shaderProgram);
+
+    //Clean up (now unnecessary) shader objects
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+    glDeleteShader(geometryShader);
+
+    //Report failure, if it occurred
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if(success != GL_TRUE) {
+        glGetProgramInfoLog(shaderProgram, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+            << infoLog << std::endl;
+        glDeleteProgram(shaderProgram);
+        shaderProgram = 0;
+    }
+    assert(success == GL_TRUE && "Failed to link shader program");
+
+    return shaderProgram;
+}
+
+GLuint buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths){
+    GLuint shaderProgram {};
+    GLuint vertexShader;
+    GLuint fragmentShader;
+
+    bool vShaderCompiled { GL_TRUE == loadAndCompileShader(vertexPaths, vertexShader, GL_VERTEX_SHADER) };
+    assert(vShaderCompiled && "Could not compile vertex shader");
+    bool fShaderCompiled { GL_TRUE == loadAndCompileShader(fragmentPaths, fragmentShader, GL_FRAGMENT_SHADER) };
+    if(!fShaderCompiled) {
+        glDeleteShader(vertexShader);
+    }
+    assert(fShaderCompiled && "Could not compile fragment shader");
+
+    //Create a shader program
+    GLint success {};
+    shaderProgram = glCreateProgram();
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    glLinkProgram(shaderProgram);
+
+    //Clean up (now unnecessary) shader objects
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
+    //Report failure, if it occurred
+    glGetProgramiv(shaderProgram, GL_LINK_STATUS, &success);
+    if(success != GL_TRUE) {
+        char infoLog[4096];
+        glGetProgramInfoLog(shaderProgram, 4096, NULL, infoLog);
+        std::cout << "ERROR::SHADER::PROGRAM::LINKING_FAILED\n"
+            << infoLog << std::endl;
+        glDeleteProgram(shaderProgram);
+        shaderProgram = 0;
+    }
+    assert(success == GL_TRUE && "Failed to link vertex and fragment shaders");
+
+    // Store build success
+    return shaderProgram;
 }
