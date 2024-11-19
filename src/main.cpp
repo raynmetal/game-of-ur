@@ -35,7 +35,7 @@ int main(int argc, char* argv[]) {
 
     InputManager inputManager {};
 
-    InputIdentity mouseMotionControl {
+    InputSourceDescription mouseMotionControl {
         .mAttributes {
             (2&InputAttributes::N_AXES)
             | InputAttributes::HAS_STATE_VALUE
@@ -57,41 +57,84 @@ int main(int argc, char* argv[]) {
     // Create the camera action context, and define what actions are available to it
     inputManager.registerActionContext("Camera");
     inputManager["Camera"].registerAction(
-        "Rotate",
-        (2&InputAttributes::N_AXES)
-        | InputAttributes::HAS_CHANGE_VALUE
+        nlohmann::json {
+            {"name", "Rotate"},
+            {"nAxes", 2},
+            {"hasChangeValue", true},
+            {"hasStateValue", false},
+            {"hasButtonValue", false},
+            {"hasNegative", false},
+            {"stateIsLocation", false},
+        }
     );
     inputManager["Camera"].registerAction(
-        "Move",
-        (2&InputAttributes::N_AXES)
-        | InputAttributes::HAS_STATE_VALUE
-        | InputAttributes::HAS_NEGATIVE
+        nlohmann::json {
+            {"name", "Move"},
+            {"nAxes", 2},
+            {"hasChangeValue", false},
+            {"hasStateValue", true},
+            {"hasButtonValue", false},
+            {"hasNegative", true},
+            {"stateIsLocation", false},
+        }
     );
     inputManager["Camera"].registerAction(
-        "ToggleControl",
-        InputAttributes::HAS_BUTTON_VALUE
+        nlohmann::json {
+            {"name", "ToggleControl"},
+            {"nAxes", 0},
+            {"hasChangeValue", false},
+            {"hasStateValue", false},
+            {"hasButtonValue", true},
+            {"hasNegative", false},
+            {"stateIsLocation", false},
+        }
     );
     inputManager["Camera"].registerAction(
-        "UpdateFOV",
-        (1&InputAttributes::N_AXES)
-        | InputAttributes::HAS_CHANGE_VALUE
+        nlohmann::json {
+            {"name", "UpdateFOV"},
+            {"nAxes", 1},
+            {"hasChangeValue", true},
+            {"hasStateValue", false},
+            {"hasButtonValue", false},
+            {"hasNegative", false},
+            {"stateIsLocation", false},
+        }
     );
 
     // Create an action context for render controls
     inputManager.registerActionContext("Graphics");
     inputManager["Graphics"].registerAction(
-        "UpdateGamma",
-        (1&InputAttributes::N_AXES)
-        | InputAttributes::HAS_CHANGE_VALUE
+        nlohmann::json {
+            {"name", "UpdateGamma"},
+            {"nAxes", 1},
+            {"hasChangeValue", true},
+            {"hasStateValue", false},
+            {"hasButtonValue", false},
+            {"hasNegative", false},
+            {"stateIsLocation", false},
+        }
     );
     inputManager["Graphics"].registerAction(
-        "UpdateExposure",
-        (1&InputAttributes::N_AXES)
-        | InputAttributes::HAS_CHANGE_VALUE
+        nlohmann::json{
+            {"name", "UpdateExposure"},
+            {"nAxes", 1},
+            {"hasChangeValue", true},
+            {"hasStateValue", false},
+            {"hasButtonValue", false},
+            {"hasNegative", false},
+            {"stateIsLocation", false},
+        }
     );
     inputManager["Graphics"].registerAction(
-        "RenderNextTexture",
-        InputAttributes::HAS_BUTTON_VALUE
+        nlohmann::json{
+            {"name", "RenderNextTexture"},
+            {"nAxes", 0},
+            {"hasChangeValue", false},
+            {"hasStateValue", false},
+            {"hasButtonValue", true},
+            {"hasNegative", false},
+            {"stateIsLocation", false},
+        }
     );
 
 

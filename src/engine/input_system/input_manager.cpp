@@ -7,7 +7,142 @@
 #include "../window_context_manager.hpp"
 #include "input_system.hpp"
 
-bool hasValue(const InputIdentity& input, const AxisFilterType filter) {
+const std::map<std::string, InputSourceDescription> kInputSourceDescriptions {
+    {"mouse_motion", 
+        InputSourceDescription {
+            .mAttributes {
+                (2&InputAttributes::N_AXES)
+                | InputAttributes::HAS_STATE_VALUE
+                | InputAttributes::HAS_CHANGE_VALUE
+                | InputAttributes::STATE_IS_LOCATION
+            },
+            .mDeviceType{ DeviceType::MOUSE },
+            .mControlType{ ControlType::POINT },
+        }
+    },
+    {"mouse_button",
+        InputSourceDescription {
+            .mAttributes{
+                (2&InputAttributes::N_AXES)
+                | InputAttributes::HAS_BUTTON_VALUE
+                | InputAttributes::HAS_STATE_VALUE
+                | InputAttributes::STATE_IS_LOCATION
+            },
+            .mDeviceType{ DeviceType::MOUSE },
+            .mControlType { ControlType::POINT },
+        }
+    },
+    {"mouse_wheel",
+        InputSourceDescription {
+            .mAttributes {
+                (2&InputAttributes::N_AXES)
+                | InputAttributes::HAS_CHANGE_VALUE
+            },
+            .mDeviceType { DeviceType::MOUSE },
+            .mControlType { ControlType::MOTION },
+        }
+    },
+    {"keyboard_button",
+        InputSourceDescription {
+            .mAttributes {
+                InputAttributes::HAS_BUTTON_VALUE
+            },
+            .mDeviceType { DeviceType::KEYBOARD },
+            .mControlType { ControlType::BUTTON },
+        }
+    },
+    {"touch_press",
+        InputSourceDescription {
+            .mAttributes {
+                (2&InputAttributes::N_AXES)
+                | InputAttributes::HAS_BUTTON_VALUE
+                | InputAttributes::HAS_STATE_VALUE
+                | InputAttributes::HAS_CHANGE_VALUE
+                | InputAttributes::STATE_IS_LOCATION
+            },
+            .mDeviceType{ DeviceType::TOUCH },
+            .mControlType { ControlType::POINT },
+        }
+    },
+    {"touch_motion",
+        InputSourceDescription {
+            .mAttributes {
+                (2&InputAttributes::N_AXES)
+                | InputAttributes::HAS_STATE_VALUE
+                | InputAttributes::HAS_CHANGE_VALUE
+                | InputAttributes::STATE_IS_LOCATION
+            },
+            .mDeviceType{DeviceType::TOUCH},
+            .mControlType{ControlType::POINT}
+        }
+    },
+    {"controller_axis",
+        InputSourceDescription {
+            .mAttributes{
+                (1&InputAttributes::N_AXES)
+                | InputAttributes::HAS_STATE_VALUE
+                | InputAttributes::HAS_NEGATIVE
+            },
+            .mDeviceType { DeviceType::CONTROLLER },
+            .mControlType{ ControlType::AXIS },
+        }
+    },
+    {"controller_hat",
+        InputSourceDescription {
+            .mAttributes{
+                (2&InputAttributes::N_AXES)
+                | InputAttributes::HAS_STATE_VALUE
+                | InputAttributes::HAS_NEGATIVE
+            },
+            .mDeviceType { DeviceType::CONTROLLER },
+            .mControlType{ ControlType::RADIO },
+        }
+    },
+    {"controller_ball",
+        InputSourceDescription {
+            .mAttributes{
+                (2&InputAttributes::N_AXES)
+                | InputAttributes::HAS_CHANGE_VALUE
+            },
+            .mDeviceType { DeviceType::CONTROLLER },
+            .mControlType { ControlType::MOTION }
+        }
+    },
+    {"controller_button",
+        InputSourceDescription {
+            .mAttributes{
+                InputAttributes::HAS_BUTTON_VALUE
+            },
+            .mDeviceType { DeviceType::CONTROLLER },
+            .mControlType { ControlType::BUTTON }
+        }
+    },
+    {"controller_touch_press",
+        InputSourceDescription {
+            .mAttributes{
+                (2&InputAttributes::N_AXES)
+                | InputAttributes::HAS_BUTTON_VALUE
+                | InputAttributes::HAS_STATE_VALUE
+                | InputAttributes::STATE_IS_LOCATION
+            },
+            .mDeviceType { DeviceType::CONTROLLER },
+            .mControlType { ControlType::POINT }
+        }
+    },
+    {"controller_touch_motion",
+        InputSourceDescription {
+            .mAttributes {
+                (2&InputAttributes::N_AXES)
+                | InputAttributes::HAS_STATE_VALUE
+                | InputAttributes::STATE_IS_LOCATION
+            },
+            .mDeviceType { DeviceType::CONTROLLER },
+            .mControlType { ControlType::POINT },
+        }
+    }
+};
+
+bool hasValue(const InputSourceDescription& input, const AxisFilterType filter) {
     uint8_t axisID { static_cast<uint8_t>(filter&AxisFilterMask::ID) };
     uint8_t axisSign { static_cast<uint8_t>(filter&AxisFilterMask::SIGN) };
     uint8_t axisDelta { static_cast<uint8_t>(filter&AxisFilterMask::CHANGE) };
@@ -89,6 +224,7 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                             value = RangeMapperLinear{0.f, static_cast<double>(windowWidth), 0.f, 1.f}(sign * inputEvent.motion.xrel);
                         }
                         break;
+
                         case Y_CHANGE_POS:
                         case Y_CHANGE_NEG:
                         {
@@ -308,44 +444,25 @@ std::vector<AxisFilter> deriveAxisFilters(InputAttributesType attributes) {
     return result;
 }
 
-InputIdentity getInputIdentity(const SDL_Event& inputEvent) {
-    InputIdentity inputIdentity {};
+InputSourceDescription getInputIdentity(const SDL_Event& inputEvent) {
+    InputSourceDescription inputIdentity {};
     switch(inputEvent.type) {
         /**
          * Mouse events
          */
         case SDL_MOUSEBUTTONUP:
         case SDL_MOUSEBUTTONDOWN:
-            inputIdentity.mAttributes = (
-                (N_AXES & 2) 
-                | HAS_BUTTON_VALUE
-                | HAS_STATE_VALUE
-                | STATE_IS_LOCATION
-            );
+            inputIdentity = kInputSourceDescriptions.at("mouse_button");
             inputIdentity.mDevice = inputEvent.button.which;
             inputIdentity.mControl = inputEvent.button.button;
-            inputIdentity.mDeviceType = DeviceType::MOUSE;
-            inputIdentity.mControlType = ControlType::POINT;
         break;
         case SDL_MOUSEMOTION:
-            inputIdentity.mAttributes = (
-                (InputAttributes::N_AXES & 2) 
-                | InputAttributes::HAS_STATE_VALUE
-                | InputAttributes::HAS_CHANGE_VALUE
-                | InputAttributes::STATE_IS_LOCATION
-            );
+            inputIdentity = kInputSourceDescriptions.at("mouse_motion");
             inputIdentity.mDevice = inputEvent.motion.which;
-            inputIdentity.mDeviceType = DeviceType::MOUSE;
-            inputIdentity.mControlType = ControlType::POINT;
         break;
         case SDL_MOUSEWHEEL:
-            inputIdentity.mAttributes = (
-                (N_AXES & 2) 
-                | HAS_CHANGE_VALUE
-            );
+            inputIdentity = kInputSourceDescriptions.at("mouse_wheel");
             inputIdentity.mDevice = inputEvent.wheel.which;
-            inputIdentity.mDeviceType = DeviceType::MOUSE;
-            inputIdentity.mControlType = ControlType::MOTION;
         break;
 
         /** 
@@ -353,86 +470,52 @@ InputIdentity getInputIdentity(const SDL_Event& inputEvent) {
          */
         case SDL_KEYDOWN:
         case SDL_KEYUP:
-            inputIdentity.mAttributes = (
-                HAS_BUTTON_VALUE
-            );
+            inputIdentity = kInputSourceDescriptions.at("keyboard_button");
             inputIdentity.mControl = inputEvent.key.keysym.sym;
-            inputIdentity.mDeviceType = DeviceType::KEYBOARD;
-            inputIdentity.mControlType = ControlType::BUTTON;
         break;
         case SDL_FINGERUP:
         case SDL_FINGERDOWN:
-            inputIdentity.mAttributes = InputAttributes::HAS_BUTTON_VALUE;
-        case SDL_FINGERMOTION:
-            inputIdentity.mAttributes |= (
-                (N_AXES & 2)
-                | HAS_STATE_VALUE
-                | HAS_CHANGE_VALUE
-                | STATE_IS_LOCATION
-            );
+            inputIdentity = kInputSourceDescriptions.at("touch_press");
             inputIdentity.mControl = inputEvent.tfinger.touchId;
-            inputIdentity.mDeviceType = DeviceType::TOUCH;
-            inputIdentity.mControlType = ControlType::POINT;
+        break;
+        case SDL_FINGERMOTION:
+            inputIdentity = kInputSourceDescriptions.at("touch_motion");
+            inputIdentity.mControl = inputEvent.tfinger.touchId;
         break;
 
         /**
          * Controller-like events
          */
         case SDL_JOYAXISMOTION:
-            inputIdentity.mAttributes = (
-                (N_AXES&1) 
-                | HAS_STATE_VALUE
-                | HAS_NEGATIVE
-            );
+            inputIdentity = kInputSourceDescriptions.at("controller_axis");
             inputIdentity.mDevice = inputEvent.jaxis.which;
             inputIdentity.mControl = inputEvent.jaxis.axis;
-            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
-            inputIdentity.mControlType = ControlType::AXIS;
         break;
         case SDL_JOYHATMOTION:
-            inputIdentity.mAttributes = (
-                (N_AXES&2)
-                | HAS_STATE_VALUE
-                | HAS_NEGATIVE
-            );
+            inputIdentity = kInputSourceDescriptions.at("controller_hat");
             inputIdentity.mDevice = inputEvent.jhat.which;
             inputIdentity.mControl = inputEvent.jhat.hat;
-            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
-            inputIdentity.mControlType = ControlType::RADIO;
         break;
         case SDL_JOYBALLMOTION:
-            inputIdentity.mAttributes = (
-                (N_AXES&2)
-                | HAS_CHANGE_VALUE
-            );
+            inputIdentity = kInputSourceDescriptions.at("controller_ball");
             inputIdentity.mControl = inputEvent.jball.ball;
             inputIdentity.mDevice = inputEvent.jball.which;
-            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
-            inputIdentity.mControlType = ControlType::MOTION;
         break;
         case SDL_JOYBUTTONDOWN:
         case SDL_JOYBUTTONUP:
-            inputIdentity.mAttributes = (
-                HAS_BUTTON_VALUE
-            );
+            inputIdentity = kInputSourceDescriptions.at("controller_button");
             inputIdentity.mDevice = inputEvent.jbutton.which;
             inputIdentity.mControl = inputEvent.jbutton.button;
-            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
-            inputIdentity.mControlType = ControlType::BUTTON;
         break;
         case SDL_CONTROLLERTOUCHPADDOWN:
         case SDL_CONTROLLERTOUCHPADUP:
-            inputIdentity.mAttributes = HAS_BUTTON_VALUE;
-        case SDL_CONTROLLERTOUCHPADMOTION:
-            inputIdentity.mAttributes |= (
-                (N_AXES & 2)
-                | HAS_STATE_VALUE
-                | STATE_IS_LOCATION
-            );
+            inputIdentity = kInputSourceDescriptions.at("controller_touch_press");
             inputIdentity.mControl = inputEvent.ctouchpad.touchpad;
             inputIdentity.mDevice = inputEvent.ctouchpad.which;
-            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
-            inputIdentity.mControlType = ControlType::POINT;
+        case SDL_CONTROLLERTOUCHPADMOTION:
+            inputIdentity = kInputSourceDescriptions.at("controller_touch_motion");
+            inputIdentity.mControl = inputEvent.ctouchpad.touchpad;
+            inputIdentity.mDevice = inputEvent.ctouchpad.which;
         break;
         default:
             // assert (false && "This event is unsupported");
@@ -448,7 +531,7 @@ ActionContext& InputManager::operator[] (const std::string& actionContext) {
 void InputManager::queueInput(const SDL_Event& inputEvent) {
     // variable storing the (internal) identity of the
     // control that created this event
-    InputIdentity inputIdentity { getInputIdentity(inputEvent) };
+    InputSourceDescription inputIdentity { getInputIdentity(inputEvent) };
     // assert(inputIdentity && "This event is not supported");
     if(!inputIdentity) return;
 
@@ -529,11 +612,6 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
 void InputManager::registerActionContext(const std::string& name, ActionContextPriority priority) {
     assert(mActionContexts.find(name) == mActionContexts.end()
         && "An action context with this name has already been registered");
-    // mActionContexts.emplace(
-    //     std::piecewise_construct,
-    //     std::forward_as_tuple(name),
-    //     std::pair(std::forward_as_tuple(*this, name), priority)
-    // );
     mActionContexts.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(name),

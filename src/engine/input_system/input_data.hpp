@@ -41,20 +41,21 @@ enum InputAttributes: InputAttributesType {
     STATE_IS_LOCATION=0x40,
 };
 
+
 /*   Identifies a single control, such as a button, trigger, or joystick,
  * on a single device
  */
-struct InputIdentity {
+struct InputSourceDescription {
     InputAttributesType mAttributes {0};
     uint8_t mDevice {0};
     uint32_t mControl {0};
     DeviceType mDeviceType {DeviceType::NA};
     ControlType mControlType {ControlType::NA};
 
-    bool operator==(const InputIdentity& other) const {
+    bool operator==(const InputSourceDescription& other) const {
         return !(*this < other) && !(other < *this);
     }
-    bool operator<(const InputIdentity& other) const {
+    bool operator<(const InputSourceDescription& other) const {
         return (
             static_cast<uint8_t>(mDeviceType) < static_cast<uint8_t>(other.mDeviceType)
             || (
@@ -109,7 +110,7 @@ enum AxisFilterMask: AxisFilterType {
 };
 
 struct InputFilter {
-    InputIdentity mControl {};
+    InputSourceDescription mControl {};
 
     AxisFilterType mAxisFilter { 0x0 };
 
@@ -298,8 +299,8 @@ union ActionData {
 
 namespace std {
     template<>
-    struct hash<InputIdentity> {
-        size_t operator() (const InputIdentity& definition) const {
+    struct hash<InputSourceDescription> {
+        size_t operator() (const InputSourceDescription& definition) const {
             return (
                 (( (hash<uint32_t>{}(definition.mControl))
                 ^ (hash<uint8_t>{}(definition.mDevice) << 1) >> 1)
@@ -320,7 +321,7 @@ namespace std {
     struct hash<InputFilter> {
         size_t operator() (const InputFilter& inputFilter) const {
             return (
-                (hash<InputIdentity>{}(inputFilter.mControl)
+                (hash<InputSourceDescription>{}(inputFilter.mControl)
                 ^ (hash<uint8_t>{}(inputFilter.mAxisFilter) << 1))
             );
         }

@@ -6,9 +6,10 @@
 #include <queue>
 #include <memory>
 
+#include <nlohmann/json.hpp>
 #include <SDL2/SDL.h>
 
-#include "data.hpp"
+#include "input_data.hpp"
 
 class ActionContext;
 class InputManager;
@@ -51,6 +52,8 @@ public:
      * time to any action contexts that can handle them.
      */
     void dispatch(uint32_t targetTimeMillis);
+
+    InputSourceDescription getInputSourceDescriptionPartial(std::string inputSourceTypeName);
 private:
     friend class ActionContext;
     double getRawValue(const InputFilter& inputFilter, const SDL_Event& inputEvent) const;
@@ -144,6 +147,7 @@ public:
 
     // Creates an action of the same name and attributes
     void registerAction(const std::string& name, InputAttributesType attributes);
+    void registerAction(const nlohmann::json& actionParameters);
     // Remove the action with this name
     void unregisterAction(const std::string& name);
 

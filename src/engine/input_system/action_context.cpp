@@ -100,8 +100,9 @@ ActionData ActionContext::ApplyInput(const ActionDefinition& actionDefinition, c
 void ActionContext::registerAction(const std::string& name, InputAttributesType attributes) {
     assert(mActions.find(ActionDefinition{.mName{name}}) == mActions.end() && "Another action with this name has already been registered");
     assert(
-        !((attributes&InputAttributes::HAS_CHANGE_VALUE) && (attributes&InputAttributes::HAS_STATE_VALUE))
-        && "Action may either have a change value or a state value but not both"
+        !(
+            (attributes&InputAttributes::HAS_CHANGE_VALUE) && (attributes&InputAttributes::HAS_STATE_VALUE)
+        ) && "Action may either have a change value or a state value but not both"
     );
 
     ActionDefinition actionDefinition { name, attributes };
@@ -115,6 +116,18 @@ void ActionContext::registerAction(const std::string& name, InputAttributesType 
         std::forward_as_tuple(actionDefinition),
         std::forward_as_tuple<std::set<std::weak_ptr<IActionHandler>, std::owner_less<std::weak_ptr<IActionHandler>>>>({})
     );
+}
+
+void ActionContext::registerAction(const nlohmann::json& actionParameters) {
+    std::string actionName { actionParameters.at("name").get<std::string>() };
+    InputAttributesType actionAttributes {};
+    actionAttributes |= actionParameters.at("hasChangeValue").get<bool>()? InputAttributes::HAS_CHANGE_VALUE: 0;
+    actionAttributes |= actionParameters.at("hasStateValue").get<bool>()? InputAttributes::HAS_CHANGE_VALUE: 0;
+    actionAttributes |= actionParameters.at("hasButtonValue").get<bool>()? InputAttributes::HAS_BUTTON_VALUE: 0;
+    actionAttributes |= actionParameters.at("hasNegative").get<bool>()? InputAttributes::HAS_NEGATIVE: 0;
+    actionAttributes |= actionParameters.at("stateIsLocation").get<bool>()? InputAttributes::STATE_IS_LOCATION: 0;
+    actionAttributes |= actionParameters.at("nAxes").get<uint8_t>()&InputAttributes::N_AXES;
+    registerAction(actionName, actionAttributes);
 }
 
 void ActionContext::unregisterAction(const std::string& name) {
