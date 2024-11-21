@@ -1,5 +1,6 @@
 #include <cassert>
 #include <algorithm>
+#include <iostream>
 
 #include <SDL2/SDL.h>
 
@@ -610,6 +611,27 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
 
     for(const auto& comboValuePair: finalComboStates) {
         mInputComboStates[comboValuePair.first] = comboValuePair.second;
+    }
+}
+
+void InputManager::loadInputConfiguration(const nlohmann::json& inputConfiguration) {
+    // clear old bindings
+    std::vector<std::string> oldActionContexts {};
+    for(auto actionContext: mActionContexts) {
+        oldActionContexts.push_back(actionContext.first);
+    }
+    for(const std::string& context: oldActionContexts) {
+        unregisterActionContext(context);
+    }
+
+    for(const std::string& actionContextName: inputConfiguration.at("action_contexts").get<std::vector<std::string>>()) {
+        registerActionContext(actionContextName);
+    }
+    for(const nlohmann::json& actionDefinition: inputConfiguration.at("actions").get<std::vector<nlohmann::json>>()) {
+        registerAction(actionDefinition);
+    }
+    for(const nlohmann::json& inputBinding: inputConfiguration.at("input_binds").get<std::vector<nlohmann::json>>()) {
+        registerInputBind(inputBinding);
     }
 }
 

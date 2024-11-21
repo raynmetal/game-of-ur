@@ -37,12 +37,12 @@ public:
 
     void registerInputBind(const nlohmann::json& inputBindingParameters);
     void registerAction(const nlohmann::json& actionParameters);
+    void loadInputConfiguration(const nlohmann::json& inputConfiguration);
 
     /*
      *  Registers a new action context with a given name
      */
     void registerActionContext(const std::string& name, ActionContextPriority priority=DEFAULT);
-
     /*
      *  Removes the action context associated with this name
      */
@@ -166,24 +166,11 @@ public:
     void registerInputBind(const nlohmann::json& inputBindParameters);
     // Remove the binding from this input-sign-axis-modifier combination to whatever
     // action it's bound to
-    void unregisterInputBind(const InputCombo& inputCombo);
+   void unregisterInputBind(const InputCombo& inputCombo);
     // Remove all bindings that map to any axis for this action
     void unregisterInputBinds(const std::string& forAction);
     // Remove all input combo -> action bindings
     void unregisterInputBinds();
-
-    // Set all action data for this action to 0.f or false, and queue a RESET action
-    void resetActionData(const std::string& forAction, uint32_t timestamp);
-    // Set all action data to 0.f or false, queue RESET actions for
-    // each action
-    void resetActionData(uint32_t timestamp);
-
-    // Send all queued action event data to its listeners, emptying the
-    // event queue in the process
-    void dispatch();
-
-    // Maps the given input value to its assigned action state
-    void mapToAction(const UnmappedInputValue& inputValue, const InputCombo& inputCombo);
 
     // Check whether this context allows propagation to lower priority contexts
     inline bool propagateAllowed() { return mPropagateInput; };
@@ -197,6 +184,19 @@ public:
     inline void setEnabled(bool enable)  { mEnabled = enable; }
 
 private:
+    // Set all action data for this action to 0.f or false, and queue a RESET action
+    void resetActionData(const std::string& forAction, uint32_t timestamp);
+    // Set all action data to 0.f or false, queue RESET actions for
+    // each action
+    void resetActionData(uint32_t timestamp);
+
+    // Maps the given input value to its assigned action state
+    void mapToAction(const UnmappedInputValue& inputValue, const InputCombo& inputCombo);
+
+    // Send all queued action event data to its listeners, emptying the
+    // event queue in the process
+    void dispatch();
+
     /* 
      *  Reference to the input manager that created this 
      * action context. 
@@ -249,6 +249,8 @@ private:
      * Pointers to all action handler instances waiting for a particular action
      */
     std::unordered_map<ActionDefinition, std::set<std::weak_ptr<IActionHandler>, std::owner_less<std::weak_ptr<IActionHandler>>>> mActionHandlers {};
+
+friend class InputManager;
 };
 
 #endif

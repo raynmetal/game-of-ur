@@ -195,7 +195,6 @@ std::shared_ptr<TResource> ResourceDatabase::getResource(const std::string& reso
     // If we still haven't got an in-memory copy, construct this resource using its description,
     // as registered in our resource description table 
     if(!pResource) {
-        std::cout << "currently loading resource: " << nlohmann::to_string(resourceDescPair->second) << "\n";
         pResource = resourceDatabase
             .mFactories.at(resourceDescPair->second["type"].get<std::string>())
             ->createResource(resourceDescPair->second);
