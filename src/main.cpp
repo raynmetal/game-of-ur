@@ -874,7 +874,7 @@ int main(int argc, char* argv[]) {
     inputManager.registerInputBind(
         nlohmann::json {
             {"context", "Graphics"},
-            {"action", "UpdateGamma"},
+            {"action", "UpdateExposure"},
             {"target_axis", "-x"},
             {"input_combo", {
                 {"main_control", {
