@@ -8,6 +8,7 @@
 
 #include <glm/glm.hpp>
 
+struct InputSourceDescription;
 enum class DeviceType: uint8_t {
     NA,
     MOUSE,
@@ -25,7 +26,13 @@ enum class ControlType: uint8_t {
     RADIO,
 };
 
+
+typedef uint8_t AxisFilterType;
 typedef uint8_t InputAttributesType;
+typedef std::pair<DeviceType, ControlType> InputSourceType;
+
+extern const std::map<InputSourceType, InputAttributesType> kInputSourceTypeAttributes;
+extern const std::map<std::string, AxisFilterType> kStringToAxisFilter;
 
 enum InputAttributes: InputAttributesType {
     /* 
@@ -40,7 +47,6 @@ enum InputAttributes: InputAttributesType {
     HAS_STATE_VALUE=0x20,
     STATE_IS_LOCATION=0x40,
 };
-
 
 /*   Identifies a single control, such as a button, trigger, or joystick,
  * on a single device
@@ -82,8 +88,9 @@ struct InputSourceDescription {
         );
     }
 };
+nlohmann::json inputSourceDescriptionToJSON(const InputSourceDescription& inputSourceDescription);
+InputSourceDescription jsonToInputSourceDescription(const nlohmann::json& inputSourceDescriptionParameters);
 
-typedef uint8_t AxisFilterType;
 
 // Enumeration of all possible axis filter values
 enum AxisFilter: AxisFilterType {
@@ -134,6 +141,9 @@ struct InputFilter {
         return mControl;
     }
 };
+
+nlohmann::json inputFilterToJSON(const InputFilter& inputFilter);
+InputFilter jsonToInputFilter(const nlohmann::json& inputFilterParameters);
 
 /**
  * An input combo whose value ranges from 0..1. Triggered
@@ -196,6 +206,8 @@ struct InputCombo {
         );
     }
 };
+nlohmann::json inputComboToJSON(const InputCombo& inputCombo);
+InputCombo jsonToInputCombo(const nlohmann::json& inputComboParameters);
 
 /**
  *  An input state that hasn't yet been mapped to its 
@@ -227,6 +239,10 @@ struct ActionDefinition {
         return mName < other.mName;
     }
 };
+
+nlohmann::json actionDefinitionToJSON(const ActionDefinition& actionDefinition);
+ActionDefinition jsonToActionDefinition(const nlohmann::json& actionParameters);
+
 
 enum class ActionType {
     BUTTON,

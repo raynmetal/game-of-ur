@@ -106,6 +106,7 @@ void ActionContext::registerAction(const std::string& name, InputAttributesType 
     );
 
     ActionDefinition actionDefinition { name, attributes };
+    // TODO: redundant
     actionDefinition.mValueType = attributes&InputAttributes::HAS_CHANGE_VALUE? ActionValueType::CHANGE: ActionValueType::STATE;
     ActionData initialActionData { static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES) };
 
@@ -120,14 +121,9 @@ void ActionContext::registerAction(const std::string& name, InputAttributesType 
 
 void ActionContext::registerAction(const nlohmann::json& actionParameters) {
     std::string actionName { actionParameters.at("name").get<std::string>() };
-    InputAttributesType actionAttributes {};
-    actionAttributes |= actionParameters.at("hasChangeValue").get<bool>()? InputAttributes::HAS_CHANGE_VALUE: 0;
-    actionAttributes |= actionParameters.at("hasStateValue").get<bool>()? InputAttributes::HAS_CHANGE_VALUE: 0;
-    actionAttributes |= actionParameters.at("hasButtonValue").get<bool>()? InputAttributes::HAS_BUTTON_VALUE: 0;
-    actionAttributes |= actionParameters.at("hasNegative").get<bool>()? InputAttributes::HAS_NEGATIVE: 0;
-    actionAttributes |= actionParameters.at("stateIsLocation").get<bool>()? InputAttributes::STATE_IS_LOCATION: 0;
-    actionAttributes |= actionParameters.at("nAxes").get<uint8_t>()&InputAttributes::N_AXES;
-    registerAction(actionName, actionAttributes);
+    assert(mActions.find(ActionDefinition{.mName{actionName}}) == mActions.end() && "An action with this name has previously been registered");
+    ActionDefinition actionDefinition { jsonToActionDefinition(actionParameters) };
+    registerAction(actionDefinition.mName, actionDefinition.mAttributes);
 }
 
 void ActionContext::unregisterAction(const std::string& name) {
@@ -154,6 +150,13 @@ void ActionContext::unregisterActionHandler(std::weak_ptr<IActionHandler> action
     for(const auto& actionValuePairs: mActions) {
         mActionHandlers.at(actionValuePairs.first).erase(actionHandler);
     }
+}
+
+void ActionContext::registerInputBind(const nlohmann::json& inputBindParameters) {
+    std::string actionName { inputBindParameters.at("action").get<std::string>() };
+    AxisFilter targetAxis { kStringToAxisFilter.at(inputBindParameters.at("target_axis").get<std::string>()) };
+    InputCombo inputCombo { jsonToInputCombo(inputBindParameters.at("input_combo").get<nlohmann::json::object_t>()) };
+    registerInputBind(actionName, targetAxis, inputCombo);
 }
 
 void ActionContext::registerInputBind(const std::string& forAction, AxisFilter targetAxis, const InputCombo& withInput){

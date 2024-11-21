@@ -7,139 +7,136 @@
 #include "../window_context_manager.hpp"
 #include "input_system.hpp"
 
-const std::map<std::string, InputSourceDescription> kInputSourceDescriptions {
-    {"mouse_motion", 
-        InputSourceDescription {
-            .mAttributes {
-                (2&InputAttributes::N_AXES)
-                | InputAttributes::HAS_STATE_VALUE
-                | InputAttributes::HAS_CHANGE_VALUE
-                | InputAttributes::STATE_IS_LOCATION
-            },
-            .mDeviceType{ DeviceType::MOUSE },
-            .mControlType{ ControlType::POINT },
-        }
-    },
-    {"mouse_button",
-        InputSourceDescription {
-            .mAttributes{
-                (2&InputAttributes::N_AXES)
-                | InputAttributes::HAS_BUTTON_VALUE
-                | InputAttributes::HAS_STATE_VALUE
-                | InputAttributes::STATE_IS_LOCATION
-            },
-            .mDeviceType{ DeviceType::MOUSE },
-            .mControlType { ControlType::POINT },
-        }
-    },
-    {"mouse_wheel",
-        InputSourceDescription {
-            .mAttributes {
-                (2&InputAttributes::N_AXES)
-                | InputAttributes::HAS_CHANGE_VALUE
-            },
-            .mDeviceType { DeviceType::MOUSE },
-            .mControlType { ControlType::MOTION },
-        }
-    },
-    {"keyboard_button",
-        InputSourceDescription {
-            .mAttributes {
-                InputAttributes::HAS_BUTTON_VALUE
-            },
-            .mDeviceType { DeviceType::KEYBOARD },
-            .mControlType { ControlType::BUTTON },
-        }
-    },
-    {"touch_press",
-        InputSourceDescription {
-            .mAttributes {
-                (2&InputAttributes::N_AXES)
-                | InputAttributes::HAS_BUTTON_VALUE
-                | InputAttributes::HAS_STATE_VALUE
-                | InputAttributes::HAS_CHANGE_VALUE
-                | InputAttributes::STATE_IS_LOCATION
-            },
-            .mDeviceType{ DeviceType::TOUCH },
-            .mControlType { ControlType::POINT },
-        }
-    },
-    {"touch_motion",
-        InputSourceDescription {
-            .mAttributes {
-                (2&InputAttributes::N_AXES)
-                | InputAttributes::HAS_STATE_VALUE
-                | InputAttributes::HAS_CHANGE_VALUE
-                | InputAttributes::STATE_IS_LOCATION
-            },
-            .mDeviceType{DeviceType::TOUCH},
-            .mControlType{ControlType::POINT}
-        }
-    },
-    {"controller_axis",
-        InputSourceDescription {
-            .mAttributes{
-                (1&InputAttributes::N_AXES)
-                | InputAttributes::HAS_STATE_VALUE
-                | InputAttributes::HAS_NEGATIVE
-            },
-            .mDeviceType { DeviceType::CONTROLLER },
-            .mControlType{ ControlType::AXIS },
-        }
-    },
-    {"controller_hat",
-        InputSourceDescription {
-            .mAttributes{
-                (2&InputAttributes::N_AXES)
-                | InputAttributes::HAS_STATE_VALUE
-                | InputAttributes::HAS_NEGATIVE
-            },
-            .mDeviceType { DeviceType::CONTROLLER },
-            .mControlType{ ControlType::RADIO },
-        }
-    },
-    {"controller_ball",
-        InputSourceDescription {
-            .mAttributes{
-                (2&InputAttributes::N_AXES)
-                | InputAttributes::HAS_CHANGE_VALUE
-            },
-            .mDeviceType { DeviceType::CONTROLLER },
-            .mControlType { ControlType::MOTION }
-        }
-    },
-    {"controller_button",
-        InputSourceDescription {
-            .mAttributes{
-                InputAttributes::HAS_BUTTON_VALUE
-            },
-            .mDeviceType { DeviceType::CONTROLLER },
-            .mControlType { ControlType::BUTTON }
-        }
-    },
-    {"controller_touch_press",
-        InputSourceDescription {
-            .mAttributes{
-                (2&InputAttributes::N_AXES)
-                | InputAttributes::HAS_BUTTON_VALUE
-                | InputAttributes::HAS_STATE_VALUE
-                | InputAttributes::STATE_IS_LOCATION
-            },
-            .mDeviceType { DeviceType::CONTROLLER },
-            .mControlType { ControlType::POINT }
-        }
-    },
-    {"controller_touch_motion",
-        InputSourceDescription {
-            .mAttributes {
-                (2&InputAttributes::N_AXES)
-                | InputAttributes::HAS_STATE_VALUE
-                | InputAttributes::STATE_IS_LOCATION
-            },
-            .mDeviceType { DeviceType::CONTROLLER },
-            .mControlType { ControlType::POINT },
-        }
-    }
+const std::map<InputSourceType, InputAttributesType> kInputSourceTypeAttributes {
+    {{DeviceType::MOUSE, ControlType::POINT}, {
+        (2&InputAttributes::N_AXES)
+        | InputAttributes::HAS_STATE_VALUE
+        | InputAttributes::HAS_CHANGE_VALUE
+        | InputAttributes::STATE_IS_LOCATION
+    }},
+    {{DeviceType::MOUSE, ControlType::BUTTON}, {
+        (2&InputAttributes::N_AXES)
+        | InputAttributes::HAS_BUTTON_VALUE
+        | InputAttributes::HAS_STATE_VALUE
+        | InputAttributes::STATE_IS_LOCATION
+    }},
+    {{DeviceType::MOUSE, ControlType::MOTION}, {
+        (2&InputAttributes::N_AXES)
+        | InputAttributes::HAS_CHANGE_VALUE
+    }},
+    {{DeviceType::KEYBOARD, ControlType::BUTTON}, {
+        InputAttributes::HAS_BUTTON_VALUE
+    }},
+    {{DeviceType::TOUCH, ControlType::POINT}, {
+        (2&InputAttributes::N_AXES)
+        | InputAttributes::HAS_BUTTON_VALUE
+        | InputAttributes::HAS_STATE_VALUE
+        | InputAttributes::HAS_CHANGE_VALUE
+        | InputAttributes::STATE_IS_LOCATION
+    }},
+    {{DeviceType::CONTROLLER, ControlType::AXIS}, {
+        (1&InputAttributes::N_AXES)
+        | InputAttributes::HAS_STATE_VALUE
+        | InputAttributes::HAS_NEGATIVE
+    }},
+    {{DeviceType::CONTROLLER, ControlType::RADIO},{
+        (2&InputAttributes::N_AXES)
+        | InputAttributes::HAS_STATE_VALUE
+        | InputAttributes::HAS_NEGATIVE
+    }},
+    {{DeviceType::CONTROLLER, ControlType::MOTION},{
+        (2&InputAttributes::N_AXES)
+        | InputAttributes::HAS_CHANGE_VALUE
+    }},
+    {{DeviceType::CONTROLLER, ControlType::BUTTON}, {
+        InputAttributes::HAS_BUTTON_VALUE
+    }},
+    {{DeviceType::CONTROLLER, ControlType::POINT}, {
+        (2&InputAttributes::N_AXES)
+        | InputAttributes::HAS_BUTTON_VALUE
+        | InputAttributes::HAS_STATE_VALUE
+        | InputAttributes::STATE_IS_LOCATION
+    }},
+    {{DeviceType::NA, ControlType::NA}, 0}
+};
+
+const std::map<DeviceType, std::string> kDeviceTypeToString {
+    {DeviceType::CONTROLLER, "controller"},
+    {DeviceType::KEYBOARD, "keyboard"},
+    {DeviceType::MOUSE, "mouse"},
+    {DeviceType::TOUCH, "touch"},
+    {DeviceType::NA, "na"},
+};
+const std::map<std::string, DeviceType> kStringToDeviceType {
+    {"controller", DeviceType::CONTROLLER},
+    {"keyboard", DeviceType::KEYBOARD},
+    {"mouse", DeviceType::MOUSE},
+    {"touch", DeviceType::TOUCH},
+    {"na", DeviceType::NA},
+};
+const std::map<ControlType, std::string> kControlTypeToString {
+    {ControlType::AXIS, "axis"},
+    {ControlType::BUTTON, "button"},
+    {ControlType::MOTION, "motion"},
+    {ControlType::POINT, "point"},
+    {ControlType::RADIO, "radio"},
+    {ControlType::NA, "na"},
+};
+const std::map<std::string, ControlType> kStringToControlType {
+    {"axis", ControlType::AXIS},
+    {"button", ControlType::BUTTON},
+    {"motion", ControlType::MOTION},
+    {"point", ControlType::POINT},
+    {"radio", ControlType::RADIO},
+    {"na", ControlType::NA}
+};
+const std::map<std::string, AxisFilterType> kStringToAxisFilter {
+    {"simple", AxisFilter::SIMPLE},
+    {"+x", AxisFilter::X_POS},
+    {"-x", AxisFilter::X_NEG},
+    {"+y", AxisFilter::Y_POS},
+    {"-y", AxisFilter::Y_NEG},
+    {"+z", AxisFilter::Z_POS},
+    {"-z", AxisFilter::Z_NEG},
+    {"+dx", AxisFilter::X_CHANGE_POS},
+    {"-dx", AxisFilter::X_CHANGE_NEG},
+    {"+dy", AxisFilter::Y_CHANGE_POS},
+    {"-dy", AxisFilter::Y_CHANGE_NEG},
+    {"+dz", AxisFilter::Z_CHANGE_POS},
+    {"-dz", AxisFilter::Z_CHANGE_NEG},
+};
+const std::map<AxisFilterType, std::string> kAxisFilterToString {
+    {AxisFilter::SIMPLE, "simple"},
+    {AxisFilter::X_POS, "+x"},
+    {AxisFilter::X_NEG, "-x"},
+    {AxisFilter::Y_POS, "+y"},
+    {AxisFilter::Y_NEG, "-y"},
+    {AxisFilter::Z_POS, "+z"},
+    {AxisFilter::Z_NEG, "-z"},
+    {AxisFilter::X_CHANGE_POS, "+dx"},
+    {AxisFilter::X_CHANGE_NEG, "-dx"},
+    {AxisFilter::Y_CHANGE_POS, "+dy"},
+    {AxisFilter::Y_CHANGE_NEG, "-dy"},
+    {AxisFilter::Z_CHANGE_POS, "+dz"},
+    {AxisFilter::Z_CHANGE_NEG, "-dz"},
+};
+const std::map<std::string, InputCombo::Trigger> kStringToInputComboTrigger {
+    {"onPress", InputCombo::Trigger::ON_PRESS},
+    {"onRelease", InputCombo::Trigger::ON_RELEASE},
+    {"onChange", InputCombo::Trigger::ON_CHANGE},
+};
+const std::map<InputCombo::Trigger, std::string> kInputComboTriggerToString {
+    {InputCombo::Trigger::ON_PRESS, "onPress"},
+    {InputCombo::Trigger::ON_RELEASE, "onRelease"},
+    {InputCombo::Trigger::ON_CHANGE, "onChange"},
+};
+const std::map<std::string, ActionValueType> kStringToActionValueType {
+    {"state", ActionValueType::STATE},
+    {"change", ActionValueType::CHANGE},
+};
+const std::map<ActionValueType, std::string> kActionValueTypeToString {
+    {ActionValueType::STATE, "state"},
+    {ActionValueType::CHANGE, "change"},
 };
 
 bool hasValue(const InputSourceDescription& input, const AxisFilterType filter) {
@@ -184,38 +181,31 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
         // Extract raw value from mouse events
         case DeviceType::MOUSE:
             switch(inputFilter.mControl.mControlType) {
-                case ControlType::POINT:
+                case ControlType::BUTTON:
                     switch(inputFilter.mAxisFilter) {
-
-                        // Mouse button filter
-                        case SIMPLE:
+                        case AxisFilter::SIMPLE:
                             value = inputEvent.button.state;
                         break;
+                        case AxisFilter::X_POS:
+                            value = RangeMapperLinear{0.f, static_cast<double>(windowWidth), 0.f, 1.f}(inputEvent.button.x);
+                        break;
+                        case AxisFilter::Y_POS:
+                            value = RangeMapperLinear{0.f, static_cast<double>(windowHeight), 0.f, 1.f}(inputEvent.button.y);
+                        break;
 
+                        default:
+                            assert(false && "Not a valid mouse event, this line should never be reached");
+                        break;
+                    }
+                case ControlType::POINT:
+                    switch(inputFilter.mAxisFilter) {
                         // Mouse location filter
                         case X_POS:
-                            switch(inputEvent.type) {
-                                case SDL_MOUSEMOTION:
-                                    value = RangeMapperLinear{0.f, static_cast<double>(windowWidth), 0.f, 1.f}(inputEvent.motion.x);
-                                break;
-                                case SDL_MOUSEBUTTONDOWN:
-                                case SDL_MOUSEBUTTONUP:
-                                    value = RangeMapperLinear{0.f, static_cast<double>(windowWidth), 0.f, 1.f}(inputEvent.button.x);
-                                break;
-                            }
+                            value = RangeMapperLinear{0.f, static_cast<double>(windowWidth), 0.f, 1.f}(inputEvent.motion.x);
                         break;
                         case Y_POS:
-                            switch(inputEvent.type) {
-                                case SDL_MOUSEMOTION:
-                                    value = RangeMapperLinear{0.f, static_cast<double>(windowHeight), 0.f, 1.f}(inputEvent.motion.y);
-                                break;
-                                case SDL_MOUSEBUTTONDOWN:
-                                case SDL_MOUSEBUTTONUP:
-                                    value = RangeMapperLinear{0.f, static_cast<double>(windowHeight), 0.f, 1.f}(inputEvent.button.y);
-                                break;
-                            }
+                            value = RangeMapperLinear{0.f, static_cast<double>(windowHeight), 0.f, 1.f}(inputEvent.motion.y);
                         break;
-
                         // Mouse movement filter
                         case X_CHANGE_POS:
                         case X_CHANGE_NEG:
@@ -224,7 +214,6 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                             value = RangeMapperLinear{0.f, static_cast<double>(windowWidth), 0.f, 1.f}(sign * inputEvent.motion.xrel);
                         }
                         break;
-
                         case Y_CHANGE_POS:
                         case Y_CHANGE_NEG:
                         {
@@ -256,7 +245,6 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                         break;
                     }
                 break;
-
                 default:
                     assert(false && "Invalid control type for mouse");
                 break;
@@ -394,26 +382,33 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
 
         // Extract raw value from touch events
         case DeviceType::TOUCH:
-            switch(inputFilter.mAxisFilter) {
-                case AxisFilter::SIMPLE:
-                    value = inputEvent.tfinger.pressure;
+            switch(inputFilter.mControl.mControlType){
+                case ControlType::POINT:
+                    switch(inputFilter.mAxisFilter) {
+                        case AxisFilter::SIMPLE:
+                            value = inputEvent.tfinger.pressure;
+                        break;
+                        case AxisFilter::X_POS:
+                            value = inputEvent.tfinger.x;
+                        break;
+                        case AxisFilter::Y_POS:
+                            value = inputEvent.tfinger.y;
+                        break;
+                        case AxisFilter::X_CHANGE_POS:
+                        case AxisFilter::X_CHANGE_NEG: {
+                            const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
+                            value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.tfinger.dx);
+                        }
+                        case AxisFilter::Y_CHANGE_POS:
+                        case AxisFilter::Y_CHANGE_NEG: {
+                            const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
+                            value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.tfinger.dy);
+                        }
+                    }
                 break;
-                case AxisFilter::X_POS:
-                    value = inputEvent.tfinger.x;
+                default: 
+                    assert(false && "unsupported touch control type");
                 break;
-                case AxisFilter::Y_POS:
-                    value = inputEvent.tfinger.y;
-                break;
-                case AxisFilter::X_CHANGE_POS:
-                case AxisFilter::X_CHANGE_NEG: {
-                    const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
-                    value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.tfinger.dx);
-                }
-                case AxisFilter::Y_CHANGE_POS:
-                case AxisFilter::Y_CHANGE_NEG: {
-                    const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
-                    value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.tfinger.dy);
-                }
             }
         break;
         default:
@@ -452,16 +447,19 @@ InputSourceDescription getInputIdentity(const SDL_Event& inputEvent) {
          */
         case SDL_MOUSEBUTTONUP:
         case SDL_MOUSEBUTTONDOWN:
-            inputIdentity = kInputSourceDescriptions.at("mouse_button");
+            inputIdentity.mDeviceType = DeviceType::MOUSE;
+            inputIdentity.mControlType = ControlType::BUTTON;
             inputIdentity.mDevice = inputEvent.button.which;
             inputIdentity.mControl = inputEvent.button.button;
         break;
         case SDL_MOUSEMOTION:
-            inputIdentity = kInputSourceDescriptions.at("mouse_motion");
+            inputIdentity.mDeviceType = DeviceType::MOUSE;
+            inputIdentity.mControlType = ControlType::POINT;
             inputIdentity.mDevice = inputEvent.motion.which;
         break;
         case SDL_MOUSEWHEEL:
-            inputIdentity = kInputSourceDescriptions.at("mouse_wheel");
+            inputIdentity.mDeviceType = DeviceType::MOUSE;
+            inputIdentity.mControlType = ControlType::MOTION;
             inputIdentity.mDevice = inputEvent.wheel.which;
         break;
 
@@ -470,16 +468,15 @@ InputSourceDescription getInputIdentity(const SDL_Event& inputEvent) {
          */
         case SDL_KEYDOWN:
         case SDL_KEYUP:
-            inputIdentity = kInputSourceDescriptions.at("keyboard_button");
+            inputIdentity.mDeviceType = DeviceType::KEYBOARD;
+            inputIdentity.mControlType = ControlType::BUTTON;
             inputIdentity.mControl = inputEvent.key.keysym.sym;
         break;
         case SDL_FINGERUP:
         case SDL_FINGERDOWN:
-            inputIdentity = kInputSourceDescriptions.at("touch_press");
-            inputIdentity.mControl = inputEvent.tfinger.touchId;
-        break;
         case SDL_FINGERMOTION:
-            inputIdentity = kInputSourceDescriptions.at("touch_motion");
+            inputIdentity.mDeviceType = DeviceType::TOUCH;
+            inputIdentity.mControlType = ControlType::POINT;
             inputIdentity.mControl = inputEvent.tfinger.touchId;
         break;
 
@@ -487,39 +484,46 @@ InputSourceDescription getInputIdentity(const SDL_Event& inputEvent) {
          * Controller-like events
          */
         case SDL_JOYAXISMOTION:
-            inputIdentity = kInputSourceDescriptions.at("controller_axis");
+            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
+            inputIdentity.mControlType = ControlType::AXIS;
             inputIdentity.mDevice = inputEvent.jaxis.which;
             inputIdentity.mControl = inputEvent.jaxis.axis;
         break;
         case SDL_JOYHATMOTION:
-            inputIdentity = kInputSourceDescriptions.at("controller_hat");
+            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
+            inputIdentity.mControlType = ControlType::RADIO;
             inputIdentity.mDevice = inputEvent.jhat.which;
             inputIdentity.mControl = inputEvent.jhat.hat;
         break;
         case SDL_JOYBALLMOTION:
-            inputIdentity = kInputSourceDescriptions.at("controller_ball");
+            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
+            inputIdentity.mControlType = ControlType::MOTION;
             inputIdentity.mControl = inputEvent.jball.ball;
             inputIdentity.mDevice = inputEvent.jball.which;
         break;
         case SDL_JOYBUTTONDOWN:
         case SDL_JOYBUTTONUP:
-            inputIdentity = kInputSourceDescriptions.at("controller_button");
+            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
+            inputIdentity.mControlType = ControlType::BUTTON;
             inputIdentity.mDevice = inputEvent.jbutton.which;
             inputIdentity.mControl = inputEvent.jbutton.button;
         break;
         case SDL_CONTROLLERTOUCHPADDOWN:
         case SDL_CONTROLLERTOUCHPADUP:
-            inputIdentity = kInputSourceDescriptions.at("controller_touch_press");
-            inputIdentity.mControl = inputEvent.ctouchpad.touchpad;
-            inputIdentity.mDevice = inputEvent.ctouchpad.which;
         case SDL_CONTROLLERTOUCHPADMOTION:
-            inputIdentity = kInputSourceDescriptions.at("controller_touch_motion");
+            inputIdentity.mDeviceType = DeviceType::CONTROLLER;
+            inputIdentity.mControlType = ControlType::POINT;
             inputIdentity.mControl = inputEvent.ctouchpad.touchpad;
             inputIdentity.mDevice = inputEvent.ctouchpad.which;
         break;
         default:
             // assert (false && "This event is unsupported");
         break;
+    }
+    if(inputIdentity.mDeviceType != DeviceType::NA) {
+        inputIdentity.mAttributes = kInputSourceTypeAttributes.at(
+            {inputIdentity.mDeviceType, inputIdentity.mControlType}
+        );
     }
     return inputIdentity;
 }
@@ -566,7 +570,7 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
                 const double lowerBound { combo.mDeadzone };
                 const double threshold { combo.mTrigger == InputCombo::Trigger::ON_CHANGE? 0.f: combo.mThreshold };
                 newComboState.mValue= RangeMapperLinear{lowerBound, upperBound, 0.f, 1.f}(mRawInputState[combo.mMainControl]);
-                newComboState.mActivated = newComboState.mValue > threshold;
+                newComboState.mActivated = newComboState.mValue >= threshold;
             } else {
                 newComboState.mValue= 0.f;
                 newComboState.mActivated = false;
@@ -607,6 +611,14 @@ void InputManager::queueInput(const SDL_Event& inputEvent) {
     for(const auto& comboValuePair: finalComboStates) {
         mInputComboStates[comboValuePair.first] = comboValuePair.second;
     }
+}
+
+void InputManager::registerInputBind(const nlohmann::json& inputBindingParameters) {
+    mActionContexts.at(inputBindingParameters.at("context").get<std::string>()).first.registerInputBind(inputBindingParameters);
+}
+
+void InputManager::registerAction(const nlohmann::json& actionParameters) {
+    mActionContexts.at(actionParameters.at("context").get<std::string>()).first.registerAction(actionParameters);
 }
 
 void InputManager::registerActionContext(const std::string& name, ActionContextPriority priority) {
@@ -818,4 +830,106 @@ void InputManager::unregisterInputCombos() {
     for(auto& actionPair: mActionContexts) {
         unregisterInputCombos(actionPair.first);
     }
+}
+
+nlohmann::json inputAttributesToJSON(InputAttributesType inputAttributes) {
+    nlohmann::json inputAttributesParameters {
+        {"n_axes", (inputAttributes&InputAttributes::N_AXES)},
+        {"has_negative", (inputAttributes&InputAttributes::HAS_NEGATIVE) > 0},
+        {"has_change_value", (inputAttributes&InputAttributes::HAS_CHANGE_VALUE) > 0},
+        {"has_button_value", (inputAttributes&InputAttributes::HAS_BUTTON_VALUE) > 0},
+        {"has_state_value", (inputAttributes&InputAttributes::HAS_STATE_VALUE) > 0},
+        {"state_is_location", (inputAttributes&InputAttributes::STATE_IS_LOCATION) > 0},
+    };
+    return inputAttributesParameters;
+}
+InputAttributesType jsonToInputAttributes(const nlohmann::json inputAttributesParameters){
+    InputAttributesType inputAttributes{ static_cast<InputAttributesType>(
+        inputAttributesParameters.at("n_axes").get<uint8_t>()
+        | (inputAttributesParameters.at("has_negative").get<bool>()?
+            InputAttributes::HAS_NEGATIVE: 0)
+        | (inputAttributesParameters.at("has_change_value").get<bool>()?
+            InputAttributes::HAS_CHANGE_VALUE: 0)
+        | (inputAttributesParameters.at("has_button_value").get<bool>()?
+            InputAttributes::HAS_BUTTON_VALUE: 0)
+        | (inputAttributesParameters.at("has_state_value").get<bool>()?
+            InputAttributes::HAS_STATE_VALUE: 0)
+        | (inputAttributesParameters.at("state_is_location").get<bool>()?
+            InputAttributes::STATE_IS_LOCATION: 0)
+    )};
+    return inputAttributes;
+}
+
+nlohmann::json inputSourceDescriptionToJSON(const InputSourceDescription& inputSourceDescription) {
+    nlohmann::json inputSourceDescriptionParameters {
+        {"device_type", kDeviceTypeToString.at(inputSourceDescription.mDeviceType)},
+        {"control_type", kControlTypeToString.at(inputSourceDescription.mControlType)},
+        {"device", inputSourceDescription.mDevice},
+        {"control", inputSourceDescription.mControl},
+    };
+    return inputSourceDescriptionParameters;
+}
+InputSourceDescription jsonToInputSourceDescription(const nlohmann::json& inputSourceDescriptionParameters) {
+    InputSourceDescription inputSourceDescription {
+        .mDevice { inputSourceDescriptionParameters.at("device").get<uint8_t>() },
+        .mControl { inputSourceDescriptionParameters.at("control").get<uint32_t>() },
+        .mDeviceType { kStringToDeviceType.at(inputSourceDescriptionParameters.at("device_type")) },
+        .mControlType { kStringToControlType.at(inputSourceDescriptionParameters.at("control_type"))},
+    };
+    const InputSourceType inputSourceType { inputSourceDescription.mDeviceType, inputSourceDescription.mControlType };
+    inputSourceDescription.mAttributes = kInputSourceTypeAttributes.at(inputSourceType);
+    return inputSourceDescription;
+}
+
+nlohmann::json inputFilterToJSON(const InputFilter& inputFilter) {
+    nlohmann::json inputFilterParameters {
+        {"input_source", inputSourceDescriptionToJSON(inputFilter.mControl) },
+        {"filter", kAxisFilterToString.at(inputFilter.mAxisFilter)}
+    };
+    return inputFilterParameters;
+}
+InputFilter jsonToInputFilter(const nlohmann::json& inputFilterParameters) {
+    InputFilter inputFilter {
+        .mControl { jsonToInputSourceDescription(inputFilterParameters.at("input_source")) },
+        .mAxisFilter { kStringToAxisFilter.at(inputFilterParameters.at("filter")) },
+    };
+    return inputFilter;
+}
+nlohmann::json inputComboToJSON(const InputCombo& inputCombo) {
+    nlohmann::json inputComboParameters{
+        {"trigger", kInputComboTriggerToString.at(inputCombo.mTrigger)},
+        {"main_control", inputFilterToJSON(inputCombo.mMainControl)},
+        {"modifier_1", inputFilterToJSON(inputCombo.mModifier1)},
+        {"modifier_2", inputFilterToJSON(inputCombo.mModifier2)},
+        {"deadzone", inputCombo.mDeadzone},
+        {"threshold", inputCombo.mThreshold},
+    };
+    return inputComboParameters;
+}
+InputCombo jsonToInputCombo(const nlohmann::json& inputComboParameters) {
+    InputCombo inputCombo {
+        .mMainControl { jsonToInputFilter(inputComboParameters.at("main_control").get<nlohmann::json::object_t>()) },
+        .mModifier1 { jsonToInputFilter(inputComboParameters.at("modifier_1").get<nlohmann::json::object_t>()) },
+        .mModifier2 { jsonToInputFilter(inputComboParameters.at("modifier_2").get<nlohmann::json::object_t>()) },
+        .mTrigger { kStringToInputComboTrigger.at(inputComboParameters.at("trigger").get<std::string>()) },
+        .mDeadzone { inputComboParameters.at("deadzone").get<float>() },
+        .mThreshold { inputComboParameters.at("threshold").get<float>() },
+    };
+    return inputCombo;
+}
+nlohmann::json actionDefinitionToJSON(const ActionDefinition& actionDefinition) {
+    nlohmann::json actionDefinitionParameters {
+        {"name", actionDefinition.mName},
+        {"attributes", inputAttributesToJSON(actionDefinition.mAttributes)},
+        {"value_type", kActionValueTypeToString.at(actionDefinition.mValueType)},
+    };
+    return actionDefinitionParameters;
+}
+ActionDefinition jsonToActionDefinition(const nlohmann::json& actionDefinitionParameters) {
+    ActionDefinition actionDefinition {
+        .mName { actionDefinitionParameters.at("name").get<std::string>() },
+        .mAttributes { jsonToInputAttributes(actionDefinitionParameters.at("attributes").get<nlohmann::json::object_t>())},
+        .mValueType { kStringToActionValueType.at(actionDefinitionParameters.at("value_type").get<std::string>()) },
+    };
+    return actionDefinition;
 }

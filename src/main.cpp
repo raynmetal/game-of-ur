@@ -35,17 +35,6 @@ int main(int argc, char* argv[]) {
 
     InputManager inputManager {};
 
-    InputSourceDescription mouseMotionControl {
-        .mAttributes {
-            (2&InputAttributes::N_AXES)
-            | InputAttributes::HAS_STATE_VALUE
-            | InputAttributes::HAS_CHANGE_VALUE
-            | InputAttributes::STATE_IS_LOCATION
-        },
-        .mDeviceType { DeviceType::MOUSE },
-        .mControlType { ControlType::POINT }
-    };
-
     std::shared_ptr<SimObject> camera { 
         SimpleECS::getSystem<SimSystem>()->createSimObject<Placement, Transform, CameraProperties, SceneNode>({}, {}, {}, {}) 
     };
@@ -56,369 +45,910 @@ int main(int argc, char* argv[]) {
 
     // Create the camera action context, and define what actions are available to it
     inputManager.registerActionContext("Camera");
-    inputManager["Camera"].registerAction(
+    inputManager.registerAction(
         nlohmann::json {
+            {"context", "Camera"},
             {"name", "Rotate"},
-            {"nAxes", 2},
-            {"hasChangeValue", true},
-            {"hasStateValue", false},
-            {"hasButtonValue", false},
-            {"hasNegative", false},
-            {"stateIsLocation", false},
+            {"attributes", {
+                {"n_axes", 2},
+                {"has_change_value", true},
+                {"has_state_value", false},
+                {"has_button_value", false},
+                {"has_negative", false},
+                {"state_is_location", false},
+            }},
+            {"value_type", "change"},
         }
     );
-    inputManager["Camera"].registerAction(
+    inputManager.registerAction(
         nlohmann::json {
+            {"context", "Camera"},
             {"name", "Move"},
-            {"nAxes", 2},
-            {"hasChangeValue", false},
-            {"hasStateValue", true},
-            {"hasButtonValue", false},
-            {"hasNegative", true},
-            {"stateIsLocation", false},
+            {"attributes",  {
+                {"n_axes", 2},
+                {"has_change_value", false},
+                {"has_state_value", true},
+                {"has_button_value", false},
+                {"has_negative", true},
+                {"state_is_location", false},
+            }},
+            {"value_type", "state"},
         }
     );
-    inputManager["Camera"].registerAction(
+    inputManager.registerAction(
         nlohmann::json {
+            {"context", "Camera"},
             {"name", "ToggleControl"},
-            {"nAxes", 0},
-            {"hasChangeValue", false},
-            {"hasStateValue", false},
-            {"hasButtonValue", true},
-            {"hasNegative", false},
-            {"stateIsLocation", false},
+            {"attributes", {
+                {"n_axes", 0},
+                {"has_change_value", false},
+                {"has_state_value", false},
+                {"has_button_value", true},
+                {"has_negative", false},
+                {"state_is_location", false},
+            }},
+            {"value_type", "state"},
         }
     );
-    inputManager["Camera"].registerAction(
+    inputManager.registerAction(
         nlohmann::json {
+            {"context", "Camera"},
             {"name", "UpdateFOV"},
-            {"nAxes", 1},
-            {"hasChangeValue", true},
-            {"hasStateValue", false},
-            {"hasButtonValue", false},
-            {"hasNegative", false},
-            {"stateIsLocation", false},
+            {"attributes", {
+                {"n_axes", 1},
+                {"has_change_value", true},
+                {"has_state_value", false},
+                {"has_button_value", false},
+                {"has_negative", false},
+                {"state_is_location", false},
+            }},
+            {"value_type", "change"},
         }
     );
-
     // Create an action context for render controls
     inputManager.registerActionContext("Graphics");
-    inputManager["Graphics"].registerAction(
+    inputManager.registerAction(
         nlohmann::json {
+            {"context", "Graphics"},
             {"name", "UpdateGamma"},
-            {"nAxes", 1},
-            {"hasChangeValue", true},
-            {"hasStateValue", false},
-            {"hasButtonValue", false},
-            {"hasNegative", false},
-            {"stateIsLocation", false},
+            {"attributes", {
+                {"n_axes", 1},
+                {"has_change_value", true},
+                {"has_state_value", false},
+                {"has_button_value", false},
+                {"has_negative", false},
+                {"state_is_location", false},
+            }},
+            {"value_type", "change"},
         }
     );
-    inputManager["Graphics"].registerAction(
+    inputManager.registerAction(
         nlohmann::json{
+            {"context", "Graphics"},
             {"name", "UpdateExposure"},
-            {"nAxes", 1},
-            {"hasChangeValue", true},
-            {"hasStateValue", false},
-            {"hasButtonValue", false},
-            {"hasNegative", false},
-            {"stateIsLocation", false},
+            {"attributes", {
+                {"n_axes", 1},
+                {"has_change_value", true},
+                {"has_state_value", false},
+                {"has_button_value", false},
+                {"has_negative", false},
+                {"state_is_location", false},
+            }},
+            {"value_type", "change"},
         }
     );
-    inputManager["Graphics"].registerAction(
+    inputManager.registerAction(
         nlohmann::json{
+            {"context", "Graphics"},
             {"name", "RenderNextTexture"},
-            {"nAxes", 0},
-            {"hasChangeValue", false},
-            {"hasStateValue", false},
-            {"hasButtonValue", true},
-            {"hasNegative", false},
-            {"stateIsLocation", false},
+            {"attributes", {
+                {"n_axes", 0},
+                {"has_change_value", false},
+                {"has_state_value", false},
+                {"has_button_value", true},
+                {"has_negative", false},
+                {"state_is_location", false},
+            }},
+            {"value_type", "change"},
         }
     );
 
 
     // Map input events to the camera actions just defined
-    inputManager["Camera"].registerInputBind(
-        "Rotate", AxisFilter::X_POS, // Action and target axis
-        InputCombo{ // Input combination and filter
-            .mMainControl {
-                .mControl { mouseMotionControl },
-                .mAxisFilter{ AxisFilter::X_CHANGE_POS },
-            }, 
-            .mTrigger { InputCombo::Trigger::ON_CHANGE }
+
+    // camera rotate
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Rotate"},
+            {"target_axis", "+x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "mouse"},
+                        {"control_type", "point"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "+dx"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onChange"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
     );
-    inputManager["Camera"].registerInputBind(
-        "Rotate", AxisFilter::X_NEG, // Action and target axis
-        InputCombo{ // Input combination and filter
-            .mMainControl {
-                .mControl { mouseMotionControl },
-                .mAxisFilter{ AxisFilter::X_CHANGE_NEG },
-            }, 
-            .mTrigger { InputCombo::Trigger::ON_CHANGE }
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Rotate"},
+            {"target_axis", "-x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "mouse"},
+                        {"control_type", "point"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "-dx"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onChange"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
     );
-    inputManager["Camera"].registerInputBind(
-        "Rotate", AxisFilter::Y_POS,
-        InputCombo{ // Input combination and filter
-            .mMainControl {
-                .mControl { mouseMotionControl },
-                .mAxisFilter{ AxisFilter::Y_CHANGE_POS },
-            },
-            .mTrigger { InputCombo::Trigger::ON_CHANGE }
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Rotate"},
+            {"target_axis", "+y"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "mouse"},
+                        {"control_type", "point"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "+dy"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onChange"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
     );
-    inputManager["Camera"].registerInputBind(
-        "Rotate", AxisFilter::Y_NEG,
-        InputCombo{ // Input combination and filter
-            .mMainControl {
-                .mControl { mouseMotionControl },
-                .mAxisFilter{ AxisFilter::Y_CHANGE_NEG },
-            },
-            .mTrigger { InputCombo::Trigger::ON_CHANGE }
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Rotate"},
+            {"target_axis", "-y"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "mouse"},
+                        {"control_type", "point"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "-dy"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onChange"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
-    );
-    inputManager["Camera"].registerInputBind(
-        "ToggleControl", AxisFilter::SIMPLE,
-        InputCombo{
-            .mMainControl{
-                .mControl {
-                    .mAttributes { HAS_BUTTON_VALUE },
-                    .mControl { SDLK_1 },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter{AxisFilter::SIMPLE},
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS }
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "Move", AxisFilter::X_POS,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_d },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter{ AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS }
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "Move", AxisFilter::X_POS,
-        InputCombo {
-            .mMainControl {
-                .mControl{
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_d },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter{ AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_RELEASE }
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "Move", AxisFilter::X_NEG,
-        InputCombo {
-            .mMainControl {
-                .mControl{
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_a },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter{ AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS }
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "Move", AxisFilter::X_NEG,
-        InputCombo {
-            .mMainControl {
-                .mControl{
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_a },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter{ AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_RELEASE }
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "Move", AxisFilter::Y_POS,
-        InputCombo {
-            .mMainControl {
-                .mControl{
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_w },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter{ AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS }
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "Move", AxisFilter::Y_POS,
-        InputCombo {
-            .mMainControl {
-                .mControl{
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_w },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter{ AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_RELEASE}
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "Move", AxisFilter::Y_NEG,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_s },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter{ AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS }
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "Move", AxisFilter::Y_NEG,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_s },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter{ AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_RELEASE }
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "UpdateFOV", AxisFilter::X_POS,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_COMMA },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter { AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS }
-        }
-    );
-    inputManager["Camera"].registerInputBind(
-        "UpdateFOV", AxisFilter::X_NEG,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_PERIOD },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter { AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS }
+    );   
+
+    // camera toggle
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "ToggleControl"},
+            {"target_axis", "simple"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_1},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
     );
 
-    // Map input events to render system controls
-    inputManager["Graphics"].registerInputBind(
-        "UpdateGamma", AxisFilter::X_NEG,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_j },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter { AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS}
+    // Camera move
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Move"},
+            {"target_axis", "+x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_d},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
     );
-    inputManager["Graphics"].registerInputBind(
-        "UpdateGamma", AxisFilter::X_POS,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_k },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter { AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS}
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Move"},
+            {"target_axis", "+x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_d},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onRelease"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
     );
-    inputManager["Graphics"].registerInputBind(
-        "UpdateExposure", AxisFilter::X_NEG,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_u },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter { AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS}
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Move"},
+            {"target_axis", "-x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_a},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
     );
-    inputManager["Graphics"].registerInputBind(
-        "UpdateExposure", AxisFilter::X_POS,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_i },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter { AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS}
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Move"},
+            {"target_axis", "-x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_a},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onRelease"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
     );
-    inputManager["Graphics"].registerInputBind(
-        "RenderNextTexture", AxisFilter::SIMPLE,
-        InputCombo {
-            .mMainControl {
-                .mControl {
-                    .mAttributes { InputAttributes::HAS_BUTTON_VALUE },
-                    .mControl { SDLK_TAB },
-                    .mDeviceType { DeviceType::KEYBOARD },
-                    .mControlType { ControlType::BUTTON },
-                },
-                .mAxisFilter { AxisFilter::SIMPLE },
-            },
-            .mTrigger { InputCombo::Trigger::ON_PRESS }
+
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Move"},
+            {"target_axis", "+y"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_w},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Move"},
+            {"target_axis", "+y"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_w},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onRelease"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Move"},
+            {"target_axis", "-y"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_s},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "Move"},
+            {"target_axis", "-y"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_s},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onRelease"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+
+    // camera fov
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "UpdateFOV"},
+            {"target_axis", "+x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_COMMA},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Camera"},
+            {"action", "UpdateFOV"},
+            {"target_axis", "-x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_PERIOD},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+
+    // graphics gamma
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Graphics"},
+            {"action", "UpdateGamma"},
+            {"target_axis", "+x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_k},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Graphics"},
+            {"action", "UpdateGamma"},
+            {"target_axis", "-x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_j},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+
+    // graphics exposure
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Graphics"},
+            {"action", "UpdateExposure"},
+            {"target_axis", "+x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_i},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Graphics"},
+            {"action", "UpdateGamma"},
+            {"target_axis", "-x"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_u},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
+        }
+    );
+
+    // graphics render texture
+    inputManager.registerInputBind(
+        nlohmann::json {
+            {"context", "Graphics"},
+            {"action", "RenderNextTexture"},
+            {"target_axis", "simple"},
+            {"input_combo", {
+                {"main_control", {
+                    {"input_source", {
+                        {"device_type", "keyboard"},
+                        {"control_type", "button"},
+                        {"device", 0},
+                        {"control", SDLK_TAB},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_1", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"modifier_2", {
+                    {"input_source", {
+                        {"device_type", "na"},
+                        {"control_type", "na"},
+                        {"device", 0},
+                        {"control", 0},
+                    }},
+                    {"filter", "simple"},
+                }},
+                {"trigger", "onPress"},
+                {"deadzone", 0.f},
+                {"threshold", .5f},
+            }}
         }
     );
 

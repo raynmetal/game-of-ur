@@ -35,6 +35,9 @@ public:
      */
     void queueInput(const SDL_Event& inputEvent);
 
+    void registerInputBind(const nlohmann::json& inputBindingParameters);
+    void registerAction(const nlohmann::json& actionParameters);
+
     /*
      *  Registers a new action context with a given name
      */
@@ -53,7 +56,6 @@ public:
      */
     void dispatch(uint32_t targetTimeMillis);
 
-    InputSourceDescription getInputSourceDescriptionPartial(std::string inputSourceTypeName);
 private:
     friend class ActionContext;
     double getRawValue(const InputFilter& inputFilter, const SDL_Event& inputEvent) const;
@@ -161,6 +163,7 @@ public:
     // Register a binding from an input-sign-axis-modifier combination to a specific axis
     // of the action named.
     void registerInputBind(const std::string& forAction, AxisFilter targetAxis, const InputCombo& withInput);
+    void registerInputBind(const nlohmann::json& inputBindParameters);
     // Remove the binding from this input-sign-axis-modifier combination to whatever
     // action it's bound to
     void unregisterInputBind(const InputCombo& inputCombo);
