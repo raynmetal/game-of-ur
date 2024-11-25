@@ -35,8 +35,9 @@ struct SceneNode {
     std::set<EntityID> mChildren {};
 };
 
-class SceneSystem: public System<SceneSystem> {
+class SceneSystem: public System<SceneSystem, Transform, SceneNode, Placement> {
 public:
+    SceneSystem(): System<SceneSystem,Transform, SceneNode, Placement>{0}{}
     void rebuildGraph();
     void markDirty(EntityID entity);
     void updateTransforms();

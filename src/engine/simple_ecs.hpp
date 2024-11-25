@@ -11,6 +11,7 @@
 #include <set>
 
 #include "util.hpp"
+#include "registrator.hpp"
 
 /* 
   See Austin Morlan's implementation of a simple ECS, where entities are
@@ -56,10 +57,6 @@ public:
 private:
     RangeMapperLinear mProgressLimits {0.f, 1.f, 0.f, 1.f};
 };
-
-class Entity;
-
-class ComponentManager;
 
 template<typename T>
 class ComponentArray : public IComponentArray {
@@ -171,19 +168,26 @@ friend class SystemManager;
 friend class SimpleECS;
 };
 
-template<typename TSystemDerived>
+template<typename TSystemDerived, typename ...TRequiredComponents>
 class System: public BaseSystem {
+    static void registerSelf();
 protected:
+    System(int explicitlyInitializeMe) {
+        s_registrator.emptyFunc();
+    }
     template<typename TComponent>
     TComponent getComponent(EntityID entityID, float progress=1.f) {
         return BaseSystem::getComponent<TComponent, TSystemDerived>(entityID, progress);
     }
-
     template<typename TComponent>
     void updateComponent(EntityID entityID, const TComponent& component) {
         BaseSystem::updateComponent<TComponent, TSystemDerived>(entityID, component);
     }
 private:
+    inline static Registrator<System<TSystemDerived, TRequiredComponents...>>& s_registrator {
+        Registrator<System<TSystemDerived, TRequiredComponents...>>::getRegistrator()
+    };
+friend class Registrator<System<TSystemDerived, TRequiredComponents...>>;
 };
 
 class SystemManager {
@@ -195,6 +199,8 @@ private:
     void registerSystem(const Signature& signature);
 
     void unregisterAll();
+
+    void initialize();
 
     template<typename TSystem>
     std::shared_ptr<TSystem> getSystem();
@@ -237,6 +243,8 @@ public:
 
     template<typename ...TComponents>
     static Entity createEntity(TComponents...components);
+
+    static void initialize();
 
     static void cleanup();
 
@@ -328,6 +336,11 @@ private:
 friend class SimpleECS;
 };
 
+template <typename TSystemDerived, typename ...TRequiredComponents>
+void System<TSystemDerived, TRequiredComponents...>::registerSelf() {
+    SimpleECS::registerComponentTypes<TRequiredComponents...>();
+    SimpleECS::registerSystem<TSystemDerived, TRequiredComponents...>();
+}
 
 template<typename T>
 T Interpolator<T>::operator() (const T& previousState, const T& nextState, float simulationProgress) const {
@@ -419,7 +432,10 @@ void ComponentArray<T>::copyComponent(EntityID to, EntityID from) {
 template<typename T> 
 void ComponentManager::registerComponentArray() {
     const std::size_t componentHash { typeid(T).hash_code() };
-    assert(mHashToComponentType.find(componentHash) == mHashToComponentType.end() && "Component type already registered");
+    if(mHashToComponentType.find(componentHash) != mHashToComponentType.end()) {
+        return;
+    }
+
     assert(mHashToComponentType.size() + 1 < kMaxComponents && "Component type limit reached");
     mHashToComponentArray.insert_or_assign(
         componentHash, std::static_pointer_cast<IComponentArray>(std::make_shared<ComponentArray<T>>())
@@ -470,7 +486,6 @@ void SystemManager::registerSystem(const Signature& signature) {
 
     mHashToSignature[systemHash] = signature;
     mHashToSystem.insert_or_assign(systemHash, std::make_shared<TSystem>());
-    mHashToSystem[systemHash]->onCreated();
 }
 
 template<typename T>
@@ -658,6 +673,5 @@ void SystemManager::handleEntityUpdatedBySystem(EntityID entityID, Signature sig
         }
     }
 }
-
 
 #endif

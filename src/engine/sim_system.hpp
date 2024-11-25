@@ -11,18 +11,25 @@
 
 class SimComponent;
 class SimObject;
+class SimSystem;
+
+struct SimCore {
+    void* mSimObject;
+};
 
 
-class SimSystem: public System<SimSystem> {
+
+class SimSystem: public System<SimSystem, SimCore> {
 public:
-    struct SimCore {
-        void* mSimObject;
-    };
+    SimSystem():
+    System<SimSystem, SimCore>{0}
+    {}
 
     class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
     public:
         ApploopEventHandler(){}
         inline void initializeEventHandler(SimSystem* pSystem) {mSystem = pSystem;}
+
     private:
         void onSimulationStep(uint32_t simulationTicks) override;
         SimSystem* mSystem;
@@ -152,7 +159,7 @@ void SimObject::removeComponent() {
 template<typename ...TCoreComponents>
 SimObject::SimObject(void*, TCoreComponents ... coreComponents)
 {
-    mEntity = std::unique_ptr<Entity>(new Entity { SimpleECS::createEntity(SimSystem::SimCore { .mSimObject {this} }, coreComponents...)} );
+    mEntity = std::unique_ptr<Entity>(new Entity { SimpleECS::createEntity(SimCore { .mSimObject {this} }, coreComponents...)} );
     mSimComponents = std::make_unique<std::unordered_map<std::size_t, std::unique_ptr<SimComponent>>>();
 }
 
@@ -217,7 +224,7 @@ void SimObject::removeCoreComponent() {
 }
 
 template<>
-inline SimSystem::SimCore Interpolator<SimSystem::SimCore>::operator() (const SimSystem::SimCore& prev, const SimSystem::SimCore& next, float value) const {
+inline SimCore Interpolator<SimCore>::operator() (const SimCore& prev, const SimCore& next, float value) const {
     return next;
 }
 

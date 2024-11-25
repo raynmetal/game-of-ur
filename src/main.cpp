@@ -29,11 +29,11 @@ extern constexpr int gWindowHeight {600};
 
 const GLuint kSimulationStep{ 1000/30 };
 
-void init();
+void initialize();
 void cleanup();
 
 int main(int argc, char* argv[]) {
-    init();
+    initialize();
 
     InputManager inputManager {};
 
@@ -262,7 +262,7 @@ int main(int argc, char* argv[]) {
     return 0;
 }
 
-void init() {
+void initialize() {
     std::cout << "This program is running" << std::endl;
 
     // IMPORTANT: call get instance, just to initialize the window
@@ -275,11 +275,7 @@ void init() {
     ResourceDatabase::getInstance();
     Material::Init();
 
-    SimpleECS::registerComponentTypes<Placement, LightEmissionData, std::shared_ptr<StaticModel>, Transform, SceneNode, SimSystem::SimCore, CameraProperties>();
-    SimpleECS::registerSystem<SceneSystem, Transform, SceneNode, Placement>();
-    SimpleECS::registerSystem<SimSystem, SimSystem::SimCore>();
-    SimpleECS::registerSystem<CameraSystem, Transform, CameraProperties>();
-    SimpleECS::registerSystem<RenderSystem, CameraProperties>();
+    SimpleECS::initialize();
 }
 
 void cleanup() {

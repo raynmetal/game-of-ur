@@ -18,8 +18,11 @@ struct CameraProperties {
     glm::mat4 mViewMatrix {};
 };
 
-class CameraSystem: public System<CameraSystem> {
+class CameraSystem: public System<CameraSystem, Transform, CameraProperties> {
 public:
+    CameraSystem():
+    System<CameraSystem, Transform, CameraProperties>{0}
+    {}
     void updateActiveCameraMatrices();
     void onEntityUpdated(EntityID entityID) override;
 private:

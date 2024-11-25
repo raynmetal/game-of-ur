@@ -19,7 +19,7 @@ constexpr float MIN_GAMMA { 1.6f };
 constexpr float MAX_EXPOSURE { 15.f };
 constexpr float MIN_EXPOSURE { 0.f };
 
-RenderSystem::LightQueue::LightQueue() {
+void RenderSystem::LightQueue::onCreated() {
     if(!ResourceDatabase::hasResourceDescription("sphereLight-10lat-5long")) {
         nlohmann::json sphereLightDescription {
             {"name", "sphereLight-10lat-5long"},
@@ -36,14 +36,17 @@ RenderSystem::LightQueue::LightQueue() {
 }
 
 void RenderSystem::onCreated() {
-    SimpleECS::registerSystem<LightQueue, Transform, LightEmissionData>();
-    SimpleECS::registerSystem<OpaqueQueue, Transform, std::shared_ptr<StaticModel>>();
+    mGeometryRenderStage = std::make_shared<GeometryRenderStage>("src/shader/geometryShader.json" );
+    mLightingRenderStage = std::make_shared<LightingRenderStage>("src/shader/lightingShader.json");
+    mBlurRenderStage = std::make_shared<BlurRenderStage>("src/shader/gaussianblurShader.json");
+    mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>( "src/shader/tonemappingShader.json" );
+    mScreenRenderStage = std::make_shared<ScreenRenderStage>("src/shader/screenShader.json");
 
-    mGeometryRenderStage.setup();
-    mLightingRenderStage.setup();
-    mBlurRenderStage.setup();
-    mTonemappingRenderStage.setup();
-    mScreenRenderStage.setup();
+    mGeometryRenderStage->setup();
+    mLightingRenderStage->setup();
+    mBlurRenderStage->setup();
+    mTonemappingRenderStage->setup();
+    mScreenRenderStage->setup();
 
     if(!ResourceDatabase::hasResourceDescription("lightMaterial")) {
         nlohmann::json lightMaterialDescription{
@@ -85,23 +88,23 @@ void RenderSystem::onCreated() {
 
     // Debug: list of screen textures that may be rendered
     mCurrentScreenTexture = 0;
-    mScreenTextures.push_back({mGeometryRenderStage.getRenderTarget("geometryPosition")});
-    mScreenTextures.push_back({mGeometryRenderStage.getRenderTarget("geometryNormal")});
-    mScreenTextures.push_back({mGeometryRenderStage.getRenderTarget("geometryAlbedoSpecular")});
-    mScreenTextures.push_back({mLightingRenderStage.getRenderTarget("litScene")}); 
-    mScreenTextures.push_back({mLightingRenderStage.getRenderTarget("brightCutoff")});
-    mScreenTextures.push_back({mBlurRenderStage.getRenderTarget("pingBuffer")});
-    mScreenTextures.push_back({mTonemappingRenderStage.getRenderTarget("tonemappedScene")});
+    mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryPosition")});
+    mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryNormal")});
+    mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryAlbedoSpecular")});
+    mScreenTextures.push_back({mLightingRenderStage->getRenderTarget("litScene")}); 
+    mScreenTextures.push_back({mLightingRenderStage->getRenderTarget("brightCutoff")});
+    mScreenTextures.push_back({mBlurRenderStage->getRenderTarget("pingBuffer")});
+    mScreenTextures.push_back({mTonemappingRenderStage->getRenderTarget("tonemappedScene")});
 
     // Last pieces of pipeline setup, where we connect all the
     // render stages together
-    mLightingRenderStage.attachTexture("positionMap", mGeometryRenderStage.getRenderTarget("geometryPosition"));
-    mLightingRenderStage.attachTexture("normalMap", mGeometryRenderStage.getRenderTarget("geometryNormal"));
-    mLightingRenderStage.attachTexture("albedoSpecularMap", mGeometryRenderStage.getRenderTarget("geometryAlbedoSpecular"));
-    mBlurRenderStage.attachTexture("unblurredImage", mLightingRenderStage.getRenderTarget("brightCutoff"));
-    mTonemappingRenderStage.attachTexture("litScene", mLightingRenderStage.getRenderTarget("litScene"));
-    mTonemappingRenderStage.attachTexture("bloomEffect", mBlurRenderStage.getRenderTarget("pingBuffer"));
-    mScreenRenderStage.attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+    mLightingRenderStage->attachTexture("positionMap", mGeometryRenderStage->getRenderTarget("geometryPosition"));
+    mLightingRenderStage->attachTexture("normalMap", mGeometryRenderStage->getRenderTarget("geometryNormal"));
+    mLightingRenderStage->attachTexture("albedoSpecularMap", mGeometryRenderStage->getRenderTarget("geometryAlbedoSpecular"));
+    mBlurRenderStage->attachTexture("unblurredImage", mLightingRenderStage->getRenderTarget("brightCutoff"));
+    mTonemappingRenderStage->attachTexture("litScene", mLightingRenderStage->getRenderTarget("litScene"));
+    mTonemappingRenderStage->attachTexture("bloomEffect", mBlurRenderStage->getRenderTarget("pingBuffer"));
+    mScreenRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
 
     // Set initial configuration for the tonemapper
     setGamma(mGamma);
@@ -109,18 +112,18 @@ void RenderSystem::onCreated() {
 
     // Functions containing a set of asserts, ensuring that valid connections have
     // been made between the rendering stages
-    mGeometryRenderStage.validate();
-    mLightingRenderStage.validate();
-    mBlurRenderStage.validate();
-    mTonemappingRenderStage.validate();
-    mScreenRenderStage.validate();
+    mGeometryRenderStage->validate();
+    mLightingRenderStage->validate();
+    mBlurRenderStage->validate();
+    mTonemappingRenderStage->validate();
+    mScreenRenderStage->validate();
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
 }
 
 void RenderSystem::renderNextTexture() {
     mCurrentScreenTexture = (mCurrentScreenTexture + 1) % mScreenTextures.size();
-    mScreenRenderStage.attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+    mScreenRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
 }
 
 void RenderSystem::updateCameraMatrices(float simulationProgress) {
@@ -152,15 +155,15 @@ void RenderSystem::execute(float simulationProgress) {
     updateCameraMatrices(simulationProgress);
 
     // Execute each rendering stage in its proper order
-    SimpleECS::getSystem<OpaqueQueue>()->enqueueTo(mGeometryRenderStage, simulationProgress);
-    mGeometryRenderStage.execute();
+    SimpleECS::getSystem<OpaqueQueue>()->enqueueTo(*mGeometryRenderStage, simulationProgress);
+    mGeometryRenderStage->execute();
 
-    SimpleECS::getSystem<LightQueue>()->enqueueTo(mLightingRenderStage, simulationProgress);
-    mLightingRenderStage.execute();
+    SimpleECS::getSystem<LightQueue>()->enqueueTo(*mLightingRenderStage, simulationProgress);
+    mLightingRenderStage->execute();
 
-    mBlurRenderStage.execute();
-    mTonemappingRenderStage.execute();
-    mScreenRenderStage.execute();
+    mBlurRenderStage->execute();
+    mTonemappingRenderStage->execute();
+    mScreenRenderStage->execute();
 
     WindowContextManager::getInstance().swapBuffers();
 }
@@ -202,7 +205,7 @@ void RenderSystem::setGamma(float gamma) {
     if(gamma > MAX_GAMMA) gamma = MAX_GAMMA;
     else if (gamma < MIN_GAMMA) gamma = MIN_GAMMA;
 
-    mTonemappingRenderStage.getMaterial("screenMaterial")->updateFloatProperty(
+    mTonemappingRenderStage->getMaterial("screenMaterial")->updateFloatProperty(
         "gamma", gamma
     );
 
@@ -213,7 +216,7 @@ void RenderSystem::setExposure(float exposure) {
     if(exposure > MAX_EXPOSURE) exposure = MAX_EXPOSURE;
     else if (exposure < MIN_EXPOSURE) exposure = MIN_EXPOSURE;
 
-    mTonemappingRenderStage.getMaterial("screenMaterial")->updateFloatProperty(
+    mTonemappingRenderStage->getMaterial("screenMaterial")->updateFloatProperty(
         "exposure", exposure
     );
 

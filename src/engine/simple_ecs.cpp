@@ -104,6 +104,11 @@ bool BaseSystem::isRegistered(EntityID entityID) const {
     );
 }
 
+void SystemManager::initialize() {
+    for(auto& pair: mHashToSystem) {
+        pair.second->onCreated();
+    }
+}
 
 void SystemManager::handleEntitySignatureChanged(EntityID entityID, Signature signature) {
     for(auto& pair: mHashToSignature) {
@@ -190,6 +195,10 @@ void ComponentManager::unregisterAll() {
 SimpleECS& SimpleECS::getInstance() {
     static SimpleECS instance {};
     return instance;
+}
+
+void SimpleECS::initialize() {
+    getInstance().mSystemManager.initialize();
 }
 
 void SimpleECS::removeComponentsAll(EntityID entityID) {

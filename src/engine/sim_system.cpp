@@ -11,7 +11,7 @@ SimObject::SimObject(SimObject&& other) {
     mSimComponents = std::move(other.mSimComponents);
 
     // update associated pointers
-    mEntity->updateComponent<SimSystem::SimCore>(SimSystem::SimCore{this});
+    mEntity->updateComponent<SimCore>(SimCore{this});
     for(auto& pair : *mSimComponents) {
         pair.second->mSimObject = this;
     }
@@ -24,7 +24,7 @@ SimObject& SimObject::operator=(SimObject&& other) {
     mSimComponents = std::move(other.mSimComponents);
 
     // update associated pointers
-    mEntity->updateComponent<SimSystem::SimCore>(SimSystem::SimCore{this});
+    mEntity->updateComponent<SimCore>(SimCore{this});
     for(auto& pair : *mSimComponents) {
         pair.second->mSimObject = this;
     }

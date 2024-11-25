@@ -10,6 +10,8 @@
 
 #include <nlohmann/json.hpp>
 
+#include "registrator.hpp"
+
 // ##########################################################################################
 // DECLARATIONS
 // ##########################################################################################
@@ -26,38 +28,6 @@ template <typename TResource, typename TMethod> class ResourceFactoryMethod;
 // ##########################################################################################
 // CLASS DEFINITIONS
 // ##########################################################################################
-
-/**  
- *  Forces implementation of static function `registerSelf()` using CRTP, called here.
- * 
- * ## Usage:
-   ```c++
-   class YourClass {
-       // ... the rest of your class definition
-       // ...
-       YourClass() {} // Explicit constructor definition
-  
-       static YourReturnType registerSelf() {
-           // ... whatever the class needs to do to register itself wherever
-           // it needs to be registered
-       }
-  
-       inline static Registrator<YourClass> s_registrator { Registrator<YourClass>{} };
-   }
-   ```
- */
-template<typename TRegisterable>
-class Registrator {
-public:
-    inline static Registrator& getRegistrator() {
-        static Registrator reg {};
-        return reg;
-    };
-    void emptyFunc() {}
-protected:
-    Registrator();
-};
-
 class IResource {
 public:
     virtual ~IResource()=default;
@@ -153,12 +123,6 @@ friend class ResourceFactory<TResource>;
 // ##########################################################################################
 // FUNCTION DEFINITIONS
 // ##########################################################################################
-
-template <typename TRegisterable>
-Registrator<TRegisterable>::Registrator() {
-    TRegisterable::registerSelf();
-}
-
 template <typename TResource>
 std::shared_ptr<TResource> ResourceDatabase::getResource(const std::string& resourceName) {
     ResourceDatabase& resourceDatabase { ResourceDatabase::getInstance() };

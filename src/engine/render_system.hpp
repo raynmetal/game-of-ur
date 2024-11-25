@@ -11,19 +11,30 @@
 #include "shapegen.hpp"
 #include "material.hpp"
 #include "render_stage.hpp"
+#include "camera_system.hpp"
 
-class RenderSystem: public System<RenderSystem>,  public IActionHandler {
+class RenderSystem: public System<RenderSystem, CameraProperties>,  public IActionHandler {
 public:
-    class LightQueue: public System<LightQueue>{
+    RenderSystem():
+    System<RenderSystem, CameraProperties>{0}
+    {}
+
+    class LightQueue: public System<LightQueue, Transform, LightEmissionData>{
     public:
-        LightQueue();
+        LightQueue():
+        System<RenderSystem::LightQueue, Transform, LightEmissionData>{0}
+        {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
     private:
+        void onCreated() override;
         std::shared_ptr<StaticMesh> mSphereMesh { nullptr };
         std::shared_ptr<Material> mLightMaterial{ std::make_shared<Material>() };
     };
-    class OpaqueQueue: public System<OpaqueQueue> {
+    class OpaqueQueue: public System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>> {
     public:
+        OpaqueQueue():
+        System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>>{0}
+        {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
     };
 
@@ -49,11 +60,11 @@ private:
     GLuint mMatrixUniformBufferIndex {0};
     GLuint mMatrixUniformBufferBinding {0};
 
-    GeometryRenderStage mGeometryRenderStage { "src/shader/geometryShader.json" };
-    LightingRenderStage mLightingRenderStage { "src/shader/lightingShader.json" };
-    BlurRenderStage mBlurRenderStage { "src/shader/gaussianblurShader.json" };
-    TonemappingRenderStage mTonemappingRenderStage { "src/shader/tonemappingShader.json" };
-    ScreenRenderStage mScreenRenderStage { "src/shader/screenShader.json" };
+    std::shared_ptr<GeometryRenderStage> mGeometryRenderStage { nullptr };
+    std::shared_ptr<LightingRenderStage> mLightingRenderStage { nullptr };
+    std::shared_ptr<BlurRenderStage> mBlurRenderStage { nullptr };
+    std::shared_ptr<TonemappingRenderStage> mTonemappingRenderStage { nullptr };
+    std::shared_ptr<ScreenRenderStage> mScreenRenderStage { nullptr };
 
     float mGamma { 2.f };
     float mExposure { 1.f };
