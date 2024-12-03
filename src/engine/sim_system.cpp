@@ -79,5 +79,5 @@ EntityID SimObjectAspect::getEntityID() const {
 }
 
 std::shared_ptr<SimObject> SimObject::copy(const std::shared_ptr<SimObject> simObject) {
-    return std::make_shared<SimObject>(*simObject);
+    return std::shared_ptr<SimObject>(new SimObject{ *simObject });
 }

@@ -52,16 +52,6 @@ public:
 
     static std::shared_ptr<SimObject> copy(const std::shared_ptr<SimObject> simObject);
 
-    template <typename ...TComponents>
-    SimObject(const Placement& placement, const std::string& name, TComponents...components);
-    SimObject(const SceneNode& sceneNode);
-    SimObject(SceneNode&& sceneNode);
-    SimObject(const SimObject& other);
-    SimObject(SimObject&& other);
-
-    SimObject& operator=(const SimObject& other);
-    SimObject& operator=(SimObject&& other);
-
     template <typename TSimObjectAspect, typename ...TSimObjectAspectArgs>
     void addAspect(TSimObjectAspectArgs ... simObjectAspectArgs);
     template <typename TSimObjectAspect>
@@ -74,6 +64,17 @@ public:
     void removeAspect();
 
 private:
+    template <typename ...TComponents>
+    SimObject(const Placement& placement, const std::string& name, TComponents...components);
+    SimObject(const SceneNode& sceneNode);
+    SimObject(SceneNode&& sceneNode);
+    SimObject(const SimObject& other);
+    SimObject(SimObject&& other);
+
+    SimObject& operator=(const SimObject& other);
+    SimObject& operator=(SimObject&& other);
+
+
     void update(uint32_t deltaSimTimeMillis);
 
     std::unordered_map<std::size_t, std::unique_ptr<SimObjectAspect>> mSimObjectAspects { };
@@ -125,15 +126,14 @@ friend class SimObject;
 };
 
 template <typename ...TComponents>
+std::shared_ptr<SimObject> SimObject::create(const Placement& placement, const std::string& name, TComponents ... components) {
+    return std::shared_ptr<SimObject>(new SimObject{placement, name, components...});
+}
+
+template <typename ...TComponents>
 SimObject::SimObject(const Placement& placement, const std::string& name, TComponents ... components) :
 SceneNode { placement, name, SimCore{this}, components... }
 {}
-
-
-template <typename ...TComponents>
-std::shared_ptr<SimObject> SimObject::create(const Placement& placement, const std::string& name, TComponents ... components) {
-    return std::make_shared<SimObject>(placement, name, components...);
-}
 
 template <typename TComponent>
 void SimObjectAspect::addComponent(const TComponent& component) {

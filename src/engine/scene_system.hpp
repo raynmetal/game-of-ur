@@ -33,15 +33,6 @@ public:
 
     static std::shared_ptr<SceneNode> copy(const std::shared_ptr<const SceneNode> sceneNode);
 
-    template<typename ...TComponents>
-    SceneNode(const Placement& placement, const std::string& name, TComponents...components);
-
-    SceneNode(const SceneNode& sceneObject);
-    SceneNode& operator=(const SceneNode& sceneObject);
-
-    SceneNode(SceneNode&& sceneObject);
-    SceneNode& operator=(SceneNode&& sceneObject);
-
     virtual ~SceneNode()=default;
 
     template <typename TComponent>
@@ -78,8 +69,18 @@ public:
 
     const std::string getName() const;
 
+protected:
+    template<typename ...TComponents>
+    SceneNode(const Placement& placement, const std::string& name, TComponents...components);
+
+    SceneNode(const SceneNode& sceneObject);
+    SceneNode& operator=(const SceneNode& sceneObject);
+
+    SceneNode(SceneNode&& sceneObject);
+    SceneNode& operator=(SceneNode&& sceneObject);
+
 private:
-    SceneNode() {}
+    SceneNode() {} // special constructor used to create the root node in the scene system
 
     static bool detectCycle(std::shared_ptr<SceneNode> node);
     static std::tuple<std::string, std::string> nextInPath(const std::string& where);
@@ -103,6 +104,7 @@ public:
     std::shared_ptr<SceneNode> getNode(const std::string& where);
     std::shared_ptr<SceneNode> removeNode(const std::string& where);
     void addNode(std::shared_ptr<SceneNode> node, const std::string& where);
+
 private:
     class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
     public:
@@ -141,7 +143,7 @@ friend class SceneNode;
 
 template<typename ...TComponents>
 std::shared_ptr<SceneNode> SceneNode::create(const Placement& placement, const std::string& name,  TComponents...components) {
-    return std::make_shared<SceneNode>(placement, name, components...);
+    return std::shared_ptr<SceneNode>( new SceneNode(placement, name, components...));
 }
 
 template <typename ...TComponents>
@@ -225,6 +227,7 @@ inline void SceneNode::setEnabled<SceneSystem>(bool state) {
     // mActiveNodes and ECS getEnabledEntities, which is 
     // redundant and may eventually cause errors
     mSystemMask.set(systemType, state);
+    mEnabled = state;
     SimpleECS::getSystem<SceneSystem>()->setNodeEnabled(
         shared_from_this(),
         state

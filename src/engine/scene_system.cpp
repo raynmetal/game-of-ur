@@ -59,7 +59,7 @@ SceneNode::SceneNode(const SceneNode& other) {
     for(auto& childPair: other.mChildren) {
         const std::string& childName { childPair.first };
         const std::shared_ptr<const SceneNode> childNode { childPair.second };
-        mChildren[childName] = std::make_shared<SceneNode>(*childNode);
+        mChildren[childName] = std::shared_ptr<SceneNode>(new SceneNode{*childNode});
         mChildren[childName]->mParent = shared_from_this();
     }
 }
@@ -90,7 +90,7 @@ SceneNode& SceneNode::operator=(const SceneNode& other) {
     for(auto& childPair: other.mChildren) {
         const std::string& childName { childPair.first };
         const std::shared_ptr<const SceneNode> childNode { childPair.second };
-        mChildren[childName] = std::make_shared<SceneNode>(*childNode);
+        mChildren[childName] = std::shared_ptr<SceneNode>(new SceneNode{*childNode});
         mChildren[childName]->mParent = shared_from_this();
     }
 
@@ -105,14 +105,14 @@ SceneNode& SceneNode::operator=(const SceneNode& other) {
 bool SceneNode::detectCycle(std::shared_ptr<SceneNode> node) {
     if(!node) return false;
 
-    std::shared_ptr<SceneNode> one { node };
-    std::shared_ptr<SceneNode> two { one->mParent };
-    while(two != nullptr && two->mParent != nullptr && one != two) {
-        one = one->mParent;
-        two = two->mParent->mParent;
+    std::shared_ptr<SceneNode> slow { node };
+    std::shared_ptr<SceneNode> fast { slow->mParent };
+    while(fast != nullptr && fast->mParent != nullptr && slow != fast) {
+        slow = slow->mParent;
+        fast = fast->mParent->mParent;
     }
 
-    if(one == two) return true;
+    if(slow == fast) return true;
     return false;
 }
 
@@ -140,7 +140,7 @@ const std::string SceneNode::getName() const {
 
 std::shared_ptr<SceneNode> SceneNode::copy(const std::shared_ptr<const SceneNode> sceneNode) {
     if(!sceneNode) return nullptr;
-    return std::make_shared<SceneNode>(*sceneNode);
+    return std::shared_ptr<SceneNode>(new SceneNode{*sceneNode});
 }
 
 std::tuple<std::string, std::string> SceneNode::nextInPath(const std::string& where) {
@@ -286,6 +286,7 @@ void SceneSystem::nodeAdded(std::shared_ptr<SceneNode> sceneNode) {
     // should be enabled
     setNodeEnabled(sceneNode, sceneNode->mEnabled);
 }
+
 void SceneSystem::nodeRemoved(std::shared_ptr<SceneNode> sceneNode) {
     // forget about keeping this node alive if it used to be 
     // a part of the scene tree
@@ -304,12 +305,11 @@ void SceneSystem::nodeRemoved(std::shared_ptr<SceneNode> sceneNode) {
 
 void SceneSystem::setNodeEnabled(std::shared_ptr<SceneNode> sceneNode, bool state) {
     assert(sceneNode && "Null node reference cannot be enabled");
-    sceneNode->mEnabled = state;
 
     // early exit if this node isn't in the scene
     if(!sceneNode->inScene()) { return; }
 
-    if(sceneNode->mEnabled && isActive(sceneNode->mParent)) {
+    if(state==true && isActive(sceneNode->mParent)) {
         sceneNode->mEntity->enableSystems(sceneNode->mSystemMask);
         mActiveEntities.emplace(sceneNode->getEntityID());
         mComputeTransformQueue.emplace(sceneNode->getEntityID());
@@ -338,7 +338,6 @@ void SceneSystem::setNodeEnabled(std::shared_ptr<SceneNode> sceneNode, bool stat
             mActiveEntities.erase(currentNode->getEntityID());
             mComputeTransformQueue.erase(currentNode->getEntityID());
         }
-
         for(auto& node: currentNode->getChildren()) {
             toVisit.push_back(node);
         }
