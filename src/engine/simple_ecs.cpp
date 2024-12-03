@@ -12,6 +12,14 @@ Entity::Entity(const Entity& other): Entity { SimpleECS::getInstance().privateCr
     SimpleECS::getInstance().copyComponents(mID, other.mID);
 }
 
+void Entity::disableSystems() {
+    SimpleECS::getInstance().disableEntity(mID);
+}
+
+void Entity::enableSystems(Signature systemMask) {
+    SimpleECS::getInstance().enableEntity(mID, systemMask);
+}
+
 Entity::Entity(Entity&& other) noexcept {
     mID = other.mID;
     other.mID = kMaxEntities;
@@ -110,6 +118,38 @@ void SystemManager::initialize() {
     }
 }
 
+void SystemManager::enableEntity(EntityID entityID, Signature entitySignature, Signature systemMask) {
+    for(const auto& signaturePair: mHashToSignature) {
+        auto& system { mHashToSystem[signaturePair.first] };
+        if(
+            // entity and system signatures match
+            (signaturePair.second&entitySignature) == signaturePair.second
+            // mask allows this system to be enabled for this entity
+            && systemMask.test(mHashToSystemType[signaturePair.first])
+            // entity isn't already enabled for this system
+            && !system->isEnabled(entityID)
+        ) {
+            system->enableEntity(entityID);
+            system->onEntityEnabled(entityID);
+        }
+    }
+}
+
+void SystemManager::disableEntity(EntityID entityID, Signature entitySignature) {
+    // disable all systems which match this entity's signature
+    for(const auto& signaturePair: mHashToSignature) {
+        if(
+            // signatures match
+            (signaturePair.second&entitySignature) == signaturePair.second
+            // and entity is enabled
+            && mHashToSystem[signaturePair.first]->isEnabled(entityID)
+        ) {
+            mHashToSystem[signaturePair.first]->disableEntity(entityID);
+            mHashToSystem[signaturePair.first]->onEntityDisabled(entityID);
+        }
+    }
+}
+
 void SystemManager::handleEntitySignatureChanged(EntityID entityID, Signature signature) {
     for(auto& pair: mHashToSignature) {
         const std::size_t systemHash { pair.first };
@@ -119,8 +159,7 @@ void SystemManager::handleEntitySignatureChanged(EntityID entityID, Signature si
         if(
             (signature&systemSignature) == systemSignature && !system.isRegistered(entityID)
         ) {
-            system.addEntity(entityID, true);
-            system.onEntityEnabled(entityID);
+            system.addEntity(entityID, false);
         } else if(
             (signature&systemSignature) != systemSignature && system.isRegistered(entityID) 
         ) {
@@ -134,8 +173,10 @@ void SystemManager::handleEntitySignatureChanged(EntityID entityID, Signature si
 void SystemManager::handleEntityDestroyed(EntityID entityID) {
     for(auto& pair: mHashToSystem) {
         if(pair.second->isRegistered(entityID)) {
-            pair.second->disableEntity(entityID);
-            pair.second->onEntityDisabled(entityID);
+            if(pair.second->isEnabled(entityID)){
+                pair.second->disableEntity(entityID);
+                pair.second->onEntityDisabled(entityID);
+            }
             pair.second->removeEntity(entityID);
         }
     }
@@ -201,9 +242,18 @@ void SimpleECS::initialize() {
     getInstance().mSystemManager.initialize();
 }
 
+void SimpleECS::disableEntity(EntityID entityID) {
+    Signature entitySignature {mComponentManager.getSignature(entityID)};
+    mSystemManager.disableEntity(entityID, entitySignature);
+}
+void SimpleECS::enableEntity(EntityID entityID, Signature systemMask) {
+    Signature entitySignature {mComponentManager.getSignature(entityID)};
+    mSystemManager.enableEntity(entityID, entitySignature, systemMask);
+}
+
 void SimpleECS::removeComponentsAll(EntityID entityID) {
-    mComponentManager.handleEntityDestroyed(entityID);
     mSystemManager.handleEntityDestroyed(entityID);
+    mComponentManager.handleEntityDestroyed(entityID);
 }
 
 void SimpleECS::destroyEntity(EntityID entityID) {

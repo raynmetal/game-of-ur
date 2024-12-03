@@ -8,11 +8,12 @@
 extern const float DEFAULT_CAMERA_SPEED;
 extern const float LOOK_SENSITIVITY;
 
-class FlyCamera: public SimComponent, public IActionHandler {
+class FlyCamera: public SimObjectAspect, public IActionHandler {
 public:
     FlyCamera(SimObject* pSimObject);
     void update(uint32_t deltaSimtimeMillis) override;
     void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override;
+    std::unique_ptr<SimObjectAspect> makeCopy() const override;
 
 private:
     void updatePitch(glm::quat& current, float dPitch);

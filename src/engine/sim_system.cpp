@@ -1,52 +1,83 @@
 #include "sim_system.hpp"
 
-void SimSystem::ApploopEventHandler::onSimulationStep(uint32_t deltaSimTimeMillis) {
-    for(EntityID entity: mSystem->getEnabledEntities()) {
-        reinterpret_cast<SimObject*>(mSystem->getComponent<SimCore>(entity).mSimObject)->update(deltaSimTimeMillis);
+SimObject::SimObject(SceneNode&& sceneNode):
+SceneNode{std::move(sceneNode)}
+{
+    addComponent<SimCore>({this});
+}
+
+SimObject::SimObject(const SceneNode& sceneNode):
+SceneNode {sceneNode}
+{
+    addComponent<SimCore>({this});
+}
+
+SimObject::SimObject(SimObject&& simObject):
+SceneNode { std::move(simObject) },
+mSimObjectAspects { std::move(simObject.mSimObjectAspects) }
+{
+    updateComponent<SimCore>({this});
+    for(auto& aspectPair: mSimObjectAspects) {
+        aspectPair.second->mSimObject = this;
     }
 }
 
-SimObject::SimObject(SimObject&& other) {
-    mEntity = std::move(other.mEntity);
-    mSimComponents = std::move(other.mSimComponents);
-
-    // update associated pointers
-    mEntity->updateComponent<SimCore>(SimCore{this});
-    for(auto& pair : *mSimComponents) {
-        pair.second->mSimObject = this;
+SimObject::SimObject(const SimObject& simObject):
+SceneNode { simObject }
+{
+    updateComponent<SimCore>({this});
+    for(auto& aspectPair: simObject.mSimObjectAspects) {
+        mSimObjectAspects[aspectPair.first] = aspectPair.second->makeCopy();
+        mSimObjectAspects[aspectPair.first]->mSimObject = this;
     }
 }
 
-SimObject& SimObject::operator=(SimObject&& other) {
-    if(&other == this) return *this;
+SimObject& SimObject::operator=(SimObject&& simObject) {
+    if(this == &simObject) return *this;
 
-    mEntity = std::move(other.mEntity);
-    mSimComponents = std::move(other.mSimComponents);
+    SceneNode::operator=(std::move(simObject));
+    mSimObjectAspects = std::move(simObject.mSimObjectAspects);
 
-    // update associated pointers
-    mEntity->updateComponent<SimCore>(SimCore{this});
-    for(auto& pair : *mSimComponents) {
-        pair.second->mSimObject = this;
+    // update pointers to self for visibility to the sim system
+    // as well as by attached aspects
+    updateComponent<SimCore>({this});
+    for(auto& aspectPair: mSimObjectAspects) {
+        mSimObjectAspects[aspectPair.first]->mSimObject = this;
     }
 
     return *this;
 }
 
-Entity& SimObject::getEntity() {
-    return *mEntity;
+SimObject& SimObject::operator=(const SimObject& other) {
+    if(this == &other) return *this;
+
+    SceneNode::operator=(other);
+    updateComponent<SimCore>({this});
+    for(auto& aspectPair: other.mSimObjectAspects) {
+        mSimObjectAspects[aspectPair.first] = aspectPair.second->makeCopy();
+        mSimObjectAspects[aspectPair.first]->mSimObject = this;
+    }
+
+    return *this;
+}
+
+
+void SimSystem::ApploopEventHandler::onSimulationStep(uint32_t deltaSimTimeMillis) {
+    for(EntityID entity: mSystem->getEnabledEntities()) {
+        mSystem->getComponent<SimCore>(entity).mSimObject->update(deltaSimTimeMillis);
+    }
 }
 
 void SimObject::update(uint32_t deltaSimTimeMillis) {
-    for(auto& pair: *mSimComponents) {
+    for(auto& pair: mSimObjectAspects) {
         pair.second->update(deltaSimTimeMillis);
     }
 }
 
-EntityID SimObject::getEntityID() const {
-    return mEntity->getID();
-}
-
-EntityID SimComponent::getEntityID() const {
+EntityID SimObjectAspect::getEntityID() const {
     return mSimObject->getEntityID();
 }
 
+std::shared_ptr<SimObject> SimObject::copy(const std::shared_ptr<SimObject> simObject) {
+    return std::make_shared<SimObject>(*simObject);
+}

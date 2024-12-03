@@ -5,7 +5,12 @@
 
 void BackAndForth::update(uint32_t deltaSimtimeMillis) {
     mElapsedTime += deltaSimtimeMillis;
-    Placement placement  { getCoreComponent<Placement>() };
+    Placement placement  { getComponent<Placement>() };
     placement.mPosition.z = glm::sin(glm::radians(mElapsedTime/10.f + getEntityID()*45.f));
-    updateCoreComponent<Placement>(placement);
+    updateComponent<Placement>(placement);
 }
+
+std::unique_ptr<SimObjectAspect> BackAndForth::makeCopy() const {
+    return std::make_unique<BackAndForth>(nullptr);
+}
+

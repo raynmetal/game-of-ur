@@ -11,12 +11,12 @@ const float ZOOM_SENSITIVITY { 1.5f };
 const float MAX_FOV {100.f};
 const float MIN_FOV {40.f};
 
-FlyCamera::FlyCamera(SimObject* pSimObject) : SimComponent { pSimObject } {}
+FlyCamera::FlyCamera(SimObject* pSimObject) : SimObjectAspect { pSimObject } {}
 
 void FlyCamera::update(uint32_t deltaSimTimeMillis) {
     if(!mActive) return;
 
-    Placement placement { getCoreComponent<Placement>() };
+    Placement placement { getComponent<Placement>() };
     const glm::mat4 rotationMatrix { glm::mat4_cast(placement.mOrientation) };
     const glm::vec4 localForward { rotationMatrix * glm::vec4{0.f, 0.f, -1.f, 0.f} };
     const glm::vec4 localRight { rotationMatrix * glm::vec4{1.f, 0.f, 0.f, 0.f} };
@@ -27,7 +27,7 @@ void FlyCamera::update(uint32_t deltaSimTimeMillis) {
             +  mVelocity.x * localRight
         )
     );
-    updateCoreComponent<Placement>(placement);
+    updateComponent<Placement>(placement);
 }
 
 void FlyCamera::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
@@ -40,10 +40,10 @@ void FlyCamera::handleAction(const ActionData& actionData, const ActionDefinitio
 
     // Handle camera rotation commands
     if(actionDefinition.mName == "Rotate") {
-        Placement placement { getCoreComponent<Placement>() };
+        Placement placement { getComponent<Placement>() };
         updatePitch(placement.mOrientation, actionData.mTwoAxisActionData.mValue.y);
         updateYaw(placement.mOrientation, actionData.mTwoAxisActionData.mValue.x);
-        updateCoreComponent<Placement>(placement);
+        updateComponent<Placement>(placement);
     // movement commands
     } else if (actionDefinition.mName == "Move") {
         mVelocity.x = mMaxSpeed * actionData.mTwoAxisActionData.mValue.x;
@@ -109,9 +109,14 @@ void FlyCamera::setActive(bool active) {
 }
 
 void FlyCamera::updateFOV(float dFOV) {
-    CameraProperties cameraProps { getCoreComponent<CameraProperties>() };
+    CameraProperties cameraProps { getComponent<CameraProperties>() };
     cameraProps.mFov += mZoomSensitivity * dFOV;
     if(cameraProps.mFov > MAX_FOV) { cameraProps.mFov = MAX_FOV; }
     else if(cameraProps.mFov < MIN_FOV) { cameraProps.mFov = MIN_FOV; }
-    updateCoreComponent<CameraProperties>(cameraProps);
+    updateComponent<CameraProperties>(cameraProps);
 }
+
+std::unique_ptr<SimObjectAspect> FlyCamera::makeCopy() const {
+    return std::make_unique<FlyCamera>(nullptr);
+}
+

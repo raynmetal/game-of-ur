@@ -37,11 +37,6 @@ int main(int argc, char* argv[]) {
 
     InputManager inputManager {};
 
-    std::shared_ptr<SimObject> camera { 
-        SimpleECS::getSystem<SimSystem>()->createSimObject<Placement, Transform, CameraProperties, SceneNode>({}, {}, {}, {}) 
-    };
-    camera->addComponent<FlyCamera>();
-
     std::ifstream jsonFileStream;
     std::string inputPath { "data/input_bindings.json" };
     jsonFileStream.open(inputPath);
@@ -49,81 +44,54 @@ int main(int argc, char* argv[]) {
     jsonFileStream.close();
     inputManager.loadInputConfiguration(inputBindingJSON.at(0));
 
+    std::shared_ptr<SimObject> camera { SimObject::create<CameraProperties>({}, "camera", {}) };
+    camera->addAspect<FlyCamera>();
+
     const float sqrt2 { sqrt(2.f) };
-    std::vector<std::shared_ptr<SimObject>> lightEntities {
-        { // Flashlight
-            SimpleECS::getSystem<SimSystem>()->createSimObject<
-                LightEmissionData, Placement, Transform, SceneNode
-            >(
-                LightEmissionData::MakeSpotLight(
-                    4.f,
-                    13.f,
-                    glm::vec3(2.f),
-                    glm::vec3(4.f),
-                    glm::vec3(.3f),
-                    .07f,
-                    .03f
-                ),
-                {
-                    glm::vec4(glm::vec3(0.f), 1.f),
-                    glm::quat(),
-                    glm::vec3{1.f}
-                },
-                {},
-                // Make the flashlight a child of the camera's scene node so that 
-                // it moves along with the camera
-                { .mParent{ camera->getEntityID() } } 
-            )
+    std::shared_ptr<SceneNode> flashlight { SceneNode::create<LightEmissionData>(
+        {
+            glm::vec4(glm::vec3(0.f), 1.f),
+            glm::quat(),
+            glm::vec3{1.f}
         },
-        { // Weak point light
-            SimpleECS::getSystem<SimSystem>()->createSimObject<LightEmissionData, Placement, Transform, SceneNode>(
-                {
-                    LightEmissionData::MakePointLight(
-                        glm::vec3(2.f, 0.6f, 1.2f),
-                        glm::vec3(3.1f, 1.04f, .32f),
-                        glm::vec3(0.1f, 0.01f, 0.03f),
-                        .07f,
-                        .02f
-                    )
-                },
-                {
-                    glm::vec4{0.f, 1.5f, -1.f, 1.f},
-                    glm::quat{},
-                    glm::vec3{1.f}
-                },
-                {},
-                {}
-            )
+        "flashlight",
+        LightEmissionData::MakeSpotLight(
+            4.f,
+            13.f,
+            glm::vec3(2.f),
+            glm::vec3(4.f),
+            glm::vec3(.3f),
+            .07f,
+            .03f
+        )
+    )};
+    {
+        Placement placement { flashlight->getComponent<Placement>() };
+        placement.mScale = { glm::vec3(flashlight->getComponent<LightEmissionData>().mRadius)};
+        flashlight->updateComponent<Placement>(placement);
+    }
+    std::shared_ptr<SimObject> sunlight { SimObject::create<LightEmissionData>(
+        {
+            glm::vec4{glm::vec3(0.f), 1.f},
+            glm::quat { glm::vec3 {
+                glm::radians(-20.f), // pitch
+                glm::radians(180.f), // yaw
+                glm::radians(0.f) // roll
+            }},
+            glm::vec3{sqrt2, sqrt2, 1.f}
         },
-        { // Sunlight
-            SimpleECS::getSystem<SimSystem>()->createSimObject<LightEmissionData, Placement, Transform, SceneNode> (
-                {
-                    LightEmissionData::MakeDirectionalLight(
-                        glm::vec3{20.f},
-                        glm::vec3{20.f},
-                        glm::vec3{.4f}
-                    )
-                },
-                {
-                    glm::vec4{glm::vec3(0.f), 1.f},
-                    glm::quat { glm::vec3 {
-                        glm::radians(-20.f), // pitch
-                        glm::radians(180.f), // yaw
-                        glm::radians(0.f) // roll
-                    }},
-                    glm::vec3{sqrt2, sqrt2, 1.f}
-                },
-                {},
-                {}
+        "sunlight",
+        {
+            LightEmissionData::MakeDirectionalLight(
+                glm::vec3{20.f},
+                glm::vec3{20.f},
+                glm::vec3{.4f}
             )
         }
-    };
-    for(int i{0}; i < 2; ++i) {
-        Placement placement { lightEntities[i]->getCoreComponent<Placement>() };
-        placement.mScale = glm::vec3 { lightEntities[i]->getCoreComponent<LightEmissionData>().mRadius };
-        lightEntities[i]->updateCoreComponent<Placement>(placement);
-    }
-    lightEntities[2]->addComponent<Revolve>(); // make sunlight revolve
+    )};
+    sunlight->addAspect<Revolve>(); // make sunlight revolve
+
+
     ResourceDatabase::addResourceDescription({
         {"name", "boardPieceModel"},
         {"type", StaticModel::getName()},
@@ -133,46 +101,41 @@ int main(int argc, char* argv[]) {
         }}
     });
 
-    std::shared_ptr<SimObject> boardPiece  {
-        SimpleECS::getSystem<SimSystem>()->createSimObject<std::shared_ptr<StaticModel>, Placement, Transform, SceneNode> (
-            ResourceDatabase::getResource<StaticModel>("boardPieceModel"),
-            {{0.f, -1.f, -1.f, 1.f}},
-            {},
-            {}
-        )
-    };
-    boardPiece->addComponent<BackAndForth>();
+    std::shared_ptr<SimObject> boardPiecePrototype { SimObject::create<std::shared_ptr<StaticModel>>(
+        Placement{{0.f, -1.f, -1.f, 1.f}},
+        "board_piece",
+        ResourceDatabase::getResource<StaticModel>("boardPieceModel")
+    )};
+    boardPiecePrototype->addAspect<BackAndForth>();
 
-    std::vector<std::shared_ptr<SimObject>> boardPieces(20, nullptr);
-    EntityID parentEntity { boardPiece->getEntityID() };
+    std::vector<std::shared_ptr<SimObject>> boardPieces(21);
+    boardPieces[0] = SimObject::copy(boardPiecePrototype);
+    std::shared_ptr<SimObject> previousBoardPiece = boardPieces[0];
+    for(std::size_t i{1}; i < 21; ++i) {
+        boardPieces[i] = SimObject::copy(boardPiecePrototype);
 
-    for(std::size_t i{0}; i < 20; ++i) {
-        boardPieces[i] = SimpleECS::getSystem<SimSystem>()->createSimObject<std::shared_ptr<StaticModel>, Placement, Transform, SceneNode>(
-            boardPiece->getCoreComponent<std::shared_ptr<StaticModel>>(),
-            boardPiece->getCoreComponent<Placement>(),
-            boardPiece->getCoreComponent<Transform>(),
-            SceneNode { .mParent { parentEntity } }
-        );
-        boardPieces[i]->addComponent<BackAndForth>();
-
-        Placement boardPiecePlacement { boardPieces[i]->getCoreComponent<Placement>() };
-
-        boardPiecePlacement.mPosition.x = 0.f;
-        boardPiecePlacement.mPosition.y = 2.f;
-        boardPiecePlacement.mPosition.z = 0.f;
+        Placement boardPiecePlacement { boardPieces[i]->getComponent<Placement>() };
+        boardPiecePlacement.mPosition = {0.f, 2.f, 0.f, 1.f};
         boardPiecePlacement.mOrientation = glm::rotate(boardPiecePlacement.mOrientation, glm::radians(360.f/(1+20)), {0.f, 0.f, -1.f});
-
-        boardPieces[i]->updateCoreComponent<Placement>(boardPiecePlacement);
+        boardPieces[i]->updateComponent<Placement>(boardPiecePlacement);
 
         // each board piece is the parent of the board piece made in
         // the next iteration
-        parentEntity = boardPieces[i]->getEntityID();
+        previousBoardPiece->addNode(boardPieces[i], "/");
+        previousBoardPiece = boardPieces[i];
     }
 
-    inputManager["Camera"].registerActionHandler("Rotate", std::shared_ptr<FlyCamera>(camera, &(camera->getComponent<FlyCamera>())));
-    inputManager["Camera"].registerActionHandler("ToggleControl", std::shared_ptr<FlyCamera>(camera, &(camera->getComponent<FlyCamera>())));
-    inputManager["Camera"].registerActionHandler("Move", std::shared_ptr<FlyCamera>(camera, &(camera->getComponent<FlyCamera>())));
-    inputManager["Camera"].registerActionHandler("UpdateFOV", std::shared_ptr<FlyCamera>(camera, &(camera->getComponent<FlyCamera>())));
+    SimpleECS::getSystem<SceneSystem>()->addNode(camera, "/");
+    SimpleECS::getSystem<SceneSystem>()->addNode(flashlight, "/camera/");
+    SimpleECS::getSystem<SceneSystem>()->addNode(sunlight, "/");
+    SimpleECS::getSystem<SceneSystem>()->addNode(boardPieces[0], "/");
+
+
+
+    inputManager["Camera"].registerActionHandler("Rotate", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
+    inputManager["Camera"].registerActionHandler("ToggleControl", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
+    inputManager["Camera"].registerActionHandler("Move", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
+    inputManager["Camera"].registerActionHandler("UpdateFOV", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
     inputManager["Graphics"].registerActionHandler("UpdateGamma", SimpleECS::getSystem<RenderSystem>());
     inputManager["Graphics"].registerActionHandler("UpdateExposure", SimpleECS::getSystem<RenderSystem>());
     inputManager["Graphics"].registerActionHandler("RenderNextTexture", SimpleECS::getSystem<RenderSystem>());
