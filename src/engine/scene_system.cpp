@@ -284,7 +284,7 @@ void SceneSystem::nodeAdded(std::shared_ptr<SceneNode> sceneNode) {
 
     // let the scene system enable systems on those nodes that
     // should be enabled
-    setNodeEnabled(sceneNode, sceneNode->mEnabled);
+    nodeActivationChanged(sceneNode, sceneNode->mEnabled);
 }
 
 void SceneSystem::nodeRemoved(std::shared_ptr<SceneNode> sceneNode) {
@@ -293,7 +293,7 @@ void SceneSystem::nodeRemoved(std::shared_ptr<SceneNode> sceneNode) {
     if(inScene(sceneNode)) {
         // disable the node and its children so that it is no
         // longer seen by any system
-        setNodeEnabled(sceneNode, false);
+        nodeActivationChanged(sceneNode, false);
 
         // lose all references to the node
         for(auto& descendant: sceneNode->getDescendants()) {
@@ -303,7 +303,7 @@ void SceneSystem::nodeRemoved(std::shared_ptr<SceneNode> sceneNode) {
     }
 }
 
-void SceneSystem::setNodeEnabled(std::shared_ptr<SceneNode> sceneNode, bool state) {
+void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNode> sceneNode, bool state) {
     assert(sceneNode && "Null node reference cannot be enabled");
 
     // early exit if this node isn't in the scene

@@ -23,7 +23,6 @@ enum class RelativeTo : uint8_t {
 
 enum SpecialEntity: EntityID {
     ENTITY_ROOT = kMaxEntities,
-    ENTITY_NULL = kMaxEntities+1
 };
 
 class SceneNode: public std::enable_shared_from_this<SceneNode> {
@@ -117,16 +116,17 @@ private:
     };
     bool isActive(std::shared_ptr<const SceneNode> sceneNode) const;
     bool isActive(EntityID entityID) const;
-    void setNodeEnabled(std::shared_ptr<SceneNode> sceneNode, bool state);
     bool inScene(std::shared_ptr<const SceneNode> sceneNode) const;
     void markDirty(EntityID entity);
     void updateTransforms();
 
     Transform getLocalTransform(std::shared_ptr<const SceneNode> sceneNode) const;
     Transform getCachedWorldTransform(std::shared_ptr<const SceneNode> sceneNode) const;
-    void onEntityUpdated(EntityID entityID) override;
     void nodeAdded(std::shared_ptr<SceneNode> sceneNode);
     void nodeRemoved(std::shared_ptr<SceneNode> sceneNode);
+    void nodeActivationChanged(std::shared_ptr<SceneNode> sceneNode, bool state);
+
+    void onEntityUpdated(EntityID entityID) override;
 
     std::shared_ptr<SceneNode> mRootNode{ new SceneNode {} };
 
@@ -170,8 +170,15 @@ SceneNode::SceneNode(const Placement& placement, const std::string& name, TCompo
 template <typename TComponent>
 void SceneNode::addComponent(const TComponent& component) {
     mEntity->addComponent<TComponent>(component);
-    if(inScene() && mEnabled) {
-        SimpleECS::getSystem<SceneSystem>()->setNodeEnabled(
+
+    // NOTE: required because even though this node's entity's signature changes, it
+    // is disabled by default on any systems it is eligible for. We need to activate
+    // the node according to its system mask
+    if(isActive()) {
+        // TODO: we shouldn't need to visit every node on the tree just because this change
+        // has occurred; just the node to which this component was added should be 
+        // sufficient
+        SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
             shared_from_this(), true
         );
     }
@@ -211,7 +218,7 @@ void SceneNode::setEnabled(bool state) {
     // to talk to ECS and make this node visible to the system that
     // was enabled
     if(inScene() && mEnabled){
-        SimpleECS::getSystem<SceneSystem>()->setNodeEnabled(
+        SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
             shared_from_this(),
             true
         );
@@ -228,7 +235,7 @@ inline void SceneNode::setEnabled<SceneSystem>(bool state) {
     // redundant and may eventually cause errors
     mSystemMask.set(systemType, state);
     mEnabled = state;
-    SimpleECS::getSystem<SceneSystem>()->setNodeEnabled(
+    SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
         shared_from_this(),
         state
     );
