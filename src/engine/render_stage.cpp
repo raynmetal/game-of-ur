@@ -15,8 +15,8 @@ BaseRenderStage::BaseRenderStage(
     if(!ResourceDatabase::hasResourceDescription(shaderFilepath)){
         nlohmann::json shaderDescription {
             {"name", shaderFilepath},
-            {"type", ShaderProgram::getName()},
-            {"method", ShaderProgramFromFile::getName()},
+            {"type", ShaderProgram::getResourceTypeName()},
+            {"method", ShaderProgramFromFile::getResourceConstructorName()},
             {"parameters", {
                 {"path", shaderFilepath}
             }}
@@ -93,8 +93,8 @@ void GeometryRenderStage::setup() {
     if(!ResourceDatabase::hasResourceDescription("geometryFramebuffer")) {
         nlohmann::json framebufferDescription {
             {"name", "geometryFramebuffer"},
-            {"type", Framebuffer::getName()},
-            {"method", FramebufferFromDescription::getName()},
+            {"type", Framebuffer::getResourceTypeName()},
+            {"method", FramebufferFromDescription::getResourceConstructorName()},
             {"parameters", {
                 {"nColorAttachments", 3},
                 {"dimensions", {
@@ -130,8 +130,8 @@ void GeometryRenderStage::setup() {
     if(!ResourceDatabase::hasResourceDescription("PlainWhite")) {
         ResourceDatabase::addResourceDescription({
             {"name", "PlainWhite"},
-            {"type", Texture::getName()},
-            {"method", TextureFromColorBufferDefinition::getName()},
+            {"type", Texture::getResourceTypeName()},
+            {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
             {"parameters", 
                 colorBufferDefinitionToJSON(ColorBufferDefinition{})
             }
@@ -239,8 +239,8 @@ void LightingRenderStage::setup() {
     if(!ResourceDatabase::hasResourceDescription("lightingFramebuffer")) {
         nlohmann::json framebufferDescription {
             {"name", "lightingFramebuffer"},
-            {"type", Framebuffer::getName()},
-            {"method", FramebufferFromDescription::getName()},
+            {"type", Framebuffer::getResourceTypeName()},
+            {"method", FramebufferFromDescription::getResourceConstructorName()},
             {"parameters", {
                 {"nColorAttachments", 2},
                 {"dimensions", {
@@ -367,8 +367,8 @@ void BlurRenderStage::setup() {
     if(!ResourceDatabase::hasResourceDescription("bloomFramebuffer")) {
         nlohmann::json framebufferDescription {
             {"name", "bloomFramebuffer"},
-            {"type", Framebuffer::getName()},
-            {"method", FramebufferFromDescription::getName()},
+            {"type", Framebuffer::getResourceTypeName()},
+            {"method", FramebufferFromDescription::getResourceConstructorName()},
             {"parameters", {
                 {"nColorAttachments", 2},
                 {"dimensions", {
@@ -392,8 +392,8 @@ void BlurRenderStage::setup() {
     if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
         nlohmann::json rectangleMeshDefinition {
             {"name", "screenRectangleMesh"},
-            {"type", StaticMesh::getName()},
-            {"method", StaticMeshRectangleDimensions::getName()},
+            {"type", StaticMesh::getResourceTypeName()},
+            {"method", StaticMeshRectangleDimensions::getResourceConstructorName()},
             {"parameters", {
                 {"width", 2.f},
                 {"height", 2.f},
@@ -475,8 +475,8 @@ void TonemappingRenderStage::setup() {
     if(!ResourceDatabase::hasResourceDescription("tonemappingFramebuffer")) {
         nlohmann::json framebufferDescription {
             {"name", "tonemappingFramebuffer"},
-            {"type", Framebuffer::getName()},
-            {"method", FramebufferFromDescription::getName()},
+            {"type", Framebuffer::getResourceTypeName()},
+            {"method", FramebufferFromDescription::getResourceConstructorName()},
             {"parameters", {
                 {"nColorAttachments", 1},
                 {"dimensions", {
@@ -496,8 +496,8 @@ void TonemappingRenderStage::setup() {
     if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
         nlohmann::json rectangleMeshDefinition {
             {"name", "screenRectangleMesh"},
-            {"type", StaticMesh::getName()},
-            {"method", StaticMeshRectangleDimensions::getName()},
+            {"type", StaticMesh::getResourceTypeName()},
+            {"method", StaticMeshRectangleDimensions::getResourceConstructorName()},
             {"parameters", {
                 {"width", 2.f},
                 {"height", 2.f},
@@ -564,8 +564,8 @@ void ScreenRenderStage::setup() {
     if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
         nlohmann::json rectangleMeshDefinition {
             {"name", "screenRectangleMesh"},
-            {"type", StaticMesh::getName()},
-            {"method", StaticMeshRectangleDimensions::getName()},
+            {"type", StaticMesh::getResourceTypeName()},
+            {"method", StaticMeshRectangleDimensions::getResourceConstructorName()},
             {"parameters", {
                 {"width", 2.f},
                 {"height", 2.f},

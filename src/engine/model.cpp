@@ -254,8 +254,8 @@ std::vector<std::shared_ptr<Texture>> loadAssimpTextures(aiMaterial* pAiMaterial
         if(!ResourceDatabase::hasResourceDescription(textureName)){
             nlohmann::json textureDescription {
                 {"name", textureName},
-                {"type", Texture::getName()},
-                {"method", TextureFromFile::getName()},
+                {"type", Texture::getResourceTypeName()},
+                {"method", TextureFromFile::getResourceConstructorName()},
                 {"parameters", {
                     {"path", textureName}
                 }}

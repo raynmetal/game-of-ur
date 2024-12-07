@@ -11,7 +11,7 @@
 
 class ShaderProgram: public Resource<ShaderProgram> {
 public:
-    inline static std::string getName() { return "ShaderProgram"; }
+    inline static std::string getResourceTypeName() { return "ShaderProgram"; }
 
     ShaderProgram(GLuint program);
 
@@ -68,7 +68,7 @@ public:
     ShaderProgramFromFile():
     ResourceFactoryMethod<ShaderProgram, ShaderProgramFromFile> {0}
     {}
-    inline static std::string getName() { return "fromFile"; }
+    inline static std::string getResourceConstructorName() { return "fromFile"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };

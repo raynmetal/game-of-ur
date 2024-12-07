@@ -42,7 +42,7 @@ public:
     static void RegisterVec2Property(const std::string& name, const glm::vec2& defaultValue);
     static void RegisterTextureHandleProperty(const std::string& name, std::shared_ptr<Texture> defaultValue);
 
-    inline static std::string getName() { return "Material"; }
+    inline static std::string getResourceTypeName() { return "Material"; }
 
     static void Init();
 
@@ -68,7 +68,7 @@ public:
     MaterialFromDescription():
     ResourceFactoryMethod<Material, MaterialFromDescription> {0}
     {}
-    inline static std::string getName() { return "fromDescription"; }
+    inline static std::string getResourceConstructorName() { return "fromDescription"; }
 
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;

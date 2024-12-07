@@ -96,8 +96,8 @@ void Framebuffer::copyResource(const Framebuffer& other) {
             ResourceDatabase::addResourceDescription(
                 nlohmann::json {
                     {"name", colorBufferName},
-                    {"type", Texture::getName()},
-                    {"method", "fromDescription"},
+                    {"type", Texture::getResourceTypeName()},
+                    {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
                     {"params", colorBufferDefinitionToJSON(textureHandle->getColorBufferDefinition())}
                 }
             );
@@ -176,8 +176,8 @@ std::shared_ptr<IResource> FramebufferFromDescription::createResource(const nloh
             };
             nlohmann::json colorBufferDescription { 
                 {"name", colorBufferName},
-                {"type", Texture::getName()},
-                {"method", TextureFromColorBufferDefinition::getName()},
+                {"type", Texture::getResourceTypeName()},
+                {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
                 {"parameters", colorBufferParams[i]}
             };
             ResourceDatabase::addResourceDescription(

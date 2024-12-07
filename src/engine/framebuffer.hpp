@@ -46,7 +46,7 @@ public:
 
     bool hasRBO();
 
-    inline static std::string getName() { return "Framebuffer"; }
+    inline static std::string getResourceTypeName() { return "Framebuffer"; }
 
 private:
     GLuint mID {};
@@ -68,7 +68,7 @@ public:
         ResourceFactoryMethod<Framebuffer,FramebufferFromDescription>{0} 
     {}
 
-    static std::string getName() { return "fromDescription"; }
+    static std::string getResourceConstructorName() { return "fromDescription"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParams) override;
 };

@@ -65,25 +65,25 @@ private:
     RangeMapperLinear mProgressLimits {0.f, 1.f, 0.f, 1.f};
 };
 
-template<typename T>
+template<typename TComponent>
 class ComponentArray : public IComponentArray {
 public:
 private:
-    void addComponent(EntityID entityID, const T& component);
+    void addComponent(EntityID entityID, const TComponent& component);
     /**
      * Removes the component associated with a specific entity, maintaining
      * packing but not order.
      */
     void removeComponent(EntityID entityID);
-    T getComponent(EntityID entityID, float simulationProgress=1.f) const;
+    TComponent getComponent(EntityID entityID, float simulationProgress=1.f) const;
     bool hasComponent(EntityID entityID) const override;
-    void updateComponent(EntityID entityID, const T& newValue);
+    void updateComponent(EntityID entityID, const TComponent& newValue);
     virtual void handleEntityDestroyed(EntityID entityID) override;
     virtual void handleFrameEnd() override;
     virtual void copyComponent(EntityID to, EntityID from) override;
 
-    std::vector<T> mComponentsNext {};
-    std::vector<T> mComponentsPrevious {};
+    std::vector<TComponent> mComponentsNext {};
+    std::vector<TComponent> mComponentsPrevious {};
     std::unordered_map<EntityID, std::size_t> mEntityToComponentIndex {};
     std::unordered_map<std::size_t, EntityID> mComponentToEntity {};
 friend class ComponentManager;
@@ -94,37 +94,37 @@ public:
 private:
     ComponentManager() = default;
 
-    template<typename T> 
+    template<typename TComponent> 
     void registerComponentArray();
 
-    template<typename T>
-    std::shared_ptr<ComponentArray<T>> getComponentArray() const {
-        const std::size_t componentHash { typeid(T).hash_code() };
+    template<typename TComponent>
+    std::shared_ptr<ComponentArray<TComponent>> getComponentArray() const {
+        const std::size_t componentHash { typeid(TComponent).hash_code() };
         assert(mHashToComponentType.find(componentHash) != mHashToComponentType.end() && "This component type has not been registered");
-        return std::dynamic_pointer_cast<ComponentArray<T>>(mHashToComponentArray.at(componentHash));
+        return std::dynamic_pointer_cast<ComponentArray<TComponent>>(mHashToComponentArray.at(componentHash));
     }
 
-    template<typename T>
+    template<typename TComponent>
     ComponentType getComponentType() const; 
 
     Signature getSignature(EntityID entityID);
 
-    template<typename T>
-    void addComponent(EntityID entityID, const T& component);
+    template<typename TComponent>
+    void addComponent(EntityID entityID, const TComponent& component);
 
-    template<typename T>
+    template<typename TComponent>
     void removeComponent(EntityID entityID);
 
-    template<typename T>
+    template<typename TComponent>
     bool hasComponent(EntityID entityID) const;
 
-    template<typename T>
-    T getComponent(EntityID entityID, float simulationProgress=1.f) const;
+    template<typename TComponent>
+    TComponent getComponent(EntityID entityID, float simulationProgress=1.f) const;
 
-    template<typename T>
-    void updateComponent(EntityID entityID, const T& newValue);
+    template<typename TComponent>
+    void updateComponent(EntityID entityID, const TComponent& newValue);
 
-    template<typename T>
+    template<typename TComponent>
     void copyComponent(EntityID to, EntityID from);
 
     void copyComponents(EntityID to, EntityID from);
@@ -384,8 +384,8 @@ T Interpolator<T>::operator() (const T& previousState, const T& nextState, float
     return simulationProgress * nextState + (1.f - simulationProgress) * previousState;
 }
 
-template<typename T>
-void ComponentArray<T>::addComponent(EntityID entityID, const T& component) {
+template<typename TComponent>
+void ComponentArray<TComponent>::addComponent(EntityID entityID, const TComponent& component) {
     assert(mEntityToComponentIndex.find(entityID) == mEntityToComponentIndex.end() && "Component already added for this entity");
 
     std::size_t newComponentID { mComponentsNext.size() };
@@ -396,13 +396,13 @@ void ComponentArray<T>::addComponent(EntityID entityID, const T& component) {
     mComponentToEntity[newComponentID] = entityID;
 }
 
-template<typename T>
-bool ComponentArray<T>::hasComponent(EntityID entityID) const {
+template<typename TComponent>
+bool ComponentArray<TComponent>::hasComponent(EntityID entityID) const {
     return mEntityToComponentIndex.find(entityID) != mEntityToComponentIndex.end();
 }
 
-template<typename T>
-void ComponentArray<T>::removeComponent(EntityID entityID) {
+template<typename TComponent>
+void ComponentArray<TComponent>::removeComponent(EntityID entityID) {
     assert(mEntityToComponentIndex.find(entityID) != mEntityToComponentIndex.end());
 
     const std::size_t removedComponentIndex { mEntityToComponentIndex[entityID] };
@@ -425,9 +425,9 @@ void ComponentArray<T>::removeComponent(EntityID entityID) {
     mComponentToEntity.erase(lastComponentIndex);
 }
 
-template <typename T>
-T ComponentArray<T>::getComponent(EntityID entityID, float simulationProgress) const {
-    static Interpolator<T> interpolator{};
+template <typename TComponent>
+TComponent ComponentArray<TComponent>::getComponent(EntityID entityID, float simulationProgress) const {
+    static Interpolator<TComponent> interpolator{};
     assert(mEntityToComponentIndex.find(entityID) != mEntityToComponentIndex.end());
     std::size_t componentID { mEntityToComponentIndex.at(entityID) };
     return interpolator(mComponentsPrevious[componentID], mComponentsNext[componentID], simulationProgress);
@@ -469,59 +469,59 @@ void ComponentArray<TComponent>::copyComponent(EntityID to, EntityID from) {
     }
 }
 
-template<typename T> 
+template<typename TComponent> 
 void ComponentManager::registerComponentArray() {
-    const std::size_t componentHash { typeid(T).hash_code() };
+    const std::size_t componentHash { typeid(TComponent).hash_code() };
     if(mHashToComponentType.find(componentHash) != mHashToComponentType.end()) {
         return;
     }
 
     assert(mHashToComponentType.size() + 1 < kMaxComponents && "Component type limit reached");
     mHashToComponentArray.insert_or_assign(
-        componentHash, std::static_pointer_cast<IComponentArray>(std::make_shared<ComponentArray<T>>())
+        componentHash, std::static_pointer_cast<IComponentArray>(std::make_shared<ComponentArray<TComponent>>())
     );
     mHashToComponentType[componentHash] = mHashToComponentType.size();
 }
 
-template<typename T>
+template<typename TComponent>
 ComponentType ComponentManager::getComponentType() const {
-    const std::size_t componentHash { typeid(T).hash_code() };
+    const std::size_t componentHash { typeid(TComponent).hash_code() };
     assert(mHashToComponentType.find(componentHash) != mHashToComponentType.end() && "Component type has not been registered");
     return mHashToComponentType.at(componentHash);
 }
 
-template<typename T>
-void ComponentManager::addComponent(EntityID entityID, const T& component) {
-    getComponentArray<T>()->addComponent(entityID, component);
-    mEntityToSignature[entityID].set(getComponentType<T>(), true);
+template<typename TComponent>
+void ComponentManager::addComponent(EntityID entityID, const TComponent& component) {
+    getComponentArray<TComponent>()->addComponent(entityID, component);
+    mEntityToSignature[entityID].set(getComponentType<TComponent>(), true);
 }
 
-template <typename T>
+template <typename TComponent>
 bool ComponentManager::hasComponent(EntityID entityID) const {
-    return getComponentArray<T>()->hasComponent(entityID);
+    return getComponentArray<TComponent>()->hasComponent(entityID);
 }
 
-template<typename T>
+template<typename TComponent>
 void ComponentManager::removeComponent(EntityID entityID) {
-    getComponentArray<T>()->removeComponent(entityID);
-    mEntityToSignature[entityID].set(getComponentType<T>(), false);
+    getComponentArray<TComponent>()->removeComponent(entityID);
+    mEntityToSignature[entityID].set(getComponentType<TComponent>(), false);
 }
 
-template<typename T>
-T ComponentManager::getComponent(EntityID entityID, float simulationProgress) const {
-    return getComponentArray<T>()->getComponent(entityID, simulationProgress);
+template<typename TComponent>
+TComponent ComponentManager::getComponent(EntityID entityID, float simulationProgress) const {
+    return getComponentArray<TComponent>()->getComponent(entityID, simulationProgress);
 }
 
-template<typename T>
-void ComponentManager::updateComponent(EntityID entityID, const T& newValue) {
-    getComponentArray<T>()->updateComponent(entityID, newValue);
+template<typename TComponent>
+void ComponentManager::updateComponent(EntityID entityID, const TComponent& newValue) {
+    getComponentArray<TComponent>()->updateComponent(entityID, newValue);
 }
 
-template <typename T>
+template <typename TComponent>
 void ComponentManager::copyComponent(EntityID to, EntityID from) {
-    assert(mEntityToSignature[from].test(getComponentType<T>()) && "The entity being copied from does not have this component");
-    getComponentArray<T>()->copyComponent(to, from);
-    mEntityToSignature[to].set(getComponentType<T>(), true);
+    assert(mEntityToSignature[from].test(getComponentType<TComponent>()) && "The entity being copied from does not have this component");
+    getComponentArray<TComponent>()->copyComponent(to, from);
+    mEntityToSignature[to].set(getComponentType<TComponent>(), true);
 }
 
 template<typename TSystem>
@@ -568,15 +568,15 @@ std::shared_ptr<TSystem> SystemManager::getSystem() {
     return std::dynamic_pointer_cast<TSystem>(mHashToSystem[systemHash]);
 }
 
-template<typename T>
+template<typename TSystem>
 void SystemManager::enableEntity(EntityID entityID) {
-    std::size_t systemHash {typeid(T).hash_code()};
+    std::size_t systemHash {typeid(TSystem).hash_code()};
     mHashToSystem[systemHash]->enableEntity(entityID);
 }
 
-template<typename T>
+template<typename TSystem>
 void SystemManager::disableEntity(EntityID entityID) {
-    std::size_t systemHash{ typeid(T).hash_code() };
+    std::size_t systemHash{ typeid(TSystem).hash_code() };
     mHashToSystem[systemHash]->disableEntity(entityID);
 }
 

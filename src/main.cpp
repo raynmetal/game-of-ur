@@ -94,8 +94,8 @@ int main(int argc, char* argv[]) {
 
     ResourceDatabase::addResourceDescription({
         {"name", "boardPieceModel"},
-        {"type", StaticModel::getName()},
-        {"method", StaticModelFromFile::getName()},
+        {"type", StaticModel::getResourceTypeName()},
+        {"method", StaticModelFromFile::getResourceConstructorName()},
         {"parameters", {
             {"path", "data/models/Generic Board Piece.obj"},
         }}

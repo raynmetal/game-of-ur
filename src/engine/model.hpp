@@ -30,7 +30,7 @@
  */
 class StaticModel : public Resource<StaticModel>{
 public:
-    inline static std::string getName() { return "StaticModel"; }
+    inline static std::string getResourceTypeName() { return "StaticModel"; }
     StaticModel(const std::vector<std::shared_ptr<StaticMesh>>& meshHandles, const std::vector<std::shared_ptr<Material>>& materialHandles);
 
     /* Model destructor */
@@ -93,7 +93,7 @@ inline std::shared_ptr<StaticModel> Interpolator<std::shared_ptr<StaticModel>>::
 class StaticModelFromFile: public ResourceFactoryMethod<StaticModel, StaticModelFromFile> {
 public:
     StaticModelFromFile();
-    inline static std::string getName() { return "fromFile"; }
+    inline static std::string getResourceConstructorName() { return "fromFile"; }
 
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;

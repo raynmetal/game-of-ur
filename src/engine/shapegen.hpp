@@ -12,7 +12,7 @@ public:
     StaticMeshSphereLatLong():
     ResourceFactoryMethod<StaticMesh, StaticMeshSphereLatLong>{0}
     {}
-    inline static std::string getName() { return "sphereLatLong"; }
+    inline static std::string getResourceConstructorName() { return "sphereLatLong"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };
@@ -22,7 +22,7 @@ public:
     StaticMeshRectangleDimensions():
     ResourceFactoryMethod<StaticMesh, StaticMeshRectangleDimensions>{0}
     {}
-    inline static std::string getName() { return "rectangleDimensions"; }
+    inline static std::string getResourceConstructorName() { return "rectangleDimensions"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };

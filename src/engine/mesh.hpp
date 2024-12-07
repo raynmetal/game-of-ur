@@ -39,7 +39,7 @@ public:
     void unbind();
 
     VertexLayout getVertexLayout() const;
-    inline static std::string getName() { return "StaticMesh"; }
+    inline static std::string getResourceTypeName() { return "StaticMesh"; }
 
 private:
 
@@ -75,7 +75,7 @@ public:
     ResourceFactoryMethod<StaticMesh, StaticMeshFromDescription>{0}
     {}
 
-    inline static std::string getName(){ return "fromDescription"; }
+    inline static std::string getResourceConstructorName(){ return "fromDescription"; }
 
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;

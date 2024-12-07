@@ -23,8 +23,8 @@ void RenderSystem::LightQueue::onCreated() {
     if(!ResourceDatabase::hasResourceDescription("sphereLight-10lat-5long")) {
         nlohmann::json sphereLightDescription {
             {"name", "sphereLight-10lat-5long"},
-            {"type", StaticMesh::getName()},
-            {"method", StaticMeshSphereLatLong::getName()},
+            {"type", StaticMesh::getResourceTypeName()},
+            {"method", StaticMeshSphereLatLong::getResourceConstructorName()},
             {"parameters", {
                 {"nLatitudes", 10},
                 {"nMeridians", 5}
@@ -51,8 +51,8 @@ void RenderSystem::onCreated() {
     if(!ResourceDatabase::hasResourceDescription("lightMaterial")) {
         nlohmann::json lightMaterialDescription{
             {"name", "lightMaterial"},
-            {"type", Material::getName()},
-            {"method", MaterialFromDescription::getName()},
+            {"type", Material::getResourceTypeName()},
+            {"method", MaterialFromDescription::getResourceConstructorName()},
             {"parameters", {
                 {"properties", nlohmann::json::array()},
             }}

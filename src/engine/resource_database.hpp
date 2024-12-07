@@ -135,7 +135,7 @@ std::shared_ptr<TResource> ResourceDatabase::getResource(const std::string& reso
         && "No resource with this name was found amongst known resources"
     );
     assert(
-        resourceDescPair->second["type"].get<std::string>() == TResource::getName()
+        resourceDescPair->second["type"].get<std::string>() == TResource::getResourceTypeName()
         && "The type of resource requested does not match the type of resource as declared \
         in its description"
     );
@@ -173,26 +173,6 @@ std::shared_ptr<TResource> ResourceDatabase::getResource(const std::string& reso
     return std::static_pointer_cast<TResource, IResource>(pResource);
 }
 
-template <typename TResource>
-std::shared_ptr<IResource> ResourceFactory<TResource>::createResource(const nlohmann::json& resourceDescription) {
-    return mFactoryMethods.at(resourceDescription["method"].get<std::string>())->createResource(
-        resourceDescription["parameters"].get<nlohmann::json>()
-    );
-}
-
-template <typename TDerived>
-void Resource<TDerived>::registerSelf() {
-    ResourceDatabase::registerFactory(TDerived::getName(), std::make_unique<ResourceFactory<TDerived>>());
-}
-
-template <typename TResource, typename TResourceFactoryMethod>
-void ResourceFactoryMethod<TResource, TResourceFactoryMethod>::registerSelf() {
-    // ensure that the associated factory is registered before methods are added to it
-    Registrator<Resource<TResource>>& resourceRegistrator { Registrator<Resource<TResource>>::getRegistrator() };
-    resourceRegistrator.emptyFunc();
-    // actually register this method now
-    ResourceDatabase::registerFactoryMethod(TResource::getName(), TResourceFactoryMethod::getName(), std::make_unique<TResourceFactoryMethod>());
-}
 template<typename TResource>
 bool ResourceDatabase::hasResource(const std::string& resourceName) {
     ResourceDatabase& resourceDatabase { getInstance() };
@@ -201,7 +181,7 @@ bool ResourceDatabase::hasResource(const std::string& resourceName) {
     bool objectLoaded;
     if(descriptionPresent){
         typeMatched = (
-            TResource::getName() 
+            TResource::getResourceTypeName() 
             == resourceDatabase.mResourceDescriptions.at(resourceName).at("type").get<std::string>()
         );
         objectLoaded = (
@@ -212,6 +192,27 @@ bool ResourceDatabase::hasResource(const std::string& resourceName) {
     return (
         descriptionPresent && typeMatched && objectLoaded
     );
+}
+
+template <typename TResource>
+std::shared_ptr<IResource> ResourceFactory<TResource>::createResource(const nlohmann::json& resourceDescription) {
+    return mFactoryMethods.at(resourceDescription["method"].get<std::string>())->createResource(
+        resourceDescription["parameters"].get<nlohmann::json>()
+    );
+}
+
+template <typename TDerived>
+void Resource<TDerived>::registerSelf() {
+    ResourceDatabase::registerFactory(TDerived::getResourceTypeName(), std::make_unique<ResourceFactory<TDerived>>());
+}
+
+template <typename TResource, typename TResourceFactoryMethod>
+void ResourceFactoryMethod<TResource, TResourceFactoryMethod>::registerSelf() {
+    // ensure that the associated factory is registered before methods are added to it
+    Registrator<Resource<TResource>>& resourceRegistrator { Registrator<Resource<TResource>>::getRegistrator() };
+    resourceRegistrator.emptyFunc();
+    // actually register this method now
+    ResourceDatabase::registerFactoryMethod(TResource::getResourceTypeName(), TResourceFactoryMethod::getResourceConstructorName(), std::make_unique<TResourceFactoryMethod>());
 }
 
 #endif

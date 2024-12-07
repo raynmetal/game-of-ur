@@ -60,7 +60,7 @@ public:
     /* get texture height */
     GLint getHeight() const;
 
-    inline static std::string getName() { return "Texture"; }
+    inline static std::string getResourceTypeName() { return "Texture"; }
 
     ColorBufferDefinition getColorBufferDefinition() { return mColorBufferDefinition; }
 
@@ -86,7 +86,7 @@ protected:
 class TextureFromFile: public ResourceFactoryMethod<Texture, TextureFromFile> {
 public:
     TextureFromFile(): ResourceFactoryMethod<Texture, TextureFromFile> {0} {}
-    inline static std::string getName() { return "fromFile"; }
+    inline static std::string getResourceConstructorName() { return "fromFile"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };
@@ -94,7 +94,7 @@ private:
 class TextureFromColorBufferDefinition: public ResourceFactoryMethod<Texture, TextureFromColorBufferDefinition> {
 public:
     TextureFromColorBufferDefinition(): ResourceFactoryMethod<Texture, TextureFromColorBufferDefinition> {0} {}
-    inline static std::string getName() { return "fromDescription"; }
+    inline static std::string getResourceConstructorName() { return "fromDescription"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };
