@@ -36,7 +36,6 @@ int main(int argc, char* argv[]) {
     initialize();
 
     InputManager inputManager {};
-
     std::ifstream jsonFileStream;
     std::string inputPath { "data/input_bindings.json" };
     jsonFileStream.open(inputPath);
@@ -157,8 +156,6 @@ int main(int argc, char* argv[]) {
     bool quit {false};
     glEnable(GL_FRAMEBUFFER_SRGB);
 
-    std::size_t toRemove {21};
-
     ApploopEventDispatcher::applicationStart();
     while(true) {
         //Handle events before anything else
@@ -209,22 +206,6 @@ int main(int argc, char* argv[]) {
             std::cout << "Framerate: " << framerate << " fps\n";
 
             framerateCounter -= frameratePoll;
-        }
-
-        // remove nodes 3 at a time every 5 seconds
-        if(toRemove > 0 && currentTicks/5000 > (21 - toRemove)/3 && currentTicks/5000 < 10) {
-            toRemove -= 3;
-            boardPieces[toRemove]->removeNode("/");
-
-        } else if(currentTicks/5000 > 2 + (21 + toRemove)/3 && toRemove < 21 && currentTicks/5000 >= 10) {
-
-            if(toRemove == 0) {
-                SimpleECS::getSystem<SceneSystem>()->addNode(boardPieces[toRemove],"/");
-            }
-            else {
-                boardPieces[toRemove-3]->addNode(boardPieces[toRemove], "/board_piece/board_piece/");
-            }
-            toRemove += 3;
         }
 
         // Render a frame

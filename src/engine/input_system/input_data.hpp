@@ -17,6 +17,14 @@ enum class DeviceType: uint8_t {
     TOUCH,
 };
 
+NLOHMANN_JSON_SERIALIZE_ENUM ( DeviceType, {
+    {DeviceType::NA, "na"},
+    {DeviceType::MOUSE, "mouse"},
+    {DeviceType::KEYBOARD, "keyboard"},
+    {DeviceType::TOUCH, "touch"},
+    {DeviceType::CONTROLLER, "controller"},
+})
+
 enum class ControlType: uint8_t {
     NA,
     AXIS,
@@ -26,15 +34,29 @@ enum class ControlType: uint8_t {
     RADIO,
 };
 
+NLOHMANN_JSON_SERIALIZE_ENUM(ControlType, {
+    {ControlType::NA, "na"},
+    {ControlType::AXIS, "axis"},
+    {ControlType::MOTION, "motion"},
+    {ControlType::POINT, "point"},
+    {ControlType::BUTTON, "button"},
+    {ControlType::RADIO, "radio"},
+})
 
 typedef uint8_t AxisFilterType;
-typedef uint8_t InputAttributesType;
+typedef uint8_t InputAttributesValueType;
 typedef std::pair<DeviceType, ControlType> InputSourceType;
 
-extern const std::map<InputSourceType, InputAttributesType> kInputSourceTypeAttributes;
-extern const std::map<std::string, AxisFilterType> kStringToAxisFilter;
+struct InputAttributesType {
+    InputAttributesType() = default;
+    InputAttributesType(InputAttributesValueType value) : mValue{value} {}
+    operator InputAttributesValueType() const { return mValue; }
+    InputAttributesValueType mValue {0};
+};
 
-enum InputAttributes: InputAttributesType {
+extern const std::map<InputSourceType, InputAttributesType> kInputSourceTypeAttributes;
+
+enum InputAttributes: InputAttributesValueType {
     /* 
      *   Mask for the first two bits containing
      * the number of axes in the value produced by
@@ -88,9 +110,6 @@ struct InputSourceDescription {
         );
     }
 };
-nlohmann::json inputSourceDescriptionToJSON(const InputSourceDescription& inputSourceDescription);
-InputSourceDescription jsonToInputSourceDescription(const nlohmann::json& inputSourceDescriptionParameters);
-
 
 // Enumeration of all possible axis filter values
 enum AxisFilter: AxisFilterType {
@@ -109,6 +128,21 @@ enum AxisFilter: AxisFilterType {
     Z_CHANGE_POS=0xB, //0b  10       11
     Z_CHANGE_NEG=0xF, //0b  11       11
 };
+NLOHMANN_JSON_SERIALIZE_ENUM( AxisFilter, {
+    {AxisFilter::SIMPLE, "simple"},
+    {AxisFilter::X_POS, "+x"},
+    {AxisFilter::X_NEG, "-x"},
+    {AxisFilter::Y_POS, "+y"},
+    {AxisFilter::Y_NEG, "-y"},
+    {AxisFilter::Z_POS, "+z"},
+    {AxisFilter::Z_NEG, "-z"},
+    {AxisFilter::X_CHANGE_POS, "+dx"},
+    {AxisFilter::X_CHANGE_NEG, "-dx"},
+    {AxisFilter::Y_CHANGE_POS, "+dy"},
+    {AxisFilter::Y_CHANGE_NEG, "-dy"},
+    {AxisFilter::Z_CHANGE_POS, "+dz"},
+    {AxisFilter::Z_CHANGE_NEG, "-dz"},
+})
 
 enum AxisFilterMask: AxisFilterType {
     ID=0x3,
@@ -141,9 +175,6 @@ struct InputFilter {
         return mControl;
     }
 };
-
-nlohmann::json inputFilterToJSON(const InputFilter& inputFilter);
-InputFilter jsonToInputFilter(const nlohmann::json& inputFilterParameters);
 
 /**
  * An input combo whose value ranges from 0..1. Triggered
@@ -206,8 +237,12 @@ struct InputCombo {
         );
     }
 };
-nlohmann::json inputComboToJSON(const InputCombo& inputCombo);
-InputCombo jsonToInputCombo(const nlohmann::json& inputComboParameters);
+
+NLOHMANN_JSON_SERIALIZE_ENUM( InputCombo::Trigger, {
+    {InputCombo::Trigger::ON_PRESS, "onPress"},
+    {InputCombo::Trigger::ON_RELEASE, "onRelease"},
+    {InputCombo::Trigger::ON_CHANGE, "onChange"},
+})
 
 /**
  *  An input state that hasn't yet been mapped to its 
@@ -223,6 +258,11 @@ enum class ActionValueType: uint8_t {
     STATE,
     CHANGE,
 };
+
+NLOHMANN_JSON_SERIALIZE_ENUM( ActionValueType, {
+    {ActionValueType::STATE, "state"},
+    {ActionValueType::CHANGE, "change"},
+})
 
 /*
  * The definition of a single action
@@ -240,9 +280,20 @@ struct ActionDefinition {
     }
 };
 
-nlohmann::json actionDefinitionToJSON(const ActionDefinition& actionDefinition);
-ActionDefinition jsonToActionDefinition(const nlohmann::json& actionParameters);
+void to_json(nlohmann::json& json, const InputAttributesType& inputAttributes);
+void from_json(const nlohmann::json& json, InputAttributesType& inputAttributes);
 
+void to_json(nlohmann::json& json, const InputSourceDescription& inputSourceDescription);
+void from_json(const nlohmann::json& json, InputSourceDescription& inputSourceDescription);
+
+void to_json(nlohmann::json& json, const InputFilter& inputFilter);
+void from_json(const nlohmann::json& json, InputFilter& inputFilter);
+
+void to_json(nlohmann::json& json, const InputCombo& inputCombo);
+void from_json(const nlohmann::json& json, InputCombo& inputCombo);
+
+void to_json(nlohmann::json& json, const ActionDefinition& actionDefinition);
+void from_json(const nlohmann::json& json, ActionDefinition& actionDefinition);
 
 enum class ActionType {
     BUTTON,

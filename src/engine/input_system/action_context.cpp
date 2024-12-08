@@ -122,7 +122,7 @@ void ActionContext::registerAction(const std::string& name, InputAttributesType 
 void ActionContext::registerAction(const nlohmann::json& actionParameters) {
     std::string actionName { actionParameters.at("name").get<std::string>() };
     assert(mActions.find(ActionDefinition{.mName{actionName}}) == mActions.end() && "An action with this name has previously been registered");
-    ActionDefinition actionDefinition { jsonToActionDefinition(actionParameters) };
+    ActionDefinition actionDefinition = actionParameters;
     registerAction(actionDefinition.mName, actionDefinition.mAttributes);
 }
 
@@ -154,8 +154,8 @@ void ActionContext::unregisterActionHandler(std::weak_ptr<IActionHandler> action
 
 void ActionContext::registerInputBind(const nlohmann::json& inputBindParameters) {
     std::string actionName { inputBindParameters.at("action").get<std::string>() };
-    AxisFilter targetAxis { kStringToAxisFilter.at(inputBindParameters.at("target_axis").get<std::string>()) };
-    InputCombo inputCombo { jsonToInputCombo(inputBindParameters.at("input_combo").get<nlohmann::json::object_t>()) };
+    AxisFilter targetAxis = inputBindParameters.at("target_axis");
+    InputCombo inputCombo = inputBindParameters.at("input_combo");
     registerInputBind(actionName, targetAxis, inputCombo);
 }
 

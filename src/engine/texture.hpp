@@ -20,8 +20,8 @@ struct ColorBufferDefinition {
     bool mUsesWebColors { false };
 };
 
-ColorBufferDefinition jsonToColorBufferDefinition(const nlohmann::json& methodParameters);
-nlohmann::json colorBufferDefinitionToJSON(const ColorBufferDefinition& colorBufferDefinition);
+void to_json(nlohmann::json& json, const ColorBufferDefinition& colorBufferDefinition);
+void from_json(const nlohmann::json& json, ColorBufferDefinition& colorBufferDefinition);
 
 class Texture : public Resource<Texture> {
 public:

@@ -102,18 +102,18 @@ void GeometryRenderStage::setup() {
                 }},
                 {"useRBO", true },
                 {"colorBufferDefinitions",{
-                    colorBufferDefinitionToJSON({
+                    ColorBufferDefinition{
                         .mDataType=GL_FLOAT,
                         .mComponentCount=4
-                    }),
-                    colorBufferDefinitionToJSON({
+                    },
+                    ColorBufferDefinition{
                         .mDataType=GL_FLOAT,
                         .mComponentCount=4
-                    }),
-                    colorBufferDefinitionToJSON({
+                    },
+                    ColorBufferDefinition{
                         .mDataType=GL_UNSIGNED_BYTE,
                         .mComponentCount=4
-                    })
+                    }
                 }},
             }}
         };
@@ -133,7 +133,7 @@ void GeometryRenderStage::setup() {
             {"type", Texture::getResourceTypeName()},
             {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
             {"parameters", 
-                colorBufferDefinitionToJSON(ColorBufferDefinition{})
+                ColorBufferDefinition{}
             }
         });
     }
@@ -248,14 +248,14 @@ void LightingRenderStage::setup() {
                 }},
                 {"useRBO", true },
                 {"colorBufferDefinitions",{
-                    colorBufferDefinitionToJSON({
+                    ColorBufferDefinition{
                         .mDataType=GL_FLOAT,
                         .mComponentCount=4
-                    }),
-                    colorBufferDefinitionToJSON({
+                    },
+                    ColorBufferDefinition{
                         .mDataType=GL_FLOAT,
                         .mComponentCount=4
-                    }),
+                    },
                 }},
             }}
         };
@@ -376,14 +376,14 @@ void BlurRenderStage::setup() {
                 }},
                 {"useRBO", false},
                 {"colorBufferDefinitions",{
-                    colorBufferDefinitionToJSON({
+                    ColorBufferDefinition{
                         .mDataType=GL_FLOAT,
                         .mComponentCount=4
-                    }),
-                    colorBufferDefinitionToJSON({
+                    },
+                    ColorBufferDefinition{
                         .mDataType=GL_FLOAT,
                         .mComponentCount=4
-                    }),
+                    },
                 }},
             }}
         };
@@ -484,10 +484,10 @@ void TonemappingRenderStage::setup() {
                 }},
                 {"useRBO", false},
                 {"colorBufferDefinitions",{
-                    colorBufferDefinitionToJSON({
+                    ColorBufferDefinition{
                         .mDataType=GL_UNSIGNED_BYTE,
                         .mComponentCount=4
-                    }),
+                    },
                 }},
             }}
         };

@@ -107,50 +107,33 @@ struct BuiltinVertexData {
     glm::vec2 mUV3;
 };
 
-inline BuiltinVertexData jsonToBuiltinVertexData(const nlohmann::json& vertexParameters) {
-    BuiltinVertexData builtinVertexData {
-        .mPosition { 
-            vertexParameters.at("position").at(0).get<float>(),
-            vertexParameters.at("position").at(1).get<float>(),
-            vertexParameters.at("position").at(2).get<float>(),
-            vertexParameters.at("position").at(3).get<float>()
-        },
-        .mNormal {
-            vertexParameters.at("normal").at(0).get<float>(),
-            vertexParameters.at("normal").at(1).get<float>(),
-            vertexParameters.at("normal").at(2).get<float>(),
-            vertexParameters.at("normal").at(3).get<float>(),
-        },
-        .mTangent {
-            vertexParameters.at("tangent").at(0).get<float>(),
-            vertexParameters.at("tangent").at(1).get<float>(),
-            vertexParameters.at("tangent").at(2).get<float>(),
-            vertexParameters.at("tangent").at(3).get<float>(),
-        },
-        .mColor {
-            vertexParameters.at("color").at(0).get<float>(),
-            vertexParameters.at("color").at(1).get<float>(),
-            vertexParameters.at("color").at(2).get<float>(),
-            vertexParameters.at("color").at(3).get<float>(),
-        },
-        .mUV1 {
-            vertexParameters.at("uv1").at(0).get<float>(),
-            vertexParameters.at("uv1").at(1).get<float>(),
-        },
-        .mUV2 {
-            vertexParameters.at("uv2").at(0).get<float>(),
-            vertexParameters.at("uv2").at(1).get<float>(),
-        },
-        .mUV3 {
-            vertexParameters.at("uv3").at(0).get<float>(),
-            vertexParameters.at("uv3").at(1).get<float>(),
-        }
-    };
-    return builtinVertexData;
+inline void from_json(const nlohmann::json& json, BuiltinVertexData& builtinVertexData) {
+    json.at("position").at(0).get_to(builtinVertexData.mPosition.x);
+    json.at("position").at(1).get_to(builtinVertexData.mPosition.y);
+    json.at("position").at(2).get_to(builtinVertexData.mPosition.z);
+    json.at("position").at(3).get_to(builtinVertexData.mPosition.w);
+    json.at("normal").at(0).get_to(builtinVertexData.mNormal.x);
+    json.at("normal").at(1).get_to(builtinVertexData.mNormal.y);
+    json.at("normal").at(2).get_to(builtinVertexData.mNormal.z);
+    json.at("normal").at(3).get_to(builtinVertexData.mNormal.w);
+    json.at("tangent").at(0).get_to(builtinVertexData.mTangent.x);
+    json.at("tangent").at(1).get_to(builtinVertexData.mTangent.y);
+    json.at("tangent").at(2).get_to(builtinVertexData.mTangent.z);
+    json.at("tangent").at(3).get_to(builtinVertexData.mTangent.w);
+    json.at("color").at(0).get_to(builtinVertexData.mColor.r);
+    json.at("color").at(1).get_to(builtinVertexData.mColor.g);
+    json.at("color").at(2).get_to(builtinVertexData.mColor.b);
+    json.at("color").at(3).get_to(builtinVertexData.mColor.a);
+    json.at("uv1").at(0).get_to(builtinVertexData.mUV1.s);
+    json.at("uv1").at(1).get_to(builtinVertexData.mUV1.t);
+    json.at("uv2").at(0).get_to(builtinVertexData.mUV2.s);
+    json.at("uv2").at(1).get_to(builtinVertexData.mUV2.t);
+    json.at("uv3").at(0).get_to(builtinVertexData.mUV3.s);
+    json.at("uv3").at(1).get_to(builtinVertexData.mUV3.t);
 }
 
-inline nlohmann::json builtinVertexDataToJSON(const BuiltinVertexData& builtinVertexData) {
-    nlohmann::json vertexParameters {
+inline void to_json(nlohmann::json& json, const BuiltinVertexData& builtinVertexData) {
+    json = {
         {"position", 
             { 
                 builtinVertexData.mPosition.x,
@@ -202,7 +185,6 @@ inline nlohmann::json builtinVertexDataToJSON(const BuiltinVertexData& builtinVe
             }
         }
     };
-    return vertexParameters;
 }
 
 static VertexLayout BuiltinVertexLayout {

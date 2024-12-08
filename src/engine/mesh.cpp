@@ -219,7 +219,7 @@ std::shared_ptr<IResource> StaticMeshFromDescription::createResource(const nlohm
     std::vector<BuiltinVertexData> vertices {};
     std::vector<GLuint> elements {};
     for(const nlohmann::json& vertexParameters: methodParameters.at("vertices").get<std::vector<nlohmann::json>>()) {
-        vertices.push_back(jsonToBuiltinVertexData(vertexParameters));
+        vertices.push_back(vertexParameters);
     }
     for(GLuint element: methodParameters.at("elements").get<std::vector<GLuint>>()) {
         elements.push_back(element);

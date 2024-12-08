@@ -98,7 +98,7 @@ void Framebuffer::copyResource(const Framebuffer& other) {
                     {"name", colorBufferName},
                     {"type", Texture::getResourceTypeName()},
                     {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
-                    {"params", colorBufferDefinitionToJSON(textureHandle->getColorBufferDefinition())}
+                    {"params", textureHandle->getColorBufferDefinition()}
                 }
             );
             mTextureHandles.push_back(

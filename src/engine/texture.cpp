@@ -10,23 +10,22 @@
 
 #include "texture.hpp"
 
+// TODO: rewrite these through the JSON_SERIALIZE_ENUM 
+// macro provided by nlohmann json
 const std::map<std::string, GLenum> kStringToFilter {
     {"linear", GL_LINEAR},
     {"nearest", GL_NEAREST},
 };
-
 const std::map<std::string, GLenum> kStringToWrap {
     { "clamp-border", GL_CLAMP_TO_BORDER },
     { "clamp-edge", GL_CLAMP_TO_EDGE },
     { "repeat", GL_REPEAT },
     { "repeat-mirrored", GL_MIRRORED_REPEAT },
 };
-
 const std::map<GLenum, std::string> kFilterToString {
     {GL_LINEAR, "linear"},
     {GL_NEAREST, "nearest"},
 };
-
 const std::map<GLenum, std::string> kWrapToString {
     {GL_CLAMP_TO_BORDER, "clamp-border"},
     {GL_CLAMP_TO_EDGE, "clamp-edge"},
@@ -300,11 +299,8 @@ std::shared_ptr<IResource> TextureFromFile::createResource(const nlohmann::json&
 }
 
 std::shared_ptr<IResource> TextureFromColorBufferDefinition::createResource(const nlohmann::json& methodParameters) {
-    ColorBufferDefinition colorBufferDefinition {
-        jsonToColorBufferDefinition(methodParameters)
-    };
+    ColorBufferDefinition colorBufferDefinition = methodParameters;
     assert(colorBufferDefinition.mComponentCount == 1 || colorBufferDefinition.mComponentCount == 4);
-
     GLuint texture;
     glGenTextures(1, &texture);
 
@@ -330,43 +326,21 @@ std::shared_ptr<IResource> TextureFromColorBufferDefinition::createResource(cons
     return std::make_shared<Texture>(texture, colorBufferDefinition);
 };
 
-ColorBufferDefinition jsonToColorBufferDefinition(const nlohmann::json& methodParameters) {
-    ColorBufferDefinition colorBufferDefinition {
-        .mDimensions {
-            {methodParameters.at("dimensions").at(0).get<float>()},
-            {methodParameters.at("dimensions").at(1).get<float>()}
-        },
-        .mMagFilter {
-            kStringToFilter.at(methodParameters.at("magFilter").get<std::string>())
-        },
-        .mMinFilter {
-            kStringToFilter.at(methodParameters.at("minFilter").get<std::string>())
-        },
-        .mWrapS {
-            kStringToWrap.at(methodParameters.at("wrapS").get<std::string>())
-        },
-        .mWrapT {
-            kStringToWrap.at(methodParameters.at("wrapT").get<std::string>())
-        },
-        .mDataType{
-            static_cast<GLenum>(methodParameters.at("dataType").get<std::string>() == "float"? 
-                GL_FLOAT :
-                GL_UNSIGNED_BYTE
-            )
-        },
-        .mComponentCount { 
-            static_cast<GLbyte>(methodParameters.at("componentCount").get<uint8_t>())
-        },
-        .mUsesWebColors {
-            methodParameters.at("usesWebColors").get<bool>()
-        },
-    };
+void from_json(const nlohmann::json& json, ColorBufferDefinition& colorBufferDefinition) {
+    json.at("dimensions").at(0).get_to(colorBufferDefinition.mDimensions.x);
+    json.at("dimensions").at(1).get_to(colorBufferDefinition.mDimensions.y);
+    colorBufferDefinition.mMagFilter = kStringToFilter.at(json.at("magFilter").get<std::string>());
+    colorBufferDefinition.mMinFilter = kStringToFilter.at(json.at("minFilter").get<std::string>());
+    colorBufferDefinition.mWrapS = kStringToWrap.at(json.at("wrapS").get<std::string>());
+    colorBufferDefinition.mWrapT = kStringToWrap.at(json.at("wrapT").get<std::string>());
+    colorBufferDefinition.mDataType = json.at("dataType") == "float"? GL_FLOAT: GL_UNSIGNED_BYTE;
+    json.at("componentCount").get_to(colorBufferDefinition.mComponentCount);
+    json.at("usesWebColors").get_to(colorBufferDefinition.mUsesWebColors);
     assert(colorBufferDefinition.mComponentCount == 1 || colorBufferDefinition.mComponentCount == 4);
-    return colorBufferDefinition;
 }
 
-nlohmann::json colorBufferDefinitionToJSON(const ColorBufferDefinition& colorBufferDefinition) {
-    nlohmann::json methodParams {
+void to_json(nlohmann::json& json, const ColorBufferDefinition& colorBufferDefinition) {
+    json = {
         {"dimensions", { colorBufferDefinition.mDimensions.x, colorBufferDefinition.mDimensions.y }},
         {"magFilter", kFilterToString.at(colorBufferDefinition.mMagFilter)},
         {"minFilter", kFilterToString.at(colorBufferDefinition.mMinFilter)},
@@ -376,5 +350,4 @@ nlohmann::json colorBufferDefinitionToJSON(const ColorBufferDefinition& colorBuf
         {"componentCount", colorBufferDefinition.mComponentCount},
         {"usesWebColors", colorBufferDefinition.mUsesWebColors},
     };
-    return methodParams;
 }

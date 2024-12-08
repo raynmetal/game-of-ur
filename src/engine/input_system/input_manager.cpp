@@ -60,86 +60,6 @@ const std::map<InputSourceType, InputAttributesType> kInputSourceTypeAttributes 
     }},
     {{DeviceType::NA, ControlType::NA}, 0}
 };
-
-const std::map<DeviceType, std::string> kDeviceTypeToString {
-    {DeviceType::CONTROLLER, "controller"},
-    {DeviceType::KEYBOARD, "keyboard"},
-    {DeviceType::MOUSE, "mouse"},
-    {DeviceType::TOUCH, "touch"},
-    {DeviceType::NA, "na"},
-};
-const std::map<std::string, DeviceType> kStringToDeviceType {
-    {"controller", DeviceType::CONTROLLER},
-    {"keyboard", DeviceType::KEYBOARD},
-    {"mouse", DeviceType::MOUSE},
-    {"touch", DeviceType::TOUCH},
-    {"na", DeviceType::NA},
-};
-const std::map<ControlType, std::string> kControlTypeToString {
-    {ControlType::AXIS, "axis"},
-    {ControlType::BUTTON, "button"},
-    {ControlType::MOTION, "motion"},
-    {ControlType::POINT, "point"},
-    {ControlType::RADIO, "radio"},
-    {ControlType::NA, "na"},
-};
-const std::map<std::string, ControlType> kStringToControlType {
-    {"axis", ControlType::AXIS},
-    {"button", ControlType::BUTTON},
-    {"motion", ControlType::MOTION},
-    {"point", ControlType::POINT},
-    {"radio", ControlType::RADIO},
-    {"na", ControlType::NA}
-};
-const std::map<std::string, AxisFilterType> kStringToAxisFilter {
-    {"simple", AxisFilter::SIMPLE},
-    {"+x", AxisFilter::X_POS},
-    {"-x", AxisFilter::X_NEG},
-    {"+y", AxisFilter::Y_POS},
-    {"-y", AxisFilter::Y_NEG},
-    {"+z", AxisFilter::Z_POS},
-    {"-z", AxisFilter::Z_NEG},
-    {"+dx", AxisFilter::X_CHANGE_POS},
-    {"-dx", AxisFilter::X_CHANGE_NEG},
-    {"+dy", AxisFilter::Y_CHANGE_POS},
-    {"-dy", AxisFilter::Y_CHANGE_NEG},
-    {"+dz", AxisFilter::Z_CHANGE_POS},
-    {"-dz", AxisFilter::Z_CHANGE_NEG},
-};
-const std::map<AxisFilterType, std::string> kAxisFilterToString {
-    {AxisFilter::SIMPLE, "simple"},
-    {AxisFilter::X_POS, "+x"},
-    {AxisFilter::X_NEG, "-x"},
-    {AxisFilter::Y_POS, "+y"},
-    {AxisFilter::Y_NEG, "-y"},
-    {AxisFilter::Z_POS, "+z"},
-    {AxisFilter::Z_NEG, "-z"},
-    {AxisFilter::X_CHANGE_POS, "+dx"},
-    {AxisFilter::X_CHANGE_NEG, "-dx"},
-    {AxisFilter::Y_CHANGE_POS, "+dy"},
-    {AxisFilter::Y_CHANGE_NEG, "-dy"},
-    {AxisFilter::Z_CHANGE_POS, "+dz"},
-    {AxisFilter::Z_CHANGE_NEG, "-dz"},
-};
-const std::map<std::string, InputCombo::Trigger> kStringToInputComboTrigger {
-    {"onPress", InputCombo::Trigger::ON_PRESS},
-    {"onRelease", InputCombo::Trigger::ON_RELEASE},
-    {"onChange", InputCombo::Trigger::ON_CHANGE},
-};
-const std::map<InputCombo::Trigger, std::string> kInputComboTriggerToString {
-    {InputCombo::Trigger::ON_PRESS, "onPress"},
-    {InputCombo::Trigger::ON_RELEASE, "onRelease"},
-    {InputCombo::Trigger::ON_CHANGE, "onChange"},
-};
-const std::map<std::string, ActionValueType> kStringToActionValueType {
-    {"state", ActionValueType::STATE},
-    {"change", ActionValueType::CHANGE},
-};
-const std::map<ActionValueType, std::string> kActionValueTypeToString {
-    {ActionValueType::STATE, "state"},
-    {ActionValueType::CHANGE, "change"},
-};
-
 bool hasValue(const InputSourceDescription& input, const AxisFilterType filter) {
     uint8_t axisID { static_cast<uint8_t>(filter&AxisFilterMask::ID) };
     uint8_t axisSign { static_cast<uint8_t>(filter&AxisFilterMask::SIGN) };
@@ -854,8 +774,8 @@ void InputManager::unregisterInputCombos() {
     }
 }
 
-nlohmann::json inputAttributesToJSON(InputAttributesType inputAttributes) {
-    nlohmann::json inputAttributesParameters {
+void to_json(nlohmann::json& json, const InputAttributesType& inputAttributes) {
+    json = {
         {"n_axes", (inputAttributes&InputAttributes::N_AXES)},
         {"has_negative", (inputAttributes&InputAttributes::HAS_NEGATIVE) > 0},
         {"has_change_value", (inputAttributes&InputAttributes::HAS_CHANGE_VALUE) > 0},
@@ -863,95 +783,81 @@ nlohmann::json inputAttributesToJSON(InputAttributesType inputAttributes) {
         {"has_state_value", (inputAttributes&InputAttributes::HAS_STATE_VALUE) > 0},
         {"state_is_location", (inputAttributes&InputAttributes::STATE_IS_LOCATION) > 0},
     };
-    return inputAttributesParameters;
 }
-InputAttributesType jsonToInputAttributes(const nlohmann::json inputAttributesParameters){
-    InputAttributesType inputAttributes{ static_cast<InputAttributesType>(
-        inputAttributesParameters.at("n_axes").get<uint8_t>()
-        | (inputAttributesParameters.at("has_negative").get<bool>()?
+void from_json(const nlohmann::json& json, InputAttributesType& inputAttributes) {
+    inputAttributes = (
+        json.at("n_axes").get<uint8_t>()
+        | (json.at("has_negative").get<bool>()?
             InputAttributes::HAS_NEGATIVE: 0)
-        | (inputAttributesParameters.at("has_change_value").get<bool>()?
+        | (json.at("has_change_value").get<bool>()?
             InputAttributes::HAS_CHANGE_VALUE: 0)
-        | (inputAttributesParameters.at("has_button_value").get<bool>()?
+        | (json.at("has_button_value").get<bool>()?
             InputAttributes::HAS_BUTTON_VALUE: 0)
-        | (inputAttributesParameters.at("has_state_value").get<bool>()?
+        | (json.at("has_state_value").get<bool>()?
             InputAttributes::HAS_STATE_VALUE: 0)
-        | (inputAttributesParameters.at("state_is_location").get<bool>()?
+        | (json.at("state_is_location").get<bool>()?
             InputAttributes::STATE_IS_LOCATION: 0)
-    )};
-    return inputAttributes;
+    );
 }
 
-nlohmann::json inputSourceDescriptionToJSON(const InputSourceDescription& inputSourceDescription) {
-    nlohmann::json inputSourceDescriptionParameters {
-        {"device_type", kDeviceTypeToString.at(inputSourceDescription.mDeviceType)},
-        {"control_type", kControlTypeToString.at(inputSourceDescription.mControlType)},
+void to_json(nlohmann::json& json, const InputSourceDescription& inputSourceDescription) {
+    json = {
+        {"device_type", inputSourceDescription.mDeviceType},
+        {"control_type", inputSourceDescription.mControlType},
         {"device", inputSourceDescription.mDevice},
         {"control", inputSourceDescription.mControl},
     };
-    return inputSourceDescriptionParameters;
 }
-InputSourceDescription jsonToInputSourceDescription(const nlohmann::json& inputSourceDescriptionParameters) {
-    InputSourceDescription inputSourceDescription {
-        .mDevice { inputSourceDescriptionParameters.at("device").get<uint8_t>() },
-        .mControl { inputSourceDescriptionParameters.at("control").get<uint32_t>() },
-        .mDeviceType { kStringToDeviceType.at(inputSourceDescriptionParameters.at("device_type")) },
-        .mControlType { kStringToControlType.at(inputSourceDescriptionParameters.at("control_type"))},
-    };
+void from_json(const nlohmann::json& json, InputSourceDescription& inputSourceDescription) {
+    json.at("device_type").get_to(inputSourceDescription.mDeviceType);
+    json.at("device").get_to(inputSourceDescription.mDevice);
+    json.at("control_type").get_to(inputSourceDescription.mControlType);
+    json.at("control").get_to(inputSourceDescription.mControl);
     const InputSourceType inputSourceType { inputSourceDescription.mDeviceType, inputSourceDescription.mControlType };
     inputSourceDescription.mAttributes = kInputSourceTypeAttributes.at(inputSourceType);
-    return inputSourceDescription;
 }
 
-nlohmann::json inputFilterToJSON(const InputFilter& inputFilter) {
-    nlohmann::json inputFilterParameters {
-        {"input_source", inputSourceDescriptionToJSON(inputFilter.mControl) },
-        {"filter", kAxisFilterToString.at(inputFilter.mAxisFilter)}
+void to_json(nlohmann::json& json, const InputFilter& inputFilter) {
+    json = {
+        {"input_source", inputFilter.mControl},
+        {"filter", static_cast<AxisFilter>(inputFilter.mAxisFilter)}
     };
-    return inputFilterParameters;
 }
-InputFilter jsonToInputFilter(const nlohmann::json& inputFilterParameters) {
-    InputFilter inputFilter {
-        .mControl { jsonToInputSourceDescription(inputFilterParameters.at("input_source")) },
-        .mAxisFilter { kStringToAxisFilter.at(inputFilterParameters.at("filter")) },
-    };
-    return inputFilter;
+void from_json(const nlohmann::json& json, InputFilter& inputFilter) {
+    AxisFilter axisFilter;
+    json.at("input_source").get_to(inputFilter.mControl);
+    json.at("filter").get_to(axisFilter);
+    inputFilter.mAxisFilter = axisFilter;
 }
-nlohmann::json inputComboToJSON(const InputCombo& inputCombo) {
-    nlohmann::json inputComboParameters{
-        {"trigger", kInputComboTriggerToString.at(inputCombo.mTrigger)},
-        {"main_control", inputFilterToJSON(inputCombo.mMainControl)},
-        {"modifier_1", inputFilterToJSON(inputCombo.mModifier1)},
-        {"modifier_2", inputFilterToJSON(inputCombo.mModifier2)},
+
+void to_json(nlohmann::json& json, const InputCombo& inputCombo) {
+    json = {
+        {"trigger", inputCombo.mTrigger},
+        {"main_control", inputCombo.mMainControl},
+        {"modifier_1", inputCombo.mModifier1},
+        {"modifier_2", inputCombo.mModifier2},
         {"deadzone", inputCombo.mDeadzone},
         {"threshold", inputCombo.mThreshold},
     };
-    return inputComboParameters;
 }
-InputCombo jsonToInputCombo(const nlohmann::json& inputComboParameters) {
-    InputCombo inputCombo {
-        .mMainControl { jsonToInputFilter(inputComboParameters.at("main_control").get<nlohmann::json::object_t>()) },
-        .mModifier1 { jsonToInputFilter(inputComboParameters.at("modifier_1").get<nlohmann::json::object_t>()) },
-        .mModifier2 { jsonToInputFilter(inputComboParameters.at("modifier_2").get<nlohmann::json::object_t>()) },
-        .mTrigger { kStringToInputComboTrigger.at(inputComboParameters.at("trigger").get<std::string>()) },
-        .mDeadzone { inputComboParameters.at("deadzone").get<float>() },
-        .mThreshold { inputComboParameters.at("threshold").get<float>() },
-    };
-    return inputCombo;
+void from_json(const nlohmann::json& json, InputCombo& inputCombo) {
+    json.at("main_control").get_to(inputCombo.mMainControl);
+    json.at("modifier_1").get_to(inputCombo.mModifier1);
+    json.at("modifier_2").get_to(inputCombo.mModifier2);
+    json.at("trigger").get_to(inputCombo.mTrigger);
+    json.at("deadzone").get_to(inputCombo.mDeadzone);
+    json.at("threshold").get_to(inputCombo.mThreshold);
 }
-nlohmann::json actionDefinitionToJSON(const ActionDefinition& actionDefinition) {
+
+void to_json(nlohmann::json& json, const ActionDefinition& actionDefinition) {
     nlohmann::json actionDefinitionParameters {
         {"name", actionDefinition.mName},
-        {"attributes", inputAttributesToJSON(actionDefinition.mAttributes)},
-        {"value_type", kActionValueTypeToString.at(actionDefinition.mValueType)},
+        {"attributes", actionDefinition.mAttributes},
+        {"value_type", actionDefinition.mValueType},
     };
-    return actionDefinitionParameters;
 }
-ActionDefinition jsonToActionDefinition(const nlohmann::json& actionDefinitionParameters) {
-    ActionDefinition actionDefinition {
-        .mName { actionDefinitionParameters.at("name").get<std::string>() },
-        .mAttributes { jsonToInputAttributes(actionDefinitionParameters.at("attributes").get<nlohmann::json::object_t>())},
-        .mValueType { kStringToActionValueType.at(actionDefinitionParameters.at("value_type").get<std::string>()) },
-    };
-    return actionDefinition;
+void from_json(const nlohmann::json& json, ActionDefinition& actionDefinition) {
+    json.at("name").get_to(actionDefinition.mName);
+    json.at("attributes").get_to(actionDefinition.mAttributes);
+    json.at("value_type").get_to(actionDefinition.mValueType);
 }
