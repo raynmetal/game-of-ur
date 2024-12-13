@@ -3,12 +3,16 @@
 
 #include <cstdint>
 #include <typeinfo>
+#include <iostream>
 #include <memory>
 #include <vector>
 #include <set>
 #include <bitset>
 #include <unordered_map>
+#include <type_traits>
 #include <set>
+
+#include <nlohmann/json.hpp>
 
 #include "util.hpp"
 #include "registrator.hpp"
@@ -54,7 +58,46 @@ public:
     virtual void handleEntityDestroyed(EntityID entityID)=0;
     virtual void handleFrameEnd() = 0;
     virtual void copyComponent(EntityID to, EntityID from)=0;
+    virtual void addComponent(EntityID to, const nlohmann::json& jsonComponent)=0;
     virtual bool hasComponent(EntityID entityID) const=0;
+};
+
+/*
+Specialization example:
+```c++
+template <typename TComponent>
+struct ComponentFromJSON<
+    std::shared_ptr<TComponent>,
+    typename std::enable_if<
+        std::is_base_of<BaseClass, TComponent>::value
+    >::type> {
+    
+    static std::shared_ptr<TComponent> get(const nlohmann::json& jsonComponent) {
+        // your custom way for constructing/retrieving a component
+        // based on json
+        return component;
+    }
+};
+```
+*/
+template <typename TComponent, typename Enable=void>
+struct ComponentFromJSON {
+    static TComponent get(const nlohmann::json& jsonComponent){
+        // in the regular case, just invoke the from_json method that the
+        // author of the component has presumably implemented
+        TComponent component = jsonComponent;
+        return component;
+    }
+};
+
+template <typename TComponent, typename Enable>
+struct ComponentFromJSON<std::shared_ptr<TComponent>, Enable> {
+    static std::shared_ptr<TComponent> get(const nlohmann::json& jsonComponent) {
+        // assume once again that the author of the component has provided
+        // a from_json function that will be invoked here
+        std::shared_ptr<TComponent> component { new TComponent{} = jsonComponent };
+        return component;
+    }
 };
 
 template<typename T>
@@ -70,6 +113,7 @@ class ComponentArray : public IComponentArray {
 public:
 private:
     void addComponent(EntityID entityID, const TComponent& component);
+    void addComponent(EntityID entityID, const nlohmann::json& componentJSON) override;
     /**
      * Removes the component associated with a specific entity, maintaining
      * packing but not order.
@@ -97,6 +141,20 @@ private:
     template<typename TComponent> 
     void registerComponentArray();
 
+    template <typename TComponent>
+    struct getComponentTypeName {
+        std::string operator()() {
+            return TComponent::getComponentTypeName();
+        }
+    };
+
+    template <typename TComponent>
+    struct getComponentTypeName<std::shared_ptr<TComponent>> {
+        std::string operator()() {
+            return TComponent::getComponentTypeName();
+        }
+    };
+
     template<typename TComponent>
     std::shared_ptr<ComponentArray<TComponent>> getComponentArray() const {
         const std::size_t componentHash { typeid(TComponent).hash_code() };
@@ -111,6 +169,8 @@ private:
 
     template<typename TComponent>
     void addComponent(EntityID entityID, const TComponent& component);
+
+    void addComponent(EntityID entityID, const nlohmann::json& jsonComponent);
 
     template<typename TComponent>
     void removeComponent(EntityID entityID);
@@ -135,6 +195,7 @@ private:
 
     void unregisterAll();
 
+    std::unordered_map<std::string, std::size_t> mNameToComponentHash {};
     std::unordered_map<std::size_t, ComponentType> mHashToComponentType {};
     std::unordered_map<std::size_t, std::shared_ptr<IComponentArray>> mHashToComponentArray {};
     std::unordered_map<EntityID, Signature> mEntityToSignature {};
@@ -300,6 +361,8 @@ private:
     template<typename TComponent>
     void addComponent(EntityID entityID, const TComponent& component);
 
+    void addComponent(EntityID entityID, const nlohmann::json& jsonComponent);
+
     template<typename TComponent>
     TComponent getComponent(EntityID entityID, float simulationProgress=1.f) const;
 
@@ -345,6 +408,8 @@ public:
 
     template<typename TComponent> 
     void addComponent(const TComponent& component);
+
+    void addComponent(const nlohmann::json& jsonComponent);
 
     template<typename TComponent> 
     void removeComponent();
@@ -394,6 +459,11 @@ void ComponentArray<TComponent>::addComponent(EntityID entityID, const TComponen
     mComponentsPrevious.push_back(component);
     mEntityToComponentIndex[entityID] = newComponentID;
     mComponentToEntity[newComponentID] = entityID;
+}
+
+template <typename TComponent>
+void ComponentArray<TComponent>::addComponent(EntityID entityID, const nlohmann::json& jsonComponent) {
+    addComponent(entityID, ComponentFromJSON<TComponent>::get(jsonComponent));
 }
 
 template<typename TComponent>
@@ -472,11 +542,17 @@ void ComponentArray<TComponent>::copyComponent(EntityID to, EntityID from) {
 template<typename TComponent> 
 void ComponentManager::registerComponentArray() {
     const std::size_t componentHash { typeid(TComponent).hash_code() };
+    // nop when a component array for this type already exists
     if(mHashToComponentType.find(componentHash) != mHashToComponentType.end()) {
         return;
     }
 
+    std::string componentTypeName { getComponentTypeName<TComponent>{}() };
     assert(mHashToComponentType.size() + 1 < kMaxComponents && "Component type limit reached");
+    assert(mNameToComponentHash.find(componentTypeName) == mNameToComponentHash.end() && "Another component with this name\
+        has already been registered");
+
+    mNameToComponentHash.insert_or_assign(componentTypeName, componentHash);
     mHashToComponentArray.insert_or_assign(
         componentHash, std::static_pointer_cast<IComponentArray>(std::make_shared<ComponentArray<TComponent>>())
     );
@@ -713,12 +789,15 @@ void SimpleECS::updateComponent(EntityID entityID, const TComponent& newValue) {
 
 template<typename ...TComponent>
 void SimpleECS::registerComponentTypes() {
+
     ((getInstance().mComponentManager.registerComponentArray<TComponent>()),...);
 }
 
 template<typename TSystem, typename ...TComponents>
 void SimpleECS::registerSystem() {
     Signature signature {
+        // expands into `1<<componentType1 | 1<<componentType2 | 1<<componentType3 | ...` during static
+        // initialization to build this system's signature
         (
             (0x1u << getInstance().mComponentManager.getComponentType<TComponents>()) 
             | ... | 0x0u

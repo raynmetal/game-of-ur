@@ -13,13 +13,12 @@
 #include <assimp/scene.h>
 #include <assimp/material.h>
 
+#include "simple_ecs_resource_component_ext.hpp" // this instead of the regular ECS and resource includes
 #include "vertex.hpp"
-#include "simple_ecs.hpp"
 #include "mesh.hpp"
 #include "texture.hpp"
 #include "shader_program.hpp"
 #include "material.hpp"
-#include "resource_database.hpp"
 
 /*
  * A class that
@@ -31,6 +30,7 @@
 class StaticModel : public Resource<StaticModel>{
 public:
     inline static std::string getResourceTypeName() { return "StaticModel"; }
+    inline static std::string getComponentTypeName() { return "StaticModel"; }
     StaticModel(const std::vector<std::shared_ptr<StaticMesh>>& meshHandles, const std::vector<std::shared_ptr<Material>>& materialHandles);
 
     /* Model destructor */

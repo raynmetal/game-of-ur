@@ -105,7 +105,7 @@ else
 	$(MKDIR) $@
 endif
 
-_TO_CLEAN := $(TARGET_BIN_DIR)/* $(TARGET_LIB_DIR)/* $(TARGET_LIB_DIR)/* $(OBJ_DIR)/*
+_TO_CLEAN := $(TARGET_BIN_DIR)/* $(TARGET_LIB_DIR)/* $(TARGET_INCLUDE_DIR)/* $(OBJ_DIR)/*
 
 clean:
 ifeq ($(OS), Windows_NT)

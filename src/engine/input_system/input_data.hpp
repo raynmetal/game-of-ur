@@ -153,7 +153,7 @@ enum AxisFilterMask: AxisFilterType {
 struct InputFilter {
     InputSourceDescription mControl {};
 
-    AxisFilterType mAxisFilter { 0x0 };
+    AxisFilter mAxisFilter { 0x0 };
 
     bool operator==(const InputFilter& other) const {
         return !(*this < other) && !(other < *this);

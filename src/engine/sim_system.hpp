@@ -16,8 +16,14 @@ class SimObject;
 class SimSystem;
 
 struct SimCore {
+    inline static std::string getComponentTypeName() { return "SimCore"; }
     SimObject* mSimObject;
 };
+
+// never used, so make empty definitions for these
+inline void from_json(const nlohmann::json& json, SimCore& simCore) {}
+// never used, so make empty definitions for these
+inline void to_json(nlohmann::json& json, const SimCore& simCore) {}
 
 class SimSystem: public System<SimSystem, SimCore> {
 public:

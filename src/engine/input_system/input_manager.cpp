@@ -164,6 +164,9 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                             value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.wheel.y);
                         }
                         break;
+                        default:
+                            assert(false && "Invalid axis for mouse motion");
+                        break;
                     }
                 break;
                 default:
@@ -325,6 +328,9 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                             const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
                             value = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.tfinger.dy);
                         }
+                        default:
+                            assert(false && "invalid axis filter type for touch");
+                        break;
                     }
                 break;
                 default: 
@@ -820,14 +826,12 @@ void from_json(const nlohmann::json& json, InputSourceDescription& inputSourceDe
 void to_json(nlohmann::json& json, const InputFilter& inputFilter) {
     json = {
         {"input_source", inputFilter.mControl},
-        {"filter", static_cast<AxisFilter>(inputFilter.mAxisFilter)}
+        {"filter", inputFilter.mAxisFilter},
     };
 }
 void from_json(const nlohmann::json& json, InputFilter& inputFilter) {
-    AxisFilter axisFilter;
     json.at("input_source").get_to(inputFilter.mControl);
-    json.at("filter").get_to(axisFilter);
-    inputFilter.mAxisFilter = axisFilter;
+    json.at("filter").get_to(inputFilter.mAxisFilter);
 }
 
 void to_json(nlohmann::json& json, const InputCombo& inputCombo) {

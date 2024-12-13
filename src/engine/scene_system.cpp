@@ -8,6 +8,7 @@
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
 
+
 SceneNode::SceneNode(SceneNode&& sceneObject) {
     mEntity = sceneObject.mEntity;
     mParent = sceneObject.mParent;
@@ -62,6 +63,10 @@ SceneNode::SceneNode(const SceneNode& other) {
         mChildren[childName] = std::shared_ptr<SceneNode>(new SceneNode{*childNode});
         mChildren[childName]->mParent = shared_from_this();
     }
+}
+
+void SceneNode::addComponent(const nlohmann::json& jsonComponent) {
+    mEntity->addComponent(jsonComponent);
 }
 
 SceneNode& SceneNode::operator=(const SceneNode& other) {

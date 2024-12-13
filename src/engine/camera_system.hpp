@@ -2,6 +2,7 @@
 #define ZOCAMERASYSTEM_H
 
 #include <glm/glm.hpp>
+#include <nlohmann/json.hpp>
 
 #include "simple_ecs.hpp"
 #include "apploop_events.hpp"
@@ -16,7 +17,14 @@ struct CameraProperties {
     double mOrthographicScale {3.f};
     glm::mat4 mProjectionMatrix {};
     glm::mat4 mViewMatrix {};
+
+    inline static std::string getComponentTypeName() { return "CameraProperties"; }
 };
+
+NLOHMANN_JSON_SERIALIZE_ENUM(CameraProperties::ProjectionType, {
+    {CameraProperties::ProjectionType::FRUSTUM, "frustum"},
+    {CameraProperties::ProjectionType::ORTHOGRAPHIC, "orthographic"},
+})
 
 class CameraSystem: public System<CameraSystem, Transform, CameraProperties> {
 public:
@@ -64,5 +72,20 @@ inline CameraProperties Interpolator<CameraProperties>::operator() (
     };
 }
 
+inline void from_json(const nlohmann::json& json, CameraProperties& cameraProperties) {
+    assert(json.at("type").get<std::string>() == CameraProperties::getComponentTypeName() && "Type mismatch, json must be of camera properties type");
+    json.at("projectionMode").get_to(cameraProperties.mProjectionType);
+    json.at("fov").get_to(cameraProperties.mFov);
+    json.at("orthographicScale").get_to(cameraProperties.mOrthographicScale);
+}
+
+inline void to_json(nlohmann::json& json, const CameraProperties& cameraProperties) {
+    json = {
+        {"type", CameraProperties::getComponentTypeName()},
+        {"projectionMode", cameraProperties.mProjectionType},
+        {"fov", cameraProperties.mFov},
+        {"orthographicScale", cameraProperties.mOrthographicScale},
+    };
+}
 
 #endif

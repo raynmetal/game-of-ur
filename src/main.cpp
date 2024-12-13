@@ -90,6 +90,11 @@ int main(int argc, char* argv[]) {
     )};
     sunlight->addAspect<Revolve>(); // make sunlight revolve
 
+    // test out addition of component by its JSON representation
+    nlohmann::json sunlightEmissionJSON = sunlight->getComponent<LightEmissionData>();
+    sunlight->removeComponent<LightEmissionData>();
+    sunlight->addComponent(sunlightEmissionJSON);
+
 
     ResourceDatabase::addResourceDescription({
         {"name", "boardPieceModel"},

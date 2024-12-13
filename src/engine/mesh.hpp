@@ -11,8 +11,6 @@
 #include <assimp/scene.h>
 
 #include "resource_database.hpp"
-
-#include "simple_ecs.hpp"
 #include "vertex.hpp"
 
 /**
@@ -60,14 +58,15 @@ private:
     void releaseResource();
 };
 
-template<>
-inline std::shared_ptr<StaticMesh> Interpolator<std::shared_ptr<StaticMesh>>::operator() (
-    const std::shared_ptr<StaticMesh>& previousState,
-    const std::shared_ptr<StaticMesh>& nextState,
-    float simulationProgress
-) const {
-    return nextState;
-}
+// Not used as a component, and so doesn't require an interpolator
+// template<>
+// inline std::shared_ptr<StaticMesh> Interpolator<std::shared_ptr<StaticMesh>>::operator() (
+//     const std::shared_ptr<StaticMesh>& previousState,
+//     const std::shared_ptr<StaticMesh>& nextState,
+//     float simulationProgress
+// ) const {
+//     return nextState;
+// }
 
 class StaticMeshFromDescription: public ResourceFactoryMethod<StaticMesh, StaticMeshFromDescription> {
 public:

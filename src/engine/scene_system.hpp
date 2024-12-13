@@ -37,6 +37,8 @@ public:
     template <typename TComponent>
     void addComponent(const TComponent& component);
 
+    void addComponent(const nlohmann::json& jsonComponent);
+
     template <typename TComponent>
     TComponent getComponent() const;
 

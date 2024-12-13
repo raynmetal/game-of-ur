@@ -11,6 +11,7 @@
         // ...
         YourClass() {s_registrator.emptyFunc()} // Explicit constructor definition
     
+        // This function will be called by constructor Registrator<YourClass>()
         static YourReturnType registerSelf() {
             // Ensure correct order of registration
             Registrator<ClassYouDependOn>::getRegistrator();

@@ -11,6 +11,8 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <nlohmann/json.hpp>
+
 #include "simple_ecs.hpp"
 #include "shapegen.hpp"
 #include "instance.hpp"
@@ -50,7 +52,157 @@ struct LightEmissionData {
     GLfloat mRadius {0.f};
 
     static float CalculateRadius(const glm::vec4& diffuseColor, float decayLinear, float decayQuadratic, float intensityCutoff);
+    inline static std::string getComponentTypeName() { return "LightEmissionData"; }
 };
+
+NLOHMANN_JSON_SERIALIZE_ENUM( LightEmissionData::LightType, {
+    {LightEmissionData::LightType::directional, "directional"},
+    {LightEmissionData::LightType::point, "point"},
+    {LightEmissionData::LightType::spot, "spot"},
+})
+
+inline void from_json(const nlohmann::json& json, LightEmissionData& lightEmissionData) {
+    assert(json.at("type") == LightEmissionData::getComponentTypeName() && "Type mismatch. Light component json must have type LightEmissionData");
+    json.at("lightType").get_to(lightEmissionData.mType);
+    switch(lightEmissionData.mType) {
+        case LightEmissionData::LightType::directional:
+            lightEmissionData = LightEmissionData::MakeDirectionalLight(
+                glm::vec3{
+                    json.at("diffuse")[0].get<float>(),
+                    json.at("diffuse")[1].get<float>(),
+                    json.at("diffuse")[2].get<float>(),
+                },
+                glm::vec3{
+                    json.at("specular")[0].get<float>(),
+                    json.at("specular")[1].get<float>(),
+                    json.at("specular")[2].get<float>(),
+                },
+                glm::vec3{
+                    json.at("ambient")[0].get<float>(),
+                    json.at("ambient")[1].get<float>(),
+                    json.at("ambient")[2].get<float>(),
+                }
+            );
+        break;
+        case LightEmissionData::LightType::point:
+            lightEmissionData = LightEmissionData::MakePointLight(
+                glm::vec3{
+                    json.at("diffuse")[0].get<float>(),
+                    json.at("diffuse")[1].get<float>(),
+                    json.at("diffuse")[2].get<float>(),
+                },
+                glm::vec3{
+                    json.at("specular")[0].get<float>(),
+                    json.at("specular")[1].get<float>(),
+                    json.at("specular")[2].get<float>(),
+                },
+                glm::vec3{
+                    json.at("ambient")[0].get<float>(),
+                    json.at("ambient")[1].get<float>(),
+                    json.at("ambient")[2].get<float>(),
+                },
+                json.at("linearConst").get<float>(),
+                json.at("quadraticConst").get<float>()
+            );
+        break;
+        case LightEmissionData::LightType::spot:
+            lightEmissionData = LightEmissionData::MakeSpotLight(
+                json.at("innerAngle").get<float>(),
+                json.at("outerAngle").get<float>(),
+                glm::vec3{
+                    json.at("diffuse")[0].get<float>(),
+                    json.at("diffuse")[1].get<float>(),
+                    json.at("diffuse")[2].get<float>(),
+                },
+                glm::vec3{
+                    json.at("specular")[0].get<float>(),
+                    json.at("specular")[1].get<float>(),
+                    json.at("specular")[2].get<float>(),
+                },
+                glm::vec3{
+                    json.at("ambient")[0].get<float>(),
+                    json.at("ambient")[1].get<float>(),
+                    json.at("ambient")[2].get<float>(),
+                },
+                json.at("linearConst").get<float>(),
+                json.at("quadraticConst").get<float>()
+            );
+        break;
+    }
+}
+inline void to_json(nlohmann::json& json, const LightEmissionData& lightEmissionData) {
+    switch(lightEmissionData.mType) {
+        case LightEmissionData::LightType::directional:
+            json = {
+                {"type", LightEmissionData::getComponentTypeName()},
+                {"lightType", lightEmissionData.mType},
+                {"diffuse", {
+                    lightEmissionData.mDiffuseColor.r,
+                    lightEmissionData.mDiffuseColor.g,
+                    lightEmissionData.mDiffuseColor.b,
+                }},
+                {"specular", {
+                    lightEmissionData.mSpecularColor.r,
+                    lightEmissionData.mSpecularColor.g,
+                    lightEmissionData.mSpecularColor.b,
+                }},
+                {"ambient", {
+                    lightEmissionData.mAmbientColor.r,
+                    lightEmissionData.mAmbientColor.g,
+                    lightEmissionData.mAmbientColor.b,
+                }},
+            };
+        break;
+        case LightEmissionData::LightType::point:
+            json = {
+                {"type", LightEmissionData::getComponentTypeName()},
+                {"lightType", lightEmissionData.mType},
+                {"diffuse", {
+                    lightEmissionData.mDiffuseColor.r,
+                    lightEmissionData.mDiffuseColor.g,
+                    lightEmissionData.mDiffuseColor.b,
+                }},
+                {"specular", {
+                    lightEmissionData.mSpecularColor.r,
+                    lightEmissionData.mSpecularColor.g,
+                    lightEmissionData.mSpecularColor.b,
+                }},
+                {"ambient", {
+                    lightEmissionData.mAmbientColor.r,
+                    lightEmissionData.mAmbientColor.g,
+                    lightEmissionData.mAmbientColor.b,
+                }},
+                {"linearConst", lightEmissionData.mDecayLinear},
+                {"quadraticConst", lightEmissionData.mDecayQuadratic},
+            };
+        break;
+        case LightEmissionData::LightType::spot:
+            json = {
+                {"type", LightEmissionData::getComponentTypeName()},
+                {"lightType", lightEmissionData.mType},
+                {"diffuse", {
+                    lightEmissionData.mDiffuseColor.r,
+                    lightEmissionData.mDiffuseColor.g,
+                    lightEmissionData.mDiffuseColor.b,
+                }},
+                {"specular", {
+                    lightEmissionData.mSpecularColor.r,
+                    lightEmissionData.mSpecularColor.g,
+                    lightEmissionData.mSpecularColor.b,
+                }},
+                {"ambient", {
+                    lightEmissionData.mAmbientColor.r,
+                    lightEmissionData.mAmbientColor.g,
+                    lightEmissionData.mAmbientColor.b,
+                }},
+                {"linearConst", lightEmissionData.mDecayLinear},
+                {"quadraticConst", lightEmissionData.mDecayQuadratic},
+                {"innerAngle", lightEmissionData.mCosCutoffInner},
+                {"outerAngle", lightEmissionData.mCosCutoffOuter},
+            };
+        break;
+    }
+}
 
 static InstanceLayout LightInstanceLayout {{
     {"attrLightPlacement.mPosition", RUNTIME, 4, GL_FLOAT},

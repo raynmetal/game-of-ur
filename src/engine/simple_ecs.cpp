@@ -4,6 +4,14 @@
 
 #include "simple_ecs.hpp"
 
+void ComponentManager::addComponent(EntityID entityID, const nlohmann::json& jsonComponent) {
+    std::string componentTypeName { jsonComponent.at("type").get<std::string>() };
+    std::size_t componentHash { mNameToComponentHash.at(componentTypeName) };
+    ComponentType componentType { mHashToComponentType.at(componentHash) };
+    mHashToComponentArray.at(componentHash)->addComponent(entityID, jsonComponent);
+    mEntityToSignature.at(entityID).set(componentType, true);
+}
+
 Entity::~Entity() {
     SimpleECS::getInstance().destroyEntity(mID);
 }
@@ -228,9 +236,21 @@ void SystemManager::unregisterAll() {
 }
 
 void ComponentManager::unregisterAll() {
+    mNameToComponentHash.clear();
     mHashToComponentArray.clear();
     mHashToComponentType.clear();
     mEntityToSignature.clear();
+}
+
+void SimpleECS::addComponent(EntityID entityID, const nlohmann::json& jsonComponent) {
+    assert(entityID < kMaxEntities && "Cannot add a component to an entity that does not exist");
+    mComponentManager.addComponent(entityID, jsonComponent);
+    Signature signature { mComponentManager.getSignature(entityID) };
+    mSystemManager.handleEntitySignatureChanged(entityID, signature);
+}
+
+void Entity::addComponent(const nlohmann::json& jsonComponent) {
+    SimpleECS::getInstance().addComponent(mID, jsonComponent);
 }
 
 SimpleECS& SimpleECS::getInstance() {
