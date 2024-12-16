@@ -3,13 +3,16 @@
 
 #include "../engine/sim_system.hpp"
 
-class BackAndForth: public SimObjectAspect {
+class BackAndForth: public SimObjectAspect<BackAndForth> {
 public:
-    BackAndForth(SimObject* simObject): SimObjectAspect{simObject} {}
+    inline static std::string getSimObjectAspectTypeName() { return "BackAndForth"; }
+    static std::unique_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
+
     void update(uint32_t deltaSimtimeMillis) override;
 
-    std::unique_ptr<SimObjectAspect> makeCopy() const override;
+    std::unique_ptr<BaseSimObjectAspect> makeCopy() const override;
 private:
+    BackAndForth(): SimObjectAspect<BackAndForth>{0} {}
     uint32_t mElapsedTime { 0 };
 };
 

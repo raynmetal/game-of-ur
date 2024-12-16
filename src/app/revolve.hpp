@@ -4,12 +4,16 @@
 #include "../engine/scene_system.hpp"
 #include "../engine/sim_system.hpp"
 
-class Revolve: public SimObjectAspect {
+class Revolve: public SimObjectAspect<Revolve>{
 public:
-    Revolve (SimObject* simObject): SimObjectAspect { simObject } {}
+    inline static std::string getSimObjectAspectTypeName() { return "Revolve"; }
+    static std::unique_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
+
     void update(uint32_t deltaSimtimeMillis) override;
 
-    std::unique_ptr<SimObjectAspect> makeCopy() const override;
+    std::unique_ptr<BaseSimObjectAspect> makeCopy() const override;
+private:
+    Revolve (): SimObjectAspect<Revolve>{0} {}
 };
 
 #endif

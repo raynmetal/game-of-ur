@@ -21,20 +21,20 @@ struct Transform {
 
 inline void from_json(const nlohmann::json& json, Placement& placement) {
     assert(json.at("type").get<std::string>() == Placement::getComponentTypeName() && "Type mismatch. Component json must have type Placement");
-    json.at("position").at(0).get_to(placement.mPosition.x);
-    json.at("position").at(1).get_to(placement.mPosition.y);
-    json.at("position").at(2).get_to(placement.mPosition.z);
-    json.at("position").at(3).get_to(placement.mPosition.w);
+    json.at("position")[0].get_to(placement.mPosition.x);
+    json.at("position")[1].get_to(placement.mPosition.y);
+    json.at("position")[2].get_to(placement.mPosition.z);
+    json.at("position")[3].get_to(placement.mPosition.w);
 
-    json.at("orientation").at(0).get_to(placement.mOrientation.w);
-    json.at("orientation").at(1).get_to(placement.mOrientation.x);
-    json.at("orientation").at(2).get_to(placement.mOrientation.y);
-    json.at("orientation").at(3).get_to(placement.mOrientation.z);
+    json.at("orientation")[0].get_to(placement.mOrientation.w);
+    json.at("orientation")[1].get_to(placement.mOrientation.x);
+    json.at("orientation")[2].get_to(placement.mOrientation.y);
+    json.at("orientation")[3].get_to(placement.mOrientation.z);
     placement.mOrientation = glm::normalize(placement.mOrientation);
 
-    json.at("scale").at(0).get_to(placement.mScale.x);
-    json.at("scale").at(1).get_to(placement.mScale.y);
-    json.at("scale").at(2).get_to(placement.mScale.z);
+    json.at("scale")[0].get_to(placement.mScale.x);
+    json.at("scale")[1].get_to(placement.mScale.y);
+    json.at("scale")[2].get_to(placement.mScale.z);
 }
 inline void to_json(nlohmann::json& json, const Placement& placement) {
     json = {

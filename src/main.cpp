@@ -21,8 +21,6 @@
 #include "engine/input_system/input_system.hpp"
 
 #include "app/fly_camera.hpp"
-#include "app/back_and_forth.hpp"
-#include "app/revolve.hpp"
 
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
@@ -44,7 +42,9 @@ int main(int argc, char* argv[]) {
     inputManager.loadInputConfiguration(inputBindingJSON.at(0));
 
     std::shared_ptr<SimObject> camera { SimObject::create<CameraProperties>({}, "camera", {}) };
-    camera->addAspect<FlyCamera>();
+    camera->addAspect(nlohmann::json {
+        {"type", "FlyCamera"},
+    });
 
     const float sqrt2 { sqrt(2.f) };
     std::shared_ptr<SceneNode> flashlight { SceneNode::create<LightEmissionData>(
@@ -88,7 +88,9 @@ int main(int argc, char* argv[]) {
             )
         }
     )};
-    sunlight->addAspect<Revolve>(); // make sunlight revolve
+    sunlight->addAspect(nlohmann::json {
+        {"type", "Revolve"},
+    }); // make sunlight revolve
 
     // test out addition of component by its JSON representation
     nlohmann::json sunlightEmissionJSON = sunlight->getComponent<LightEmissionData>();
@@ -110,7 +112,9 @@ int main(int argc, char* argv[]) {
         "board_piece",
         ResourceDatabase::getResource<StaticModel>("boardPieceModel")
     )};
-    boardPiecePrototype->addAspect<BackAndForth>();
+    boardPiecePrototype->addAspect(nlohmann::json {
+        {"type", "BackAndForth"},
+    });
 
     std::vector<std::shared_ptr<SimObject>> boardPieces(21);
     boardPieces[0] = SimObject::copy(boardPiecePrototype);

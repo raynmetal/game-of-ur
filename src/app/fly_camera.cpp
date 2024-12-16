@@ -11,8 +11,6 @@ const float ZOOM_SENSITIVITY { 1.5f };
 const float MAX_FOV {100.f};
 const float MIN_FOV {40.f};
 
-FlyCamera::FlyCamera(SimObject* pSimObject) : SimObjectAspect { pSimObject } {}
-
 void FlyCamera::update(uint32_t deltaSimTimeMillis) {
     if(!mActive) return;
 
@@ -116,7 +114,10 @@ void FlyCamera::updateFOV(float dFOV) {
     updateComponent<CameraProperties>(cameraProps);
 }
 
-std::unique_ptr<SimObjectAspect> FlyCamera::makeCopy() const {
-    return std::make_unique<FlyCamera>(nullptr);
+std::unique_ptr<BaseSimObjectAspect> FlyCamera::makeCopy() const {
+    return std::unique_ptr<FlyCamera>(new FlyCamera{});
 }
 
+std::unique_ptr<BaseSimObjectAspect> FlyCamera::create(const nlohmann::json& jsonAspectProeprties) {
+    return std::unique_ptr<FlyCamera>(new FlyCamera{});
+}

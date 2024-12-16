@@ -61,6 +61,9 @@ SimObject& SimObject::operator=(const SimObject& other) {
     return *this;
 }
 
+std::unique_ptr<BaseSimObjectAspect> SimSystem::constructAspect(const nlohmann::json& jsonAspectProperties) {
+    return mAspectConstructors.at(jsonAspectProperties.at("type").get<std::string>())(jsonAspectProperties);
+}
 
 void SimSystem::ApploopEventHandler::onSimulationStep(uint32_t deltaSimTimeMillis) {
     for(EntityID entity: mSystem->getEnabledEntities()) {
@@ -74,10 +77,31 @@ void SimObject::update(uint32_t deltaSimTimeMillis) {
     }
 }
 
-EntityID SimObjectAspect::getEntityID() const {
+EntityID BaseSimObjectAspect::getEntityID() const {
     return mSimObject->getEntityID();
 }
 
 std::shared_ptr<SimObject> SimObject::copy(const std::shared_ptr<SimObject> simObject) {
     return std::shared_ptr<SimObject>(new SimObject{ *simObject });
+}
+
+void SimObject::addAspect(const BaseSimObjectAspect& aspect) {
+    mSimObjectAspects.try_emplace(aspect.getAspectTypeName(), aspect.makeCopy());
+    mSimObjectAspects.at(aspect.getAspectTypeName())->mSimObject = this;
+}
+
+void SimObject::addAspect(const nlohmann::json& jsonAspectProperties) {
+    mSimObjectAspects.try_emplace(
+        jsonAspectProperties.at("type").get<std::string>(),
+        SimpleECS::getSystem<SimSystem>()->constructAspect(jsonAspectProperties)
+    );
+    mSimObjectAspects.at(jsonAspectProperties.at("type").get<std::string>())->mSimObject = this;
+}
+
+void BaseSimObjectAspect::addAspect(const BaseSimObjectAspect& aspect) {
+    mSimObject->addAspect(aspect);
+}
+
+void BaseSimObjectAspect::addAspect(const nlohmann::json& jsonAspectProperties) {
+    mSimObject->addAspect(jsonAspectProperties);
 }

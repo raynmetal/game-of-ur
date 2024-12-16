@@ -12,8 +12,9 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "simple_ecs.hpp"
-#include "scene_components.hpp"
+#include "resource_database.hpp"
 #include "apploop_events.hpp"
+#include "scene_components.hpp"
 
 enum class RelativeTo : uint8_t {
     PARENT=0,
@@ -21,14 +22,19 @@ enum class RelativeTo : uint8_t {
     // CAMERA=2,
 };
 
+NLOHMANN_JSON_SERIALIZE_ENUM(RelativeTo, {
+    {RelativeTo::PARENT, "parent"},
+})
+
 enum SpecialEntity: EntityID {
     ENTITY_ROOT = kMaxEntities,
 };
 
-class SceneNode: public std::enable_shared_from_this<SceneNode> {
+class SceneNode: public std::enable_shared_from_this<SceneNode>, public Resource<SceneNode> {
 public:
     template<typename ...TComponents>
     static std::shared_ptr<SceneNode> create(const Placement& placement, const std::string& name,  TComponents...components);
+    static std::shared_ptr<SceneNode> create(const nlohmann::json& sceneNodeDescription);
 
     static std::shared_ptr<SceneNode> copy(const std::shared_ptr<const SceneNode> sceneNode);
 
@@ -70,6 +76,8 @@ public:
 
     const std::string getName() const;
 
+    static inline std::string getResourceTypeName() { return "SceneNode"; }
+
 protected:
     template<typename ...TComponents>
     SceneNode(const Placement& placement, const std::string& name, TComponents...components);
@@ -80,8 +88,12 @@ protected:
     SceneNode(SceneNode&& sceneObject);
     SceneNode& operator=(SceneNode&& sceneObject);
 
+    static void validateName(const std::string& nodeName);
+
 private:
-    SceneNode() {} // special constructor used to create the root node in the scene system
+    SceneNode():
+    Resource<SceneNode>{0}
+    {} // special constructor used to create the root node in the scene system
 
     static bool detectCycle(std::shared_ptr<SceneNode> node);
     static std::tuple<std::string, std::string> nextInPath(const std::string& where);
@@ -143,22 +155,27 @@ friend class SceneSystem::ApploopEventHandler;
 friend class SceneNode;
 };
 
+class SceneNodeFromDescription: public ResourceFactoryMethod<SceneNode, SceneNodeFromDescription> {
+public:
+    SceneNodeFromDescription(): 
+    ResourceFactoryMethod<SceneNode, SceneNodeFromDescription>{0}
+    {}
+
+    static std::string getResourceConstructorName() { return "fromDescription"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParams) override;
+};
+
 template<typename ...TComponents>
 std::shared_ptr<SceneNode> SceneNode::create(const Placement& placement, const std::string& name,  TComponents...components) {
     return std::shared_ptr<SceneNode>( new SceneNode(placement, name, components...));
 }
 
 template <typename ...TComponents>
-SceneNode::SceneNode(const Placement& placement, const std::string& name, TComponents...components) {
-    const bool containsValidCharacters{
-        std::all_of(name.begin(), name.end(), 
-            [](char c) { 
-                return (std::isalnum(c) || c == '_');
-            }
-        )
-    };
-    assert(name.size() > 0 && "Scene node must have a name");
-    assert(containsValidCharacters && "Scene node name may contain only alphanumeric characters and underscores");
+SceneNode::SceneNode(const Placement& placement, const std::string& name, TComponents...components):
+Resource<SceneNode>{0}
+{
+    validateName(name);
 
     mName = name;
     mEntity = std::make_shared<Entity>(

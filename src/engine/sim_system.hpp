@@ -5,13 +5,16 @@
 #include <set>
 #include <cassert>
 #include <typeinfo>
+#include <type_traits>
+
 #include <nlohmann/json.hpp>
 
+#include "registrator.hpp"
 #include "apploop_events.hpp" 
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
 
-class SimObjectAspect;
+class BaseSimObjectAspect;
 class SimObject;
 class SimSystem;
 
@@ -43,8 +46,16 @@ public:
     };
 
 private:
+    template <typename TSimObjectAspect>
+    void registerAspect();
+
+    std::unique_ptr<BaseSimObjectAspect> constructAspect(const nlohmann::json& jsonAspectProperties);
+
+    std::unordered_map<std::string, std::unique_ptr<BaseSimObjectAspect> (*)(const nlohmann::json& jsonAspectProperties)> mAspectConstructors{};
     std::shared_ptr<SimSystem::ApploopEventHandler> mApploopEventHandler { SimSystem::ApploopEventHandler::registerHandler(this) };
 friend class SimSystem::ApploopEventHandler;
+friend class BaseSimObjectAspect;
+friend class SimObject;
 };
 
 /**
@@ -58,10 +69,8 @@ public:
 
     static std::shared_ptr<SimObject> copy(const std::shared_ptr<SimObject> simObject);
 
-    template <typename TSimObjectAspect, typename ...TSimObjectAspectArgs>
-    void addAspect(TSimObjectAspectArgs ... simObjectAspectArgs);
-    template <typename TSimObjectAspect>
-    void addAspect(const TSimObjectAspect& simObjectAspect);
+    void addAspect(const nlohmann::json& jsonAspectProperties);
+    void addAspect(const BaseSimObjectAspect& simObjectAspect);
     template <typename TSimObjectAspect>
     bool hasAspect();
     template <typename TSimObjectAspect>
@@ -83,22 +92,35 @@ private:
 
     void update(uint32_t deltaSimTimeMillis);
 
-    std::unordered_map<std::size_t, std::unique_ptr<SimObjectAspect>> mSimObjectAspects { };
+    std::unordered_map<std::string, std::unique_ptr<BaseSimObjectAspect>> mSimObjectAspects { };
 
 friend class SimSystem;
-friend class SimObjectAspect;
+friend class BaseSimObjectAspect;
 };
 
-class SimObjectAspect {
+class BaseSimObjectAspect {
 public:
-    virtual ~SimObjectAspect()=default;
+    virtual ~BaseSimObjectAspect()=default;
 
     virtual void update(uint32_t deltaSimTimeMillis) {};
     virtual void onCreate() {};
     virtual void onDestroy() {};
     
 protected:
-    SimObjectAspect(SimObject* simObject): mSimObject { simObject } {};
+    BaseSimObjectAspect()=default;
+
+    template <typename TSimObjectAspectDerived>
+    static inline void registerAspect() {
+        //ensure registration of SimSystem before trying to register
+        //this aspect
+        auto& simSystemRegistrator { 
+            Registrator<System<SimSystem, SimCore>>::getRegistrator()
+        };
+        simSystemRegistrator.emptyFunc();
+
+        // Let SimSystem know that this type of aspect exists
+        SimpleECS::getSystem<SimSystem>()->registerAspect<TSimObjectAspectDerived>();
+    }
 
     template <typename TComponent>
     void addComponent(const TComponent& component);
@@ -111,11 +133,8 @@ protected:
     template <typename TComponent>
     void removeComponent();
 
-
-    template <typename TSimObjectAspect, typename ... TSimObjectAspectArgs>
-    void addAspect(TSimObjectAspectArgs ... simObjectAspectArgs);
-    template <typename TSimObjectAspect>
-    void addAspect(const TSimObjectAspect& aspect);
+    void addAspect(const nlohmann::json& jsonAspectProperties);
+    void addAspect(const BaseSimObjectAspect& aspect);
     template <typename TSimObjectAspect>
     bool hasAspect();
     template <typename TSimObjectAspect>
@@ -125,11 +144,44 @@ protected:
 
     EntityID getEntityID() const;
 
+    virtual std::string getAspectTypeName() const = 0;
 private:
-    virtual std::unique_ptr<SimObjectAspect> makeCopy() const = 0;
+    virtual std::unique_ptr<BaseSimObjectAspect> makeCopy() const = 0;
     SimObject* mSimObject { nullptr };
 friend class SimObject;
 };
+
+template <typename TSimObjectAspectDerived>
+class SimObjectAspect: public BaseSimObjectAspect {
+protected:
+    SimObjectAspect(int explicitlyInitializeMe){
+        s_registrator.emptyFunc();
+    }
+private:
+    inline std::string getAspectTypeName() const override {
+        return TSimObjectAspectDerived::getSimObjectAspectTypeName();
+    }
+    static inline void registerSelf() {
+        BaseSimObjectAspect::registerAspect<TSimObjectAspectDerived>();
+    }
+    static Registrator<SimObjectAspect<TSimObjectAspectDerived>>& s_registrator;
+friend class Registrator<SimObjectAspect<TSimObjectAspectDerived>>;
+friend class SimObject;
+};
+
+template<typename TSimObjectAspectDerived>
+Registrator<SimObjectAspect<TSimObjectAspectDerived>>& SimObjectAspect<TSimObjectAspectDerived>::s_registrator{ 
+    Registrator<SimObjectAspect<TSimObjectAspectDerived>>::getRegistrator()
+};
+
+template <typename TSimObjectAspect>
+void SimSystem::registerAspect() {
+    assert((std::is_base_of<BaseSimObjectAspect, TSimObjectAspect>::value) && "Type being registered must be a subclass of BaseSimObjectAspect");
+    mAspectConstructors.insert_or_assign(
+        TSimObjectAspect::getSimObjectAspectTypeName(),
+        &(TSimObjectAspect::create)
+    );
+}
 
 template <typename ...TComponents>
 std::shared_ptr<SimObject> SimObject::create(const Placement& placement, const std::string& name, TComponents ... components) {
@@ -142,85 +194,54 @@ SceneNode { placement, name, SimCore{this}, components... }
 {}
 
 template <typename TComponent>
-void SimObjectAspect::addComponent(const TComponent& component) {
+void BaseSimObjectAspect::addComponent(const TComponent& component) {
     mSimObject->addComponent<TComponent>(component);
 }
 template <typename TComponent>
-bool SimObjectAspect::hasComponent() {
+bool BaseSimObjectAspect::hasComponent() {
     return mSimObject->hasComponent<TComponent>();
 }
 template <typename TComponent>
-void SimObjectAspect::updateComponent(const TComponent& component) {
+void BaseSimObjectAspect::updateComponent(const TComponent& component) {
     mSimObject->updateComponent<TComponent>(component);
 }
 template <typename TComponent>
-TComponent SimObjectAspect::getComponent() {
+TComponent BaseSimObjectAspect::getComponent() {
     return mSimObject->getComponent<TComponent>();
 }
-
 template <typename TComponent>
-void SimObjectAspect::removeComponent() {
+void BaseSimObjectAspect::removeComponent() {
     return mSimObject->removeComponent<TComponent>();
 }
 
 
 template <typename TSimObjectAspect>
 bool SimObject::hasAspect() {
-    std::size_t componentHash { typeid(TSimObjectAspect).hash_code() };
-    return mSimObjectAspects.find(componentHash) != mSimObjectAspects.end();
+    return mSimObjectAspects.find(TSimObjectAspect::getSimObjectAspectTypeName()) != mSimObjectAspects.end();
 }
 
 template <typename TSimObjectAspect>
 TSimObjectAspect& SimObject::getAspect() {
-    std::size_t componentHash { typeid(TSimObjectAspect).hash_code() };
-    return *(static_cast<TSimObjectAspect*>(mSimObjectAspects.at(componentHash).get()));
+    return *(static_cast<TSimObjectAspect*>(mSimObjectAspects.at(TSimObjectAspect::getSimObjectAspectTypeName()).get()));
 }
 
 template <typename TSimObjectAspect>
 void SimObject::removeAspect() {
-    std::size_t componentHash { typeid(TSimObjectAspect).hash_code() };
-    mSimObjectAspects.erase(componentHash);
+    mSimObjectAspects.erase(TSimObjectAspect::getSimObjectAspectTypeName());
 }
 
 template <typename TSimObjectAspect>
-void SimObject::addAspect(const TSimObjectAspect& aspect) {
-    std::size_t componentHash { typeid(TSimObjectAspect).hash_code() };
-    constexpr bool isDerivedFromsimObjectAspect { std::is_base_of<SimObjectAspect, TSimObjectAspect>::value };
-    static_assert(isDerivedFromsimObjectAspect && "Component object must be a subclass of SimObjectAspect");
-    mSimObjectAspects.try_emplace(componentHash, aspect.makeCopy());
-    mSimObjectAspects.at(componentHash)->mSimObject = this;
-}
-
-template <typename TSimObjectAspect, typename ...TSimObjectAspectArgs>
-void SimObject::addAspect(TSimObjectAspectArgs ... simObjectAspectArgs) {
-    std::size_t componentHash { typeid(TSimObjectAspect).hash_code() };
-    constexpr bool isDerivedFromsimObjectAspect { std::is_base_of<SimObjectAspect, TSimObjectAspect>::value };
-    static_assert(isDerivedFromsimObjectAspect && "Component object must be a subclass of SimObjectAspect");
-    mSimObjectAspects.try_emplace(componentHash, std::make_unique<TSimObjectAspect>( this,  simObjectAspectArgs... ));
-}
-
-template <typename TSimObjectAspect>
-void SimObjectAspect::addAspect(const TSimObjectAspect& aspect) {
-    mSimObject->addAspect(aspect);
-}
-
-template <typename TSimObjectAspect, typename ...TSimObjectAspectArgs>
-void SimObjectAspect::addAspect(TSimObjectAspectArgs ... simObjectAspectArgs) {
-    mSimObject->addAspect<TSimObjectAspect>(simObjectAspectArgs...);
-}
-
-template <typename TSimObjectAspect>
-void SimObjectAspect::removeAspect() {
+void BaseSimObjectAspect::removeAspect() {
     mSimObject->removeAspect<TSimObjectAspect>();
 }
 
 template <typename TSimObjectAspect>
-TSimObjectAspect& SimObjectAspect::getAspect() {
+TSimObjectAspect& BaseSimObjectAspect::getAspect() {
     return mSimObject->getAspect<TSimObjectAspect>();
 }
 
 template <typename TSimObjectAspect>
-bool SimObjectAspect::hasAspect() {
+bool BaseSimObjectAspect::hasAspect() {
     return mSimObject->hasAspect<TSimObjectAspect>();
 }
 

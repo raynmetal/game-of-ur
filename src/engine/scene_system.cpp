@@ -8,8 +8,9 @@
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
 
-
-SceneNode::SceneNode(SceneNode&& sceneObject) {
+SceneNode::SceneNode(SceneNode&& sceneObject):
+Resource<SceneNode>{0}
+{
     mEntity = sceneObject.mEntity;
     mParent = sceneObject.mParent;
     mEnabled = sceneObject.mEnabled;
@@ -45,7 +46,9 @@ SceneNode& SceneNode::operator=(SceneNode&& sceneObject) {
     return *this;
 }
 
-SceneNode::SceneNode(const SceneNode& other) {
+SceneNode::SceneNode(const SceneNode& other):
+Resource<SceneNode>{0}
+{
     std::shared_ptr<Entity> newEntity { 
         std::make_shared<Entity>(SimpleECS::createEntity())
     };
@@ -63,10 +66,6 @@ SceneNode::SceneNode(const SceneNode& other) {
         mChildren[childName] = std::shared_ptr<SceneNode>(new SceneNode{*childNode});
         mChildren[childName]->mParent = shared_from_this();
     }
-}
-
-void SceneNode::addComponent(const nlohmann::json& jsonComponent) {
-    mEntity->addComponent(jsonComponent);
 }
 
 SceneNode& SceneNode::operator=(const SceneNode& other) {
@@ -105,6 +104,10 @@ SceneNode& SceneNode::operator=(const SceneNode& other) {
     }
 
     return *this;
+}
+
+void SceneNode::addComponent(const nlohmann::json& jsonComponent) {
+    mEntity->addComponent(jsonComponent);
 }
 
 bool SceneNode::detectCycle(std::shared_ptr<SceneNode> node) {
@@ -427,4 +430,35 @@ void SceneSystem::ApploopEventHandler::onPreRenderStep(float simulationProgress)
 
 void SceneSystem::ApploopEventHandler::onApplicationStart() {
     mSystem->updateTransforms();
+}
+
+void SceneNode::validateName(const std::string& nodeName) {
+    const bool containsValidCharacters{
+        std::all_of(nodeName.begin(), nodeName.end(), 
+            [](char c) { 
+                return (std::isalnum(c) || c == '_');
+            }
+        )
+    };
+    assert(nodeName.size() > 0 && "Scene node must have a name");
+    assert(containsValidCharacters && "Scene node name may contain only alphanumeric characters and underscores");
+}
+
+std::shared_ptr<SceneNode> SceneNode::create(const nlohmann::json& sceneNodeDescription) {
+    validateName(sceneNodeDescription.at("name").get<std::string>());
+    std::shared_ptr<SceneNode> newNode { new SceneNode{} };
+    newNode->mName = sceneNodeDescription.at("name").get<std::string>();
+    newNode->mEntity = std::make_shared<Entity>(
+        SimpleECS::createEntity()
+    );
+    for(const nlohmann::json& component: sceneNodeDescription.at("components")) {
+        newNode->mEntity->addComponent(component);
+    }
+    assert(newNode->hasComponent<Placement>() && "scene nodes must define a placement component");
+    assert(newNode->hasComponent<Transform>() && "scene nodes must define a transform component");
+    return newNode;
+}
+
+std::shared_ptr<IResource> SceneNodeFromDescription::createResource(const nlohmann::json& methodParams) {
+    return SceneNode::create(methodParams);
 }
