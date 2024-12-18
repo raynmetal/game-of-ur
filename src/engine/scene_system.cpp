@@ -8,106 +8,91 @@
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
 
-SceneNode::SceneNode(SceneNode&& sceneObject):
-Resource<SceneNode>{0}
-{
-    mEntity = sceneObject.mEntity;
-    mParent = sceneObject.mParent;
-    mEnabled = sceneObject.mEnabled;
-    mName = sceneObject.mName;
-    mChildren = sceneObject.mChildren;
-    mSystemMask = sceneObject.mSystemMask;
-
-    sceneObject.mEntity = nullptr;
-    sceneObject.mParent = nullptr;
-    sceneObject.mEnabled = false;
-    sceneObject.mChildren.clear();
-    sceneObject.mSystemMask = 0;
-    sceneObject.mName = "";
+std::shared_ptr<SceneNode> SceneNode::create(const nlohmann::json& sceneNodeDescription) {
+    std::shared_ptr<SceneNode> newNode{ new SceneNode{sceneNodeDescription} };
+    return newNode;
 }
 
-SceneNode& SceneNode::operator=(SceneNode&& sceneObject) {
-    if(this == &sceneObject) return *this;
+std::shared_ptr<SceneNode> SceneNode::copy(const std::shared_ptr<const SceneNode> sceneNode) {
+    if(!sceneNode) return nullptr;
+    std::shared_ptr<SceneNode> newSceneNode{ sceneNode->clone() };
 
-    mEntity = std::move(sceneObject.mEntity);
-    mParent = std::move(sceneObject.mParent);
-    mEnabled = sceneObject.mEnabled;
-    mName = std::move(sceneObject.mName);
-    mChildren = std::move(sceneObject.mChildren);
-    mSystemMask = sceneObject.mSystemMask;
+    newSceneNode->copyDescendants(*sceneNode);
 
-    sceneObject.mEntity = nullptr;
-    sceneObject.mParent = nullptr;
-    sceneObject.mEnabled = false;
-    sceneObject.mChildren.clear();
-    sceneObject.mSystemMask = 0;
-    sceneObject.mName = "";
+    return newSceneNode;
+}
 
-    return *this;
+std::shared_ptr<SceneNode> SceneNode::clone() const {
+    // construct a new scene node with the same components as this one
+    std::shared_ptr<SceneNode> newSceneNode{ new SceneNode{*this} };
+    return newSceneNode;
+}
+
+SceneNode::SceneNode(const nlohmann::json& sceneNodeDescription):
+Resource<SceneNode>{0}
+{
+    validateName(sceneNodeDescription.at("name").get<std::string>());
+    mName = sceneNodeDescription.at("name").get<std::string>();
+    mEntity = std::make_shared<Entity>(
+        SimpleECS::createEntity()
+    );
+    // bypass own implementation of addComponent. We shouldn't trigger methods that
+    // require a shared pointer to this to be present
+    addComponent<Transform>({}, true);
+    for(const nlohmann::json& componentDescription: sceneNodeDescription.at("components")) {
+        addComponent(componentDescription, true);
+    }
+    assert(hasComponent<Placement>() && "scene nodes must define a placement component");
 }
 
 SceneNode::SceneNode(const SceneNode& other):
 Resource<SceneNode>{0}
 {
-    std::shared_ptr<Entity> newEntity { 
-        std::make_shared<Entity>(SimpleECS::createEntity())
-    };
-    newEntity->copy(*(other.mEntity));
-
-    mEntity = newEntity;
-    mEnabled = other.mEnabled;
-    mName = other.mName;
-    mParent = nullptr;
-    mSystemMask = other.mSystemMask;
-
-    for(auto& childPair: other.mChildren) {
-        const std::string& childName { childPair.first };
-        const std::shared_ptr<const SceneNode> childNode { childPair.second };
-        mChildren[childName] = std::shared_ptr<SceneNode>(new SceneNode{*childNode});
-        mChildren[childName]->mParent = shared_from_this();
-    }
+    copyAndReplaceAttributes(other);
 }
 
-SceneNode& SceneNode::operator=(const SceneNode& other) {
-    // avoid doing anything if other is just a reference to self
-    if(this == &other) return *this;
+// NOTE: save this for the day I find a use for it.
+// SceneNode& SceneNode::operator=(const SceneNode& other) {
+//     // avoid doing anything if other is just a reference to self
+//     if(this == &other) return *this;
 
-    // disconnect self from parent, and if we were 
-    // part of the scene, make scene system forget about
-    // us.
-    std::shared_ptr<SceneNode> parent{ mParent };
-    removeNode("/");
+//     // disconnect self from parent, and if we were 
+//     // part of the scene, make scene system forget about
+//     // us.
+//     std::shared_ptr<SceneNode> parent{ mParent };
+//     removeNode("/");
 
-    // copy the other entity and its components
-    std::shared_ptr<Entity> newEntity { 
-        std::make_shared<Entity>(SimpleECS::createEntity())
-    };
-    newEntity->copy(*(other.mEntity));
-    mEntity = newEntity;
-    mEnabled = other.mEnabled;
-    mChildren.clear();
-    mName = other.mName;
-    mParent = nullptr;
-    mSystemMask = other.mSystemMask;
+//     copyAndReplaceAttributes(other);
 
-    // copy descendant nodes too, attach them to self
-    for(auto& childPair: other.mChildren) {
-        const std::string& childName { childPair.first };
-        const std::shared_ptr<const SceneNode> childNode { childPair.second };
-        mChildren[childName] = std::shared_ptr<SceneNode>(new SceneNode{*childNode});
-        mChildren[childName]->mParent = shared_from_this();
-    }
+//     // should be safe because if assignment is invoked, a shared
+//     // pointer to `this` must already exist
+//     copyDescendants(other); 
+        
 
-    // add self back to our parent node complete with our new subtree
-    if(parent) {
-        parent->addNode(shared_from_this(), "/");
-    }
+//     // add self back to our parent node complete with our new subtree
+//     if(parent) {
+//         // should be safe because if assignment is invoked, a shared
+//         // pointer to `this` must already exist
+//         parent->addNode(shared_from_this(), "/");
+//     }
 
-    return *this;
-}
+//     return *this;
+// }
 
-void SceneNode::addComponent(const nlohmann::json& jsonComponent) {
+void SceneNode::addComponent(const nlohmann::json& jsonComponent, const bool bypassSceneActivityCheck) {
     mEntity->addComponent(jsonComponent);
+
+    // NOTE: required because even though this node's entity's signature changes, it
+    // is disabled by default on any systems it is eligible for. We need to activate
+    // the node according to its system mask
+    if(!bypassSceneActivityCheck && isActive()) {
+        // TODO: we shouldn't need to visit every node on the tree just because this change
+        // has occurred; just the node to which this component was added should be 
+        // sufficient
+        SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
+            shared_from_this(), true
+        );
+    }
 }
 
 bool SceneNode::detectCycle(std::shared_ptr<SceneNode> node) {
@@ -144,11 +129,6 @@ bool SceneNode::isAncestorOf(std::shared_ptr<const SceneNode> sceneNode) const {
 
 const std::string SceneNode::getName() const {
     return mName;
-}
-
-std::shared_ptr<SceneNode> SceneNode::copy(const std::shared_ptr<const SceneNode> sceneNode) {
-    if(!sceneNode) return nullptr;
-    return std::shared_ptr<SceneNode>(new SceneNode{*sceneNode});
 }
 
 std::tuple<std::string, std::string> SceneNode::nextInPath(const std::string& where) {
@@ -190,6 +170,13 @@ void SceneNode::addNode(std::shared_ptr<SceneNode> node, const std::string& wher
 
 std::vector<std::shared_ptr<SceneNode>> SceneNode::getChildren() {
     std::vector<std::shared_ptr<SceneNode>> children {};
+    for(auto& pair: mChildren) {
+        children.push_back(pair.second);
+    }
+    return children;
+}
+std::vector<std::shared_ptr<const SceneNode>> SceneNode::getChildren() const {
+    std::vector<std::shared_ptr<const SceneNode>> children {};
     for(auto& pair: mChildren) {
         children.push_back(pair.second);
     }
@@ -444,19 +431,32 @@ void SceneNode::validateName(const std::string& nodeName) {
     assert(containsValidCharacters && "Scene node name may contain only alphanumeric characters and underscores");
 }
 
-std::shared_ptr<SceneNode> SceneNode::create(const nlohmann::json& sceneNodeDescription) {
-    validateName(sceneNodeDescription.at("name").get<std::string>());
-    std::shared_ptr<SceneNode> newNode { new SceneNode{} };
-    newNode->mName = sceneNodeDescription.at("name").get<std::string>();
-    newNode->mEntity = std::make_shared<Entity>(
-        SimpleECS::createEntity()
-    );
-    for(const nlohmann::json& component: sceneNodeDescription.at("components")) {
-        newNode->mEntity->addComponent(component);
+void SceneNode::copyAndReplaceAttributes(const SceneNode& other) {
+    // copy the other entity and its components
+    std::shared_ptr<Entity> newEntity { 
+        std::make_shared<Entity>(SimpleECS::createEntity())
+    };
+    newEntity->copy(*(other.mEntity));
+    mEntity = newEntity;
+    mEnabled = other.mEnabled;
+    mChildren.clear();
+    mName = other.mName;
+    mParent = nullptr;
+    mSystemMask = other.mSystemMask;
+}
+
+void SceneNode::copyDescendants(const SceneNode& other) {
+    // copy descendant nodes, attach them to self
+    for(auto& childPair: other.mChildren) {
+        const std::string& childName { childPair.first };
+        const std::shared_ptr<const SceneNode> childNode { childPair.second };
+        mChildren[childName] = SceneNode::copy(childNode);
+
+        // TODO : somehow make this whole thing less delicate. Shared
+        // from this depends on the existence of a shared pointer
+        // to the current object
+        mChildren[childName]->mParent = shared_from_this();
     }
-    assert(newNode->hasComponent<Placement>() && "scene nodes must define a placement component");
-    assert(newNode->hasComponent<Transform>() && "scene nodes must define a transform component");
-    return newNode;
 }
 
 std::shared_ptr<IResource> SceneNodeFromDescription::createResource(const nlohmann::json& methodParams) {

@@ -41,10 +41,28 @@ int main(int argc, char* argv[]) {
     jsonFileStream.close();
     inputManager.loadInputConfiguration(inputBindingJSON.at(0));
 
-    std::shared_ptr<SimObject> camera { SimObject::create<CameraProperties>({}, "camera", {}) };
-    camera->addAspect(nlohmann::json {
-        {"type", "FlyCamera"},
-    });
+    std::shared_ptr<SimObject> camera { SimObject::create(nlohmann::json {
+        {"name", "camera"},
+        {"components", nlohmann::json::array_t{
+            nlohmann::json::object_t {
+                {"type", "CameraProperties"},
+                {"projectionMode", "frustum"},
+                {"fov", 45.f},
+                {"orthographicScale", 3.f}
+            },
+            nlohmann::json::object_t {
+                {"type", "Placement"},
+                {"position", {0.f, 0.f, 0.f, 1.f}},
+                {"orientation", {1.f, 0.f, 0.f, 0.f}},
+                {"scale", {1.f, 1.f, 1.f}},
+            },
+        }},
+        {"aspects", nlohmann::json::array_t {
+            nlohmann::json::object_t {
+                { "type", "FlyCamera" },
+            }
+        }},
+    })};
 
     const float sqrt2 { sqrt(2.f) };
     std::shared_ptr<SceneNode> flashlight { SceneNode::create<LightEmissionData>(
@@ -117,10 +135,10 @@ int main(int argc, char* argv[]) {
     });
 
     std::vector<std::shared_ptr<SimObject>> boardPieces(21);
-    boardPieces[0] = SimObject::copy(boardPiecePrototype);
+    boardPieces[0] = std::static_pointer_cast<SimObject>(SceneNode::copy(boardPiecePrototype));
     std::shared_ptr<SimObject> previousBoardPiece = boardPieces[0];
     for(std::size_t i{1}; i < 21; ++i) {
-        boardPieces[i] = SimObject::copy(boardPiecePrototype);
+        boardPieces[i] = std::static_pointer_cast<SimObject>(SceneNode::copy(boardPiecePrototype));
 
         Placement boardPiecePlacement { boardPieces[i]->getComponent<Placement>() };
         boardPiecePlacement.mPosition = {0.f, 2.f, 0.f, 1.f};

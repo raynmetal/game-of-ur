@@ -35,15 +35,15 @@ public:
     template<typename ...TComponents>
     static std::shared_ptr<SceneNode> create(const Placement& placement, const std::string& name,  TComponents...components);
     static std::shared_ptr<SceneNode> create(const nlohmann::json& sceneNodeDescription);
-
     static std::shared_ptr<SceneNode> copy(const std::shared_ptr<const SceneNode> sceneNode);
+
 
     virtual ~SceneNode()=default;
 
     template <typename TComponent>
-    void addComponent(const TComponent& component);
+    void addComponent(const TComponent& component, const bool bypassSceneActivityCheck=false);
 
-    void addComponent(const nlohmann::json& jsonComponent);
+    void addComponent(const nlohmann::json& jsonComponent, const bool bypassSceneActivityCheck=false);
 
     template <typename TComponent>
     TComponent getComponent() const;
@@ -69,6 +69,7 @@ public:
     bool isAncestorOf(std::shared_ptr<const SceneNode> sceneNode) const;
     void addNode(std::shared_ptr<SceneNode> node, const std::string& where);
     std::vector<std::shared_ptr<SceneNode>> getChildren();
+    std::vector<std::shared_ptr<const SceneNode>> getChildren() const;
     std::vector<std::shared_ptr<SceneNode>> getDescendants();
     std::shared_ptr<SceneNode> getNode(const std::string& where);
     std::shared_ptr<SceneNode> getParentNode();
@@ -81,12 +82,13 @@ public:
 protected:
     template<typename ...TComponents>
     SceneNode(const Placement& placement, const std::string& name, TComponents...components);
+    SceneNode(const nlohmann::json& jsonSceneNode);
 
     SceneNode(const SceneNode& sceneObject);
-    SceneNode& operator=(const SceneNode& sceneObject);
 
-    SceneNode(SceneNode&& sceneObject);
-    SceneNode& operator=(SceneNode&& sceneObject);
+    // // TODO: sit down and figure out whether this operator will ever actually
+    // // be used
+    // SceneNode& operator=(const SceneNode& sceneObject);
 
     static void validateName(const std::string& nodeName);
 
@@ -95,8 +97,13 @@ private:
     Resource<SceneNode>{0}
     {} // special constructor used to create the root node in the scene system
 
+    virtual std::shared_ptr<SceneNode> clone() const;
+    void copyDescendants(const SceneNode& other);
+
     static bool detectCycle(std::shared_ptr<SceneNode> node);
     static std::tuple<std::string, std::string> nextInPath(const std::string& where);
+
+    void copyAndReplaceAttributes(const SceneNode& other);
 
     std::string mName {};
     bool mEnabled { true };
@@ -187,13 +194,13 @@ Resource<SceneNode>{0}
     );
 }
 template <typename TComponent>
-void SceneNode::addComponent(const TComponent& component) {
+void SceneNode::addComponent(const TComponent& component, bool bypassSceneActivityCheck) {
     mEntity->addComponent<TComponent>(component);
 
     // NOTE: required because even though this node's entity's signature changes, it
     // is disabled by default on any systems it is eligible for. We need to activate
     // the node according to its system mask
-    if(isActive()) {
+    if(!bypassSceneActivityCheck && isActive()) {
         // TODO: we shouldn't need to visit every node on the tree just because this change
         // has occurred; just the node to which this component was added should be 
         // sufficient

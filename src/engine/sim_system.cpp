@@ -1,65 +1,62 @@
 #include "sim_system.hpp"
 
-SimObject::SimObject(SceneNode&& sceneNode):
-SceneNode{std::move(sceneNode)}
+std::shared_ptr<SimObject> SimObject::create(const nlohmann::json& jsonSimObject) {
+    std::shared_ptr<SceneNode> newSimObject {new SimObject{ jsonSimObject }};
+    std::shared_ptr<SimObject> downcastSimObject { std::static_pointer_cast<SimObject, SceneNode>(newSimObject) };
+
+    for(const nlohmann::json& aspectDescription: jsonSimObject.at("aspects")) {
+        downcastSimObject->addAspect(aspectDescription);
+    }
+
+    return downcastSimObject;
+}
+
+std::shared_ptr<SceneNode> SimObject::clone() const {
+    // since SceneNode enables shared from this, we must ensure that the
+    // associated SceneNode control block is created
+    std::shared_ptr<SceneNode> newSimObject { new SimObject{ *this } };
+    std::shared_ptr<SimObject> downcastSimObject { std::static_pointer_cast<SimObject>(newSimObject) };
+
+    downcastSimObject->copyAspects(*this);
+
+    return newSimObject;
+}
+
+SimObject::SimObject(const nlohmann::json& jsonSimObject):
+SceneNode{jsonSimObject},
+Resource<SimObject>{0}
 {
-    addComponent<SimCore>({this});
+    addComponent<SimCore>({this}, true);
 }
 
 SimObject::SimObject(const SceneNode& sceneNode):
-SceneNode {sceneNode}
+SceneNode { sceneNode },
+Resource<SimObject>{0}
 {
-    addComponent<SimCore>({this});
-}
-
-SimObject::SimObject(SimObject&& simObject):
-SceneNode { std::move(simObject) },
-mSimObjectAspects { std::move(simObject.mSimObjectAspects) }
-{
-    updateComponent<SimCore>({this});
-    for(auto& aspectPair: mSimObjectAspects) {
-        aspectPair.second->mSimObject = this;
-    }
+    addComponent<SimCore>({this}, true);
 }
 
 SimObject::SimObject(const SimObject& simObject):
-SceneNode { simObject }
+SceneNode { simObject },
+Resource<SimObject>{0}
 {
     updateComponent<SimCore>({this});
-    for(auto& aspectPair: simObject.mSimObjectAspects) {
-        mSimObjectAspects[aspectPair.first] = aspectPair.second->makeCopy();
-        mSimObjectAspects[aspectPair.first]->mSimObject = this;
-    }
 }
 
-SimObject& SimObject::operator=(SimObject&& simObject) {
-    if(this == &simObject) return *this;
+// Save this for whenever I actually find a use for it
+// SimObject& SimObject::operator=(const SimObject& other) {
+//     if(this == &other) return *this;
 
-    SceneNode::operator=(std::move(simObject));
-    mSimObjectAspects = std::move(simObject.mSimObjectAspects);
+//     SceneNode::operator=(other);
+//     updateComponent<SimCore>({this});
 
-    // update pointers to self for visibility to the sim system
-    // as well as by attached aspects
-    updateComponent<SimCore>({this});
-    for(auto& aspectPair: mSimObjectAspects) {
-        mSimObjectAspects[aspectPair.first]->mSimObject = this;
-    }
+//     // with assignment, we can assume that a shared pointer
+//     // to this already exists, and so aspects which depend on
+//     // it being present are safe
+//     copyAspects(other);
 
-    return *this;
-}
-
-SimObject& SimObject::operator=(const SimObject& other) {
-    if(this == &other) return *this;
-
-    SceneNode::operator=(other);
-    updateComponent<SimCore>({this});
-    for(auto& aspectPair: other.mSimObjectAspects) {
-        mSimObjectAspects[aspectPair.first] = aspectPair.second->makeCopy();
-        mSimObjectAspects[aspectPair.first]->mSimObject = this;
-    }
-
-    return *this;
-}
+//     return *this;
+// }
 
 std::unique_ptr<BaseSimObjectAspect> SimSystem::constructAspect(const nlohmann::json& jsonAspectProperties) {
     return mAspectConstructors.at(jsonAspectProperties.at("type").get<std::string>())(jsonAspectProperties);
@@ -77,12 +74,16 @@ void SimObject::update(uint32_t deltaSimTimeMillis) {
     }
 }
 
-EntityID BaseSimObjectAspect::getEntityID() const {
-    return mSimObject->getEntityID();
+void SimObject::copyAspects(const SimObject& other) {
+    mSimObjectAspects.clear();
+    for(auto& aspectPair: other.mSimObjectAspects) {
+        mSimObjectAspects[aspectPair.first] = aspectPair.second->makeCopy();
+        mSimObjectAspects[aspectPair.first]->mSimObject = this;
+    }
 }
 
-std::shared_ptr<SimObject> SimObject::copy(const std::shared_ptr<SimObject> simObject) {
-    return std::shared_ptr<SimObject>(new SimObject{ *simObject });
+EntityID BaseSimObjectAspect::getEntityID() const {
+    return mSimObject->getEntityID();
 }
 
 void SimObject::addAspect(const BaseSimObjectAspect& aspect) {
@@ -104,4 +105,13 @@ void BaseSimObjectAspect::addAspect(const BaseSimObjectAspect& aspect) {
 
 void BaseSimObjectAspect::addAspect(const nlohmann::json& jsonAspectProperties) {
     mSimObject->addAspect(jsonAspectProperties);
+}
+
+std::shared_ptr<IResource> SimObjectFromDescription::createResource(const nlohmann::json& methodParameters) {
+    // SceneNode shared pointer control block created through SimObject::create
+    std::shared_ptr<SimObject> simObjectPtr { SimObject::create(methodParameters) };
+
+    // Resource<SimObject> shared pointer shares reference count with SceneNode shared pointer
+    // control block
+    return std::static_pointer_cast<Resource<SimObject>, SimObject>(simObjectPtr);
 }

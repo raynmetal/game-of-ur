@@ -62,12 +62,13 @@ friend class SimObject;
  * A wrapper on entity that provides access to sim components and
  * sim logic
  */
-class SimObject: public SceneNode {
+class SimObject: public SceneNode, public Resource<SimObject> {
 public:
+    inline static std::string getResourceTypeName() { return "SimObject"; }
+
     template <typename ...TComponents>
     static std::shared_ptr<SimObject> create(const Placement& placement, const std::string& name, TComponents...components);
-
-    static std::shared_ptr<SimObject> copy(const std::shared_ptr<SimObject> simObject);
+    static std::shared_ptr<SimObject> create(const nlohmann::json& jsonSimObject);
 
     void addAspect(const nlohmann::json& jsonAspectProperties);
     void addAspect(const BaseSimObjectAspect& simObjectAspect);
@@ -78,19 +79,22 @@ public:
     template <typename TSimObjectAspect>
     void removeAspect();
 
-private:
+protected:
     template <typename ...TComponents>
     SimObject(const Placement& placement, const std::string& name, TComponents...components);
+    SimObject(const nlohmann::json& jsonSimObject);
     SimObject(const SceneNode& sceneNode);
-    SimObject(SceneNode&& sceneNode);
     SimObject(const SimObject& other);
-    SimObject(SimObject&& other);
 
-    SimObject& operator=(const SimObject& other);
-    SimObject& operator=(SimObject&& other);
+    // // TODO: sit down and figure out whether this operator will ever actually be useful
+    // SimObject& operator=(const SimObject& other);
 
 
+private:
     void update(uint32_t deltaSimTimeMillis);
+
+    void copyAspects(const SimObject& other);
+    std::shared_ptr<SceneNode> clone() const override;
 
     std::unordered_map<std::string, std::unique_ptr<BaseSimObjectAspect>> mSimObjectAspects { };
 
@@ -169,6 +173,17 @@ friend class Registrator<SimObjectAspect<TSimObjectAspectDerived>>;
 friend class SimObject;
 };
 
+class SimObjectFromDescription: public ResourceFactoryMethod<SimObject, SimObjectFromDescription> {
+public:
+    SimObjectFromDescription():
+    ResourceFactoryMethod<SimObject, SimObjectFromDescription> {0}
+    {}
+
+    static std::string getResourceConstructorName() { return "fromDescription"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters);
+};
+
 template<typename TSimObjectAspectDerived>
 Registrator<SimObjectAspect<TSimObjectAspectDerived>>& SimObjectAspect<TSimObjectAspectDerived>::s_registrator{ 
     Registrator<SimObjectAspect<TSimObjectAspectDerived>>::getRegistrator()
@@ -185,12 +200,17 @@ void SimSystem::registerAspect() {
 
 template <typename ...TComponents>
 std::shared_ptr<SimObject> SimObject::create(const Placement& placement, const std::string& name, TComponents ... components) {
-    return std::shared_ptr<SimObject>(new SimObject{placement, name, components...});
+    // SceneNode pointer to sim object, because scene node's `enable_shared_from_this` needs
+    // it.
+    // TODO: make this more robust somehow
+    std::shared_ptr<SceneNode> newSimObject(new SimObject{placement, name, components...});
+    return std::static_pointer_cast<SimObject, SceneNode>(newSimObject);
 }
 
 template <typename ...TComponents>
 SimObject::SimObject(const Placement& placement, const std::string& name, TComponents ... components) :
-SceneNode { placement, name, SimCore{this}, components... }
+SceneNode { placement, name, SimCore{this}, components... },
+Resource<SimObject>{0}
 {}
 
 template <typename TComponent>
