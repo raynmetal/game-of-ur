@@ -70,6 +70,8 @@ public:
     static std::shared_ptr<SimObject> create(const Placement& placement, const std::string& name, TComponents...components);
     static std::shared_ptr<SimObject> create(const nlohmann::json& jsonSimObject);
 
+    static std::shared_ptr<SimObject> copy(const std::shared_ptr<const SimObject> simObject);
+
     void addAspect(const nlohmann::json& jsonAspectProperties);
     void addAspect(const BaseSimObjectAspect& simObjectAspect);
     template <typename TSimObjectAspect>
@@ -173,17 +175,6 @@ friend class Registrator<SimObjectAspect<TSimObjectAspectDerived>>;
 friend class SimObject;
 };
 
-class SimObjectFromDescription: public ResourceFactoryMethod<SimObject, SimObjectFromDescription> {
-public:
-    SimObjectFromDescription():
-    ResourceFactoryMethod<SimObject, SimObjectFromDescription> {0}
-    {}
-
-    static std::string getResourceConstructorName() { return "fromDescription"; }
-private:
-    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters);
-};
-
 template<typename TSimObjectAspectDerived>
 Registrator<SimObjectAspect<TSimObjectAspectDerived>>& SimObjectAspect<TSimObjectAspectDerived>::s_registrator{ 
     Registrator<SimObjectAspect<TSimObjectAspectDerived>>::getRegistrator()
@@ -233,7 +224,6 @@ template <typename TComponent>
 void BaseSimObjectAspect::removeComponent() {
     return mSimObject->removeComponent<TComponent>();
 }
-
 
 template <typename TSimObjectAspect>
 bool SimObject::hasAspect() {

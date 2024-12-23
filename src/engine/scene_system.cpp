@@ -79,6 +79,34 @@ Resource<SceneNode>{0}
 //     return *this;
 // }
 
+void SceneNode::copyAndReplaceAttributes(const SceneNode& other) {
+    // copy the other entity and its components
+    std::shared_ptr<Entity> newEntity { 
+        std::make_shared<Entity>(SimpleECS::createEntity())
+    };
+    newEntity->copy(*(other.mEntity));
+    mEntity = newEntity;
+    mEnabled = other.mEnabled;
+    mChildren.clear();
+    mName = other.mName;
+    mParent = nullptr;
+    mSystemMask = other.mSystemMask;
+}
+
+void SceneNode::copyDescendants(const SceneNode& other) {
+    // copy descendant nodes, attach them to self
+    for(auto& childPair: other.mChildren) {
+        const std::string& childName { childPair.first };
+        const std::shared_ptr<const SceneNode> childNode { childPair.second };
+        mChildren[childName] = SceneNode::copy(childNode);
+
+        // TODO : somehow make this whole thing less delicate. Shared
+        // from this depends on the existence of a shared pointer
+        // to the current object
+        mChildren[childName]->mParent = shared_from_this();
+    }
+}
+
 void SceneNode::addComponent(const nlohmann::json& jsonComponent, const bool bypassSceneActivityCheck) {
     mEntity->addComponent(jsonComponent);
 
@@ -198,6 +226,10 @@ std::shared_ptr<SceneNode> SceneNode::getNode(const std::string& where) {
 }
 
 std::shared_ptr<SceneNode> SceneNode::getParentNode() {
+    // TODO: Find a more efficient way to prevent access to the scene root
+    // Guard against indirect access to scene root owned by the scene system via
+    // its descendants.
+    if(mParent) assert(mParent->getName() != "" && "Cannot retrieve reference to root node of the scene");
     return mParent;
 }
 
@@ -429,36 +461,4 @@ void SceneNode::validateName(const std::string& nodeName) {
     };
     assert(nodeName.size() > 0 && "Scene node must have a name");
     assert(containsValidCharacters && "Scene node name may contain only alphanumeric characters and underscores");
-}
-
-void SceneNode::copyAndReplaceAttributes(const SceneNode& other) {
-    // copy the other entity and its components
-    std::shared_ptr<Entity> newEntity { 
-        std::make_shared<Entity>(SimpleECS::createEntity())
-    };
-    newEntity->copy(*(other.mEntity));
-    mEntity = newEntity;
-    mEnabled = other.mEnabled;
-    mChildren.clear();
-    mName = other.mName;
-    mParent = nullptr;
-    mSystemMask = other.mSystemMask;
-}
-
-void SceneNode::copyDescendants(const SceneNode& other) {
-    // copy descendant nodes, attach them to self
-    for(auto& childPair: other.mChildren) {
-        const std::string& childName { childPair.first };
-        const std::shared_ptr<const SceneNode> childNode { childPair.second };
-        mChildren[childName] = SceneNode::copy(childNode);
-
-        // TODO : somehow make this whole thing less delicate. Shared
-        // from this depends on the existence of a shared pointer
-        // to the current object
-        mChildren[childName]->mParent = shared_from_this();
-    }
-}
-
-std::shared_ptr<IResource> SceneNodeFromDescription::createResource(const nlohmann::json& methodParams) {
-    return SceneNode::create(methodParams);
 }

@@ -2,16 +2,9 @@
 
 #include "resource_database.hpp"
 
-void ResourceDatabase::addResourceDescription(const nlohmann::json& resourceDescription) {
+void ResourceDatabase::assertResourceDescriptionValidity(const nlohmann::json& resourceDescription)  {
     ResourceDatabase& resourceDatabase { ResourceDatabase::getInstance() };
 
-    // validate
-    assert(
-        (
-            resourceDescription.find("name") != resourceDescription.end()
-            && resourceDescription["name"].type() == nlohmann::detail::value_t::string
-        ) && "Resource description must include a name field filled with a string"
-    );
     assert(
         (
             resourceDescription.find("type") != resourceDescription.end()
@@ -40,13 +33,30 @@ void ResourceDatabase::addResourceDescription(const nlohmann::json& resourceDesc
             && resourceDescription["parameters"].type() == nlohmann::detail::value_t::object
         ) && "Resource description must contain a parameters field filled with a json object"
     );
+
     //TODO: assert that params contains values that the method expects
+    //TODO: how do we generate documentation that tells a developer what values are expected?
+}
+
+void ResourceDatabase::addResourceDescription(const nlohmann::json& resourceDescription) {
+    ResourceDatabase& resourceDatabase { ResourceDatabase::getInstance() };
+
+    // validate
+    assertResourceDescriptionValidity(resourceDescription);
+
+    assert(
+        (
+            resourceDescription.find("name") != resourceDescription.end()
+            && resourceDescription["name"].type() == nlohmann::detail::value_t::string
+        ) && "Resource description to be registered must include a name field filled with a string"
+    );
     assert(
         (
             resourceDatabase.mResourceDescriptions.find(resourceDescription["name"].get<std::string>())
             == resourceDatabase.mResourceDescriptions.end()
         ) && "There is already a resource description matching a resource with this name which cannot be overwritten"
     );
+
     std::string resourceName { resourceDescription.at("name").get<std::string>() };
     resourceDatabase.mResourceDescriptions[resourceName] = resourceDescription;
 }
@@ -66,6 +76,6 @@ void ResourceDatabase::registerFactory (const std::string& factoryName, std::uni
     getInstance().mFactories[factoryName] = std::move(pFactory);
 }
 
-void ResourceDatabase::registerFactoryMethod (const std::string& resourceType, const std::string& methodName, std::unique_ptr<IResourceFactoryMethod> pFactoryMethod) {
+void ResourceDatabase::registerFactoryMethod (const std::string& resourceType, const std::string& methodName, std::unique_ptr<IResourceConstructor> pFactoryMethod) {
     getInstance().mFactories.at(resourceType)->mFactoryMethods[methodName] = std::move(pFactoryMethod);
 }

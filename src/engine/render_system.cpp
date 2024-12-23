@@ -32,7 +32,7 @@ void RenderSystem::LightQueue::onCreated() {
         };
         ResourceDatabase::addResourceDescription(sphereLightDescription);
     }
-    mSphereMesh = ResourceDatabase::getResource<StaticMesh>("sphereLight-10lat-5long");
+    mSphereMesh = ResourceDatabase::getRegisteredResource<StaticMesh>("sphereLight-10lat-5long");
 }
 
 void RenderSystem::onCreated() {
@@ -59,7 +59,7 @@ void RenderSystem::onCreated() {
         };
         ResourceDatabase::addResourceDescription(lightMaterialDescription);
     }
-    mLightMaterialHandle = ResourceDatabase::getResource<Material>("lightMaterial");
+    mLightMaterialHandle = ResourceDatabase::getRegisteredResource<Material>("lightMaterial");
     mLightMaterialHandle->updateIntProperty("screenWidth", 800);
     mLightMaterialHandle->updateIntProperty("screenHeight", 600);
 
@@ -187,7 +187,7 @@ void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float si
 
 void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
     std::shared_ptr<Material> lightMaterialHandle { 
-        ResourceDatabase::getResource<Material>("lightMaterial")
+        ResourceDatabase::getRegisteredResource<Material>("lightMaterial")
     };
     for(EntityID entity: getEnabledEntities()) {
         Transform entityTransform { getComponent<Transform>(entity, simulationProgress)};

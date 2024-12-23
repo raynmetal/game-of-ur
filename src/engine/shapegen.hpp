@@ -7,20 +7,20 @@
 #include "resource_database.hpp"
 #include "mesh.hpp"
 
-class StaticMeshSphereLatLong: public ResourceFactoryMethod<StaticMesh, StaticMeshSphereLatLong> {
+class StaticMeshSphereLatLong: public ResourceConstructor<StaticMesh, StaticMeshSphereLatLong> {
 public:
     StaticMeshSphereLatLong():
-    ResourceFactoryMethod<StaticMesh, StaticMeshSphereLatLong>{0}
+    ResourceConstructor<StaticMesh, StaticMeshSphereLatLong>{0}
     {}
     inline static std::string getResourceConstructorName() { return "sphereLatLong"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };
 
-class StaticMeshRectangleDimensions: public ResourceFactoryMethod<StaticMesh, StaticMeshRectangleDimensions> {
+class StaticMeshRectangleDimensions: public ResourceConstructor<StaticMesh, StaticMeshRectangleDimensions> {
 public:
     StaticMeshRectangleDimensions():
-    ResourceFactoryMethod<StaticMesh, StaticMeshRectangleDimensions>{0}
+    ResourceConstructor<StaticMesh, StaticMeshRectangleDimensions>{0}
     {}
     inline static std::string getResourceConstructorName() { return "rectangleDimensions"; }
 private:

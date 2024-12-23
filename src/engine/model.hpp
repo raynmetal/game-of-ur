@@ -90,7 +90,7 @@ inline std::shared_ptr<StaticModel> Interpolator<std::shared_ptr<StaticModel>>::
     return nextState;
 }
 
-class StaticModelFromFile: public ResourceFactoryMethod<StaticModel, StaticModelFromFile> {
+class StaticModelFromFile: public ResourceConstructor<StaticModel, StaticModelFromFile> {
 public:
     StaticModelFromFile();
     inline static std::string getResourceConstructorName() { return "fromFile"; }

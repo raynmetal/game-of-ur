@@ -87,7 +87,7 @@ void StaticModel::destroyResource() {
 void StaticModel::releaseResource() {}
 
 StaticModelFromFile::StaticModelFromFile():
-ResourceFactoryMethod<StaticModel, StaticModelFromFile>{0}
+ResourceConstructor<StaticModel, StaticModelFromFile>{0}
 {}
 
 std::shared_ptr<IResource> StaticModelFromFile::createResource(const nlohmann::json& methodParameters) {
@@ -264,7 +264,7 @@ std::vector<std::shared_ptr<Texture>> loadAssimpTextures(aiMaterial* pAiMaterial
         }
         
         textureHandles.push_back(
-            ResourceDatabase::getResource<Texture>(textureName)
+            ResourceDatabase::getRegisteredResource<Texture>(textureName)
         );
     }
 

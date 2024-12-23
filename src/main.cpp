@@ -18,6 +18,7 @@
 #include "engine/model.hpp"
 #include "engine/render_system.hpp"
 #include "engine/scene_system.hpp"
+#include "engine/scene_loading.hpp"
 #include "engine/input_system/input_system.hpp"
 
 #include "app/fly_camera.hpp"
@@ -41,121 +42,166 @@ int main(int argc, char* argv[]) {
     jsonFileStream.close();
     inputManager.loadInputConfiguration(inputBindingJSON.at(0));
 
-    std::shared_ptr<SimObject> camera { SimObject::create(nlohmann::json {
-        {"name", "camera"},
-        {"components", nlohmann::json::array_t{
-            nlohmann::json::object_t {
-                {"type", "CameraProperties"},
-                {"projectionMode", "frustum"},
-                {"fov", 45.f},
-                {"orthographicScale", 3.f}
+    const float sqrt2 { sqrt(2.f) };
+    nlohmann::json sceneDescription {
+        {"name", "test_scene_1"},
+        {"type", "SceneNode"},
+        {"method", "fromSceneDescription"},
+        {"parameters", {
+            {"resources", nlohmann::json::array_t {
+                {
+                    {"name", "boardPieceModel"},
+                    {"type", StaticModel::getResourceTypeName()},
+                    {"method", StaticModelFromFile::getResourceConstructorName()},
+                    {"parameters", {
+                        {"path", "data/models/Generic Board Piece.obj"},
+                    }}
+                },
+            }},
+            {"nodes", nlohmann::json::array_t {
+                {
+                    {"name", "partial_scene_root"},
+                    {"type", "SceneNode"},
+                    {"parent", ""},
+                    {"components", nlohmann::json::array_t{
+                        {
+                            {"type", "Placement"},
+                            {"position", {0.f, 0.f, 0.f, 1.f}},
+                            {"orientation", {1.f, 0.f, 0.f, 0.f}},
+                            {"scale", {1.f, 1.f, 1.f}},
+                        },
+                    }},
+                },
+                {
+                    {"name", "camera"},
+                    {"type", "SimObject"},
+                    {"parent", "/"},
+                    {"aspects", nlohmann::json::array_t {
+                        nlohmann::json::object_t {
+                            { "type", "FlyCamera" },
+                        }
+                    }},
+                    {"components", nlohmann::json::array_t{
+                        {
+                            {"type", "CameraProperties"},
+                            {"projectionMode", "frustum"},
+                            {"fov", 45.f},
+                            {"orthographicScale", 3.f}
+                        },
+                        {
+                            {"type", "Placement"},
+                            {"position", {0.f, 0.f, 0.f, 1.f}},
+                            {"orientation", {1.f, 0.f, 0.f, 0.f}},
+                            {"scale", {1.f, 1.f, 1.f}},
+                        },
+                    }},
+                },
+                {
+                    { "name", "flashlight" },
+                    { "type", "SceneNode" },
+                    { "parent", "/camera/" },
+                    { "components", nlohmann::json::array_t {
+                        {
+                            {"type", "Placement"},
+                            {"position", {0.f, 0.f, 0.f, 1.f}},
+                            {"orientation", {1.f, 0.f, 0.f, 0.f}},
+                            {"scale", {1.f, 1.f, 1.f}}
+                        },
+                        {
+                            {"type", "LightEmissionData"},
+                            {"lightType", "spot"},
+                            {"diffuse", {2.f, 2.f, 2.f}},
+                            {"specular", {4.f, 4.f, 4.f}},
+                            {"ambient", {.2f, .2f, .2f}},
+                            {"linearConst", .07f},
+                            {"quadraticConst", .03f},
+                            {"innerAngle", 4.f},
+                            {"outerAngle", 13.f},
+                        },
+                    }}
+                },
+                {
+                    {"name", "sunlight"},
+                    {"type", "SimObject"},
+                    {"parent", "/"},
+                    {"aspects", nlohmann::json::array_t {
+                        nlohmann::json::object_t {
+                            {"type", "Revolve"},
+                        },
+                    }},
+                    {"components", nlohmann::json::array_t {
+                        {
+                            {"type", "Placement"},
+                            {"position", {0.f, 0.f, 0.f, 1.f}},
+                            {"orientation", {1.f, 0.f, 0.f, 0.f}},
+                            {"scale", {sqrt2, sqrt2, 1.f}},
+                        },
+                        {
+                            {"type", "LightEmissionData"},
+                            {"lightType", "directional"},
+                            {"diffuse", {20.f, 20.f, 20.f}},
+                            {"specular", {20.f, 20.f, 20.f}},
+                            {"ambient", {.4f, .4f, .4f}},
+                        },
+                    }}
+                }
+            }},
+        }},
+    };
+
+    const nlohmann::json boardPiecePrototypeDescription {
+        {"name", "board_piece"},
+        {"type", "SimObject"},
+        {"parent", "/"},
+        {"aspects", nlohmann::json::array_t {
+            {
+                {"type", "BackAndForth"},
             },
-            nlohmann::json::object_t {
+        }},
+        {"components", nlohmann::json::array_t {
+            {
                 {"type", "Placement"},
-                {"position", {0.f, 0.f, 0.f, 1.f}},
+                {"position", {0.f, -1.f, -1.f, 1.f}},
                 {"orientation", {1.f, 0.f, 0.f, 0.f}},
                 {"scale", {1.f, 1.f, 1.f}},
             },
-        }},
-        {"aspects", nlohmann::json::array_t {
-            nlohmann::json::object_t {
-                { "type", "FlyCamera" },
+            {
+                {"type", "StaticModel"},
+                {"resourceName", "boardPieceModel"},
             }
         }},
-    })};
+    };
+    sceneDescription.at("parameters").at("nodes").push_back(boardPiecePrototypeDescription);
+    std::string nextParent { "/board_piece/" };
+    for(std::size_t i{1}; i < 21; ++i) {
+        Placement  newPiecePlacement {
+            .mPosition { 0.f, 2.f, 0.f, 1.f},
+            .mOrientation { glm::rotate(glm::quat{1.f, 0.f, 0.f, 0.f}, glm::radians(360.f/21.f), {0.f, 0.f, -1.f})},
+            .mScale { 1.f, 1.f, 1.f}
+        };
+        nlohmann::json newBoardPieceDescription = boardPiecePrototypeDescription;
+        newBoardPieceDescription.at("components")[0] = newPiecePlacement;
+        newBoardPieceDescription.at("parent") = nextParent;
 
-    const float sqrt2 { sqrt(2.f) };
-    std::shared_ptr<SceneNode> flashlight { SceneNode::create<LightEmissionData>(
-        {
-            glm::vec4(glm::vec3(0.f), 1.f),
-            glm::quat(),
-            glm::vec3{1.f}
-        },
-        "flashlight",
-        LightEmissionData::MakeSpotLight(
-            4.f,
-            13.f,
-            glm::vec3(2.f),
-            glm::vec3(4.f),
-            glm::vec3(.3f),
-            .07f,
-            .03f
-        )
-    )};
+        sceneDescription.at("parameters").at("nodes").push_back(newBoardPieceDescription);
+        nextParent += "board_piece/";
+    }
+
+    ResourceDatabase::addResourceDescription(sceneDescription);
+    std::shared_ptr<SceneNode> partialScene { ResourceDatabase::getRegisteredResource<SceneNode>(sceneDescription.at("name").get<std::string>()) };
     {
+        std::shared_ptr<SceneNode> flashlight { partialScene->getNode("/camera/flashlight/") };
+        // TODO: set scale automatically according to  the flashlight's light
+        // emission radius. How?
         Placement placement { flashlight->getComponent<Placement>() };
         placement.mScale = { glm::vec3(flashlight->getComponent<LightEmissionData>().mRadius)};
         flashlight->updateComponent<Placement>(placement);
     }
-    std::shared_ptr<SimObject> sunlight { SimObject::create<LightEmissionData>(
-        {
-            glm::vec4{glm::vec3(0.f), 1.f},
-            glm::quat { glm::vec3 {
-                glm::radians(-20.f), // pitch
-                glm::radians(180.f), // yaw
-                glm::radians(0.f) // roll
-            }},
-            glm::vec3{sqrt2, sqrt2, 1.f}
-        },
-        "sunlight",
-        {
-            LightEmissionData::MakeDirectionalLight(
-                glm::vec3{20.f},
-                glm::vec3{20.f},
-                glm::vec3{.4f}
-            )
-        }
-    )};
-    sunlight->addAspect(nlohmann::json {
-        {"type", "Revolve"},
-    }); // make sunlight revolve
-
-    // test out addition of component by its JSON representation
-    nlohmann::json sunlightEmissionJSON = sunlight->getComponent<LightEmissionData>();
-    sunlight->removeComponent<LightEmissionData>();
-    sunlight->addComponent(sunlightEmissionJSON);
 
 
-    ResourceDatabase::addResourceDescription({
-        {"name", "boardPieceModel"},
-        {"type", StaticModel::getResourceTypeName()},
-        {"method", StaticModelFromFile::getResourceConstructorName()},
-        {"parameters", {
-            {"path", "data/models/Generic Board Piece.obj"},
-        }}
-    });
+    SimpleECS::getSystem<SceneSystem>()->addNode(partialScene, "/");
 
-    std::shared_ptr<SimObject> boardPiecePrototype { SimObject::create<std::shared_ptr<StaticModel>>(
-        Placement{{0.f, -1.f, -1.f, 1.f}},
-        "board_piece",
-        ResourceDatabase::getResource<StaticModel>("boardPieceModel")
-    )};
-    boardPiecePrototype->addAspect(nlohmann::json {
-        {"type", "BackAndForth"},
-    });
-
-    std::vector<std::shared_ptr<SimObject>> boardPieces(21);
-    boardPieces[0] = std::static_pointer_cast<SimObject>(SceneNode::copy(boardPiecePrototype));
-    std::shared_ptr<SimObject> previousBoardPiece = boardPieces[0];
-    for(std::size_t i{1}; i < 21; ++i) {
-        boardPieces[i] = std::static_pointer_cast<SimObject>(SceneNode::copy(boardPiecePrototype));
-
-        Placement boardPiecePlacement { boardPieces[i]->getComponent<Placement>() };
-        boardPiecePlacement.mPosition = {0.f, 2.f, 0.f, 1.f};
-        boardPiecePlacement.mOrientation = glm::rotate(boardPiecePlacement.mOrientation, glm::radians(360.f/(1+20)), {0.f, 0.f, -1.f});
-        boardPieces[i]->updateComponent<Placement>(boardPiecePlacement);
-
-        // each board piece is the parent of the board piece made in
-        // the next iteration
-        previousBoardPiece->addNode(boardPieces[i], "/");
-        previousBoardPiece = boardPieces[i];
-    }
-
-    SimpleECS::getSystem<SceneSystem>()->addNode(camera, "/");
-    SimpleECS::getSystem<SceneSystem>()->addNode(flashlight, "/camera/");
-    SimpleECS::getSystem<SceneSystem>()->addNode(sunlight, "/");
-    SimpleECS::getSystem<SceneSystem>()->addNode(boardPieces[0], "/");
-
+    std::shared_ptr<SimObject> camera { std::static_pointer_cast<SimObject>(partialScene->getNode("/camera/")) };
     inputManager["Camera"].registerActionHandler("Rotate", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
     inputManager["Camera"].registerActionHandler("ToggleControl", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
     inputManager["Camera"].registerActionHandler("Move", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));

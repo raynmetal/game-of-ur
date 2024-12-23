@@ -62,11 +62,11 @@ private:
     void releaseResource();
 };
 
-class MaterialFromDescription: public ResourceFactoryMethod<Material, MaterialFromDescription> {
+class MaterialFromDescription: public ResourceConstructor<Material, MaterialFromDescription> {
 public:
 
     MaterialFromDescription():
-    ResourceFactoryMethod<Material, MaterialFromDescription> {0}
+    ResourceConstructor<Material, MaterialFromDescription> {0}
     {}
     inline static std::string getResourceConstructorName() { return "fromDescription"; }
 

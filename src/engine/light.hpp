@@ -197,8 +197,8 @@ inline void to_json(nlohmann::json& json, const LightEmissionData& lightEmission
                 }},
                 {"linearConst", lightEmissionData.mDecayLinear},
                 {"quadraticConst", lightEmissionData.mDecayQuadratic},
-                {"innerAngle", lightEmissionData.mCosCutoffInner},
-                {"outerAngle", lightEmissionData.mCosCutoffOuter},
+                {"innerAngle", glm::degrees(glm::acos(lightEmissionData.mCosCutoffInner))},
+                {"outerAngle", glm::degrees(glm::acos(lightEmissionData.mCosCutoffOuter))},
             };
         break;
     }

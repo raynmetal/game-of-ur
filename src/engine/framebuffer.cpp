@@ -102,7 +102,7 @@ void Framebuffer::copyResource(const Framebuffer& other) {
                 }
             );
             mTextureHandles.push_back(
-                ResourceDatabase::getResource<Texture>(colorBufferName)
+                ResourceDatabase::getRegisteredResource<Texture>(colorBufferName)
             );
             if(count < mNColorAttachments){
                 mTextureHandles.back()->attachToFramebuffer(count);
@@ -184,7 +184,7 @@ std::shared_ptr<IResource> FramebufferFromDescription::createResource(const nloh
                 colorBufferDescription
             );
             textureHandles.push_back(
-                ResourceDatabase::getResource<Texture>(colorBufferName)
+                ResourceDatabase::getRegisteredResource<Texture>(colorBufferName)
             );
             //Assume the first n color buffers become the first n
             //framebuffer attachments

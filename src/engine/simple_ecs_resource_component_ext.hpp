@@ -14,7 +14,7 @@ struct ComponentFromJSON<std::shared_ptr<TResource>,
     >::value>::type> {
 
     static std::shared_ptr<TResource> get(const nlohmann::json& jsonResource) {
-        return ResourceDatabase::getResource<TResource>(
+        return ResourceDatabase::getRegisteredResource<TResource>(
             jsonResource.at("resourceName")
         );
     }

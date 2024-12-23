@@ -16,6 +16,9 @@
 #include "apploop_events.hpp"
 #include "scene_components.hpp"
 
+class SceneNode;
+class SceneSystem;
+
 enum class RelativeTo : uint8_t {
     PARENT=0,
     // WORLD=1,
@@ -160,17 +163,6 @@ private:
 
 friend class SceneSystem::ApploopEventHandler;
 friend class SceneNode;
-};
-
-class SceneNodeFromDescription: public ResourceFactoryMethod<SceneNode, SceneNodeFromDescription> {
-public:
-    SceneNodeFromDescription(): 
-    ResourceFactoryMethod<SceneNode, SceneNodeFromDescription>{0}
-    {}
-
-    static std::string getResourceConstructorName() { return "fromDescription"; }
-private:
-    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParams) override;
 };
 
 template<typename ...TComponents>

@@ -68,10 +68,10 @@ private:
 //     return nextState;
 // }
 
-class StaticMeshFromDescription: public ResourceFactoryMethod<StaticMesh, StaticMeshFromDescription> {
+class StaticMeshFromDescription: public ResourceConstructor<StaticMesh, StaticMeshFromDescription> {
 public:
     StaticMeshFromDescription():
-    ResourceFactoryMethod<StaticMesh, StaticMeshFromDescription>{0}
+    ResourceConstructor<StaticMesh, StaticMeshFromDescription>{0}
     {}
 
     inline static std::string getResourceConstructorName(){ return "fromDescription"; }

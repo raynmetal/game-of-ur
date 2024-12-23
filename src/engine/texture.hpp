@@ -83,17 +83,17 @@ protected:
     void releaseResource();
 };
 
-class TextureFromFile: public ResourceFactoryMethod<Texture, TextureFromFile> {
+class TextureFromFile: public ResourceConstructor<Texture, TextureFromFile> {
 public:
-    TextureFromFile(): ResourceFactoryMethod<Texture, TextureFromFile> {0} {}
+    TextureFromFile(): ResourceConstructor<Texture, TextureFromFile> {0} {}
     inline static std::string getResourceConstructorName() { return "fromFile"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };
 
-class TextureFromColorBufferDefinition: public ResourceFactoryMethod<Texture, TextureFromColorBufferDefinition> {
+class TextureFromColorBufferDefinition: public ResourceConstructor<Texture, TextureFromColorBufferDefinition> {
 public:
-    TextureFromColorBufferDefinition(): ResourceFactoryMethod<Texture, TextureFromColorBufferDefinition> {0} {}
+    TextureFromColorBufferDefinition(): ResourceConstructor<Texture, TextureFromColorBufferDefinition> {0} {}
     inline static std::string getResourceConstructorName() { return "fromDescription"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;

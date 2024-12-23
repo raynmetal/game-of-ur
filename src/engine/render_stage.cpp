@@ -23,7 +23,7 @@ BaseRenderStage::BaseRenderStage(
         };
         ResourceDatabase::addResourceDescription(shaderDescription);
     }
-    mShaderHandle = ResourceDatabase::getResource<ShaderProgram>(shaderFilepath);
+    mShaderHandle = ResourceDatabase::getRegisteredResource<ShaderProgram>(shaderFilepath);
     glGenVertexArrays(1, &mVertexArrayObject);
 }
 
@@ -119,7 +119,7 @@ void GeometryRenderStage::setup() {
         };
         ResourceDatabase::addResourceDescription(framebufferDescription);
     }
-    mFramebufferHandle = ResourceDatabase::getResource<Framebuffer>("geometryFramebuffer");
+    mFramebufferHandle = ResourceDatabase::getRegisteredResource<Framebuffer>("geometryFramebuffer");
 
     declareRenderTarget("geometryPosition", 0);
     declareRenderTarget("geometryNormal", 1);
@@ -137,7 +137,7 @@ void GeometryRenderStage::setup() {
             }
         });
     }
-    std::shared_ptr<Texture> plainWhite = ResourceDatabase::getResource<Texture>("PlainWhite");
+    std::shared_ptr<Texture> plainWhite = ResourceDatabase::getRegisteredResource<Texture>("PlainWhite");
     Material::RegisterTextureHandleProperty("textureAlbedo", plainWhite);
     Material::RegisterTextureHandleProperty("textureSpecular", plainWhite);
     Material::RegisterTextureHandleProperty("textureNormal", plainWhite);
@@ -261,7 +261,7 @@ void LightingRenderStage::setup() {
         };
         ResourceDatabase::addResourceDescription(framebufferDescription);
     }
-    mFramebufferHandle = ResourceDatabase::getResource<Framebuffer>("lightingFramebuffer");
+    mFramebufferHandle = ResourceDatabase::getRegisteredResource<Framebuffer>("lightingFramebuffer");
     declareRenderTarget("litScene", 0);
     declareRenderTarget("brightCutoff", 1);
     mShaderHandle->use();
@@ -401,11 +401,11 @@ void BlurRenderStage::setup() {
         };
         ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
     }
-    mFramebufferHandle = ResourceDatabase::getResource<Framebuffer>("bloomFramebuffer");
+    mFramebufferHandle = ResourceDatabase::getRegisteredResource<Framebuffer>("bloomFramebuffer");
 
     declareRenderTarget("pingBuffer", 0);
     declareRenderTarget("pongBuffer", 1);
-    attachMesh("screenMesh", ResourceDatabase::getResource<StaticMesh>("screenRectangleMesh"));
+    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
     attachMaterial("screenMaterial",
         std::make_shared<Material>()
     );
@@ -505,9 +505,9 @@ void TonemappingRenderStage::setup() {
         };
         ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
     }
-    mFramebufferHandle = ResourceDatabase::getResource<Framebuffer>("tonemappingFramebuffer");
+    mFramebufferHandle = ResourceDatabase::getRegisteredResource<Framebuffer>("tonemappingFramebuffer");
     declareRenderTarget("tonemappedScene", 0);
-    attachMesh("screenMesh", ResourceDatabase::getResource<StaticMesh>("screenRectangleMesh"));
+    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
     attachMaterial("screenMaterial",
         std::make_shared<Material>()
     );
@@ -573,7 +573,7 @@ void ScreenRenderStage::setup() {
         };
         ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
     }
-    attachMesh("screenMesh", ResourceDatabase::getResource<StaticMesh>("screenRectangleMesh"));
+    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
 }
 
 void ScreenRenderStage::validate() {

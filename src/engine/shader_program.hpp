@@ -63,10 +63,10 @@ private:
     GLuint mID;
 };
 
-class ShaderProgramFromFile: public ResourceFactoryMethod<ShaderProgram, ShaderProgramFromFile> {
+class ShaderProgramFromFile: public ResourceConstructor<ShaderProgram, ShaderProgramFromFile> {
 public:
     ShaderProgramFromFile():
-    ResourceFactoryMethod<ShaderProgram, ShaderProgramFromFile> {0}
+    ResourceConstructor<ShaderProgram, ShaderProgramFromFile> {0}
     {}
     inline static std::string getResourceConstructorName() { return "fromFile"; }
 private:

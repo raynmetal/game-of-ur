@@ -62,10 +62,10 @@ private:
     void stealResource(Framebuffer& other);
 };
 
-class FramebufferFromDescription: public ResourceFactoryMethod<Framebuffer, FramebufferFromDescription> {
+class FramebufferFromDescription: public ResourceConstructor<Framebuffer, FramebufferFromDescription> {
 public:
     FramebufferFromDescription(): 
-        ResourceFactoryMethod<Framebuffer,FramebufferFromDescription>{0} 
+        ResourceConstructor<Framebuffer,FramebufferFromDescription>{0} 
     {}
 
     static std::string getResourceConstructorName() { return "fromDescription"; }

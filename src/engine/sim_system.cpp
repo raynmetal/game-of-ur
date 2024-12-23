@@ -11,6 +11,13 @@ std::shared_ptr<SimObject> SimObject::create(const nlohmann::json& jsonSimObject
     return downcastSimObject;
 }
 
+std::shared_ptr<SimObject> SimObject::copy(const std::shared_ptr<const SimObject> simObject) {
+    //downcast before return
+    return std::static_pointer_cast<SimObject>(
+        SceneNode::copy(simObject)
+    );
+}
+
 std::shared_ptr<SceneNode> SimObject::clone() const {
     // since SceneNode enables shared from this, we must ensure that the
     // associated SceneNode control block is created
@@ -105,13 +112,4 @@ void BaseSimObjectAspect::addAspect(const BaseSimObjectAspect& aspect) {
 
 void BaseSimObjectAspect::addAspect(const nlohmann::json& jsonAspectProperties) {
     mSimObject->addAspect(jsonAspectProperties);
-}
-
-std::shared_ptr<IResource> SimObjectFromDescription::createResource(const nlohmann::json& methodParameters) {
-    // SceneNode shared pointer control block created through SimObject::create
-    std::shared_ptr<SimObject> simObjectPtr { SimObject::create(methodParameters) };
-
-    // Resource<SimObject> shared pointer shares reference count with SceneNode shared pointer
-    // control block
-    return std::static_pointer_cast<Resource<SimObject>, SimObject>(simObjectPtr);
 }
