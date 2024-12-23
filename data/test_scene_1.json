@@ -1,0 +1,936 @@
+{
+    "nodes": [
+        {
+        "components": [
+            {
+            "orientation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "position": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            }
+        ],
+        "name": "partial_scene_root",
+        "parent": "",
+        "type": "SceneNode"
+        },
+        {
+        "aspects": [
+            {
+            "type": "FlyCamera"
+            }
+        ],
+        "components": [
+            {
+            "fov": 45.0,
+            "orthographicScale": 3.0,
+            "projectionMode": "frustum",
+            "type": "CameraProperties"
+            },
+            {
+            "orientation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "position": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            }
+        ],
+        "name": "camera",
+        "parent": "/",
+        "type": "SimObject"
+        },
+        {
+        "components": [
+            {
+            "orientation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "position": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "ambient": [
+                0.20000000298023224,
+                0.20000000298023224,
+                0.20000000298023224
+            ],
+            "diffuse": [
+                2.0,
+                2.0,
+                2.0
+            ],
+            "innerAngle": 4.0,
+            "lightType": "spot",
+            "linearConst": 0.07000000029802322,
+            "outerAngle": 13.0,
+            "quadraticConst": 0.029999999329447746,
+            "specular": [
+                4.0,
+                4.0,
+                4.0
+            ],
+            "type": "LightEmissionData"
+            }
+        ],
+        "name": "flashlight",
+        "parent": "/camera/",
+        "type": "SceneNode"
+        },
+        {
+        "aspects": [
+            {
+            "type": "Revolve"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "position": [
+                0.0,
+                0.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.4142135381698608,
+                1.4142135381698608,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "ambient": [
+                0.4000000059604645,
+                0.4000000059604645,
+                0.4000000059604645
+            ],
+            "diffuse": [
+                20.0,
+                20.0,
+                20.0
+            ],
+            "lightType": "directional",
+            "specular": [
+                20.0,
+                20.0,
+                20.0
+            ],
+            "type": "LightEmissionData"
+            }
+        ],
+        "name": "sunlight",
+        "parent": "/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                1.0,
+                0.0,
+                0.0,
+                0.0
+            ],
+            "position": [
+                0.0,
+                -1.0,
+                -1.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        },
+        {
+        "aspects": [
+            {
+            "type": "BackAndForth"
+            }
+        ],
+        "components": [
+            {
+            "orientation": [
+                0.9888308048248291,
+                0.0,
+                0.0,
+                -0.1490422636270523
+            ],
+            "position": [
+                0.0,
+                2.0,
+                0.0,
+                1.0
+            ],
+            "scale": [
+                1.0,
+                1.0,
+                1.0
+            ],
+            "type": "Placement"
+            },
+            {
+            "resourceName": "boardPieceModel",
+            "type": "StaticModel"
+            }
+        ],
+        "name": "board_piece",
+        "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
+        "type": "SimObject"
+        }
+    ],
+    "resources": [
+        {
+        "method": "fromFile",
+        "name": "boardPieceModel",
+        "parameters": {
+            "path": "data/models/Generic Board Piece.obj"
+        },
+        "type": "StaticModel"
+        }
+    ]
+}

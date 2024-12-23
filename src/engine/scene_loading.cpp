@@ -8,13 +8,13 @@ std::shared_ptr<IResource> SceneFromFile::createResource(const nlohmann::json& s
     std::ifstream jsonFileStream;
 
     jsonFileStream.open(scenePath);
-    nlohmann::json sceneDescription { nlohmann::json::parse(jsonFileStream)[0].get<nlohmann::json>() };
+    nlohmann::json sceneDescription { nlohmann::json::parse(jsonFileStream) };
     jsonFileStream.close();
 
     return ResourceDatabase::constructAnonymousResource<SceneNode>({
         { "type", SceneNode::getResourceTypeName() },
-        { "method", SceneNodeFromDescription::getResourceConstructorName() },
-        { "parameters", sceneDescription },
+        { "method", SceneFromDescription::getResourceConstructorName() },
+        { "parameters", sceneDescription[0].get<nlohmann::json>() },
     });
 }
 
