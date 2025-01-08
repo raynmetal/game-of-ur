@@ -96,6 +96,7 @@ EntityID BaseSimObjectAspect::getEntityID() const {
 void SimObject::addAspect(const BaseSimObjectAspect& aspect) {
     mSimObjectAspects.try_emplace(aspect.getAspectTypeName(), aspect.makeCopy());
     mSimObjectAspects.at(aspect.getAspectTypeName())->mSimObject = this;
+    mSimObjectAspects.at(aspect.getAspectTypeName())->onAttach();
 }
 
 void SimObject::addAspect(const nlohmann::json& jsonAspectProperties) {
@@ -104,6 +105,7 @@ void SimObject::addAspect(const nlohmann::json& jsonAspectProperties) {
         SimpleECS::getSystem<SimSystem>()->constructAspect(jsonAspectProperties)
     );
     mSimObjectAspects.at(jsonAspectProperties.at("type").get<std::string>())->mSimObject = this;
+    mSimObjectAspects.at(jsonAspectProperties.at("type").get<std::string>())->onAttach();
 }
 
 void BaseSimObjectAspect::addAspect(const BaseSimObjectAspect& aspect) {
@@ -112,4 +114,8 @@ void BaseSimObjectAspect::addAspect(const BaseSimObjectAspect& aspect) {
 
 void BaseSimObjectAspect::addAspect(const nlohmann::json& jsonAspectProperties) {
     mSimObject->addAspect(jsonAspectProperties);
+}
+
+SignalTracker& BaseSimObjectAspect::getSignalTrackerReference() {
+    return mSimObject->mSignalTracker;
 }

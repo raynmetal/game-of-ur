@@ -13,6 +13,7 @@
 #include "apploop_events.hpp" 
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
+#include "signals.hpp"
 
 class BaseSimObjectAspect;
 class SimObject;
@@ -51,7 +52,7 @@ private:
 
     std::unique_ptr<BaseSimObjectAspect> constructAspect(const nlohmann::json& jsonAspectProperties);
 
-    std::unordered_map<std::string, std::unique_ptr<BaseSimObjectAspect> (*)(const nlohmann::json& jsonAspectProperties)> mAspectConstructors{};
+    std::unordered_map<std::string, std::unique_ptr<BaseSimObjectAspect> (*)(const nlohmann::json& jsonAspectProperties)> mAspectConstructors {};
     std::shared_ptr<SimSystem::ApploopEventHandler> mApploopEventHandler { SimSystem::ApploopEventHandler::registerHandler(this) };
 friend class SimSystem::ApploopEventHandler;
 friend class BaseSimObjectAspect;
@@ -91,7 +92,6 @@ protected:
     // // TODO: sit down and figure out whether this operator will ever actually be useful
     // SimObject& operator=(const SimObject& other);
 
-
 private:
     void update(uint32_t deltaSimTimeMillis);
 
@@ -99,6 +99,7 @@ private:
     std::shared_ptr<SceneNode> clone() const override;
 
     std::unordered_map<std::string, std::unique_ptr<BaseSimObjectAspect>> mSimObjectAspects { };
+    SignalTracker mSignalTracker {};
 
 friend class SimSystem;
 friend class BaseSimObjectAspect;
@@ -109,11 +110,15 @@ public:
     virtual ~BaseSimObjectAspect()=default;
 
     virtual void update(uint32_t deltaSimTimeMillis) {};
-    virtual void onCreate() {};
-    virtual void onDestroy() {};
-    
+    virtual void onCreate(){};
+    virtual void onDestroy(){};
+    virtual void onAttach(){};
+    virtual void onDetach(){};
+
 protected:
     BaseSimObjectAspect()=default;
+
+    SignalTracker& getSignalTrackerReference();
 
     template <typename TSimObjectAspectDerived>
     static inline void registerAspect() {

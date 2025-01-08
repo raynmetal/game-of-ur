@@ -22,6 +22,7 @@
 #include "engine/input_system/input_system.hpp"
 
 #include "app/fly_camera.hpp"
+#include "app/back_and_forth.hpp"
 
 extern constexpr int gWindowWidth {800};
 extern constexpr int gWindowHeight {600};
@@ -30,6 +31,9 @@ const GLuint kSimulationStep{ 1000/30 };
 
 void initialize();
 void cleanup();
+void observeDirectionChange(float direction) {
+    std::cout << "direction changed to: " << direction << "\n";
+}
 
 int main(int argc, char* argv[]) {
     initialize();
@@ -77,6 +81,13 @@ int main(int argc, char* argv[]) {
     // Scene should be remembered by the scene system 
     // now; no need to store a reference to it ourselves
     partialScene = nullptr;
+
+    // testing the signals system with a signal emitted whenever the 
+    // first board piece changes directions
+    SignalTracker mainsTracker {};
+    SignalObserver<float> observerDirectionChanged { mainsTracker, "directionChangeObserved", observeDirectionChange };
+    std::shared_ptr<SimObject> firstBoardPiece {std::static_pointer_cast<SimObject>(SimpleECS::getSystem<SceneSystem>()->getNode("/partial_scene_root/board_piece/"))};
+    observerDirectionChanged.connect(*(firstBoardPiece->getAspect<BackAndForth>().mSigDirectionChanged));
 
     // Timing related variables
     uint32_t previousTicks { SDL_GetTicks() };
