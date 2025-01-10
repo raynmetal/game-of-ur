@@ -82,12 +82,18 @@ int main(int argc, char* argv[]) {
     // now; no need to store a reference to it ourselves
     partialScene = nullptr;
 
-    // testing the signals system with a signal emitted whenever the 
+    // testing the signals system with a signal emitted whenever the
     // first board piece changes directions
     SignalTracker mainsTracker {};
-    SignalObserver<float> observerDirectionChanged { mainsTracker, "directionChangeObserved", observeDirectionChange };
+    SignalObserver<float> observerDirectionChanged1 { mainsTracker, "directionChangeObserved1", observeDirectionChange };
+    SignalObserver<float> observerDirectionChanged2 { mainsTracker, "directionChangeObserved2", observeDirectionChange };
     std::shared_ptr<SimObject> firstBoardPiece {std::static_pointer_cast<SimObject>(SimpleECS::getSystem<SceneSystem>()->getNode("/partial_scene_root/board_piece/"))};
-    observerDirectionChanged.connect(*(firstBoardPiece->getAspect<BackAndForth>().mSigDirectionChanged));
+    std::shared_ptr<SimObject> thirdBoardPiece {std::static_pointer_cast<SimObject>(SimpleECS::getSystem<SceneSystem>()->getNode("/partial_scene_root/board_piece/board_piece/board_piece/"))};
+
+    // connection using observer and signal directly
+    observerDirectionChanged1.connect(firstBoardPiece->getAspect<BackAndForth>().mSigDirectionChanged);
+    // connection using observer's tracker, by observer's and signal's names
+    mainsTracker.connect("directionChanged", "directionChangeObserved2", thirdBoardPiece->getAspect("BackAndForth"));
 
     // Timing related variables
     uint32_t previousTicks { SDL_GetTicks() };

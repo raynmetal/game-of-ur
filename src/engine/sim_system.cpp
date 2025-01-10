@@ -1,9 +1,15 @@
 #include "sim_system.hpp"
 
+SimObject::~SimObject() {
+    for(const auto& aspectPair: mSimObjectAspects) {
+        aspectPair.second->detach();
+    }
+}
+
 std::shared_ptr<SimObject> SimObject::create(const nlohmann::json& jsonSimObject) {
     std::shared_ptr<SceneNode> newSimObject {new SimObject{ jsonSimObject }};
     std::shared_ptr<SimObject> downcastSimObject { std::static_pointer_cast<SimObject, SceneNode>(newSimObject) };
-
+    newSimObject->onCreated();
     for(const nlohmann::json& aspectDescription: jsonSimObject.at("aspects")) {
         downcastSimObject->addAspect(aspectDescription);
     }
@@ -16,6 +22,7 @@ std::shared_ptr<SimObject> SimObject::copy(const std::shared_ptr<const SimObject
     return std::static_pointer_cast<SimObject>(
         SceneNode::copy(simObject)
     );
+
 }
 
 std::shared_ptr<SceneNode> SimObject::clone() const {
@@ -94,18 +101,44 @@ EntityID BaseSimObjectAspect::getEntityID() const {
 }
 
 void SimObject::addAspect(const BaseSimObjectAspect& aspect) {
+    const std::string& aspectType { aspect.getAspectTypeName() };
     mSimObjectAspects.try_emplace(aspect.getAspectTypeName(), aspect.makeCopy());
-    mSimObjectAspects.at(aspect.getAspectTypeName())->mSimObject = this;
-    mSimObjectAspects.at(aspect.getAspectTypeName())->onAttach();
+    mSimObjectAspects.at(aspectType)->attach(this);
+}
+
+BaseSimObjectAspect& SimObject::getAspect(const std::string& aspectType) {
+    return *mSimObjectAspects.at(aspectType);
 }
 
 void SimObject::addAspect(const nlohmann::json& jsonAspectProperties) {
+    const std::string& aspectType { jsonAspectProperties.at("type").get<std::string>() };
     mSimObjectAspects.try_emplace(
-        jsonAspectProperties.at("type").get<std::string>(),
+        aspectType,
         SimpleECS::getSystem<SimSystem>()->constructAspect(jsonAspectProperties)
     );
-    mSimObjectAspects.at(jsonAspectProperties.at("type").get<std::string>())->mSimObject = this;
-    mSimObjectAspects.at(jsonAspectProperties.at("type").get<std::string>())->onAttach();
+    mSimObjectAspects.at(aspectType)->attach(this);
+}
+
+bool SimObject::hasAspect(const std::string& aspectType) const {
+    return mSimObjectAspects.find(aspectType) != mSimObjectAspects.end();
+}
+
+void SimObject::removeAspect(const std::string& aspectType) {
+    mSimObjectAspects.erase(aspectType);
+}
+
+void BaseSimObjectAspect::attach(SimObject* newOwner) {
+    detach();
+
+    mSimObject = newOwner;
+    onAttach();
+}
+
+void BaseSimObjectAspect::detach() {
+    if(!mSimObject) return;
+
+    onDetach();
+    mSimObject = nullptr;
 }
 
 void BaseSimObjectAspect::addAspect(const BaseSimObjectAspect& aspect) {
@@ -115,7 +148,10 @@ void BaseSimObjectAspect::addAspect(const BaseSimObjectAspect& aspect) {
 void BaseSimObjectAspect::addAspect(const nlohmann::json& jsonAspectProperties) {
     mSimObject->addAspect(jsonAspectProperties);
 }
+BaseSimObjectAspect& BaseSimObjectAspect::getAspect(const std::string& aspectType) {
+    return mSimObject->getAspect(aspectType);
+}
 
-SignalTracker& BaseSimObjectAspect::getSignalTrackerReference() {
-    return mSimObject->mSignalTracker;
+bool BaseSimObjectAspect::hasAspect(const std::string& aspectType) const {
+    return mSimObject->hasAspect(aspectType);
 }

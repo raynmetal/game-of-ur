@@ -1,6 +1,5 @@
 #include <vector>
 #include <set>
-#include <stack>
 #include <cassert>
 #include <memory>
 
@@ -8,15 +7,19 @@
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
 
+SceneNode::~SceneNode() {
+    onDestroyed();
+}
+
 std::shared_ptr<SceneNode> SceneNode::create(const nlohmann::json& sceneNodeDescription) {
     std::shared_ptr<SceneNode> newNode{ new SceneNode{sceneNodeDescription} };
+    newNode->onCreated();
     return newNode;
 }
 
 std::shared_ptr<SceneNode> SceneNode::copy(const std::shared_ptr<const SceneNode> sceneNode) {
     if(!sceneNode) return nullptr;
     std::shared_ptr<SceneNode> newSceneNode{ sceneNode->clone() };
-
     newSceneNode->copyDescendants(*sceneNode);
 
     return newSceneNode;
@@ -25,6 +28,7 @@ std::shared_ptr<SceneNode> SceneNode::copy(const std::shared_ptr<const SceneNode
 std::shared_ptr<SceneNode> SceneNode::clone() const {
     // construct a new scene node with the same components as this one
     std::shared_ptr<SceneNode> newSceneNode{ new SceneNode{*this} };
+    newSceneNode->onCreated();
     return newSceneNode;
 }
 
@@ -114,12 +118,7 @@ void SceneNode::addComponent(const nlohmann::json& jsonComponent, const bool byp
     // is disabled by default on any systems it is eligible for. We need to activate
     // the node according to its system mask
     if(!bypassSceneActivityCheck && isActive()) {
-        // TODO: we shouldn't need to visit every node on the tree just because this change
-        // has occurred; just the node to which this component was added should be 
-        // sufficient
-        SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
-            shared_from_this(), true
-        );
+        mEntity->enableSystems(mSystemMask);
     }
 }
 
@@ -274,6 +273,12 @@ EntityID SceneNode::getEntityID() const {
     } return SpecialEntity::ENTITY_ROOT;
 }
 
+void SceneSystem::ApploopEventHandler::onApplicationEnd() {
+    for(auto& child: mSystem->mRootNode->getChildren()) {
+        child->setEnabled<SceneSystem>(false);
+    }
+}
+
 bool SceneSystem::inScene(std::shared_ptr<const SceneNode> sceneNode) const {
     return mEntityToNode.find(sceneNode->getEntityID()) != mEntityToNode.end();
 }
@@ -322,7 +327,7 @@ void SceneSystem::nodeRemoved(std::shared_ptr<SceneNode> sceneNode) {
         // longer seen by any system
         nodeActivationChanged(sceneNode, false);
 
-        // lose all references to the node
+        // lose all references to the node and its descendants
         for(auto& descendant: sceneNode->getDescendants()) {
             mEntityToNode.erase(descendant->getEntityID());
         }
@@ -333,41 +338,40 @@ void SceneSystem::nodeRemoved(std::shared_ptr<SceneNode> sceneNode) {
 void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNode> sceneNode, bool state) {
     assert(sceneNode && "Null node reference cannot be enabled");
 
-    // early exit if this node isn't in the scene
-    if(!sceneNode->inScene()) { return; }
+    // early exit if this node isn't in the scene, or if its parent
+    // isn't active, or node is already in requested state
+    if(
+        !sceneNode->inScene() 
+        || !isActive(sceneNode->mParent)
+        || (isActive(sceneNode) && state) 
+        || (!isActive(sceneNode) && !state)
+    ) { return; }
 
-    if(state==true && isActive(sceneNode->mParent)) {
-        sceneNode->mEntity->enableSystems(sceneNode->mSystemMask);
-        mActiveEntities.emplace(sceneNode->getEntityID());
-        mComputeTransformQueue.emplace(sceneNode->getEntityID());
+    if(state) activateSubtree(sceneNode);
+    else deactivateSubtree(sceneNode);
+}
+
+void SceneSystem::activateSubtree(std::shared_ptr<SceneNode> rootNode) {
+    for(auto& childNode: rootNode->getChildren()) {
+        if(childNode->mEnabled) activateSubtree(childNode);
     }
-    else {
-        sceneNode->mEntity->disableSystems();
-        mActiveEntities.erase(sceneNode->getEntityID());
-        mComputeTransformQueue.erase(sceneNode->getEntityID());
-    }
-    std::vector<std::shared_ptr<SceneNode>> toVisit { sceneNode->getChildren() };
 
-    // propagate the change in this node's state down to its descendants
-    while(!toVisit.empty()) {
-        std::shared_ptr<SceneNode> currentNode { toVisit.back() };
-        toVisit.pop_back();
+    rootNode->mEntity->enableSystems(rootNode->mSystemMask);
+    mActiveEntities.emplace(rootNode->getEntityID());
+    mComputeTransformQueue.emplace(rootNode->getEntityID());
 
-        // if this node is marked enabled, and an unbroken chain of
-        // alive nodes exists to the scene root, enable this node
-        if(currentNode->mEnabled && currentNode->mParent->isActive()) {
-            currentNode->mEntity->enableSystems(currentNode->mSystemMask);
-            mActiveEntities.emplace(currentNode->getEntityID());
-            mComputeTransformQueue.emplace(currentNode->getEntityID());
-        // not enabled or parent is dead, disable this node
-        } else {
-            currentNode->mEntity->disableSystems();
-            mActiveEntities.erase(currentNode->getEntityID());
-            mComputeTransformQueue.erase(currentNode->getEntityID());
-        }
-        for(auto& node: currentNode->getChildren()) {
-            toVisit.push_back(node);
-        }
+    rootNode->onActivated();
+}
+
+void SceneSystem::deactivateSubtree(std::shared_ptr<SceneNode> rootNode) {
+    rootNode->onDeactivated();
+
+    rootNode->mEntity->disableSystems();
+    mActiveEntities.erase(rootNode->getEntityID());
+    mComputeTransformQueue.erase(rootNode->getEntityID());
+
+    for(auto& childNode: rootNode->getChildren()) {
+        if(childNode->mEnabled) deactivateSubtree(childNode);
     }
 }
 

@@ -36,12 +36,12 @@ enum SpecialEntity: EntityID {
 class SceneNode: public std::enable_shared_from_this<SceneNode>, public Resource<SceneNode> {
 public:
     template<typename ...TComponents>
-    static std::shared_ptr<SceneNode> create(const Placement& placement, const std::string& name,  TComponents...components);
+    static std::shared_ptr<SceneNode> create(const Placement& placement, const std::string& name, TComponents...components);
     static std::shared_ptr<SceneNode> create(const nlohmann::json& sceneNodeDescription);
     static std::shared_ptr<SceneNode> copy(const std::shared_ptr<const SceneNode> sceneNode);
 
 
-    virtual ~SceneNode()=default;
+    virtual ~SceneNode();
 
     template <typename TComponent>
     void addComponent(const TComponent& component, const bool bypassSceneActivityCheck=false);
@@ -66,6 +66,12 @@ public:
     bool getEnabled() const;
 
     EntityID getEntityID() const;
+
+    // lifecycle event hooks
+    virtual void onCreated(){}
+    virtual void onActivated(){}
+    virtual void onDeactivated(){}
+    virtual void onDestroyed(){}
 
     bool inScene() const;
     bool isActive() const;
@@ -136,6 +142,7 @@ private:
     private:
         void onPreRenderStep(float simulationProgress) override;
         void onApplicationStart() override;
+        void onApplicationEnd() override;
         SceneSystem* mSystem;
     };
     bool isActive(std::shared_ptr<const SceneNode> sceneNode) const;
@@ -149,6 +156,8 @@ private:
     void nodeAdded(std::shared_ptr<SceneNode> sceneNode);
     void nodeRemoved(std::shared_ptr<SceneNode> sceneNode);
     void nodeActivationChanged(std::shared_ptr<SceneNode> sceneNode, bool state);
+    void activateSubtree(std::shared_ptr<SceneNode> sceneNode);
+    void deactivateSubtree(std::shared_ptr<SceneNode> sceneNode);
 
     void onEntityUpdated(EntityID entityID) override;
 
@@ -167,7 +176,9 @@ friend class SceneNode;
 
 template<typename ...TComponents>
 std::shared_ptr<SceneNode> SceneNode::create(const Placement& placement, const std::string& name,  TComponents...components) {
-    return std::shared_ptr<SceneNode>( new SceneNode(placement, name, components...));
+    std::shared_ptr<SceneNode> newNode ( new SceneNode(placement, name, components...));
+    newNode->onCreated();
+    return newNode;
 }
 
 template <typename ...TComponents>
@@ -193,13 +204,11 @@ void SceneNode::addComponent(const TComponent& component, bool bypassSceneActivi
     // is disabled by default on any systems it is eligible for. We need to activate
     // the node according to its system mask
     if(!bypassSceneActivityCheck && isActive()) {
-        // TODO: we shouldn't need to visit every node on the tree just because this change
-        // has occurred; just the node to which this component was added should be 
-        // sufficient
-        SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
-            shared_from_this(), true
-        );
+        mEntity->enableSystems(mSystemMask);
     }
+    // NOTE: no removeComponent() equivalent required, as systems that depend on the removed
+    // component will automatically have this entity removed from their list, and hence
+    // be disabled
 }
 
 template <typename TComponent>
@@ -234,12 +243,9 @@ void SceneNode::setEnabled(bool state) {
 
     // since the system mask has been changed, we'll want the scene
     // to talk to ECS and make this node visible to the system that
-    // was enabled
-    if(inScene() && mEnabled){
-        SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
-            shared_from_this(),
-            true
-        );
+    // was enabled, if eligible
+    if(state == true && isActive()){
+        mEntity->enableSystems(mSystemMask);
     }
 }
 
@@ -252,7 +258,7 @@ inline void SceneNode::setEnabled<SceneSystem>(bool state) {
     // mActiveNodes and ECS getEnabledEntities, which is 
     // redundant and may eventually cause errors
     mSystemMask.set(systemType, state);
-    mEnabled = state;
+    mEnabled = state; // TODO: more redundancy; why?
     SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
         shared_from_this(),
         state

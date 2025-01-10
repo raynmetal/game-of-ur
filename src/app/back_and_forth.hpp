@@ -9,13 +9,11 @@ public:
     inline static std::string getSimObjectAspectTypeName() { return "BackAndForth"; }
     static std::unique_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
 
-    void onAttach() override;
-
     void update(uint32_t deltaSimtimeMillis) override;
 
     std::unique_ptr<BaseSimObjectAspect> makeCopy() const override;
 
-    std::unique_ptr<Signal<float>> mSigDirectionChanged {nullptr};
+    Signal<float> mSigDirectionChanged {*this, "directionChanged"};
 
 private:
     BackAndForth() : SimObjectAspect<BackAndForth>{0} {}

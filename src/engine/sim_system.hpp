@@ -65,6 +65,7 @@ friend class SimObject;
  */
 class SimObject: public SceneNode, public Resource<SimObject> {
 public:
+    ~SimObject();
     inline static std::string getResourceTypeName() { return "SimObject"; }
 
     template <typename ...TComponents>
@@ -76,11 +77,14 @@ public:
     void addAspect(const nlohmann::json& jsonAspectProperties);
     void addAspect(const BaseSimObjectAspect& simObjectAspect);
     template <typename TSimObjectAspect>
-    bool hasAspect();
+    bool hasAspect() const;
+    bool hasAspect(const std::string& aspectType) const;
     template <typename TSimObjectAspect>
     TSimObjectAspect& getAspect();
+    BaseSimObjectAspect& getAspect(const std::string& aspectType);
     template <typename TSimObjectAspect>
     void removeAspect();
+    void removeAspect(const std::string& aspectType);
 
 protected:
     template <typename ...TComponents>
@@ -105,20 +109,16 @@ friend class SimSystem;
 friend class BaseSimObjectAspect;
 };
 
-class BaseSimObjectAspect {
+class BaseSimObjectAspect : public SignalTracker {
 public:
     virtual ~BaseSimObjectAspect()=default;
 
     virtual void update(uint32_t deltaSimTimeMillis) {};
-    virtual void onCreate(){};
-    virtual void onDestroy(){};
     virtual void onAttach(){};
     virtual void onDetach(){};
 
 protected:
     BaseSimObjectAspect()=default;
-
-    SignalTracker& getSignalTrackerReference();
 
     template <typename TSimObjectAspectDerived>
     static inline void registerAspect() {
@@ -147,9 +147,11 @@ protected:
     void addAspect(const nlohmann::json& jsonAspectProperties);
     void addAspect(const BaseSimObjectAspect& aspect);
     template <typename TSimObjectAspect>
-    bool hasAspect();
+    bool hasAspect() const;
+    bool hasAspect(const std::string& aspectType) const;
     template <typename TSimObjectAspect>
     TSimObjectAspect& getAspect();
+    BaseSimObjectAspect& getAspect(const std::string& aspectType);
     template <typename TSimObjectAspect>
     void removeAspect();
 
@@ -157,6 +159,8 @@ protected:
 
     virtual std::string getAspectTypeName() const = 0;
 private:
+    void attach(SimObject* owner);
+    void detach();
     virtual std::unique_ptr<BaseSimObjectAspect> makeCopy() const = 0;
     SimObject* mSimObject { nullptr };
 friend class SimObject;
@@ -200,6 +204,7 @@ std::shared_ptr<SimObject> SimObject::create(const Placement& placement, const s
     // it.
     // TODO: make this more robust somehow
     std::shared_ptr<SceneNode> newSimObject(new SimObject{placement, name, components...});
+    newSimObject->onCreated();
     return std::static_pointer_cast<SimObject, SceneNode>(newSimObject);
 }
 
@@ -231,7 +236,7 @@ void BaseSimObjectAspect::removeComponent() {
 }
 
 template <typename TSimObjectAspect>
-bool SimObject::hasAspect() {
+bool SimObject::hasAspect() const {
     return mSimObjectAspects.find(TSimObjectAspect::getSimObjectAspectTypeName()) != mSimObjectAspects.end();
 }
 
@@ -256,7 +261,7 @@ TSimObjectAspect& BaseSimObjectAspect::getAspect() {
 }
 
 template <typename TSimObjectAspect>
-bool BaseSimObjectAspect::hasAspect() {
+bool BaseSimObjectAspect::hasAspect() const {
     return mSimObject->hasAspect<TSimObjectAspect>();
 }
 

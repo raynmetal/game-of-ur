@@ -3,10 +3,6 @@
 
 #include "glm/glm.hpp"
 
-void BackAndForth::onAttach() {
-    mSigDirectionChanged = std::make_unique<Signal<float>>(getSignalTrackerReference(), "directionChanged");
-}
-
 void BackAndForth::update(uint32_t deltaSimtimeMillis) {
     mElapsedTime += deltaSimtimeMillis;
     Placement placement  { getComponent<Placement>() };
@@ -17,7 +13,7 @@ void BackAndForth::update(uint32_t deltaSimtimeMillis) {
     mDelta = placement.mPosition.z - prevZ;
     if(std::signbit(prevDelta) != std::signbit(mDelta)) {
         const float direction { mDelta < 0.f? -1.f: 1.f };
-        mSigDirectionChanged->emit(direction);
+        mSigDirectionChanged.emit(direction);
     }
 
     updateComponent<Placement>(placement);
