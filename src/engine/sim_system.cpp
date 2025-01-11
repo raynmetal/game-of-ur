@@ -7,28 +7,21 @@ SimObject::~SimObject() {
 }
 
 std::shared_ptr<SimObject> SimObject::create(const nlohmann::json& jsonSimObject) {
-    std::shared_ptr<SceneNode> newSimObject {new SimObject{ jsonSimObject }};
-    std::shared_ptr<SimObject> downcastSimObject { std::static_pointer_cast<SimObject, SceneNode>(newSimObject) };
-    newSimObject->onCreated();
+    std::shared_ptr<SimObject> newSimObject {BaseSceneNode<SimObject>::create(jsonSimObject) };
     for(const nlohmann::json& aspectDescription: jsonSimObject.at("aspects")) {
-        downcastSimObject->addAspect(aspectDescription);
+        newSimObject->addAspect(aspectDescription);
     }
-
-    return downcastSimObject;
+    return newSimObject;
 }
 
 std::shared_ptr<SimObject> SimObject::copy(const std::shared_ptr<const SimObject> simObject) {
-    //downcast before return
-    return std::static_pointer_cast<SimObject>(
-        SceneNode::copy(simObject)
-    );
-
+    return BaseSceneNode<SimObject>::copy(simObject);
 }
 
-std::shared_ptr<SceneNode> SimObject::clone() const {
+std::shared_ptr<SceneNodeCore> SimObject::clone() const {
     // since SceneNode enables shared from this, we must ensure that the
     // associated SceneNode control block is created
-    std::shared_ptr<SceneNode> newSimObject { new SimObject{ *this } };
+    std::shared_ptr<SceneNodeCore> newSimObject { new SimObject{ *this } };
     std::shared_ptr<SimObject> downcastSimObject { std::static_pointer_cast<SimObject>(newSimObject) };
 
     downcastSimObject->copyAspects(*this);
@@ -37,21 +30,21 @@ std::shared_ptr<SceneNode> SimObject::clone() const {
 }
 
 SimObject::SimObject(const nlohmann::json& jsonSimObject):
-SceneNode{jsonSimObject},
+BaseSceneNode<SimObject>{jsonSimObject},
 Resource<SimObject>{0}
 {
     addComponent<SimCore>({this}, true);
 }
 
-SimObject::SimObject(const SceneNode& sceneNode):
-SceneNode { sceneNode },
+SimObject::SimObject(const SceneNodeCore& sceneNode):
+BaseSceneNode<SimObject>{ sceneNode },
 Resource<SimObject>{0}
 {
     addComponent<SimCore>({this}, true);
 }
 
 SimObject::SimObject(const SimObject& simObject):
-SceneNode { simObject },
+BaseSceneNode<SimObject> { simObject },
 Resource<SimObject>{0}
 {
     updateComponent<SimCore>({this});
@@ -106,10 +99,6 @@ void SimObject::addAspect(const BaseSimObjectAspect& aspect) {
     mSimObjectAspects.at(aspectType)->attach(this);
 }
 
-BaseSimObjectAspect& SimObject::getAspect(const std::string& aspectType) {
-    return *mSimObjectAspects.at(aspectType);
-}
-
 void SimObject::addAspect(const nlohmann::json& jsonAspectProperties) {
     const std::string& aspectType { jsonAspectProperties.at("type").get<std::string>() };
     mSimObjectAspects.try_emplace(
@@ -127,17 +116,29 @@ void SimObject::removeAspect(const std::string& aspectType) {
     mSimObjectAspects.erase(aspectType);
 }
 
+BaseSimObjectAspect& SimObject::getAspect(const std::string& aspectType) {
+    return *mSimObjectAspects.at(aspectType);
+}
+
+BaseSimObjectAspect::~BaseSimObjectAspect() { detach(); }
+
 void BaseSimObjectAspect::attach(SimObject* newOwner) {
     detach();
 
     mSimObject = newOwner;
-    onAttach();
+    onAttached();
+    if(mSimObject->isActive()) {
+        onActivated();
+    }
 }
 
 void BaseSimObjectAspect::detach() {
     if(!mSimObject) return;
 
-    onDetach();
+    if(mSimObject->isActive()) { 
+        onDeactivated();
+    }
+    onDetached();
     mSimObject = nullptr;
 }
 

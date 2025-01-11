@@ -9,7 +9,7 @@
             "type": "StaticModel"
         },
         {
-            "type": "SceneNode",
+            "type": "SimObject",
             "method": "fromSceneFile",
             "name": "boardPieceRing",
             "parameters": {
@@ -41,9 +41,10 @@
                     "type": "Placement"
                 }
             ],
+            "aspects": [],
             "name": "partial_scene_root",
             "parent": "",
-            "type": "SceneNode"
+            "type": "SimObject"
         },
         {
             "aspects": [

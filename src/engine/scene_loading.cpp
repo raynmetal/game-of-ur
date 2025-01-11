@@ -12,7 +12,7 @@ std::shared_ptr<IResource> SceneFromFile::createResource(const nlohmann::json& s
     jsonFileStream.close();
 
     return ResourceDatabase::constructAnonymousResource<SceneNode>({
-        { "type", SceneNode::getResourceTypeName() },
+        { "type", SimObject::getResourceTypeName() },
         { "method", SceneFromDescription::getResourceConstructorName() },
         { "parameters", sceneDescription[0].get<nlohmann::json>() },
     });
@@ -22,13 +22,13 @@ std::shared_ptr<IResource> SceneFromDescription::createResource(const nlohmann::
     // Load resources described by this scene
     for(const nlohmann::json& resourceDescription: sceneDescription.at("resources")) {
         assert(
-            resourceDescription.at("type").get<std::string>() != SimObject::getResourceTypeName()
-            && "Resource section cannot contain SimObject descriptions"
+            resourceDescription.at("type").get<std::string>() != SceneNode::getResourceTypeName()
+            && "Resource section cannot contain descriptions of scene nodes, only SimObjects loaded via files"
         );
-        if(resourceDescription.at("type").get<std::string>() == SceneNode::getResourceTypeName()) {
+        if(resourceDescription.at("type") == SimObject::getResourceTypeName()) {
             assert(
                 resourceDescription.at("method") == SceneFromFile::getResourceConstructorName()
-                && "Only scene nodes loaded from files may be defined in the resources section of a scene"
+                && "Only scenes loaded from files may be defined in the resources section of a scene"
             );
         }
         ResourceDatabase::addResourceDescription(resourceDescription);
@@ -38,32 +38,21 @@ std::shared_ptr<IResource> SceneFromDescription::createResource(const nlohmann::
 
     auto nodeDescriptionIterator { sceneDescription.at("nodes").cbegin() };
     const nlohmann::json& localRootDescription { nodeDescriptionIterator.value() };
-    std::shared_ptr<SceneNode> localRoot { nullptr };
+    std::shared_ptr<SimObject> localRoot { nullptr };
 
     assert(localRootDescription.at("parent").get<std::string>() == "" 
         && "Root node must not have a parent"
     );
-    if(localRootDescription.at("type") == SimObject::getResourceTypeName()) {
-        localRoot = ResourceDatabase::constructAnonymousResource<SimObject>({
-            {"type", SimObject::getResourceTypeName()},
-            {"method", SimObjectFromDescription::getResourceConstructorName()},
-            {"parameters", localRootDescription},
-        });
-
-    } else if(localRootDescription.at("type") == SceneNode::getResourceTypeName()) {
-        localRoot = ResourceDatabase::constructAnonymousResource<SceneNode>({
-            {"type", SceneNode::getResourceTypeName()},
-            {"method", SceneNodeFromDescription::getResourceConstructorName()},
-            {"parameters", localRootDescription},
-        });
-
-    } else {
-        assert(false && "Scene's root node must either be a scene node or sim object");
-    }
+    assert(localRootDescription.at("type") == SimObject::getResourceTypeName() && "Scene's root must be a sim object");
+    localRoot = ResourceDatabase::constructAnonymousResource<SimObject>({
+        {"type", SimObject::getResourceTypeName()},
+        {"method", SimObjectFromDescription::getResourceConstructorName()},
+        {"parameters", localRootDescription},
+    });
 
     for(++nodeDescriptionIterator; nodeDescriptionIterator != sceneDescription.at("nodes").cend(); ++nodeDescriptionIterator) {
         const nlohmann::json& nodeDescription { nodeDescriptionIterator.value() };
-        std::shared_ptr<SceneNode> node { nullptr };
+        std::shared_ptr<SceneNodeCore> node { nullptr };
 
         assert(
             nodeDescription.at("parent").get<std::string>() != "" 
@@ -83,15 +72,14 @@ std::shared_ptr<IResource> SceneFromDescription::createResource(const nlohmann::
                 {"method", SceneNodeFromDescription::getResourceConstructorName()},
                 {"parameters", nodeDescription},
             });
-        // TODO: make it so that certain resource constructors can define resource type 
-        // Aliases that refer to the same type (and therefor any tables associated with 
-        // it)
+        // TODO: make it so that certain resource constructors can define resource aliases
+        // that refer to the same type (and by extension any tables associated with it)
         } else if(nodeDescription.at("type") == "Scene") {
-            node = ResourceDatabase::getRegisteredResource<SceneNode>(
+            node = ResourceDatabase::getRegisteredResource<SimObject>(
                 nodeDescription.at("name").get<std::string>()
             );
             if(nodeDescription.at("copy").get<bool>()) {
-                node = SceneNode::copy(node);
+                node = SimObject::copy(std::static_pointer_cast<SimObject>(node));
             }
         } else {
             assert(false && "Scene nodes in file must be scene nodes, sim objects, or reference to a scene node file resource");
@@ -107,10 +95,5 @@ std::shared_ptr<IResource> SceneNodeFromDescription::createResource(const nlohma
 }
 
 std::shared_ptr<IResource> SimObjectFromDescription::createResource(const nlohmann::json& methodParameters) {
-    // SceneNode shared pointer control block created through SimObject::create
-    std::shared_ptr<SimObject> simObjectPtr { SimObject::create(methodParameters) };
-
-    // Resource<SimObject> shared pointer shares reference count with SceneNode shared pointer
-    // control block
-    return std::static_pointer_cast<Resource<SimObject>, SimObject>(simObjectPtr);
+    return SimObject::create(methodParameters);
 }

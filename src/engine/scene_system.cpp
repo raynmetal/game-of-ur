@@ -7,33 +7,33 @@
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
 
-SceneNode::~SceneNode() {
+SceneNodeCore::~SceneNodeCore() {
     onDestroyed();
 }
 
-std::shared_ptr<SceneNode> SceneNode::create(const nlohmann::json& sceneNodeDescription) {
-    std::shared_ptr<SceneNode> newNode{ new SceneNode{sceneNodeDescription} };
-    newNode->onCreated();
-    return newNode;
-}
-
-std::shared_ptr<SceneNode> SceneNode::copy(const std::shared_ptr<const SceneNode> sceneNode) {
-    if(!sceneNode) return nullptr;
-    std::shared_ptr<SceneNode> newSceneNode{ sceneNode->clone() };
-    newSceneNode->copyDescendants(*sceneNode);
-
+std::shared_ptr<SceneNodeCore> SceneNodeCore::copy(const std::shared_ptr<const SceneNodeCore> other) {
+    if(!other) return nullptr;
+    std::shared_ptr<SceneNodeCore> newSceneNode{ other->clone() };
+    newSceneNode->copyDescendants(*other);
     return newSceneNode;
 }
 
-std::shared_ptr<SceneNode> SceneNode::clone() const {
+std::shared_ptr<SceneNode> SceneNode::create(const nlohmann::json& sceneNodeDescription) {
+    return BaseSceneNode<SceneNode>::create(sceneNodeDescription);
+}
+
+std::shared_ptr<SceneNode> SceneNode::copy(const std::shared_ptr<const SceneNode> sceneNode) {
+    return BaseSceneNode<SceneNode>::copy(sceneNode);
+}
+
+std::shared_ptr<SceneNodeCore> SceneNodeCore::clone() const {
     // construct a new scene node with the same components as this one
-    std::shared_ptr<SceneNode> newSceneNode{ new SceneNode{*this} };
+    std::shared_ptr<SceneNodeCore> newSceneNode{ new SceneNodeCore{*this} };
     newSceneNode->onCreated();
     return newSceneNode;
 }
 
-SceneNode::SceneNode(const nlohmann::json& sceneNodeDescription):
-Resource<SceneNode>{0}
+SceneNodeCore::SceneNodeCore(const nlohmann::json& sceneNodeDescription)
 {
     validateName(sceneNodeDescription.at("name").get<std::string>());
     mName = sceneNodeDescription.at("name").get<std::string>();
@@ -49,8 +49,7 @@ Resource<SceneNode>{0}
     assert(hasComponent<Placement>() && "scene nodes must define a placement component");
 }
 
-SceneNode::SceneNode(const SceneNode& other):
-Resource<SceneNode>{0}
+SceneNodeCore::SceneNodeCore(const SceneNodeCore& other)
 {
     copyAndReplaceAttributes(other);
 }
@@ -83,7 +82,7 @@ Resource<SceneNode>{0}
 //     return *this;
 // }
 
-void SceneNode::copyAndReplaceAttributes(const SceneNode& other) {
+void SceneNodeCore::copyAndReplaceAttributes(const SceneNodeCore& other) {
     // copy the other entity and its components
     std::shared_ptr<Entity> newEntity { 
         std::make_shared<Entity>(SimpleECS::createEntity())
@@ -97,12 +96,12 @@ void SceneNode::copyAndReplaceAttributes(const SceneNode& other) {
     mSystemMask = other.mSystemMask;
 }
 
-void SceneNode::copyDescendants(const SceneNode& other) {
+void SceneNodeCore::copyDescendants(const SceneNodeCore& other) {
     // copy descendant nodes, attach them to self
     for(auto& childPair: other.mChildren) {
         const std::string& childName { childPair.first };
-        const std::shared_ptr<const SceneNode> childNode { childPair.second };
-        mChildren[childName] = SceneNode::copy(childNode);
+        const std::shared_ptr<const SceneNodeCore> childNode { childPair.second };
+        mChildren[childName] = SceneNodeCore::copy(childNode);
 
         // TODO : somehow make this whole thing less delicate. Shared
         // from this depends on the existence of a shared pointer
@@ -111,7 +110,7 @@ void SceneNode::copyDescendants(const SceneNode& other) {
     }
 }
 
-void SceneNode::addComponent(const nlohmann::json& jsonComponent, const bool bypassSceneActivityCheck) {
+void SceneNodeCore::addComponent(const nlohmann::json& jsonComponent, const bool bypassSceneActivityCheck) {
     mEntity->addComponent(jsonComponent);
 
     // NOTE: required because even though this node's entity's signature changes, it
@@ -122,11 +121,11 @@ void SceneNode::addComponent(const nlohmann::json& jsonComponent, const bool byp
     }
 }
 
-bool SceneNode::detectCycle(std::shared_ptr<SceneNode> node) {
+bool SceneNodeCore::detectCycle(std::shared_ptr<SceneNodeCore> node) {
     if(!node) return false;
 
-    std::shared_ptr<SceneNode> slow { node };
-    std::shared_ptr<SceneNode> fast { slow->mParent };
+    std::shared_ptr<SceneNodeCore> slow { node };
+    std::shared_ptr<SceneNodeCore> fast { slow->mParent };
     while(fast != nullptr && fast->mParent != nullptr && slow != fast) {
         slow = slow->mParent;
         fast = fast->mParent->mParent;
@@ -136,29 +135,29 @@ bool SceneNode::detectCycle(std::shared_ptr<SceneNode> node) {
     return false;
 }
 
-bool SceneNode::inScene() const {
+bool SceneNodeCore::inScene() const {
     return SimpleECS::getSystem<SceneSystem>()->inScene(shared_from_this());
 }
 
-bool SceneNode::isActive() const {
+bool SceneNodeCore::isActive() const {
     return SimpleECS::getSystem<SceneSystem>()->isActive(shared_from_this());
 }
 
-bool SceneNode::isAncestorOf(std::shared_ptr<const SceneNode> sceneNode) const {
+bool SceneNodeCore::isAncestorOf(std::shared_ptr<const SceneNodeCore> sceneNode) const {
     if(!sceneNode || sceneNode.get() == this) return false;
 
-    std::shared_ptr<const SceneNode> currentNode { sceneNode };
+    std::shared_ptr<const SceneNodeCore> currentNode { sceneNode };
     while(currentNode != nullptr && currentNode.get() != this) {
         currentNode = currentNode->mParent;
     }
     return static_cast<bool>(currentNode);
 }
 
-const std::string SceneNode::getName() const {
+const std::string SceneNodeCore::getName() const {
     return mName;
 }
 
-std::tuple<std::string, std::string> SceneNode::nextInPath(const std::string& where) {
+std::tuple<std::string, std::string> SceneNodeCore::nextInPath(const std::string& where) {
     // Search for beginning and end of the name of the next node in the specified path
     std::string::const_iterator nextBegin{ where.begin() };
     ++nextBegin;
@@ -174,7 +173,7 @@ std::tuple<std::string, std::string> SceneNode::nextInPath(const std::string& wh
     return std::tuple<std::string, std::string>{nextNodeName, remainingWhere};
 }
 
-void SceneNode::addNode(std::shared_ptr<SceneNode> node, const std::string& where) {
+void SceneNodeCore::addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where) {
     assert(node && "Must be a non null pointer to a valid scene node");
     assert(node->mParent == nullptr && "Node must not have a parent");
     if(where == "/") {
@@ -195,22 +194,22 @@ void SceneNode::addNode(std::shared_ptr<SceneNode> node, const std::string& wher
     mChildren.at(nextNodeName)->addNode(node, remainingWhere);
 }
 
-std::vector<std::shared_ptr<SceneNode>> SceneNode::getChildren() {
-    std::vector<std::shared_ptr<SceneNode>> children {};
+std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::getChildren() {
+    std::vector<std::shared_ptr<SceneNodeCore>> children {};
     for(auto& pair: mChildren) {
         children.push_back(pair.second);
     }
     return children;
 }
-std::vector<std::shared_ptr<const SceneNode>> SceneNode::getChildren() const {
-    std::vector<std::shared_ptr<const SceneNode>> children {};
+std::vector<std::shared_ptr<const SceneNodeCore>> SceneNodeCore::getChildren() const {
+    std::vector<std::shared_ptr<const SceneNodeCore>> children {};
     for(auto& pair: mChildren) {
         children.push_back(pair.second);
     }
     return children;
 }
 
-std::shared_ptr<SceneNode> SceneNode::getNode(const std::string& where) {
+std::shared_ptr<SceneNodeCore> SceneNodeCore::getNode(const std::string& where) {
     if(where=="/") {
         return shared_from_this();
     }
@@ -224,7 +223,7 @@ std::shared_ptr<SceneNode> SceneNode::getNode(const std::string& where) {
     return mChildren.at(nextNodeName)->getNode(remainingWhere);
 }
 
-std::shared_ptr<SceneNode> SceneNode::getParentNode() {
+std::shared_ptr<SceneNodeCore> SceneNodeCore::getParentNode() {
     // TODO: Find a more efficient way to prevent access to the scene root
     // Guard against indirect access to scene root owned by the scene system via
     // its descendants.
@@ -232,14 +231,14 @@ std::shared_ptr<SceneNode> SceneNode::getParentNode() {
     return mParent;
 }
 
-std::shared_ptr<SceneNode> SceneNode::removeNode(const std::string& where) {
+std::shared_ptr<SceneNodeCore> SceneNodeCore::removeNode(const std::string& where) {
     if(where == "/") {
         // let scene system know that this node has been removed
-        std::shared_ptr<SceneNode> removedNode{shared_from_this()};
+        std::shared_ptr<SceneNodeCore> removedNode{shared_from_this()};
         SimpleECS::getSystem<SceneSystem>()->nodeRemoved(removedNode);
 
         //disconnect this node from its parent
-        std::shared_ptr<SceneNode> parent { removedNode->mParent };
+        std::shared_ptr<SceneNodeCore> parent { removedNode->mParent };
         if(parent) {
             parent->mChildren.erase(removedNode->mName);
         }
@@ -257,17 +256,17 @@ std::shared_ptr<SceneNode> SceneNode::removeNode(const std::string& where) {
     return mChildren.at(nextNodeName)->removeNode(remainingWhere);
 }
 
-std::vector<std::shared_ptr<SceneNode>> SceneNode::getDescendants() {
-    std::vector<std::shared_ptr<SceneNode>> descendants {};
+std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::getDescendants() {
+    std::vector<std::shared_ptr<SceneNodeCore>> descendants {};
     for(auto& pair: mChildren) {
         descendants.push_back(pair.second);
-        std::vector<std::shared_ptr<SceneNode>> childDescendants {pair.second->getDescendants()};
+        std::vector<std::shared_ptr<SceneNodeCore>> childDescendants {pair.second->getDescendants()};
         descendants.insert(descendants.end(), childDescendants.begin(), childDescendants.end());
     }
     return descendants;
 }
 
-EntityID SceneNode::getEntityID() const {
+EntityID SceneNodeCore::getEntityID() const {
     if(mEntity) {
         return mEntity->getID();
     } return SpecialEntity::ENTITY_ROOT;
@@ -279,32 +278,32 @@ void SceneSystem::ApploopEventHandler::onApplicationEnd() {
     }
 }
 
-bool SceneSystem::inScene(std::shared_ptr<const SceneNode> sceneNode) const {
+bool SceneSystem::inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const {
     return mEntityToNode.find(sceneNode->getEntityID()) != mEntityToNode.end();
 }
 
-bool SceneSystem::isActive(std::shared_ptr<const SceneNode> sceneNode) const {
+bool SceneSystem::isActive(std::shared_ptr<const SceneNodeCore> sceneNode) const {
     return isActive(sceneNode->getEntityID());
 }
 bool SceneSystem::isActive(EntityID entityID) const {
     return mActiveEntities.find(entityID) != mActiveEntities.end();
 }
 
-std::shared_ptr<SceneNode> SceneSystem::getNode(const std::string& where) {
+std::shared_ptr<SceneNodeCore> SceneSystem::getNode(const std::string& where) {
     assert(where != "/" && "Cannot retrieve scene system's root node");
     return mRootNode->getNode(where);
 }
 
-std::shared_ptr<SceneNode> SceneSystem::removeNode(const std::string& where) {
+std::shared_ptr<SceneNodeCore> SceneSystem::removeNode(const std::string& where) {
     assert(where != "/" && "Cannot remove scene system's root node");
     return mRootNode->removeNode(where);
 }
 
-void SceneSystem::addNode(std::shared_ptr<SceneNode> sceneNode, const std::string& where) {
+void SceneSystem::addNode(std::shared_ptr<SceneNodeCore> sceneNode, const std::string& where) {
     mRootNode->addNode(sceneNode, where);
 }
 
-void SceneSystem::nodeAdded(std::shared_ptr<SceneNode> sceneNode) {
+void SceneSystem::nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode) {
     if(!inScene(sceneNode->mParent)) return;
 
     mEntityToNode[sceneNode->getEntityID()] = sceneNode;
@@ -319,7 +318,7 @@ void SceneSystem::nodeAdded(std::shared_ptr<SceneNode> sceneNode) {
     nodeActivationChanged(sceneNode, sceneNode->mEnabled);
 }
 
-void SceneSystem::nodeRemoved(std::shared_ptr<SceneNode> sceneNode) {
+void SceneSystem::nodeRemoved(std::shared_ptr<SceneNodeCore> sceneNode) {
     // forget about keeping this node alive if it used to be 
     // a part of the scene tree
     if(inScene(sceneNode)) {
@@ -335,7 +334,7 @@ void SceneSystem::nodeRemoved(std::shared_ptr<SceneNode> sceneNode) {
     }
 }
 
-void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNode> sceneNode, bool state) {
+void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNodeCore> sceneNode, bool state) {
     assert(sceneNode && "Null node reference cannot be enabled");
 
     // early exit if this node isn't in the scene, or if its parent
@@ -351,7 +350,7 @@ void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNode> sceneNode, bo
     else deactivateSubtree(sceneNode);
 }
 
-void SceneSystem::activateSubtree(std::shared_ptr<SceneNode> rootNode) {
+void SceneSystem::activateSubtree(std::shared_ptr<SceneNodeCore> rootNode) {
     for(auto& childNode: rootNode->getChildren()) {
         if(childNode->mEnabled) activateSubtree(childNode);
     }
@@ -363,7 +362,7 @@ void SceneSystem::activateSubtree(std::shared_ptr<SceneNode> rootNode) {
     rootNode->onActivated();
 }
 
-void SceneSystem::deactivateSubtree(std::shared_ptr<SceneNode> rootNode) {
+void SceneSystem::deactivateSubtree(std::shared_ptr<SceneNodeCore> rootNode) {
     rootNode->onDeactivated();
 
     rootNode->mEntity->disableSystems();
@@ -380,7 +379,7 @@ void SceneSystem::updateTransforms() {
     // covered by their ancestor's update
     std::set<EntityID> entitiesToIgnore {};
     for(EntityID entity: mComputeTransformQueue) {
-        std::shared_ptr<SceneNode> sceneNode { mEntityToNode.at(entity)->mParent };
+        std::shared_ptr<SceneNodeCore> sceneNode { mEntityToNode.at(entity)->mParent };
         while(sceneNode != nullptr) {
             if(mComputeTransformQueue.find(sceneNode->getEntityID()) != mComputeTransformQueue.end()) {
                 entitiesToIgnore.emplace(entity);
@@ -395,23 +394,23 @@ void SceneSystem::updateTransforms() {
 
     // Apply transform updates to all subtrees present in the queue
     for(EntityID entityID: mComputeTransformQueue) {
-        std::vector<std::shared_ptr<SceneNode>> toVisit { {mEntityToNode.at(entityID)} };
+        std::vector<std::shared_ptr<SceneNodeCore>> toVisit { {mEntityToNode.at(entityID)} };
         while(!toVisit.empty()) {
-            std::shared_ptr<SceneNode> currentNode { toVisit.back() };
+            std::shared_ptr<SceneNodeCore> currentNode { toVisit.back() };
             toVisit.pop_back();
 
             glm::mat4 localModelMatrix { getLocalTransform(currentNode).mModelMatrix };
             glm::mat4 worldMatrix { getCachedWorldTransform(currentNode->mParent).mModelMatrix };
             updateComponent<Transform>(currentNode->getEntityID(), {worldMatrix * localModelMatrix});
 
-            for(std::shared_ptr<SceneNode> child: currentNode->getChildren()) {
+            for(std::shared_ptr<SceneNodeCore> child: currentNode->getChildren()) {
                 toVisit.push_back(child);
             }
         }
     }
 }
 
-Transform SceneSystem::getLocalTransform(std::shared_ptr<const SceneNode> sceneNode) const {
+Transform SceneSystem::getLocalTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const {
     constexpr Transform rootTransform {
         glm::mat4{1.f}
     };   
@@ -427,7 +426,7 @@ Transform SceneSystem::getLocalTransform(std::shared_ptr<const SceneNode> sceneN
     )};
 }
 
-Transform SceneSystem::getCachedWorldTransform(std::shared_ptr<const SceneNode> sceneNode) const {
+Transform SceneSystem::getCachedWorldTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const {
     constexpr Transform rootTransform {
         glm::mat4{1.f}
     };
@@ -455,7 +454,7 @@ void SceneSystem::ApploopEventHandler::onApplicationStart() {
     mSystem->updateTransforms();
 }
 
-void SceneNode::validateName(const std::string& nodeName) {
+void SceneNodeCore::validateName(const std::string& nodeName) {
     const bool containsValidCharacters{
         std::all_of(nodeName.begin(), nodeName.end(), 
             [](char c) { 

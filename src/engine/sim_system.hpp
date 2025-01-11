@@ -63,7 +63,7 @@ friend class SimObject;
  * A wrapper on entity that provides access to sim components and
  * sim logic
  */
-class SimObject: public SceneNode, public Resource<SimObject> {
+class SimObject: public BaseSceneNode<SimObject>, public Resource<SimObject> {
 public:
     ~SimObject();
     inline static std::string getResourceTypeName() { return "SimObject"; }
@@ -71,7 +71,6 @@ public:
     template <typename ...TComponents>
     static std::shared_ptr<SimObject> create(const Placement& placement, const std::string& name, TComponents...components);
     static std::shared_ptr<SimObject> create(const nlohmann::json& jsonSimObject);
-
     static std::shared_ptr<SimObject> copy(const std::shared_ptr<const SimObject> simObject);
 
     void addAspect(const nlohmann::json& jsonAspectProperties);
@@ -90,7 +89,7 @@ protected:
     template <typename ...TComponents>
     SimObject(const Placement& placement, const std::string& name, TComponents...components);
     SimObject(const nlohmann::json& jsonSimObject);
-    SimObject(const SceneNode& sceneNode);
+    SimObject(const SceneNodeCore& sceneNode);
     SimObject(const SimObject& other);
 
     // // TODO: sit down and figure out whether this operator will ever actually be useful
@@ -100,22 +99,25 @@ private:
     void update(uint32_t deltaSimTimeMillis);
 
     void copyAspects(const SimObject& other);
-    std::shared_ptr<SceneNode> clone() const override;
+    std::shared_ptr<SceneNodeCore> clone() const override;
 
     std::unordered_map<std::string, std::unique_ptr<BaseSimObjectAspect>> mSimObjectAspects { };
     SignalTracker mSignalTracker {};
 
 friend class SimSystem;
 friend class BaseSimObjectAspect;
+friend class BaseSceneNode<SimObject>;
 };
 
 class BaseSimObjectAspect : public SignalTracker {
 public:
-    virtual ~BaseSimObjectAspect()=default;
+    virtual ~BaseSimObjectAspect();
 
-    virtual void update(uint32_t deltaSimTimeMillis) {};
-    virtual void onAttach(){};
-    virtual void onDetach(){};
+    virtual void update(uint32_t deltaSimTimeMillis) {}
+    virtual void onAttached(){}
+    virtual void onDetached(){}
+    virtual void onActivated() {}
+    virtual void onDeactivated() {}
 
 protected:
     BaseSimObjectAspect()=default;
@@ -199,18 +201,13 @@ void SimSystem::registerAspect() {
 }
 
 template <typename ...TComponents>
-std::shared_ptr<SimObject> SimObject::create(const Placement& placement, const std::string& name, TComponents ... components) {
-    // SceneNode pointer to sim object, because scene node's `enable_shared_from_this` needs
-    // it.
-    // TODO: make this more robust somehow
-    std::shared_ptr<SceneNode> newSimObject(new SimObject{placement, name, components...});
-    newSimObject->onCreated();
-    return std::static_pointer_cast<SimObject, SceneNode>(newSimObject);
+std::shared_ptr<SimObject> SimObject::create(const Placement& placement, const std::string& name, TComponents...components) {
+    return SceneNode::create<SimObject, TComponents...>(placement, name, components...);
 }
 
 template <typename ...TComponents>
 SimObject::SimObject(const Placement& placement, const std::string& name, TComponents ... components) :
-SceneNode { placement, name, SimCore{this}, components... },
+BaseSceneNode<SimObject> { placement, name, SimCore{this}, components... },
 Resource<SimObject>{0}
 {}
 
@@ -271,7 +268,7 @@ inline SimCore Interpolator<SimCore>::operator() (const SimCore& prev, const Sim
 }
 
 template <>
-inline void SceneNode::removeComponent<SimCore>() {
+inline void SceneNodeCore::removeComponent<SimCore>() {
     assert(false && "Cannot remove a sim object's sim core component.");
 }
 

@@ -9,10 +9,10 @@
 class SceneFromDescription;
 class SceneNodeFromDescription;
 
-class SceneFromFile: public ResourceConstructor<SceneNode, SceneFromFile> {
+class SceneFromFile: public ResourceConstructor<SimObject, SceneFromFile> {
 public:
     SceneFromFile():
-    ResourceConstructor<SceneNode, SceneFromFile> {0}
+    ResourceConstructor<SimObject, SceneFromFile> {0}
     {}
 
     static std::string getResourceConstructorName() { return "fromSceneFile"; }
@@ -20,10 +20,10 @@ private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParams);
 };
 
-class SceneFromDescription: public ResourceConstructor<SceneNode, SceneFromDescription> {
+class SceneFromDescription: public ResourceConstructor<SimObject, SceneFromDescription> {
 public:
     SceneFromDescription(): 
-    ResourceConstructor<SceneNode, SceneFromDescription> {0}
+    ResourceConstructor<SimObject, SceneFromDescription> {0}
     {}
 
     static std::string getResourceConstructorName() { return "fromSceneDescription"; }

@@ -48,7 +48,7 @@ int main(int argc, char* argv[]) {
 
     nlohmann::json sceneDescription {
         {"name", "test_scene_1"},
-        {"type", "SceneNode"},
+        {"type", "SimObject"},
         {"method", "fromSceneFile"},
         {"parameters", {
             {"path", "data/test_scene_1.json"},
@@ -56,9 +56,9 @@ int main(int argc, char* argv[]) {
     };
 
     ResourceDatabase::addResourceDescription(sceneDescription);
-    std::shared_ptr<SceneNode> partialScene { ResourceDatabase::getRegisteredResource<SceneNode>(sceneDescription.at("name").get<std::string>()) };
+    std::shared_ptr<SimObject> partialScene { ResourceDatabase::getRegisteredResource<SimObject>(sceneDescription.at("name").get<std::string>()) };
     {
-        std::shared_ptr<SceneNode> flashlight { partialScene->getNode("/camera/flashlight/") };
+        std::shared_ptr<SceneNode> flashlight { std::static_pointer_cast<SceneNode>(partialScene->getNode("/camera/flashlight/")) };
         // TODO: set scale automatically according to  the flashlight's light
         // emission radius. How?
         Placement placement { flashlight->getComponent<Placement>() };
