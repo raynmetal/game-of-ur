@@ -46,6 +46,8 @@ public:
     friend class SimSystem;
     };
 
+    bool aspectRegistered(const std::string& aspectName) const;
+
 private:
     template <typename TSimObjectAspect>
     void registerAspect();
@@ -98,6 +100,9 @@ protected:
 private:
     void update(uint32_t deltaSimTimeMillis);
 
+    void onActivated() override;
+    void onDeactivated() override;
+
     void copyAspects(const SimObject& other);
     std::shared_ptr<SceneNodeCore> clone() const override;
 
@@ -114,11 +119,6 @@ public:
     virtual ~BaseSimObjectAspect();
 
     virtual void update(uint32_t deltaSimTimeMillis) {}
-    virtual void onAttached(){}
-    virtual void onDetached(){}
-    virtual void onActivated() {}
-    virtual void onDeactivated() {}
-
 protected:
     BaseSimObjectAspect()=default;
 
@@ -161,6 +161,11 @@ protected:
 
     virtual std::string getAspectTypeName() const = 0;
 private:
+    virtual void onAttached(){}
+    virtual void onDetached(){}
+    virtual void onActivated() {}
+    virtual void onDeactivated() {}
+
     void attach(SimObject* owner);
     void detach();
     virtual std::unique_ptr<BaseSimObjectAspect> makeCopy() const = 0;
@@ -261,6 +266,30 @@ template <typename TSimObjectAspect>
 bool BaseSimObjectAspect::hasAspect() const {
     return mSimObject->hasAspect<TSimObjectAspect>();
 }
+
+template <>
+struct SceneNodeCore::getByPath_Helper<BaseSimObjectAspect&> {
+    static BaseSimObjectAspect& get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where) {
+        std::string::const_iterator div {std::find(where.begin(), where.end(), '@')};
+        assert(div != where.end() && "Must contain @ to be a valid path to a scene node's aspect");
+
+        // extract the node path from full path
+        const std::string_view fullPath { where };
+        const std::string nodePath { where.substr(0, div - where.begin()) };
+        const std::string aspectName { where.substr(1 + (div - where.begin())) };
+        assert(SimpleECS::getSystem<SimSystem>()->aspectRegistered(aspectName) && "No aspect of this type has been registered with the Sim System");
+
+        std::shared_ptr<SimObject> node { rootNode->getByPath<std::shared_ptr<SimObject>>(nodePath) };
+        return node->getAspect(aspectName);
+    }
+};
+
+template <typename TAspect>
+struct SceneNodeCore::getByPath_Helper<TAspect&, std::enable_if_t<std::is_base_of<BaseSimObjectAspect, TAspect>::value>> {
+    static TAspect& get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where) {
+        return static_cast<TAspect&>(SceneNodeCore::getByPath_Helper<BaseSimObjectAspect&>::get(rootNode, where));
+    }
+};
 
 template<>
 inline SimCore Interpolator<SimCore>::operator() (const SimCore& prev, const SimCore& next, float value) const {

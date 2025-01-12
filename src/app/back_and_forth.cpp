@@ -1,7 +1,14 @@
+#include <iostream>
+
 #include "back_and_forth.hpp"
 #include "../engine/scene_system.hpp"
 
 #include "glm/glm.hpp"
+
+void BackAndForth::onAttached() { std::cout << "BackAndForth attached\n";}
+void BackAndForth::onActivated() { std::cout << "BackAndForth activated\n"; }
+void BackAndForth::onDeactivated() { std::cout << "BackAndForth deactivated\n"; }
+void BackAndForth::onDetached() { std::cout << "BackAndForth detached\n"; }
 
 void BackAndForth::update(uint32_t deltaSimtimeMillis) {
     mElapsedTime += deltaSimtimeMillis;

@@ -58,7 +58,7 @@ int main(int argc, char* argv[]) {
     ResourceDatabase::addResourceDescription(sceneDescription);
     std::shared_ptr<SimObject> partialScene { ResourceDatabase::getRegisteredResource<SimObject>(sceneDescription.at("name").get<std::string>()) };
     {
-        std::shared_ptr<SceneNode> flashlight { std::static_pointer_cast<SceneNode>(partialScene->getNode("/camera/flashlight/")) };
+        std::shared_ptr<SceneNode> flashlight { partialScene->getByPath("/camera/flashlight/") };
         // TODO: set scale automatically according to  the flashlight's light
         // emission radius. How?
         Placement placement { flashlight->getComponent<Placement>() };
@@ -69,7 +69,7 @@ int main(int argc, char* argv[]) {
 
     SimpleECS::getSystem<SceneSystem>()->addNode(partialScene, "/");
 
-    std::shared_ptr<SimObject> camera { std::static_pointer_cast<SimObject>(partialScene->getNode("/camera/")) };
+    std::shared_ptr<SimObject> camera { partialScene->getByPath<std::shared_ptr<SimObject>>("/camera/") };
     inputManager["Camera"].registerActionHandler("Rotate", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
     inputManager["Camera"].registerActionHandler("ToggleControl", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
     inputManager["Camera"].registerActionHandler("Move", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
@@ -87,13 +87,14 @@ int main(int argc, char* argv[]) {
     SignalTracker mainsTracker {};
     SignalObserver<float> observerDirectionChanged1 { mainsTracker, "directionChangeObserved1", observeDirectionChange };
     SignalObserver<float> observerDirectionChanged2 { mainsTracker, "directionChangeObserved2", observeDirectionChange };
-    std::shared_ptr<SimObject> firstBoardPiece {std::static_pointer_cast<SimObject>(SimpleECS::getSystem<SceneSystem>()->getNode("/partial_scene_root/board_piece/"))};
-    std::shared_ptr<SimObject> thirdBoardPiece {std::static_pointer_cast<SimObject>(SimpleECS::getSystem<SceneSystem>()->getNode("/partial_scene_root/board_piece/board_piece/board_piece/"))};
+
+    BackAndForth& firstBackAndForth { SimpleECS::getSystem<SceneSystem>()->getByPath<BackAndForth&>("/partial_scene_root/board_piece/@BackAndForth") };
+    BackAndForth& thirdBackAndForth { SimpleECS::getSystem<SceneSystem>()->getByPath<BackAndForth&>("/partial_scene_root/board_piece/board_piece/board_piece/@BackAndForth") };
 
     // connection using observer and signal directly
-    observerDirectionChanged1.connect(firstBoardPiece->getAspect<BackAndForth>().mSigDirectionChanged);
+    observerDirectionChanged1.connect(firstBackAndForth.mSigDirectionChanged);
     // connection using observer's tracker, by observer's and signal's names
-    mainsTracker.connect("directionChanged", "directionChangeObserved2", thirdBoardPiece->getAspect("BackAndForth"));
+    mainsTracker.connect("directionChanged", "directionChangeObserved2", thirdBackAndForth);
 
     // Timing related variables
     uint32_t previousTicks { SDL_GetTicks() };

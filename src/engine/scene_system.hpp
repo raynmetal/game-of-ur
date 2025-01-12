@@ -2,11 +2,11 @@
 #define ZOSCENESYSTEM_H
 
 #include <vector>
-#include <queue>
 #include <memory>
 #include <unordered_map>
 #include <algorithm>
 #include <cctype>
+#include <type_traits>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
@@ -69,9 +69,12 @@ public:
     std::vector<std::shared_ptr<SceneNodeCore>> getChildren();
     std::vector<std::shared_ptr<const SceneNodeCore>> getChildren() const;
     std::vector<std::shared_ptr<SceneNodeCore>> getDescendants();
+    template <typename TObject=std::shared_ptr<SceneNode>>
+    TObject getByPath(const std::string& where);
     std::shared_ptr<SceneNodeCore> getNode(const std::string& where);
     std::shared_ptr<SceneNodeCore> getParentNode();
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
+    std::vector<std::shared_ptr<SceneNodeCore>> removeChildren();
 
     const std::string getName() const;
 
@@ -88,18 +91,25 @@ protected:
     // BaseSceneNode& operator=(const BaseSceneNode& sceneObject);
 
     // lifecycle event hooks
-    virtual void onCreated(){}
-    virtual void onActivated(){}
-    virtual void onDeactivated(){}
-    virtual void onDestroyed(){}
+    virtual void onCreated();
+    virtual void onActivated();
+    virtual void onDeactivated();
+    virtual void onDestroyed();
 
     static void validateName(const std::string& nodeName);
 
 private:
+    template <typename TObject, typename Enable=void>
+    struct getByPath_Helper {
+        static TObject get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where);
+    };
+
     SceneNodeCore(){} // special constructor used to create the root node in the scene system
 
     virtual std::shared_ptr<SceneNodeCore> clone() const;
     void copyDescendants(const SceneNodeCore& other);
+
+    static std::shared_ptr<SceneNodeCore> disconnectNode(std::shared_ptr<SceneNodeCore> node);
 
     static bool detectCycle(std::shared_ptr<SceneNodeCore> node);
     static std::tuple<std::string, std::string> nextInPath(const std::string& where);
@@ -173,6 +183,10 @@ public:
     SceneSystem():
     System<SceneSystem, Placement, Transform>{0}
     {}
+
+    template<typename TObject=std::shared_ptr<SceneNode>>
+    TObject getByPath(const std::string& where);
+
     std::shared_ptr<SceneNodeCore> getNode(const std::string& where);
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
@@ -243,6 +257,30 @@ std::shared_ptr<SceneNode> SceneNode::create(const Placement& placement, const s
     return BaseSceneNode<SceneNode>::create<TComponents...>(placement, name, components...);
 }
 
+// Fail retrieval in cases where no explicitly defined object by path
+// method exists
+template <typename TObject>
+TObject SceneNodeCore::getByPath(const std::string& where) {
+    return getByPath_Helper<TObject>::get(shared_from_this(), where);
+}
+
+template <typename TObject>
+TObject SceneSystem::getByPath(const std::string& where) {
+    return mRootNode->getByPath<TObject>(where);
+}
+
+template <typename TObject, typename Enable>
+TObject SceneNodeCore::getByPath_Helper<TObject, Enable>::get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where) {
+    static_assert(false && "No Object-by-Path method for this type exists");
+    return TObject{}; // this is just to shut the compiler up about no returned value
+}
+
+template <typename TObject>
+struct SceneNodeCore::getByPath_Helper<std::shared_ptr<TObject>, typename std::enable_if_t<std::is_base_of<SceneNodeCore, TObject>::value>> {
+    static std::shared_ptr<TObject> get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where) {
+        return std::static_pointer_cast<TObject>(rootNode->getNode(where));
+    }
+};
 
 template <typename ...TComponents>
 SceneNodeCore::SceneNodeCore(const Placement& placement, const std::string& name, TComponents...components):

@@ -16,6 +16,10 @@ public:
     Signal<float> mSigDirectionChanged {*this, "directionChanged"};
 
 private:
+    void onAttached() override;
+    void onActivated() override;
+    void onDeactivated() override;
+    void onDetached() override;
     BackAndForth() : SimObjectAspect<BackAndForth>{0} {}
     float mDelta { 0.f };
     uint32_t mElapsedTime { 0 };

@@ -50,6 +50,17 @@ Resource<SimObject>{0}
     updateComponent<SimCore>({this});
 }
 
+void SimObject::onActivated() {
+    for(auto& aspectPair: mSimObjectAspects) {
+        aspectPair.second->onActivated();
+    }
+}
+void SimObject::onDeactivated() {
+    for(auto& aspectPair: mSimObjectAspects) {
+        aspectPair.second->onDeactivated();
+    }
+}
+
 // Save this for whenever I actually find a use for it
 // SimObject& SimObject::operator=(const SimObject& other) {
 //     if(this == &other) return *this;
@@ -64,6 +75,10 @@ Resource<SimObject>{0}
 
 //     return *this;
 // }
+
+bool SimSystem::aspectRegistered(const std::string& aspectName) const {
+    return mAspectConstructors.find(aspectName) != mAspectConstructors.end();
+}
 
 std::unique_ptr<BaseSimObjectAspect> SimSystem::constructAspect(const nlohmann::json& jsonAspectProperties) {
     return mAspectConstructors.at(jsonAspectProperties.at("type").get<std::string>())(jsonAspectProperties);

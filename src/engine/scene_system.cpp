@@ -11,6 +11,11 @@ SceneNodeCore::~SceneNodeCore() {
     onDestroyed();
 }
 
+void SceneNodeCore::onCreated(){}
+void SceneNodeCore::onActivated(){};
+void SceneNodeCore::onDeactivated(){};
+void SceneNodeCore::onDestroyed(){};
+
 std::shared_ptr<SceneNodeCore> SceneNodeCore::copy(const std::shared_ptr<const SceneNodeCore> other) {
     if(!other) return nullptr;
     std::shared_ptr<SceneNodeCore> newSceneNode{ other->clone() };
@@ -231,20 +236,23 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::getParentNode() {
     return mParent;
 }
 
+std::shared_ptr<SceneNodeCore> SceneNodeCore::disconnectNode(std::shared_ptr<SceneNodeCore> node) {
+    // let system know that this node is being disconnected, in case it was part
+    // of the scene tree
+    SimpleECS::getSystem<SceneSystem>()->nodeRemoved(node);
+
+    //disconnect this node from its parent
+    std::shared_ptr<SceneNodeCore> parent { node->mParent };
+    if(parent) {
+        parent->mChildren.erase(node->mName);
+    }
+    node->mParent = nullptr;
+    return node;
+}
+
 std::shared_ptr<SceneNodeCore> SceneNodeCore::removeNode(const std::string& where) {
     if(where == "/") {
-        // let scene system know that this node has been removed
-        std::shared_ptr<SceneNodeCore> removedNode{shared_from_this()};
-        SimpleECS::getSystem<SceneSystem>()->nodeRemoved(removedNode);
-
-        //disconnect this node from its parent
-        std::shared_ptr<SceneNodeCore> parent { removedNode->mParent };
-        if(parent) {
-            parent->mChildren.erase(removedNode->mName);
-        }
-        removedNode->mParent = nullptr;
-
-        return removedNode;
+        return disconnectNode(shared_from_this());
     }
 
     // descend to the next node in the path
@@ -254,6 +262,14 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::removeNode(const std::string& wher
     assert(mChildren.find(nextNodeName) != mChildren.end() && "No child node with this name is known");
 
     return mChildren.at(nextNodeName)->removeNode(remainingWhere);
+}
+
+std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::removeChildren() {
+    std::vector<std::shared_ptr<SceneNodeCore>> children { getChildren() };
+    for(auto& child: children) {
+        disconnectNode(child);
+    }
+    return children;
 }
 
 std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::getDescendants() {
@@ -273,9 +289,7 @@ EntityID SceneNodeCore::getEntityID() const {
 }
 
 void SceneSystem::ApploopEventHandler::onApplicationEnd() {
-    for(auto& child: mSystem->mRootNode->getChildren()) {
-        child->setEnabled<SceneSystem>(false);
-    }
+    mSystem->mRootNode->removeChildren();
 }
 
 bool SceneSystem::inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const {
