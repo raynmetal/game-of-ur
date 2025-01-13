@@ -7,7 +7,7 @@ SimObject::~SimObject() {
 }
 
 std::shared_ptr<SimObject> SimObject::create(const nlohmann::json& jsonSimObject) {
-    std::shared_ptr<SimObject> newSimObject {BaseSceneNode<SimObject>::create(jsonSimObject) };
+    std::shared_ptr<SimObject> newSimObject { BaseSceneNode<SimObject>::create(jsonSimObject) };
     for(const nlohmann::json& aspectDescription: jsonSimObject.at("aspects")) {
         newSimObject->addAspect(aspectDescription);
     }
@@ -134,8 +134,6 @@ void SimObject::removeAspect(const std::string& aspectType) {
 BaseSimObjectAspect& SimObject::getAspect(const std::string& aspectType) {
     return *mSimObjectAspects.at(aspectType);
 }
-
-BaseSimObjectAspect::~BaseSimObjectAspect() { detach(); }
 
 void BaseSimObjectAspect::attach(SimObject* newOwner) {
     detach();

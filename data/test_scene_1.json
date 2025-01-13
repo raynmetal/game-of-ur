@@ -41,7 +41,11 @@
                     "type": "Placement"
                 }
             ],
-            "aspects": [],
+            "aspects": [
+                {
+                    "type": "TickSecond"
+                }
+            ],
             "name": "partial_scene_root",
             "parent": "",
             "type": "SimObject"
@@ -190,6 +194,14 @@
             "name": "boardPieceRing",
             "parent": "/",
             "copy": false
+        }
+    ],
+    "connections": [
+        {
+            "from": "/@TickSecond",
+            "to": "/sunlight/@Revolve",
+            "signal": "secondPassed",
+            "observer": "secondPassedObserved"
         }
     ]
 }

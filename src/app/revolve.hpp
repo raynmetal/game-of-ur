@@ -12,6 +12,10 @@ public:
     void update(uint32_t deltaSimtimeMillis) override;
 
     std::unique_ptr<BaseSimObjectAspect> makeCopy() const override;
+
+    void onSecondPassed();
+
+    SignalObserver<> mSecondPassedObserved { *this, "secondPassedObserved", [this]() { this->onSecondPassed(); } };
 private:
     Revolve (): SimObjectAspect<Revolve>{0} {}
 };

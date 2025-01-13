@@ -19,8 +19,17 @@ std::shared_ptr<IResource> SceneFromFile::createResource(const nlohmann::json& s
 }
 
 std::shared_ptr<IResource> SceneFromDescription::createResource(const nlohmann::json& sceneDescription) {
+    // load resources
+    loadResources(sceneDescription.at("resources"));
+    std::shared_ptr<SimObject> localRoot { loadSceneNodes(sceneDescription.at("nodes")) };
+    loadConnections(sceneDescription.at("connections"), localRoot);
+
+    return localRoot;
+}
+
+void SceneFromDescription::loadResources(const nlohmann::json& resourceList) {
     // Load resources described by this scene
-    for(const nlohmann::json& resourceDescription: sceneDescription.at("resources")) {
+    for(const nlohmann::json& resourceDescription: resourceList) {
         assert(
             resourceDescription.at("type").get<std::string>() != SceneNode::getResourceTypeName()
             && "Resource section cannot contain descriptions of scene nodes, only SimObjects loaded via files"
@@ -33,10 +42,12 @@ std::shared_ptr<IResource> SceneFromDescription::createResource(const nlohmann::
         }
         ResourceDatabase::addResourceDescription(resourceDescription);
     }
-    
-    assert(sceneDescription.at("nodes").is_array() && "A scene's \"nodes\" property must be an array of node descriptions");
+}
 
-    auto nodeDescriptionIterator { sceneDescription.at("nodes").cbegin() };
+std::shared_ptr<SimObject> SceneFromDescription::loadSceneNodes(const nlohmann::json& nodeList) {
+    assert(nodeList.is_array() && "A scene's \"nodes\" property must be an array of node descriptions");
+
+    auto nodeDescriptionIterator { nodeList.cbegin() };
     const nlohmann::json& localRootDescription { nodeDescriptionIterator.value() };
     std::shared_ptr<SimObject> localRoot { nullptr };
 
@@ -50,7 +61,7 @@ std::shared_ptr<IResource> SceneFromDescription::createResource(const nlohmann::
         {"parameters", localRootDescription},
     });
 
-    for(++nodeDescriptionIterator; nodeDescriptionIterator != sceneDescription.at("nodes").cend(); ++nodeDescriptionIterator) {
+    for(++nodeDescriptionIterator; nodeDescriptionIterator != nodeList.cend(); ++nodeDescriptionIterator) {
         const nlohmann::json& nodeDescription { nodeDescriptionIterator.value() };
         std::shared_ptr<SceneNodeCore> node { nullptr };
 
@@ -88,6 +99,18 @@ std::shared_ptr<IResource> SceneFromDescription::createResource(const nlohmann::
     }
 
     return localRoot;
+}
+
+void SceneFromDescription::loadConnections(const nlohmann::json& connectionList, std::shared_ptr<SceneNodeCore> localRoot) {
+    for(const nlohmann::json& connection: connectionList) {
+        BaseSimObjectAspect& signalFrom { localRoot->getByPath<BaseSimObjectAspect&>(connection.at("from").get<std::string>()) };
+        BaseSimObjectAspect& signalTo { localRoot->getByPath<BaseSimObjectAspect&>(connection.at("to").get<std::string>()) };
+        signalTo.connect(
+            connection.at("signal").get<std::string>(),
+            connection.at("observer").get<std::string>(),
+            signalFrom
+        );
+    }
 }
 
 std::shared_ptr<IResource> SceneNodeFromDescription::createResource(const nlohmann::json& methodParams) {

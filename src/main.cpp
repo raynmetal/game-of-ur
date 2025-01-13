@@ -66,7 +66,6 @@ int main(int argc, char* argv[]) {
         flashlight->updateComponent<Placement>(placement);
     }
 
-
     SimpleECS::getSystem<SceneSystem>()->addNode(partialScene, "/");
 
     std::shared_ptr<SimObject> camera { partialScene->getByPath<std::shared_ptr<SimObject>>("/camera/") };

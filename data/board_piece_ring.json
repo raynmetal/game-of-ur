@@ -757,5 +757,6 @@
             "parent": "/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/board_piece/",
             "type": "SimObject"
         }
-    ]
+    ],
+    "connections": []
 }

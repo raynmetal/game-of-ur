@@ -1,7 +1,13 @@
+#include <iostream>
+
 #include <glm/glm.hpp>
 
 #include "../engine/scene_system.hpp"
 #include "revolve.hpp"
+
+void Revolve::onSecondPassed() {
+    std::cout << "Revolve: passage of a second observed\n";
+}
 
 void Revolve::update(uint32_t deltaSimtimeMillis) {
     Placement placement { getComponent<Placement>() };

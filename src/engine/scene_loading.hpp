@@ -27,8 +27,11 @@ public:
     {}
 
     static std::string getResourceConstructorName() { return "fromSceneDescription"; }
-
 private:
+    void loadResources(const nlohmann::json& resourceList);
+    std::shared_ptr<SimObject> loadSceneNodes(const nlohmann::json& nodeList);
+    void loadConnections(const nlohmann::json& connectionList, std::shared_ptr<SceneNodeCore> localRoot);
+
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParams) override;
 };
 
@@ -40,6 +43,7 @@ public:
 
     static std::string getResourceConstructorName() { return "fromNodeDescription"; }
 private:
+
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParams) override;
 };
 

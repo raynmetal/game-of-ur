@@ -36,7 +36,9 @@ enum SpecialEntity: EntityID {
 
 class SceneNodeCore: public std::enable_shared_from_this<SceneNodeCore> {
 public:
-    virtual ~SceneNodeCore();
+    static void SceneNodeCore_del_(SceneNodeCore* sceneNode);
+
+    virtual ~SceneNodeCore()=default;
 
     template <typename TComponent>
     void addComponent(const TComponent& component, const bool bypassSceneActivityCheck=false);
@@ -62,8 +64,15 @@ public:
 
     EntityID getEntityID() const;
 
+    // TODO: How can we be certain that the value returned by this method here,
+    // and the one in SceneSystem, are both in sync? Yet more redundancy
+    // that might trip us up
     bool inScene() const;
+    // TODO: How can we be certain that the value returned by this method here,
+    // and the one in SceneSystem, are both in sync? Yet more redundancy
+    // that might trip us up
     bool isActive() const;
+
     bool isAncestorOf(std::shared_ptr<const SceneNodeCore> sceneNode) const;
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
     std::vector<std::shared_ptr<SceneNodeCore>> getChildren();
@@ -99,6 +108,11 @@ protected:
     static void validateName(const std::string& nodeName);
 
 private:
+    enum StateFlags: uint8_t {
+        ENABLED=0x1,
+        ACTIVE=0x2,
+    };
+
     template <typename TObject, typename Enable=void>
     struct getByPath_Helper {
         static TObject get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where);
@@ -117,10 +131,10 @@ private:
     void copyAndReplaceAttributes(const SceneNodeCore& other);
 
     std::string mName {};
-    bool mEnabled { true };
+    uint8_t mStateFlags { 0x00 | StateFlags::ENABLED };
     RelativeTo mRelativeTo{ RelativeTo::PARENT };
     std::shared_ptr<Entity> mEntity { nullptr };
-    std::shared_ptr<SceneNodeCore> mParent { nullptr };
+    std::weak_ptr<SceneNodeCore> mParent {};
     std::unordered_map<std::string, std::shared_ptr<SceneNodeCore>> mChildren {};
 
     Signature mSystemMask {Signature{}.set()};
@@ -129,6 +143,7 @@ friend class SceneSystem;
 template<typename TSceneNode>
 friend class BaseSceneNode;
 };
+
 
 template <typename TSceneNode>
 class BaseSceneNode: public SceneNodeCore {
@@ -182,7 +197,7 @@ class SceneSystem : public System<SceneSystem, Placement, Transform> {
 public:
     SceneSystem():
     System<SceneSystem, Placement, Transform>{0}
-    {}
+    { mRootNode->mStateFlags |= SceneNodeCore::ACTIVE; }
 
     template<typename TObject=std::shared_ptr<SceneNode>>
     TObject getByPath(const std::string& where);
@@ -205,6 +220,7 @@ private:
     bool isActive(std::shared_ptr<const SceneNodeCore> sceneNode) const;
     bool isActive(EntityID entityID) const;
     bool inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const;
+    bool inScene(EntityID entityID) const;
     void markDirty(EntityID entity);
     void updateTransforms();
 
@@ -218,7 +234,7 @@ private:
 
     void onEntityUpdated(EntityID entityID) override;
 
-    std::shared_ptr<SceneNodeCore> mRootNode{ new SceneNodeCore {} };
+    std::shared_ptr<SceneNodeCore> mRootNode{ new SceneNodeCore {}, &SceneNodeCore::SceneNodeCore_del_ };
 
     std::shared_ptr<ApploopEventHandler> mApploopEventHandler { ApploopEventHandler::registerHandler(this) };
     std::unordered_map<EntityID, std::shared_ptr<SceneNodeCore>> mEntityToNode {
@@ -235,7 +251,7 @@ friend class SceneNodeCore;
 template <typename TSceneNode>
 template <typename ...TComponents>
 std::shared_ptr<TSceneNode> BaseSceneNode<TSceneNode>::create(const Placement& placement, const std::string& name, TComponents...components) {
-    std::shared_ptr<SceneNodeCore> newNode ( new TSceneNode(placement, name, components...));
+    std::shared_ptr<SceneNodeCore> newNode ( new TSceneNode(placement, name, components...), &SceneNodeCore_del_);
     newNode->onCreated();
     return std::static_pointer_cast<TSceneNode>(newNode);
 }
@@ -359,7 +375,8 @@ inline void SceneNodeCore::setEnabled<SceneSystem>(bool state) {
     // mActiveNodes and ECS getEnabledEntities, which is 
     // redundant and may eventually cause errors
     mSystemMask.set(systemType, state);
-    mEnabled = state; // TODO: more redundancy; why?
+    //TODO: More redundancy. Why?
+    mStateFlags = state? (mStateFlags | SceneNodeCore::StateFlags::ENABLED): (mStateFlags & ~SceneNodeCore::StateFlags::ENABLED);
     SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
         shared_from_this(),
         state

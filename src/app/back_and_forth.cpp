@@ -5,7 +5,7 @@
 
 #include "glm/glm.hpp"
 
-void BackAndForth::onAttached() { std::cout << "BackAndForth attached\n";}
+void BackAndForth::onAttached() { std::cout << "BackAndForth attached\n"; }
 void BackAndForth::onActivated() { std::cout << "BackAndForth activated\n"; }
 void BackAndForth::onDeactivated() { std::cout << "BackAndForth deactivated\n"; }
 void BackAndForth::onDetached() { std::cout << "BackAndForth detached\n"; }

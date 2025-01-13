@@ -2,7 +2,6 @@
 #define ZOBACKANDFORTH_H
 
 #include "../engine/sim_system.hpp"
-#include "../engine/signals.hpp"
 
 class BackAndForth: public SimObjectAspect<BackAndForth> {
 public:

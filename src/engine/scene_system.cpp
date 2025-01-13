@@ -7,8 +7,11 @@
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
 
-SceneNodeCore::~SceneNodeCore() {
-    onDestroyed();
+void SceneNodeCore::SceneNodeCore_del_(SceneNodeCore* sceneNode) {
+    if(!sceneNode) return;
+    sceneNode->onDestroyed();
+    // sceneNode.rese;
+    delete sceneNode;
 }
 
 void SceneNodeCore::onCreated(){}
@@ -33,7 +36,7 @@ std::shared_ptr<SceneNode> SceneNode::copy(const std::shared_ptr<const SceneNode
 
 std::shared_ptr<SceneNodeCore> SceneNodeCore::clone() const {
     // construct a new scene node with the same components as this one
-    std::shared_ptr<SceneNodeCore> newSceneNode{ new SceneNodeCore{*this} };
+    std::shared_ptr<SceneNodeCore> newSceneNode{ new SceneNodeCore{*this}, &SceneNodeCore_del_ };
     newSceneNode->onCreated();
     return newSceneNode;
 }
@@ -94,10 +97,10 @@ void SceneNodeCore::copyAndReplaceAttributes(const SceneNodeCore& other) {
     };
     newEntity->copy(*(other.mEntity));
     mEntity = newEntity;
-    mEnabled = other.mEnabled;
+    mStateFlags = (other.mStateFlags&StateFlags::ENABLED);
     mChildren.clear();
     mName = other.mName;
-    mParent = nullptr;
+    mParent.reset();
     mSystemMask = other.mSystemMask;
 }
 
@@ -130,10 +133,10 @@ bool SceneNodeCore::detectCycle(std::shared_ptr<SceneNodeCore> node) {
     if(!node) return false;
 
     std::shared_ptr<SceneNodeCore> slow { node };
-    std::shared_ptr<SceneNodeCore> fast { slow->mParent };
-    while(fast != nullptr && fast->mParent != nullptr && slow != fast) {
-        slow = slow->mParent;
-        fast = fast->mParent->mParent;
+    std::shared_ptr<SceneNodeCore> fast { slow->mParent.lock() };
+    while(fast != nullptr && !fast->mParent.expired()  && slow != fast) {
+        slow = slow->mParent.lock();
+        fast = fast->mParent.lock()->mParent.lock();
     }
 
     if(slow == fast) return true;
@@ -141,11 +144,11 @@ bool SceneNodeCore::detectCycle(std::shared_ptr<SceneNodeCore> node) {
 }
 
 bool SceneNodeCore::inScene() const {
-    return SimpleECS::getSystem<SceneSystem>()->inScene(shared_from_this());
+    return mStateFlags&StateFlags::ENABLED;
 }
 
 bool SceneNodeCore::isActive() const {
-    return SimpleECS::getSystem<SceneSystem>()->isActive(shared_from_this());
+    return mStateFlags&StateFlags::ACTIVE;
 }
 
 bool SceneNodeCore::isAncestorOf(std::shared_ptr<const SceneNodeCore> sceneNode) const {
@@ -153,7 +156,7 @@ bool SceneNodeCore::isAncestorOf(std::shared_ptr<const SceneNodeCore> sceneNode)
 
     std::shared_ptr<const SceneNodeCore> currentNode { sceneNode };
     while(currentNode != nullptr && currentNode.get() != this) {
-        currentNode = currentNode->mParent;
+        currentNode = currentNode->mParent.lock();
     }
     return static_cast<bool>(currentNode);
 }
@@ -180,7 +183,7 @@ std::tuple<std::string, std::string> SceneNodeCore::nextInPath(const std::string
 
 void SceneNodeCore::addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where) {
     assert(node && "Must be a non null pointer to a valid scene node");
-    assert(node->mParent == nullptr && "Node must not have a parent");
+    assert(node->mParent.expired() && "Node must not have a parent");
     if(where == "/") {
         assert(mChildren.find(node->mName) == mChildren.end() && "A node with this name already exists at this location");
         mChildren[node->mName] = node;
@@ -232,8 +235,9 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::getParentNode() {
     // TODO: Find a more efficient way to prevent access to the scene root
     // Guard against indirect access to scene root owned by the scene system via
     // its descendants.
-    if(mParent) assert(mParent->getName() != "" && "Cannot retrieve reference to root node of the scene");
-    return mParent;
+    std::shared_ptr<SceneNodeCore> parent { mParent };
+    if(parent) assert(parent->getName() != "" && "Cannot retrieve reference to root node of the scene");
+    return parent;
 }
 
 std::shared_ptr<SceneNodeCore> SceneNodeCore::disconnectNode(std::shared_ptr<SceneNodeCore> node) {
@@ -246,7 +250,7 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::disconnectNode(std::shared_ptr<Sce
     if(parent) {
         parent->mChildren.erase(node->mName);
     }
-    node->mParent = nullptr;
+    node->mParent.reset();
     return node;
 }
 
@@ -293,7 +297,10 @@ void SceneSystem::ApploopEventHandler::onApplicationEnd() {
 }
 
 bool SceneSystem::inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const {
-    return mEntityToNode.find(sceneNode->getEntityID()) != mEntityToNode.end();
+    return inScene(sceneNode->getEntityID());
+}
+bool SceneSystem::inScene(EntityID entityID) const {
+    return mEntityToNode.find(entityID) != mEntityToNode.end();
 }
 
 bool SceneSystem::isActive(std::shared_ptr<const SceneNodeCore> sceneNode) const {
@@ -318,7 +325,7 @@ void SceneSystem::addNode(std::shared_ptr<SceneNodeCore> sceneNode, const std::s
 }
 
 void SceneSystem::nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode) {
-    if(!inScene(sceneNode->mParent)) return;
+    if(!inScene(sceneNode->mParent.lock())) return;
 
     mEntityToNode[sceneNode->getEntityID()] = sceneNode;
     // when a node is added to the scene, all its children should
@@ -329,7 +336,7 @@ void SceneSystem::nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode) {
 
     // let the scene system enable systems on those nodes that
     // should be enabled
-    nodeActivationChanged(sceneNode, sceneNode->mEnabled);
+    nodeActivationChanged(sceneNode, sceneNode->mStateFlags&SceneNodeCore::StateFlags::ENABLED);
 }
 
 void SceneSystem::nodeRemoved(std::shared_ptr<SceneNodeCore> sceneNode) {
@@ -355,7 +362,7 @@ void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNodeCore> sceneNode
     // isn't active, or node is already in requested state
     if(
         !sceneNode->inScene() 
-        || !isActive(sceneNode->mParent)
+        || !isActive(sceneNode->mParent.lock())
         || (isActive(sceneNode) && state) 
         || (!isActive(sceneNode) && !state)
     ) { return; }
@@ -366,9 +373,10 @@ void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNodeCore> sceneNode
 
 void SceneSystem::activateSubtree(std::shared_ptr<SceneNodeCore> rootNode) {
     for(auto& childNode: rootNode->getChildren()) {
-        if(childNode->mEnabled) activateSubtree(childNode);
+        if(childNode->mStateFlags&SceneNodeCore::StateFlags::ENABLED) activateSubtree(childNode);
     }
 
+    rootNode->mStateFlags |= SceneNodeCore::StateFlags::ACTIVE;
     rootNode->mEntity->enableSystems(rootNode->mSystemMask);
     mActiveEntities.emplace(rootNode->getEntityID());
     mComputeTransformQueue.emplace(rootNode->getEntityID());
@@ -382,9 +390,10 @@ void SceneSystem::deactivateSubtree(std::shared_ptr<SceneNodeCore> rootNode) {
     rootNode->mEntity->disableSystems();
     mActiveEntities.erase(rootNode->getEntityID());
     mComputeTransformQueue.erase(rootNode->getEntityID());
+    rootNode->mStateFlags &= ~SceneNodeCore::StateFlags::ACTIVE;
 
     for(auto& childNode: rootNode->getChildren()) {
-        if(childNode->mEnabled) deactivateSubtree(childNode);
+        if(childNode->mStateFlags&SceneNodeCore::StateFlags::ENABLED) deactivateSubtree(childNode);
     }
 }
 
@@ -399,7 +408,7 @@ void SceneSystem::updateTransforms() {
                 entitiesToIgnore.emplace(entity);
                 break;
             }
-            sceneNode = sceneNode->mParent;
+            sceneNode = sceneNode->mParent.lock();
         }
     }
     for(EntityID entity: entitiesToIgnore) {
@@ -414,7 +423,7 @@ void SceneSystem::updateTransforms() {
             toVisit.pop_back();
 
             glm::mat4 localModelMatrix { getLocalTransform(currentNode).mModelMatrix };
-            glm::mat4 worldMatrix { getCachedWorldTransform(currentNode->mParent).mModelMatrix };
+            glm::mat4 worldMatrix { getCachedWorldTransform(currentNode->mParent.lock()).mModelMatrix };
             updateComponent<Transform>(currentNode->getEntityID(), {worldMatrix * localModelMatrix});
 
             for(std::shared_ptr<SceneNodeCore> child: currentNode->getChildren()) {

@@ -67,7 +67,7 @@ friend class SimObject;
  */
 class SimObject: public BaseSceneNode<SimObject>, public Resource<SimObject> {
 public:
-    ~SimObject();
+    ~SimObject() override;
     inline static std::string getResourceTypeName() { return "SimObject"; }
 
     template <typename ...TComponents>
@@ -116,7 +116,7 @@ friend class BaseSceneNode<SimObject>;
 
 class BaseSimObjectAspect : public SignalTracker {
 public:
-    virtual ~BaseSimObjectAspect();
+    virtual ~BaseSimObjectAspect()=default;
 
     virtual void update(uint32_t deltaSimTimeMillis) {}
 protected:
@@ -207,7 +207,7 @@ void SimSystem::registerAspect() {
 
 template <typename ...TComponents>
 std::shared_ptr<SimObject> SimObject::create(const Placement& placement, const std::string& name, TComponents...components) {
-    return SceneNode::create<SimObject, TComponents...>(placement, name, components...);
+    return BaseSceneNode<SimObject>::create<SimObject, TComponents...>(placement, name, components...);
 }
 
 template <typename ...TComponents>
