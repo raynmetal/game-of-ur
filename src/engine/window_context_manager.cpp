@@ -41,6 +41,7 @@ WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeig
     // Apply color correction, converting SRGB values to linear space values
     // when in the shader context
     glEnable(GL_FRAMEBUFFER_SRGB);
+    glClearColor(0.f, 0.f, 0.f, 1.f);
 
     std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
 

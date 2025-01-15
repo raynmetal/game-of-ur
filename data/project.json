@@ -1,0 +1,8 @@
+{
+    "window_width": 800,
+    "window_height": 600,
+    "simulation_step": 33,
+
+    "input_map_path": "input_bindings.json",
+    "root_scene_path": "test_scene_1.json"
+}
