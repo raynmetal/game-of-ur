@@ -15,6 +15,7 @@ void FlyCamera::update(uint32_t deltaSimTimeMillis) {
     if(!mActive) return;
 
     Placement placement { getComponent<Placement>() };
+
     const glm::mat4 rotationMatrix { glm::mat4_cast(placement.mOrientation) };
     const glm::vec4 localForward { rotationMatrix * glm::vec4{0.f, 0.f, -1.f, 0.f} };
     const glm::vec4 localRight { rotationMatrix * glm::vec4{1.f, 0.f, 0.f, 0.f} };

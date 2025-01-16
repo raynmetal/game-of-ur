@@ -26,13 +26,12 @@ constexpr uint16_t kMinWidth { 800 };
 constexpr uint16_t kMaxHeight { 2304 };
 constexpr uint16_t kMinHeight { 600 };
 constexpr uint32_t kMaxSimStep { 2000 };
-constexpr uint32_t kMinSimStep { 1000/60 };
+constexpr uint32_t kMinSimStep { 1000/90 };
 
 std::weak_ptr<Application> Application::s_pInstance {};
 bool Application::s_instantiated { false };
 
 Application::Application(const std::string& projectPath) {
-    using namespace std::string_literals;
     s_instantiated = true;
 
     std::filesystem::path currentResourcePath { projectPath };
@@ -44,6 +43,7 @@ Application::Application(const std::string& projectPath) {
     nlohmann::json projectJSON { nlohmann::json::parse(jsonFileStream) };
     jsonFileStream.close();
 
+    mTitle = projectJSON[0].at("title").get<std::string>();
     mWindowWidth = projectJSON[0].at("window_width").get<uint16_t>();
     mWindowHeight = projectJSON[0].at("window_height").get<uint16_t>();
     mSimulationStep = projectJSON[0].at("simulation_step").get<uint32_t>();
@@ -52,7 +52,7 @@ Application::Application(const std::string& projectPath) {
         sprintf(assertionMessage, "Window width must be between %dpx and %dpx", kMinWidth, kMaxWidth);
         assert(mWindowWidth >= kMinWidth && mWindowWidth <= kMaxWidth && assertionMessage);
         sprintf(assertionMessage, "Window height must be between %dpx and %dpx", kMinHeight, kMaxHeight);
-        assert(mWindowHeight >= kMinHeight && mWindowHeight <= kMinHeight && assertionMessage);
+        assert(mWindowHeight >= kMinHeight && mWindowHeight <= kMaxHeight && assertionMessage);
         sprintf(assertionMessage, "Simulation step must be between %dms and %dms", kMinSimStep, kMaxSimStep);
         assert(mSimulationStep >= kMinSimStep && mSimulationStep <= kMaxSimStep && assertionMessage);
     }
@@ -116,6 +116,7 @@ void Application::execute() {
     SDL_Event event;
     bool quit {false};
     ApploopEventDispatcher::applicationStart();
+    SimpleECS::beginFrame();
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
@@ -139,6 +140,7 @@ void Application::execute() {
 
         // Apply simulation updates, if possible
         while(currentTicks - simulationTicks >= mSimulationStep) {
+            SimpleECS::beginFrame();
             ++simFrame;
             simulationTicks += mSimulationStep;
 
@@ -171,7 +173,6 @@ void Application::execute() {
         ApploopEventDispatcher::preRenderStep(simulationProgress);
         SimpleECS::getSystem<RenderSystem>()->execute(simulationProgress);
         ApploopEventDispatcher::postRenderStep(simulationProgress);
-        SimpleECS::endFrame();
     }
     ApploopEventDispatcher::applicationEnd();
 }
@@ -198,7 +199,7 @@ void Application::initialize() {
 
     // IMPORTANT: call get instance, just to initialize the window
     // TODO: stupid name bound to trip me up sooner or later. Replace it.
-    WindowContextManager::getInstance(mWindowWidth, mWindowHeight);
+    WindowContextManager::getInstance(mTitle, mWindowWidth, mWindowHeight);
 
     // The framebuffer resource manager depends on the texture resource manager existing (especially 
     // during destruction at end of program.) Instantiate these managers in reverse order of their

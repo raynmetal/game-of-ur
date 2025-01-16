@@ -7,14 +7,14 @@
 
 #include "window_context_manager.hpp"
 
-WindowContextManager::WindowContextManager(GLuint windowWidth, GLuint windowHeight) :
+WindowContextManager::WindowContextManager(const std::string& applicationTitle, GLuint windowWidth, GLuint windowHeight) :
     mWindowWidth {windowWidth},
     mWindowHeight {windowHeight}
 {
     SDL_Init(SDL_INIT_VIDEO);
     IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
 
-    mpSDLWindow = SDL_CreateWindow("Game of Ur", 100, 100, mWindowWidth, mWindowHeight, SDL_WINDOW_OPENGL);
+    mpSDLWindow = SDL_CreateWindow(applicationTitle.c_str(), 100, 100, mWindowWidth, mWindowHeight, SDL_WINDOW_OPENGL);
     if(mpSDLWindow == nullptr){
         std::cout << "Window could not be created" << std::endl;
     }
@@ -59,8 +59,8 @@ void WindowContextManager::swapBuffers() {
     SDL_GL_SwapWindow(mpSDLWindow);
 }
 
-WindowContextManager& WindowContextManager::getInstance(GLuint width, GLuint height) {
-    static WindowContextManager instance { width, height };
+WindowContextManager& WindowContextManager::getInstance(const std::string& applicationTitle, GLuint width, GLuint height) {
+    static WindowContextManager instance { applicationTitle, width, height };
     return instance;
 }
 

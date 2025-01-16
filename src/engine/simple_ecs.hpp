@@ -56,7 +56,7 @@ class IComponentArray {
 public:
     virtual ~IComponentArray()=default;
     virtual void handleEntityDestroyed(EntityID entityID)=0;
-    virtual void handleFrameEnd() = 0;
+    virtual void handleFrameBegin() = 0;
     virtual void copyComponent(EntityID to, EntityID from)=0;
     virtual void addComponent(EntityID to, const nlohmann::json& jsonComponent)=0;
     virtual bool hasComponent(EntityID entityID) const=0;
@@ -123,7 +123,7 @@ private:
     bool hasComponent(EntityID entityID) const override;
     void updateComponent(EntityID entityID, const TComponent& newValue);
     virtual void handleEntityDestroyed(EntityID entityID) override;
-    virtual void handleFrameEnd() override;
+    virtual void handleFrameBegin() override;
     virtual void copyComponent(EntityID to, EntityID from) override;
 
     std::vector<TComponent> mComponentsNext {};
@@ -191,7 +191,7 @@ private:
 
     void handleEntityDestroyed(EntityID entityID);
 
-    void handleFrameEnd();
+    void handleFrameBegin();
 
     void unregisterAll();
 
@@ -334,7 +334,7 @@ public:
 
     static void cleanup();
 
-    static void endFrame();
+    static void beginFrame();
 
 private:
     static SimpleECS& getInstance();
@@ -507,7 +507,6 @@ template <typename TComponent>
 void ComponentArray<TComponent>::updateComponent(EntityID entityID, const TComponent& newComponent) {
     assert(mEntityToComponentIndex.find(entityID) != mEntityToComponentIndex.end());
     std::size_t componentID { mEntityToComponentIndex.at(entityID) };
-    mComponentsPrevious[componentID] = mComponentsNext[componentID];
     mComponentsNext[componentID] = newComponent;
 }
 
@@ -519,10 +518,11 @@ void ComponentArray<TComponent>::handleEntityDestroyed(EntityID entityID) {
 }
 
 template<typename TComponent>
-void ComponentArray<TComponent>::handleFrameEnd() {
-    for(std::size_t i{0}; i < mComponentsNext.size(); ++i) {
-        mComponentsPrevious[i] = mComponentsNext[i];
-    }
+void ComponentArray<TComponent>::handleFrameBegin() {
+    std::copy<typename std::vector<TComponent>::iterator, typename std::vector<TComponent>::iterator>(
+        mComponentsNext.begin(), mComponentsNext.end(), 
+        mComponentsPrevious.begin()
+    );
 }
 
 template <typename TComponent>

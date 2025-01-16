@@ -283,10 +283,10 @@ void SimpleECS::destroyEntity(EntityID entityID) {
     mDeletedIDs.push_back(entityID);
 }
 
-void ComponentManager::handleFrameEnd() {
+void ComponentManager::handleFrameBegin() {
     for(auto& pair: mHashToComponentArray) {
         // copy "Next" buffer into "Previous" buffer
-        pair.second->handleFrameEnd();
+        pair.second->handleFrameBegin();
     }
 }
 
@@ -297,8 +297,8 @@ void SimpleECS::copyComponents(EntityID to, EntityID from) {
     mSystemManager.handleEntitySignatureChanged(to, signature);
 }
 
-void SimpleECS::endFrame() {
-    getInstance().mComponentManager.handleFrameEnd();
+void SimpleECS::beginFrame() {
+    getInstance().mComponentManager.handleFrameBegin();
 }
 
 void SimpleECS::cleanup() {

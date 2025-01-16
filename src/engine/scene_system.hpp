@@ -46,7 +46,7 @@ public:
     void addComponent(const nlohmann::json& jsonComponent, const bool bypassSceneActivityCheck=false);
 
     template <typename TComponent>
-    TComponent getComponent() const;
+    TComponent getComponent(const float simulationProgress=1.f) const;
 
     template <typename TComponent>
     bool hasComponent() const;
@@ -212,7 +212,7 @@ private:
         ApploopEventHandler(){}
         inline void initializeEventHandler(SceneSystem* pSystem){ mSystem = pSystem; }
     private:
-        void onPreRenderStep(float simulationProgress) override;
+        void onPostSimulationStep(float simulationProgress) override;
         void onApplicationStart() override;
         void onApplicationEnd() override;
         SceneSystem* mSystem;
@@ -329,8 +329,8 @@ void SceneNodeCore::addComponent(const TComponent& component, bool bypassSceneAc
 }
 
 template <typename TComponent>
-TComponent SceneNodeCore::getComponent() const {
-    return mEntity->getComponent<TComponent>();
+TComponent SceneNodeCore::getComponent(const float simulationProgress) const {
+    return mEntity->getComponent<TComponent>(simulationProgress);
 }
 
 template <typename TComponent>

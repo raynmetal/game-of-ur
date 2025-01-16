@@ -14,6 +14,17 @@ struct Placement {
     inline static std::string getComponentTypeName() { return "Placement"; }
 };
 
+struct PlacementPosition {
+    glm::vec4 mPosition { 0.f, 0.f, 0.f, 1.f };
+};
+
+struct PlacementOrientation  {
+    glm::quat mOrientation { glm::vec3 { 0.f } };
+};
+struct PlacementScale {
+    glm::vec3 mScale { 1.f, 1.f, 1.f };
+};
+
 struct Transform {
     glm::mat4 mModelMatrix {1.f};
     inline static std::string getComponentTypeName() { return "Transform"; }
@@ -79,6 +90,15 @@ inline Placement Interpolator<Placement>::operator() (
         .mOrientation{ glm::slerp(previousState.mOrientation, nextState.mOrientation, simulationProgress) },
         .mScale{ (1.f - simulationProgress) * previousState.mScale + simulationProgress * nextState.mScale }
     };
+}
+
+template <>
+inline PlacementPosition Interpolator<PlacementPosition>::operator() (
+    const PlacementPosition& previousState, const PlacementPosition& nextState,
+    float simulationProgress
+) const {
+    simulationProgress = mProgressLimits(simulationProgress);
+    return { (1.f - simulationProgress) * previousState.mPosition + simulationProgress * nextState.mPosition };
 }
 
 template<>

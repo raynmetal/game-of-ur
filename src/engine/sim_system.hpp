@@ -142,7 +142,7 @@ protected:
     template <typename TComponent>
     void updateComponent(const TComponent& component);
     template <typename TComponent>
-    TComponent getComponent();
+    TComponent getComponent(const float simulationProgress=1.f);
     template <typename TComponent>
     void removeComponent();
 
@@ -229,8 +229,8 @@ void BaseSimObjectAspect::updateComponent(const TComponent& component) {
     mSimObject->updateComponent<TComponent>(component);
 }
 template <typename TComponent>
-TComponent BaseSimObjectAspect::getComponent() {
-    return mSimObject->getComponent<TComponent>();
+TComponent BaseSimObjectAspect::getComponent(const float simulationProgress) {
+    return mSimObject->getComponent<TComponent>(simulationProgress);
 }
 template <typename TComponent>
 void BaseSimObjectAspect::removeComponent() {

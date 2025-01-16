@@ -30,7 +30,7 @@ void CameraSystem::updateActiveCameraMatrices() {
 
     // Apply pending updates
     for(EntityID entity: requiresProjectionUpdate) {
-        CameraProperties cameraProperties { getComponent<CameraProperties>(entity, 1.f) };
+        CameraProperties cameraProperties { getComponent<CameraProperties>(entity) };
         switch(cameraProperties.mProjectionType) {
             case CameraProperties::ProjectionType::FRUSTUM:
                 cameraProperties.mProjectionMatrix = glm::perspective(
@@ -46,8 +46,8 @@ void CameraSystem::updateActiveCameraMatrices() {
         updateComponent<CameraProperties>(entity, cameraProperties);
     }
     for(EntityID entity: requiresViewUpdate) {
-        CameraProperties cameraProperties { getComponent<CameraProperties>(entity, 1.f) };
-        cameraProperties.mViewMatrix = glm::inverse(getComponent<Transform>(entity, 1.f).mModelMatrix);
+        CameraProperties cameraProperties { getComponent<CameraProperties>(entity) };
+        cameraProperties.mViewMatrix = glm::inverse(getComponent<Transform>(entity).mModelMatrix);
         updateComponent<CameraProperties>(entity, cameraProperties);
     }
 }
@@ -62,6 +62,8 @@ void CameraSystem::onEntityUpdated(EntityID entity)  {
         mViewUpdateQueue.insert(entity);
     }
 
+    // TODO: implement an override of == and != for the CameraProperties struct 
+    // that encapsulates this comparison
     if(
         cameraPropsBefore.mProjectionType != cameraPropsAfter.mProjectionType
         || (

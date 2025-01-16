@@ -11,7 +11,7 @@ public:
     /* Deletes SDL and GL contexts */
     ~WindowContextManager();
 
-    static WindowContextManager& getInstance(GLuint width=800, GLuint height=600);
+    static WindowContextManager& getInstance(const std::string& applicationTitle="Default Title", GLuint width=800, GLuint height=600);
 
     /*Removes default constructor*/
     WindowContextManager() = delete;
@@ -35,7 +35,7 @@ private:
     Initializes SDL and OpenGL contexts, creates an SDL window 
     and stores a reference to it
     */
-    WindowContextManager(GLuint windowWidth, GLuint windowHeight);
+    WindowContextManager(const std::string& applicationTitle, GLuint windowWidth, GLuint windowHeight);
     /* Uses default copy constructor */
     WindowContextManager(WindowContextManager& other) = default;
     /* Uses default copy assignment */

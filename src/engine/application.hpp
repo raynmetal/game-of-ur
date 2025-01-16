@@ -35,6 +35,7 @@ private:
     uint16_t mWindowHeight {600};
     uint32_t mSimulationStep { 1000/30 }; // simulation stepsize in ms
     InputManager mInputManager {};
+    std::string mTitle {"Default Title"};
 
     static std::weak_ptr<Application> s_pInstance;
     static bool s_instantiated;
