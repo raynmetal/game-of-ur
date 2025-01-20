@@ -9,7 +9,9 @@
 
 #include <nlohmann/json.hpp>
 
+#include "resource_database.hpp"
 #include "registrator.hpp"
+#include "input_system/input_system.hpp"
 #include "apploop_events.hpp" 
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
@@ -35,6 +37,7 @@ public:
     System<SimSystem, SimCore>{0}
     {}
 
+    static std::string getSystemTypeName() { return "SimSystem"; }
     class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
     public:
         ApploopEventHandler(){}
@@ -52,9 +55,9 @@ private:
     template <typename TSimObjectAspect>
     void registerAspect();
 
-    std::unique_ptr<BaseSimObjectAspect> constructAspect(const nlohmann::json& jsonAspectProperties);
+    std::shared_ptr<BaseSimObjectAspect> constructAspect(const nlohmann::json& jsonAspectProperties);
 
-    std::unordered_map<std::string, std::unique_ptr<BaseSimObjectAspect> (*)(const nlohmann::json& jsonAspectProperties)> mAspectConstructors {};
+    std::unordered_map<std::string, std::shared_ptr<BaseSimObjectAspect> (*)(const nlohmann::json& jsonAspectProperties)> mAspectConstructors {};
     std::shared_ptr<SimSystem::ApploopEventHandler> mApploopEventHandler { SimSystem::ApploopEventHandler::registerHandler(this) };
 friend class SimSystem::ApploopEventHandler;
 friend class BaseSimObjectAspect;
@@ -106,19 +109,22 @@ private:
     void copyAspects(const SimObject& other);
     std::shared_ptr<SceneNodeCore> clone() const override;
 
-    std::unordered_map<std::string, std::unique_ptr<BaseSimObjectAspect>> mSimObjectAspects { };
-    SignalTracker mSignalTracker {};
+    std::unordered_map<std::string, std::shared_ptr<BaseSimObjectAspect>> mSimObjectAspects {};
 
 friend class SimSystem;
 friend class BaseSimObjectAspect;
 friend class BaseSceneNode<SimObject>;
 };
 
-class BaseSimObjectAspect : public SignalTracker {
+class BaseSimObjectAspect : public std::enable_shared_from_this<BaseSimObjectAspect>, public SignalTracker, public IActionHandler {
 public:
     virtual ~BaseSimObjectAspect()=default;
 
     virtual void update(uint32_t deltaSimTimeMillis) {}
+
+    void addFixedActionBinding(const std::string& context, const std::string& action);
+    void removeFixedActionBinding(const std::string& context, const std::string& action);
+
 protected:
     BaseSimObjectAspect()=default;
 
@@ -160,7 +166,16 @@ protected:
     EntityID getEntityID() const;
 
     virtual std::string getAspectTypeName() const = 0;
+
 private:
+    void activateFixedActionBindings();
+    void deactivateFixedActionBindings();
+
+    void onAttached_();
+    void onDetached_();
+    void onActivated_();
+    void onDeactivated_();
+
     virtual void onAttached(){}
     virtual void onDetached(){}
     virtual void onActivated() {}
@@ -168,8 +183,17 @@ private:
 
     void attach(SimObject* owner);
     void detach();
-    virtual std::unique_ptr<BaseSimObjectAspect> makeCopy() const = 0;
+    virtual std::shared_ptr<BaseSimObjectAspect> makeCopy() const = 0;
+
+    std::unordered_map<std::string, std::set<std::string>> mFixedActionBindings {};
     SimObject* mSimObject { nullptr };
+
+    enum AspectState : uint8_t {
+        ATTACHED=1,
+        ACTIVE=2,
+    };
+    uint8_t mState { 0x0 };
+
 friend class SimObject;
 };
 
@@ -274,7 +298,6 @@ struct SceneNodeCore::getByPath_Helper<BaseSimObjectAspect&> {
         assert(div != where.end() && "Must contain @ to be a valid path to a scene node's aspect");
 
         // extract the node path from full path
-        const std::string_view fullPath { where };
         const std::string nodePath { where.substr(0, div - where.begin()) };
         const std::string aspectName { where.substr(1 + (div - where.begin())) };
         assert(SimpleECS::getSystem<SimSystem>()->aspectRegistered(aspectName) && "No aspect of this type has been registered with the Sim System");
@@ -282,6 +305,8 @@ struct SceneNodeCore::getByPath_Helper<BaseSimObjectAspect&> {
         std::shared_ptr<SimObject> node { rootNode->getByPath<std::shared_ptr<SimObject>>(nodePath) };
         return node->getAspect(aspectName);
     }
+
+    static constexpr bool s_valid { true };
 };
 
 template <typename TAspect>
@@ -289,6 +314,7 @@ struct SceneNodeCore::getByPath_Helper<TAspect&, std::enable_if_t<std::is_base_o
     static TAspect& get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where) {
         return static_cast<TAspect&>(SceneNodeCore::getByPath_Helper<BaseSimObjectAspect&>::get(rootNode, where));
     }
+    static constexpr bool s_valid { true };
 };
 
 template<>

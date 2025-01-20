@@ -83,23 +83,10 @@ Application::Application(const std::string& projectPath) {
 
 void Application::execute() {
     std::cout << "Application executing" << std::endl;
-
     SimpleECS::getSystem<SceneSystem>()->addNode(
         ResourceDatabase::getRegisteredResource<SimObject>("root_scene"),
         "/"
     );
-
-    // TODO: To be removed as soon as we figure out input action bindings
-    std::shared_ptr<SimObject> camera { SimpleECS::getSystem<SceneSystem>()->getByPath<std::shared_ptr<SimObject>>("/partial_scene_root/camera/") };
-    mInputManager["Camera"].registerActionHandler("Rotate", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
-    mInputManager["Camera"].registerActionHandler("ToggleControl", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
-    mInputManager["Camera"].registerActionHandler("Move", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
-    mInputManager["Camera"].registerActionHandler("UpdateFOV", std::shared_ptr<FlyCamera>(camera, &(camera->getAspect<FlyCamera>())));
-    mInputManager["Graphics"].registerActionHandler("UpdateGamma", SimpleECS::getSystem<RenderSystem>());
-    mInputManager["Graphics"].registerActionHandler("UpdateExposure", SimpleECS::getSystem<RenderSystem>());
-    mInputManager["Graphics"].registerActionHandler("RenderNextTexture", SimpleECS::getSystem<RenderSystem>());
-    // TODO: To be removed as soon as we figure out input action bindings
-
 
     // Timing related variables
     uint32_t previousTicks { SDL_GetTicks() };
@@ -127,7 +114,6 @@ void Application::execute() {
                 quit = true;
                 break;
             }
-
             else {
                 mInputManager.queueInput(event);
             }

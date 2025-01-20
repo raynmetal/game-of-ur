@@ -1,3 +1,5 @@
+#include "application.hpp"
+
 #include "sim_system.hpp"
 
 SimObject::~SimObject() {
@@ -52,12 +54,12 @@ Resource<SimObject>{0}
 
 void SimObject::onActivated() {
     for(auto& aspectPair: mSimObjectAspects) {
-        aspectPair.second->onActivated();
+        aspectPair.second->onActivated_();
     }
 }
 void SimObject::onDeactivated() {
     for(auto& aspectPair: mSimObjectAspects) {
-        aspectPair.second->onDeactivated();
+        aspectPair.second->onDeactivated_();
     }
 }
 
@@ -80,7 +82,7 @@ bool SimSystem::aspectRegistered(const std::string& aspectName) const {
     return mAspectConstructors.find(aspectName) != mAspectConstructors.end();
 }
 
-std::unique_ptr<BaseSimObjectAspect> SimSystem::constructAspect(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<BaseSimObjectAspect> SimSystem::constructAspect(const nlohmann::json& jsonAspectProperties) {
     return mAspectConstructors.at(jsonAspectProperties.at("type").get<std::string>())(jsonAspectProperties);
 }
 
@@ -139,9 +141,9 @@ void BaseSimObjectAspect::attach(SimObject* newOwner) {
     detach();
 
     mSimObject = newOwner;
-    onAttached();
+    onAttached_();
     if(mSimObject->isActive()) {
-        onActivated();
+        onActivated_();
     }
 }
 
@@ -149,9 +151,9 @@ void BaseSimObjectAspect::detach() {
     if(!mSimObject) return;
 
     if(mSimObject->isActive()) { 
-        onDeactivated();
+        onDeactivated_();
     }
-    onDetached();
+    onDetached_();
     mSimObject = nullptr;
 }
 
@@ -168,4 +170,71 @@ BaseSimObjectAspect& BaseSimObjectAspect::getAspect(const std::string& aspectTyp
 
 bool BaseSimObjectAspect::hasAspect(const std::string& aspectType) const {
     return mSimObject->hasAspect(aspectType);
+}
+
+void BaseSimObjectAspect::addFixedActionBinding(const std::string& context, const std::string& action) {
+    assert(!(mState & AspectState::ACTIVE) && "Cannot add or remove fixed action bindings while aspect is active.");
+    mFixedActionBindings[context].insert(action);
+}
+
+void BaseSimObjectAspect::removeFixedActionBinding(const std::string& context, const std::string& action) {
+    assert(!(mState & AspectState::ACTIVE) && "Cannot add or remove fixed action bindings while aspect is active.");
+    mFixedActionBindings[context].erase(action);
+    if(mFixedActionBindings[context].empty()) {
+        mFixedActionBindings.erase(context);
+    }
+}
+
+void BaseSimObjectAspect::activateFixedActionBindings(){
+    assert((mState == (AspectState::ATTACHED|AspectState::ACTIVE)) && "Action bindings may only be activated or deactivated if an aspect is attached to an active SimObject");
+    for(const auto& contextPair: mFixedActionBindings) {
+        const std::string& context { contextPair.first };
+        const std::set<std::string>& actions { contextPair.second };
+        for(const auto& action: actions) {
+            Application::getInstance()
+                .getObject<InputManager&>()[context]
+                .registerActionHandler(
+                    action,
+                    shared_from_this()
+            );
+        }
+    }
+}
+
+void BaseSimObjectAspect::deactivateFixedActionBindings() {
+    assert((mState == (AspectState::ATTACHED|AspectState::ACTIVE)) && "Action bindings may only be activated or deactivated if an aspect is attached to an active SimObject");
+    for(const auto& contextPair: mFixedActionBindings) {
+        const std::string& context { contextPair.first };
+        const std::set<std::string>& actions { contextPair.second };
+        for(const auto& action: actions) {
+            Application::getInstance()
+                .getObject<InputManager&>()[context]
+                .unregisterActionHandler(
+                    action,
+                    shared_from_this()
+            );
+        }
+    }
+}
+
+void BaseSimObjectAspect::onAttached_() {
+    mState |= AspectState::ATTACHED;
+    onAttached();
+}
+
+void BaseSimObjectAspect::onDetached_() {
+    onDetached();
+    mState &= ~AspectState::ATTACHED;
+}
+
+void BaseSimObjectAspect::onActivated_() {
+    mState |= AspectState::ACTIVE;
+    activateFixedActionBindings();
+    onActivated();
+}
+
+void BaseSimObjectAspect::onDeactivated_() {
+    onDeactivated();
+    deactivateFixedActionBindings();
+    mState &= ~AspectState::ACTIVE;
 }

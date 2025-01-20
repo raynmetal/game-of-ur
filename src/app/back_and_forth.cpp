@@ -1,9 +1,10 @@
 #include <iostream>
 
-#include "back_and_forth.hpp"
+#include <glm/glm.hpp>
+
 #include "../engine/scene_system.hpp"
 
-#include "glm/glm.hpp"
+#include "back_and_forth.hpp"
 
 void BackAndForth::onAttached() { std::cout << "BackAndForth attached\n"; }
 void BackAndForth::onActivated() { std::cout << "BackAndForth activated\n"; }
@@ -26,10 +27,10 @@ void BackAndForth::update(uint32_t deltaSimtimeMillis) {
     updateComponent<Placement>(placement);
 }
 
-std::unique_ptr<BaseSimObjectAspect> BackAndForth::makeCopy() const {
-    return std::unique_ptr<BackAndForth>(new BackAndForth{});
+std::shared_ptr<BaseSimObjectAspect> BackAndForth::makeCopy() const {
+    return std::shared_ptr<BackAndForth>(new BackAndForth{});
 }
 
-std::unique_ptr<BaseSimObjectAspect> BackAndForth::create(const nlohmann::json& jsonAspectProperties) {
-    return std::unique_ptr<BackAndForth>(new BackAndForth{});
+std::shared_ptr<BaseSimObjectAspect> BackAndForth::create(const nlohmann::json& jsonAspectProperties) {
+    return std::shared_ptr<BackAndForth>(new BackAndForth{});
 }

@@ -116,6 +116,7 @@ private:
     template <typename TObject, typename Enable=void>
     struct getByPath_Helper {
         static TObject get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where);
+        static constexpr bool s_valid { false };
     };
 
     SceneNodeCore(){} // special constructor used to create the root node in the scene system
@@ -206,6 +207,7 @@ public:
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
 
+    static std::string getSystemTypeName() { return "SceneSystem"; }
 private:
     class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
     public:
@@ -273,8 +275,7 @@ std::shared_ptr<SceneNode> SceneNode::create(const Placement& placement, const s
     return BaseSceneNode<SceneNode>::create<TComponents...>(placement, name, components...);
 }
 
-// Fail retrieval in cases where no explicitly defined object by path
-// method exists
+
 template <typename TObject>
 TObject SceneNodeCore::getByPath(const std::string& where) {
     return getByPath_Helper<TObject>::get(shared_from_this(), where);
@@ -285,6 +286,8 @@ TObject SceneSystem::getByPath(const std::string& where) {
     return mRootNode->getByPath<TObject>(where);
 }
 
+// Fail retrieval in cases where no explicitly defined object by path
+// method exists
 template <typename TObject, typename Enable>
 TObject SceneNodeCore::getByPath_Helper<TObject, Enable>::get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where) {
     static_assert(false && "No Object-by-Path method for this type exists");
@@ -296,6 +299,7 @@ struct SceneNodeCore::getByPath_Helper<std::shared_ptr<TObject>, typename std::e
     static std::shared_ptr<TObject> get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where) {
         return std::static_pointer_cast<TObject>(rootNode->getNode(where));
     }
+    static constexpr bool s_valid { true };
 };
 
 template <typename ...TComponents>

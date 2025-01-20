@@ -12,6 +12,7 @@
 #include "input_data.hpp"
 
 class ActionContext;
+
 class InputManager;
 
 /*
@@ -136,7 +137,11 @@ public:
      * input that triggered it can be propagated to lower
      * precedence action contexts.
      */
-    virtual void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) = 0;
+
+private:
+    virtual void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {};
+
+friend class ActionContext;
 };
 
 class ActionContext {

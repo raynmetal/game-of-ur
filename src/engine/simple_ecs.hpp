@@ -302,9 +302,9 @@ private:
     template<typename TSystem>
     void handleEntityUpdatedBySystem(EntityID entityID, Signature signature);
 
-    std::unordered_map<std::size_t, Signature> mHashToSignature {};
-    std::unordered_map<std::size_t, SystemType> mHashToSystemType {};
-    std::unordered_map<std::size_t, std::shared_ptr<BaseSystem>> mHashToSystem {};
+    std::unordered_map<std::string, Signature> mNameToSignature {};
+    std::unordered_map<std::string, SystemType> mNameToSystemType {};
+    std::unordered_map<std::string, std::shared_ptr<BaseSystem>> mNameToSystem {};
 
 friend class SimpleECS;
 friend class BaseSystem;
@@ -602,9 +602,9 @@ void ComponentManager::copyComponent(EntityID to, EntityID from) {
 
 template<typename TSystem>
 SystemType SystemManager::getSystemType() const {
-    const std::size_t systemHash { typeid(TSystem).hash_code() };
-    assert(mHashToSystemType.find(systemHash) != mHashToSystemType.end() && "Component type has not been registered");
-    return mHashToSystemType.at(systemHash);
+    const std::string systemTypeName{ TSystem::getSystemTypeName() };
+    assert(mNameToSystemType.find(systemTypeName) != mNameToSystemType.end() && "Component type has not been registered");
+    return mNameToSystemType.at(systemTypeName);
 }
 
 template <typename TSystem>
@@ -627,33 +627,32 @@ void System<TSystemDerived, TRequiredComponents...>::registerSelf() {
 
 template<typename TSystem>
 void SystemManager::registerSystem(const Signature& signature) {
-    std::size_t systemHash {typeid(TSystem).hash_code()};
+    std::string systemTypeName { TSystem::getSystemTypeName() };
+    assert(mNameToSignature.find(systemTypeName) == mNameToSignature.end() && "System has already been registered");
+    assert(mNameToSystemType.size() + 1 < kMaxSystems && "System type limit reached");
 
-    assert(mHashToSignature.find(systemHash) == mHashToSignature.end() && "System has already been registered");
-    assert(mHashToSystemType.size() + 1 < kMaxSystems && "System type limit reached");
-
-    mHashToSignature[systemHash] = signature;
-    mHashToSystem.insert_or_assign(systemHash, std::make_shared<TSystem>());
-    mHashToSystemType[systemHash] = mHashToSystemType.size();
+    mNameToSignature[systemTypeName] = signature;
+    mNameToSystem.insert_or_assign(systemTypeName, std::make_shared<TSystem>());
+    mNameToSystemType[systemTypeName] = mNameToSystemType.size();
 }
 
 template<typename TSystem>
 std::shared_ptr<TSystem> SystemManager::getSystem() {
-    std::size_t systemHash {typeid(TSystem).hash_code()};
-    assert(mHashToSignature.find(systemHash) != mHashToSignature.end() && "System has not yet been registered");
-    return std::dynamic_pointer_cast<TSystem>(mHashToSystem[systemHash]);
+    std::string systemTypeName { TSystem::getSystemTypeName() };
+    assert(mNameToSignature.find(systemTypeName) != mNameToSignature.end() && "System has not yet been registered");
+    return std::dynamic_pointer_cast<TSystem>(mNameToSystem[systemTypeName]);
 }
 
 template<typename TSystem>
 void SystemManager::enableEntity(EntityID entityID) {
-    std::size_t systemHash {typeid(TSystem).hash_code()};
-    mHashToSystem[systemHash]->enableEntity(entityID);
+    std::string systemTypeName { TSystem::getSystemTypeName() };
+    mNameToSystem[systemTypeName]->enableEntity(entityID);
 }
 
 template<typename TSystem>
 void SystemManager::disableEntity(EntityID entityID) {
-    std::size_t systemHash{ typeid(TSystem).hash_code() };
-    mHashToSystem[systemHash]->disableEntity(entityID);
+    std::string systemTypeName { TSystem::getSystemTypeName() };
+    mNameToSystem[systemTypeName]->disableEntity(entityID);
 }
 
 template <typename TComponent>
@@ -698,8 +697,8 @@ void Entity::disableSystem() {
 
 template <typename TSystem>
 bool SystemManager::isEnabled(EntityID entityID) {
-    const std::size_t systemHash { typeid(TSystem).hash_code() };
-    return mHashToSystem[systemHash]->isEnabled(entityID);
+    const std::string systemTypeName { TSystem::getSystemTypeName() };
+    return mNameToSystem[systemTypeName]->isEnabled(entityID);
 }
 
 template<typename ...TComponents>
@@ -759,7 +758,7 @@ template<typename TComponent, typename TSystem>
 TComponent SimpleECS::getComponent(EntityID entityID, float progress) const {
     assert(
         (
-            mSystemManager.mHashToSignature.at(typeid(TSystem).hash_code())
+            mSystemManager.mNameToSignature.at(TSystem::getSystemTypeName())
                 .test(mComponentManager.getComponentType<TComponent>())
         )
         && "This system cannot access this kind of component"
@@ -776,9 +775,9 @@ void SimpleECS::updateComponent(EntityID entityID, const TComponent& newValue) {
 
 template<typename TComponent, typename TSystem>
 void SimpleECS::updateComponent(EntityID entityID, const TComponent& newValue) {
-     assert(
+    assert(
         (
-            mSystemManager.mHashToSignature.at(typeid(TSystem).hash_code())
+            mSystemManager.mNameToSignature.at(TSystem::getSystemTypeName())
                 .test(mComponentManager.getComponentType<TComponent>())
         )
         && "This system cannot access this kind of component"
@@ -828,15 +827,14 @@ void BaseSystem::updateComponent(EntityID entityID, const TComponent& component)
 
 template<typename TSystem>
 void SystemManager::handleEntityUpdatedBySystem(EntityID entityID, Signature signature) {
-    std::size_t originatingSystemHash { typeid(TSystem).hash_code() };
-    for(auto& pair: mHashToSignature) {
+    std::string originatingSystemTypeName { TSystem::getSystemTypeName() };
+    for(auto& pair: mNameToSignature) {
         // suppress update callback from the system that caused this update
-        if(pair.first == originatingSystemHash) continue;
+        if(pair.first == originatingSystemTypeName) continue;
 
         Signature& systemSignature { pair.second };
         if((systemSignature & signature) == systemSignature){
-            BaseSystem& system { *(mHashToSystem[pair.first]).get() };
-            system.onEntityUpdated(entityID);
+            mNameToSystem[pair.first]->onEntityUpdated(entityID);
         }
     }
 }

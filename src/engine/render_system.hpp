@@ -13,11 +13,13 @@
 #include "render_stage.hpp"
 #include "camera_system.hpp"
 
-class RenderSystem: public System<RenderSystem, CameraProperties>,  public IActionHandler {
+class RenderSystem: public System<RenderSystem, CameraProperties> {
 public:
     RenderSystem():
     System<RenderSystem, CameraProperties>{0}
     {}
+
+    static std::string getSystemTypeName() { return "RenderSystem"; }
 
     class LightQueue: public System<LightQueue, Transform, LightEmissionData>{
     public:
@@ -25,6 +27,7 @@ public:
         System<RenderSystem::LightQueue, Transform, LightEmissionData>{0}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
+        static std::string getSystemTypeName() { return "RenderSystem::LightQueue"; }
     private:
         void onCreated() override;
         std::shared_ptr<StaticMesh> mSphereMesh { nullptr };
@@ -36,18 +39,20 @@ public:
         System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>>{0}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
+        static std::string getSystemTypeName() { return "RenderSystem::OpaqueQueue"; }
     };
 
     void execute(float simulationProgress);
 
     void updateCameraMatrices(float simulationProgress);
 
-    void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override;
 
     /* Set the texture to be rendered to the screen by its relative index */
     void renderNextTexture ();
     void setGamma(float gamma);
+    float getGamma();
     void setExposure(float exposure);
+    float getExposure();
     std::size_t getCurrentScreenTexture ();
 
 private:
@@ -68,9 +73,6 @@ private:
 
     float mGamma { 2.f };
     float mExposure { 1.f };
-
-    float mGammaStep { .1f };
-    float mExposureStep { .1f };
 };
 
 #endif

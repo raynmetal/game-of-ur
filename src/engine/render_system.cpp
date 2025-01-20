@@ -211,6 +211,9 @@ void RenderSystem::setGamma(float gamma) {
 
     mGamma = gamma;
 }
+float RenderSystem::getGamma() {
+    return mGamma;
+}
 
 void RenderSystem::setExposure(float exposure) {
     if(exposure > MAX_EXPOSURE) exposure = MAX_EXPOSURE;
@@ -222,15 +225,6 @@ void RenderSystem::setExposure(float exposure) {
 
     mExposure = exposure;
 }
-
-void RenderSystem::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-    if(actionDefinition.mName == "UpdateGamma") {
-        setGamma(mGamma + actionData.mOneAxisActionData.mValue*mGammaStep);
-    }
-    else if(actionDefinition.mName == "UpdateExposure") {
-        setExposure(mExposure + actionData.mOneAxisActionData.mValue*mExposureStep);
-    }
-    else if(actionDefinition.mName == "RenderNextTexture") {
-        renderNextTexture();
-    }
+float RenderSystem::getExposure() {
+    return mExposure;
 }

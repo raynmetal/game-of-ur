@@ -6,11 +6,11 @@
 class TickSecond: public SimObjectAspect<TickSecond> {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "TickSecond"; }
-    static std::unique_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
+    static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
 
     void update(uint32_t deltaSimtimeMillis) override;
 
-    std::unique_ptr<BaseSimObjectAspect> makeCopy() const override;
+    std::shared_ptr<BaseSimObjectAspect> makeCopy() const override;
     Signal<> mSigSecondPassed { *this, "secondPassed" };
 
 private:

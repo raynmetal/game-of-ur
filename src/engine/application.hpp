@@ -3,10 +3,12 @@
 
 #include <string>
 
+#include "simple_ecs.hpp"
+#include "scene_system.hpp"
 #include "input_system/input_system.hpp"
 
 class Application {
-    template <typename TObject>
+    template <typename TObject, typename=void>
     class getByPath_Helper;
 
 public:
@@ -17,15 +19,18 @@ public:
     void execute();
 
     template <typename TObject>
-    TObject getByPath(const std::string& path);
+    TObject getObject(const std::string& path="");
 
 private:
 
     Application(const std::string& projectPath);
 
-    template <typename TObject>
+    template <typename TObject, typename Enable>
     class getByPath_Helper {
-        static TObject get(const std::string& path);
+        getByPath_Helper(Application* application);
+        TObject get(const std::string& path="");
+        Application* mApplication;
+    friend class Application;
     };
 
     void initialize();
@@ -43,5 +48,52 @@ private:
     static std::shared_ptr<Application> instantiate(const std::string& projectPath);
 friend int main(int, char* []);
 };
+
+template <typename TObject>
+TObject Application::getObject(const std::string& path) {
+    return getByPath_Helper<TObject>{this}.get(path);
+}
+
+template <typename TObject, typename Enable>
+TObject Application::getByPath_Helper<TObject, Enable>::get(const std::string& path) {
+    static_assert(false && "No getter for this object type is known.");
+    return TObject {}; // prevent compiler warnings about no return type
+}
+
+template <typename TObject>
+struct Application::getByPath_Helper<
+    std::shared_ptr<TObject>,
+    typename std::enable_if_t<
+        std::is_base_of_v<BaseSystem, TObject>
+    >
+> {
+    getByPath_Helper(Application* application): mApplication {application} {}
+    std::shared_ptr<TObject> get(const std::string& path) {
+        assert(path == "" && "Getter for ECS Systems does not accept any path parameter");
+        return SimpleECS::getSystem<TObject>();
+    }
+    Application* mApplication;
+};
+
+template <typename TObject>
+struct Application::getByPath_Helper<
+    TObject,
+    typename std::enable_if_t<
+        SceneNodeCore::getByPath_Helper<TObject>::s_valid
+    >
+> {
+    getByPath_Helper(Application* application): mApplication {application} {}
+    TObject get(const std::string& path) {
+        return SimpleECS::getSystem<SceneSystem>()->getByPath<TObject>(path);
+    }
+    Application* mApplication;
+};
+
+template <>
+inline InputManager& Application::getByPath_Helper<InputManager&, void>::get(const std::string& path){
+    assert(path == "" && "Getter for InputManager does not accept any path parameter");
+    return mApplication->mInputManager;
+}
+
 
 #endif

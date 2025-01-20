@@ -33,6 +33,8 @@ public:
     {}
     void updateActiveCameraMatrices();
     void onEntityUpdated(EntityID entityID) override;
+
+    static std::string getSystemTypeName() { return "CameraSystem"; }
 private:
     class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
     public:

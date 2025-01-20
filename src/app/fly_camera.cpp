@@ -115,10 +115,10 @@ void FlyCamera::updateFOV(float dFOV) {
     updateComponent<CameraProperties>(cameraProps);
 }
 
-std::unique_ptr<BaseSimObjectAspect> FlyCamera::makeCopy() const {
-    return std::unique_ptr<FlyCamera>(new FlyCamera{});
+std::shared_ptr<BaseSimObjectAspect> FlyCamera::makeCopy() const {
+    return std::shared_ptr<FlyCamera>(new FlyCamera{});
 }
 
-std::unique_ptr<BaseSimObjectAspect> FlyCamera::create(const nlohmann::json& jsonAspectProeprties) {
-    return std::unique_ptr<FlyCamera>(new FlyCamera{});
+std::shared_ptr<BaseSimObjectAspect> FlyCamera::create(const nlohmann::json& jsonAspectProeprties) {
+    return std::shared_ptr<FlyCamera>(new FlyCamera{});
 }

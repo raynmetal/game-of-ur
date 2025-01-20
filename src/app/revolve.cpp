@@ -15,10 +15,10 @@ void Revolve::update(uint32_t deltaSimtimeMillis) {
     updateComponent<Placement>(placement);
 }
 
-std::unique_ptr<BaseSimObjectAspect> Revolve::makeCopy() const {
-    return std::unique_ptr<Revolve>(new Revolve{});
+std::shared_ptr<BaseSimObjectAspect> Revolve::makeCopy() const {
+    return std::shared_ptr<Revolve>(new Revolve{});
 }
 
-std::unique_ptr<BaseSimObjectAspect> Revolve::create(const nlohmann::json& jsonAspectProperties) {
-    return std::unique_ptr<Revolve>{new Revolve{}};
+std::shared_ptr<BaseSimObjectAspect> Revolve::create(const nlohmann::json& jsonAspectProperties) {
+    return std::shared_ptr<Revolve>{new Revolve{}};
 }

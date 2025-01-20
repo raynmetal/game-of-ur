@@ -8,14 +8,14 @@
 extern const float DEFAULT_CAMERA_SPEED;
 extern const float LOOK_SENSITIVITY;
 
-class FlyCamera: public SimObjectAspect<FlyCamera>, public IActionHandler {
+class FlyCamera: public SimObjectAspect<FlyCamera> {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "FlyCamera"; }
     void update(uint32_t deltaSimtimeMillis) override;
     void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override;
-    std::unique_ptr<BaseSimObjectAspect> makeCopy() const override;
+    std::shared_ptr<BaseSimObjectAspect> makeCopy() const override;
 
-    static std::unique_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
+    static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
 
 private:
     FlyCamera(): SimObjectAspect<FlyCamera>{0} {}

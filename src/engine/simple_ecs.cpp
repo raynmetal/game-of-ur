@@ -121,19 +121,19 @@ bool BaseSystem::isRegistered(EntityID entityID) const {
 }
 
 void SystemManager::initialize() {
-    for(auto& pair: mHashToSystem) {
+    for(auto& pair: mNameToSystem) {
         pair.second->onCreated();
     }
 }
 
 void SystemManager::enableEntity(EntityID entityID, Signature entitySignature, Signature systemMask) {
-    for(const auto& signaturePair: mHashToSignature) {
-        auto& system { mHashToSystem[signaturePair.first] };
+    for(const auto& signaturePair: mNameToSignature) {
+        auto& system { mNameToSystem[signaturePair.first] };
         if(
             // entity and system signatures match
             (signaturePair.second&entitySignature) == signaturePair.second
             // mask allows this system to be enabled for this entity
-            && systemMask.test(mHashToSystemType[signaturePair.first])
+            && systemMask.test(mNameToSystemType[signaturePair.first])
             // entity isn't already enabled for this system
             && !system->isEnabled(entityID)
         ) {
@@ -145,24 +145,24 @@ void SystemManager::enableEntity(EntityID entityID, Signature entitySignature, S
 
 void SystemManager::disableEntity(EntityID entityID, Signature entitySignature) {
     // disable all systems which match this entity's signature
-    for(const auto& signaturePair: mHashToSignature) {
+    for(const auto& signaturePair: mNameToSignature) {
         if(
             // signatures match
             (signaturePair.second&entitySignature) == signaturePair.second
             // and entity is enabled
-            && mHashToSystem[signaturePair.first]->isEnabled(entityID)
+            && mNameToSystem[signaturePair.first]->isEnabled(entityID)
         ) {
-            mHashToSystem[signaturePair.first]->disableEntity(entityID);
-            mHashToSystem[signaturePair.first]->onEntityDisabled(entityID);
+            mNameToSystem[signaturePair.first]->disableEntity(entityID);
+            mNameToSystem[signaturePair.first]->onEntityDisabled(entityID);
         }
     }
 }
 
 void SystemManager::handleEntitySignatureChanged(EntityID entityID, Signature signature) {
-    for(auto& pair: mHashToSignature) {
-        const std::size_t systemHash { pair.first };
+    for(auto& pair: mNameToSignature) {
+        const std::string systemTypeName { pair.first };
         const Signature& systemSignature { pair.second };
-        BaseSystem& system { *(mHashToSystem[systemHash].get()) };
+        BaseSystem& system { *(mNameToSystem[systemTypeName].get()) };
 
         if(
             (signature&systemSignature) == systemSignature && !system.isRegistered(entityID)
@@ -179,7 +179,7 @@ void SystemManager::handleEntitySignatureChanged(EntityID entityID, Signature si
 }
 
 void SystemManager::handleEntityDestroyed(EntityID entityID) {
-    for(auto& pair: mHashToSystem) {
+    for(auto& pair: mNameToSystem) {
         if(pair.second->isRegistered(entityID)) {
             if(pair.second->isEnabled(entityID)){
                 pair.second->disableEntity(entityID);
@@ -191,10 +191,10 @@ void SystemManager::handleEntityDestroyed(EntityID entityID) {
 }
 
 void SystemManager::handleEntityUpdated(EntityID entityID, Signature signature) {
-    for(auto& pair: mHashToSignature) {
+    for(auto& pair: mNameToSignature) {
         Signature& systemSignature { pair.second };
         if((systemSignature & signature) == systemSignature){
-            BaseSystem& system { *(mHashToSystem[pair.first]).get() };
+            BaseSystem& system { *(mNameToSystem[pair.first]).get() };
             system.onEntityUpdated(entityID);
         }
     }
@@ -228,11 +228,11 @@ void ComponentManager::handleEntityDestroyed(EntityID entityID) {
 }
 
 void SystemManager::unregisterAll() {
-    for(auto& pair: mHashToSystem) {
+    for(auto& pair: mNameToSystem) {
         pair.second->onDestroyed();
     }
-    mHashToSystem.clear();
-    mHashToSignature.clear();
+    mNameToSystem.clear();
+    mNameToSignature.clear();
 }
 
 void ComponentManager::unregisterAll() {
