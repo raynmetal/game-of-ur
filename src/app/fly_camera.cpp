@@ -29,29 +29,34 @@ void FlyCamera::update(uint32_t deltaSimTimeMillis) {
     updateComponent<Placement>(placement);
 }
 
-void FlyCamera::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+// void FlyCamera::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
     // Enable or disable this camera's visibility in the camera system
-    if(actionDefinition.mName == "ToggleControl") {
-        setActive(!mActive);
-        return;
-    }
-    else if(!mActive) return;
 
+void FlyCamera::onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition){
+    setActive(!mActive);
+}
+
+void FlyCamera::onRotate(const ActionData& actionData, const ActionDefinition & actionDefinition) {
+    if(!mActive) return;
     // Handle camera rotation commands
-    if(actionDefinition.mName == "Rotate") {
-        Placement placement { getComponent<Placement>() };
-        updatePitch(placement.mOrientation, actionData.mTwoAxisActionData.mValue.y);
-        updateYaw(placement.mOrientation, actionData.mTwoAxisActionData.mValue.x);
-        updateComponent<Placement>(placement);
+    Placement placement { getComponent<Placement>() };
+    updatePitch(placement.mOrientation, actionData.mTwoAxisActionData.mValue.y);
+    updateYaw(placement.mOrientation, actionData.mTwoAxisActionData.mValue.x);
+    updateComponent<Placement>(placement);
+}
+
+void FlyCamera::onMove(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    if(!mActive) return;
     // movement commands
-    } else if (actionDefinition.mName == "Move") {
-        mVelocity.x = mMaxSpeed * actionData.mTwoAxisActionData.mValue.x;
-        mVelocity.z = mMaxSpeed * actionData.mTwoAxisActionData.mValue.y;
+    mVelocity.x = mMaxSpeed * actionData.mTwoAxisActionData.mValue.x;
+    mVelocity.z = mMaxSpeed * actionData.mTwoAxisActionData.mValue.y;
+}
+
+void FlyCamera::onUpdateFOV(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    if(!mActive) return;
     // "Zoom" commands
-    } else if (actionDefinition.mName == "UpdateFOV") {
-        const float dFOV { static_cast<float>(-actionData.mOneAxisActionData.mValue) };
-        updateFOV(dFOV);
-    }
+    const float dFOV { static_cast<float>(-actionData.mOneAxisActionData.mValue) };
+    updateFOV(dFOV);
 }
 
 void FlyCamera::updatePitch(glm::quat& current, float dPitch) {

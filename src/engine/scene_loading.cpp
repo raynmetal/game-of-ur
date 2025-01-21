@@ -23,7 +23,6 @@ std::shared_ptr<IResource> SceneFromDescription::createResource(const nlohmann::
     loadResources(sceneDescription.at("resources"));
     std::shared_ptr<SimObject> localRoot { loadSceneNodes(sceneDescription.at("nodes")) };
     loadConnections(sceneDescription.at("connections"), localRoot);
-    loadActionBindings(sceneDescription.at("action_bindings"), localRoot);
 
     return localRoot;
 }
@@ -110,18 +109,6 @@ void SceneFromDescription::loadConnections(const nlohmann::json& connectionList,
             connection.at("signal").get<std::string>(),
             connection.at("observer").get<std::string>(),
             signalFrom
-        );
-    }
-}
-
-void SceneFromDescription::loadActionBindings(const nlohmann::json& actionBindingList, std::shared_ptr<SceneNodeCore> localRoot) {
-    for(const nlohmann::json& binding: actionBindingList) {
-        BaseSimObjectAspect& aspect { 
-            localRoot->getByPath<BaseSimObjectAspect&>(binding.at("aspect").get<std::string>())
-        };
-        aspect.addFixedActionBinding(
-            binding.at("context").get<std::string>(),
-            binding.at("action").get<std::string>()
         );
     }
 }

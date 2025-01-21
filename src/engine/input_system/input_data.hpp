@@ -271,6 +271,7 @@ struct ActionDefinition {
     std::string mName {};
     InputAttributesType mAttributes {};
     ActionValueType mValueType {};
+    std::string mContext {};
 
     bool operator==(const ActionDefinition& other) const {
         return !(mName < other.mName) && !(other.mName < mName);

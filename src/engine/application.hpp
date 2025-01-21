@@ -27,7 +27,7 @@ private:
 
     template <typename TObject, typename Enable>
     class getByPath_Helper {
-        getByPath_Helper(Application* application);
+        getByPath_Helper(Application* application): mApplication { application } {}
         TObject get(const std::string& path="");
         Application* mApplication;
     friend class Application;

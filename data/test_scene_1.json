@@ -206,42 +206,5 @@
             "signal": "secondPassed",
             "observer": "secondPassedObserved"
         }
-    ],
-    "action_bindings": [
-        {
-            "aspect": "/camera/@FlyCamera",
-            "context": "Camera",
-            "action": "Rotate"
-        },
-        {
-            "aspect": "/camera/@FlyCamera",
-            "context": "Camera",
-            "action": "ToggleControl"
-        },
-        {
-            "aspect": "/camera/@FlyCamera",
-            "context": "Camera",
-            "action": "Move"
-        },
-        {
-            "aspect": "/camera/@FlyCamera",
-            "context": "Camera",
-            "action": "UpdateFOV"
-        },
-        {
-            "aspect": "/@RenderDebugViewer",
-            "context": "Graphics",
-            "action": "UpdateGamma"
-        },
-        {
-            "aspect": "/@RenderDebugViewer",
-            "context": "Graphics",
-            "action": "UpdateExposure"
-        },
-        {
-            "aspect": "/@RenderDebugViewer",
-            "context": "Graphics",
-            "action": "RenderNextTexture"
-        }
     ]
 }

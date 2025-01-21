@@ -12,10 +12,54 @@ class FlyCamera: public SimObjectAspect<FlyCamera> {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "FlyCamera"; }
     void update(uint32_t deltaSimtimeMillis) override;
-    void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override;
+
     std::shared_ptr<BaseSimObjectAspect> makeCopy() const override;
 
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
+protected:
+    void onMove(const ActionData& actionData, const ActionDefinition& actionDefinition);
+    void onRotate(const ActionData& actionData, const ActionDefinition& actionDefinition);
+    void onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition);
+    void onUpdateFOV(const ActionData& actionData, const ActionDefinition& actionDefinition);
+
+    std::weak_ptr<FixedActionBinding> handlerMove { 
+        declareFixedActionBinding(
+            "Camera",
+            "Move",
+            [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
+                this->onMove(actionData, actionDefinition);
+            }
+        )
+    };
+
+    std::weak_ptr<FixedActionBinding> handlerRotate { 
+        declareFixedActionBinding(
+            "Camera",
+            "Rotate",
+            [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
+                this->onRotate(actionData, actionDefinition);
+            }
+        )
+    };
+
+    std::weak_ptr<FixedActionBinding> handlerUpdateFOV {
+        declareFixedActionBinding(
+            "Camera",
+            "UpdateFOV",
+            [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
+                this->onUpdateFOV(actionData, actionDefinition);
+            }
+        )
+    };
+    std::weak_ptr<FixedActionBinding> handlerToggleControl {
+        declareFixedActionBinding(
+            "Camera",
+            "ToggleControl",
+            [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
+                this->onToggleControl(actionData, actionDefinition);
+            }
+        )
+    };
 
 private:
     FlyCamera(): SimObjectAspect<FlyCamera>{0} {}

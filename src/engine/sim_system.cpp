@@ -172,48 +172,51 @@ bool BaseSimObjectAspect::hasAspect(const std::string& aspectType) const {
     return mSimObject->hasAspect(aspectType);
 }
 
-void BaseSimObjectAspect::addFixedActionBinding(const std::string& context, const std::string& action) {
+std::weak_ptr<FixedActionBinding> BaseSimObjectAspect::declareFixedActionBinding(
+    const std::string& context,
+    const std::string& action,
+    std::function<void(const ActionData&, const ActionDefinition&)> handler
+) {
     assert(!(mState & AspectState::ACTIVE) && "Cannot add or remove fixed action bindings while aspect is active.");
-    mFixedActionBindings[context].insert(action);
-}
-
-void BaseSimObjectAspect::removeFixedActionBinding(const std::string& context, const std::string& action) {
-    assert(!(mState & AspectState::ACTIVE) && "Cannot add or remove fixed action bindings while aspect is active.");
-    mFixedActionBindings[context].erase(action);
-    if(mFixedActionBindings[context].empty()) {
-        mFixedActionBindings.erase(context);
-    }
+    assert(mFixedActionBindings.emplace(
+        std::piecewise_construct,
+        std::forward_as_tuple(context, action),
+        std::forward_as_tuple(new FixedActionBinding{context, action, handler})
+    ).second == true && "Could not create this binding; perhaps a similar binding has already been registered");
+    return mFixedActionBindings.at({context, action});
 }
 
 void BaseSimObjectAspect::activateFixedActionBindings(){
     assert((mState == (AspectState::ATTACHED|AspectState::ACTIVE)) && "Action bindings may only be activated or deactivated if an aspect is attached to an active SimObject");
-    for(const auto& contextPair: mFixedActionBindings) {
-        const std::string& context { contextPair.first };
-        const std::set<std::string>& actions { contextPair.second };
-        for(const auto& action: actions) {
-            Application::getInstance()
-                .getObject<InputManager&>()[context]
-                .registerActionHandler(
-                    action,
-                    shared_from_this()
-            );
-        }
+    for(const auto& contextActionHandlerPair: mFixedActionBindings) {
+        const std::string& context{ contextActionHandlerPair.first.first };
+        const std::string& action { contextActionHandlerPair.first.second };
+        Application::getInstance()
+            .getObject<InputManager&>()[context]
+            .registerActionHandler(
+                action,
+                shared_from_this()
+        );
     }
+}
+
+void BaseSimObjectAspect::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    mFixedActionBindings
+        .at({actionDefinition.mContext, actionDefinition.mName})
+        ->call(actionData, actionDefinition);
 }
 
 void BaseSimObjectAspect::deactivateFixedActionBindings() {
     assert((mState == (AspectState::ATTACHED|AspectState::ACTIVE)) && "Action bindings may only be activated or deactivated if an aspect is attached to an active SimObject");
-    for(const auto& contextPair: mFixedActionBindings) {
-        const std::string& context { contextPair.first };
-        const std::set<std::string>& actions { contextPair.second };
-        for(const auto& action: actions) {
-            Application::getInstance()
-                .getObject<InputManager&>()[context]
-                .unregisterActionHandler(
-                    action,
-                    shared_from_this()
-            );
-        }
+    for(const auto& contextActionHandlerPair: mFixedActionBindings) {
+        const std::string& context{ contextActionHandlerPair.first.first };
+        const std::string& action { contextActionHandlerPair.first.second };
+        Application::getInstance()
+            .getObject<InputManager&>()[context]
+            .unregisterActionHandler(
+                action,
+                shared_from_this()
+        );
     }
 }
 

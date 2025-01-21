@@ -108,6 +108,7 @@ void ActionContext::registerAction(const std::string& name, InputAttributesType 
     ActionDefinition actionDefinition { name, attributes };
     // TODO: redundant
     actionDefinition.mValueType = attributes&InputAttributes::HAS_CHANGE_VALUE? ActionValueType::CHANGE: ActionValueType::STATE;
+    actionDefinition.mContext = mName;
     ActionData initialActionData { static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES) };
 
     mActions.emplace(std::pair<ActionDefinition, ActionData>{actionDefinition, initialActionData});

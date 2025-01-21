@@ -3,23 +3,30 @@
 
 #include "render_debug_viewer.hpp"
 
-void RenderDebugViewer::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+
+void RenderDebugViewer::onUpdateGamma(const ActionData& actionData, const ActionDefinition& actionDefinition) {
     std::shared_ptr<RenderSystem> renderSystem {
         Application::getInstance().getObject<std::shared_ptr<RenderSystem>>()
     };
-    if(actionDefinition.mName == "UpdateGamma") {
-        renderSystem->setGamma(
-            renderSystem->getGamma() 
-            + actionData.mOneAxisActionData.mValue*mGammaStep
-        );
-    } else if(actionDefinition.mName == "UpdateExposure") {
-        renderSystem->setExposure(
-            renderSystem->getExposure()
-            + actionData.mOneAxisActionData.mValue*mExposureStep
-        );
-    } else if (actionDefinition.mName == "RenderNextTexture") {
-        renderSystem->renderNextTexture();
-    }
+    renderSystem->setGamma(
+        renderSystem->getGamma() 
+        + actionData.mOneAxisActionData.mValue*mGammaStep
+    );
+}
+void RenderDebugViewer::onUpdateExposure(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    std::shared_ptr<RenderSystem> renderSystem {
+        Application::getInstance().getObject<std::shared_ptr<RenderSystem>>()
+    };
+    renderSystem->setExposure(
+        renderSystem->getExposure()
+        + actionData.mOneAxisActionData.mValue*mExposureStep
+    );
+}
+void RenderDebugViewer::onRenderNextTexture(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    std::shared_ptr<RenderSystem> renderSystem {
+        Application::getInstance().getObject<std::shared_ptr<RenderSystem>>()
+    };
+    renderSystem->renderNextTexture();
 }
 
 std::shared_ptr<BaseSimObjectAspect> RenderDebugViewer::makeCopy() const {

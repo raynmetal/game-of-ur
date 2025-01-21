@@ -116,17 +116,34 @@ friend class BaseSimObjectAspect;
 friend class BaseSceneNode<SimObject>;
 };
 
+class FixedActionBinding {
+private:
+    inline void call(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+        mHandler(actionData, actionDefinition);
+    }
+    FixedActionBinding(const std::string& context, const std::string& name, std::function<void(const ActionData&, const ActionDefinition&)> handler):
+    mContext { context },
+    mName { name },
+    mHandler { handler }
+    {}
+    std::string mContext;
+    std::string mName;
+    std::function<void(const ActionData&, const ActionDefinition&)> mHandler;
+friend class BaseSimObjectAspect;
+};
+
 class BaseSimObjectAspect : public std::enable_shared_from_this<BaseSimObjectAspect>, public SignalTracker, public IActionHandler {
 public:
     virtual ~BaseSimObjectAspect()=default;
-
     virtual void update(uint32_t deltaSimTimeMillis) {}
 
-    void addFixedActionBinding(const std::string& context, const std::string& action);
-    void removeFixedActionBinding(const std::string& context, const std::string& action);
+    void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override final;
 
 protected:
     BaseSimObjectAspect()=default;
+
+    BaseSimObjectAspect(const BaseSimObjectAspect& other)=delete;
+    BaseSimObjectAspect(BaseSimObjectAspect&& other)=delete;
 
     template <typename TSimObjectAspectDerived>
     static inline void registerAspect() {
@@ -163,9 +180,13 @@ protected:
     template <typename TSimObjectAspect>
     void removeAspect();
 
+
+    std::weak_ptr<FixedActionBinding> declareFixedActionBinding(const std::string& context, const std::string& action, std::function<void(const ActionData&, const ActionDefinition&)>);
+
     EntityID getEntityID() const;
 
     virtual std::string getAspectTypeName() const = 0;
+
 
 private:
     void activateFixedActionBindings();
@@ -185,7 +206,11 @@ private:
     void detach();
     virtual std::shared_ptr<BaseSimObjectAspect> makeCopy() const = 0;
 
-    std::unordered_map<std::string, std::set<std::string>> mFixedActionBindings {};
+    std::map<
+        std::pair<std::string, std::string>, 
+        std::shared_ptr<FixedActionBinding>,
+        std::less<std::pair<std::string, std::string>>
+    > mFixedActionBindings {};
     SimObject* mSimObject { nullptr };
 
     enum AspectState : uint8_t {

@@ -758,6 +758,5 @@
             "type": "SimObject"
         }
     ],
-    "connections": [],
-    "action_bindings": []
+    "connections": []
 }
