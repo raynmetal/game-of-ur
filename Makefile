@@ -49,13 +49,14 @@ ENGINE_STATIC_LIB_TARGETS := $(TARGET_LIB_DIR)/lib$(ENGINE_TARGET_BASE).a
 
 ENGINE_TARGET := $(ENGINE_STATIC_LIB_TARGETS)
 ENGINE_LIB := $(patsubst lib%.a,%,$(notdir $(filter %.a,$(ENGINE_TARGET))))
-ENGINE_SOURCES := $(wildcard $(SRC_DIR)/$(ENGINE_SRC_DIR)/*.cpp $(SRC_DIR)/$(ENGINE_SRC_DIR)/**/*.cpp)
 ENGINE_HEADERS := \
 	$(patsubst $(SRC_DIR)/$(ENGINE_SRC_DIR)/%,$(TARGET_INCLUDE_DIR)/$(ENGINE_SRC_DIR)/%, \
 		$(wildcard $(SRC_DIR)/$(ENGINE_SRC_DIR)/*.hpp $(SRC_DIR)/$(ENGINE_SRC_DIR)/**/*.hpp) \
 	)
+ENGINE_SOURCES := $(wildcard $(SRC_DIR)/$(ENGINE_SRC_DIR)/*.cpp $(SRC_DIR)/$(ENGINE_SRC_DIR)/**/*.cpp)
 ENGINE_OBJS := $(patsubst $(SRC_DIR)/$(ENGINE_SRC_DIR)/%.cpp,$(OBJ_DIR)/$(ENGINE_SRC_DIR)/%.o,$(ENGINE_SOURCES))
 
+APP_HEADERS := $(filter-out $(SRC_DIR)/$(ENGINE_SRC_DIR)/%, $(wildcard $(SRC_DIR)/*.hpp $(SRC_DIR)/**/*.hpp))
 APP_SOURCES := $(filter-out $(SRC_DIR)/$(ENGINE_SRC_DIR)/%, $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/**/*.cpp))
 APP_OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(APP_SOURCES))
 
@@ -65,7 +66,7 @@ REQUIRED_SUBDIRS := $(dir $(ENGINE_HEADERS) $(ENGINE_OBJS) $(APP_OBJS))
 
 all: $(APP_EXECUTABLE)
 
-$(APP_EXECUTABLE): $(ENGINE_TARGET) $(ENGINE_HEADERS) $(APP_OBJS)
+$(APP_EXECUTABLE): $(ENGINE_TARGET) $(APP_OBJS)
 	$(CC) $(APP_OBJS) \
 		-o $(APP_EXECUTABLE) \
 		$(addprefix -I,$(INCLUDE_PATHS) $(TARGET_INCLUDE_DIR)) \
@@ -79,21 +80,17 @@ $(ENGINE_TARGET): $(ENGINE_OBJS)
 
 .SECONDEXPANSION:
 
-$(APP_OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp | $$(dir $$@)
+$(APP_OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(APP_HEADERS) $(ENGINE_HEADERS) | $$(dir $$@)
 	$(CC) -c $< -o $@ \
 		$(addprefix -I,$(INCLUDE_PATHS) $(TARGET_INCLUDE_DIR)) \
-		$(addprefix -L,$(LIBRARY_PATHS) $(TARGET_LIB_DIR)) \
 		$(COMPILER_FLAGS_DBG) \
 		$(DEBUG_OPTS) \
-		$(addprefix -l,$(DYNAMIC_LIBS) $(ENGINE_LIB))
 
-$(ENGINE_OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp | $$(dir $$@)
+$(ENGINE_OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(ENGINE_HEADERS) | $$(dir $$@)
 	$(CC) -r -c $< -o $@ \
 		$(addprefix -I,$(INCLUDE_PATHS)) \
-		$(addprefix -L,$(LIBRARY_PATHS)) \
 		$(COMPILER_FLAGS_DBG) \
 		$(DEBUG_OPTS) \
-		$(addprefix -l,$(DYNAMIC_LIBS))
 
 $(TARGET_INCLUDE_DIR)/%.hpp: $(SRC_DIR)/%.hpp | $$(dir $$@)
 	$(CP) "$(subst /,\,$(patsubst $(TARGET_INCLUDE_DIR)/%.hpp,$(SRC_DIR)/%.hpp,$@))" "$(dir $(subst /,\,$@))"

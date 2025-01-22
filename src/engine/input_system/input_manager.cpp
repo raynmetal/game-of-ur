@@ -456,7 +456,9 @@ InputSourceDescription getInputIdentity(const SDL_Event& inputEvent) {
 }
 
 ActionContext& InputManager::operator[] (const std::string& actionContext) {
-    return mActionContexts.at(actionContext).first;
+    auto actionContextPair { mActionContexts.find(actionContext) };
+    assert(actionContextPair != mActionContexts.end() && "No action context with this name has been registered with the input manager");
+    return actionContextPair->second.first;
 }
 
 void InputManager::queueInput(const SDL_Event& inputEvent) {
