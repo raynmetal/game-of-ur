@@ -6,6 +6,7 @@
 #include "simple_ecs.hpp"
 #include "scene_system.hpp"
 #include "input_system/input_system.hpp"
+#include "window_context_manager.hpp"
 
 class Application {
     template <typename TObject, typename=void>
@@ -21,6 +22,7 @@ public:
     template <typename TObject>
     TObject getObject(const std::string& path="");
 
+
 private:
 
     Application(const std::string& projectPath);
@@ -33,14 +35,11 @@ private:
     friend class Application;
     };
 
-    void initialize();
+    void initialize(const nlohmann::json& windowProperties);
     void cleanup();
 
-    uint16_t mWindowWidth {800};
-    uint16_t mWindowHeight {600};
     uint32_t mSimulationStep { 1000/30 }; // simulation stepsize in ms
     InputManager mInputManager {};
-    std::string mTitle {"Default Title"};
 
     static std::weak_ptr<Application> s_pInstance;
     static bool s_instantiated;

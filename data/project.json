@@ -1,8 +1,10 @@
 {
-    "title": "My Game of Ur",
+    "window_configuration": {
+        "application_title": "My Game of Ur",
+        "window_width": 800,
+        "window_height": 600
+    },
 
-    "window_width": 800,
-    "window_height": 600,
     "simulation_step": 33,
 
     "input_map_path": "input_bindings.json",

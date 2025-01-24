@@ -199,12 +199,5 @@
             "copy": false
         }
     ],
-    "connections": [
-        {
-            "from": "/@TickSecond",
-            "to": "/sunlight/@Revolve",
-            "signal": "secondPassed",
-            "observer": "secondPassedObserved"
-        }
-    ]
+    "connections": []
 }

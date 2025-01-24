@@ -93,7 +93,7 @@ ResourceConstructor<StaticModel, StaticModelFromFile>{0}
 std::shared_ptr<IResource> StaticModelFromFile::createResource(const nlohmann::json& methodParameters) {
     std::string modelPath { methodParameters.at("path").get<std::string>() };
 
-    Assimp::Importer* pImporter { WindowContextManager::getInstance().getAssetImporter() };
+    Assimp::Importer* pImporter { WindowContext::getInstance().getAssetImporter() };
     const aiScene* pAiScene {
         pImporter->ReadFile(
             modelPath,

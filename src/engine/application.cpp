@@ -1,4 +1,3 @@
-#include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
@@ -21,12 +20,8 @@
 
 #include "application.hpp"
 
-constexpr uint16_t kMaxWidth { 4096 };
-constexpr uint16_t kMinWidth { 800 };
-constexpr uint16_t kMaxHeight { 2304 };
-constexpr uint16_t kMinHeight { 600 };
-constexpr uint32_t kMaxSimStep { 2000 };
-constexpr uint32_t kMinSimStep { 1000/90 };
+constexpr uint32_t kMaxSimStep { 5000 };
+constexpr uint32_t kMinSimStep { 1000/120 };
 
 std::weak_ptr<Application> Application::s_pInstance {};
 bool Application::s_instantiated { false };
@@ -43,21 +38,14 @@ Application::Application(const std::string& projectPath) {
     nlohmann::json projectJSON { nlohmann::json::parse(jsonFileStream) };
     jsonFileStream.close();
 
-    mTitle = projectJSON[0].at("title").get<std::string>();
-    mWindowWidth = projectJSON[0].at("window_width").get<uint16_t>();
-    mWindowHeight = projectJSON[0].at("window_height").get<uint16_t>();
     mSimulationStep = projectJSON[0].at("simulation_step").get<uint32_t>();
     {
         char assertionMessage[100];
-        sprintf(assertionMessage, "Window width must be between %dpx and %dpx", kMinWidth, kMaxWidth);
-        assert(mWindowWidth >= kMinWidth && mWindowWidth <= kMaxWidth && assertionMessage);
-        sprintf(assertionMessage, "Window height must be between %dpx and %dpx", kMinHeight, kMaxHeight);
-        assert(mWindowHeight >= kMinHeight && mWindowHeight <= kMaxHeight && assertionMessage);
         sprintf(assertionMessage, "Simulation step must be between %dms and %dms", kMinSimStep, kMaxSimStep);
         assert(mSimulationStep >= kMinSimStep && mSimulationStep <= kMaxSimStep && assertionMessage);
     }
 
-    initialize();
+    initialize(projectJSON[0].at("window_configuration"));
 
     const std::string& inputFile{ projectJSON[0].at("input_map_path").get<std::string>() };
     currentResourcePath = projectRootDirectory / inputFile;
@@ -82,11 +70,11 @@ Application::Application(const std::string& projectPath) {
 }
 
 void Application::execute() {
-    std::cout << "Application executing" << std::endl;
     SimpleECS::getSystem<SceneSystem>()->addNode(
         ResourceDatabase::getRegisteredResource<SimObject>("root_scene"),
         "/"
     );
+    WindowContext& windowContext { WindowContext::getInstance() };
 
     // Timing related variables
     uint32_t previousTicks { SDL_GetTicks() };
@@ -108,15 +96,18 @@ void Application::execute() {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
             // TODO: We probably want to locate this elsewhere? I'm not sure. Let's see.
-            if(
-                event.type == SDL_QUIT
-            ) {
-                quit = true;
+            switch(event.type) {
+                case SDL_QUIT:
+                    quit=true;
+                break;
+                case SDL_WINDOWEVENT:
+                    windowContext.handleWindowEvent(event.window);
+                break;
+                default:
+                    mInputManager.queueInput(event);
                 break;
             }
-            else {
-                mInputManager.queueInput(event);
-            }
+            if(quit) break;
         }
         if(quit) break;
         ++renderFrame;
@@ -149,9 +140,6 @@ void Application::execute() {
         framerate = framerate * (framerateBias) + (1.f - framerateBias)/(deltaTime > .0001f? deltaTime: .0001f);
         framerateCounter += deltaTime;
         while(framerateCounter > frameratePoll) {
-            std::cout << "Frame " << renderFrame << ", Simulation Frame " << simFrame << " -- Progress to next sim frame: " << simulationProgress*100.f << "%\n";
-            std::cout << "Framerate: " << framerate << " fps\n";
-
             framerateCounter -= frameratePoll;
         }
 
@@ -180,12 +168,10 @@ Application& Application::getInstance() {
     return *s_pInstance.lock();
 }
 
-void Application::initialize() {
-    std::cout << "Application initialized" << std::endl;
-
+void Application::initialize(const nlohmann::json& windowProperties) {
     // IMPORTANT: call get instance, just to initialize the window
     // TODO: stupid name bound to trip me up sooner or later. Replace it.
-    WindowContextManager::getInstance(mTitle, mWindowWidth, mWindowHeight);
+    WindowContext::initialize(windowProperties);
 
     // The framebuffer resource manager depends on the texture resource manager existing (especially 
     // during destruction at end of program.) Instantiate these managers in reverse order of their

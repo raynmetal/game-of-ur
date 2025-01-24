@@ -22,12 +22,15 @@ SignalTracker& SignalTracker::operator=(SignalTracker&& other) {
 }
 
 void SignalTracker::connect(const std::string& theirSignalsName, const std::string& ourObserversName, SignalTracker& other) {
+    auto otherSignalIter { other.mSignals.find(theirSignalsName) };
+    assert(otherSignalIter != other.mSignals.end() && "No signal of this name found on other's tracker");
+    std::shared_ptr<ISignal> otherSignal { otherSignalIter->second.lock() };
+    assert(otherSignal && "This signal has expired and is no longer valid");
 
-    std::shared_ptr<ISignal> otherSignal { other.mSignals.at(theirSignalsName).lock() };
-    assert(otherSignal && "No signal of this name found on other");
-
-    std::shared_ptr<ISignalObserver> ourObserver { mObservers.at(ourObserversName).lock() };
-    assert(ourObserver && "No observer of this name present on this object");
+    auto thisObserverIter { mObservers.find(ourObserversName) };
+    assert(thisObserverIter != mObservers.end() && "No observer of this name present on this object");
+    std::shared_ptr<ISignalObserver> ourObserver { thisObserverIter->second.lock() };
+    assert(ourObserver && "This observer has expired and is no longer valid");
 
     otherSignal->registerObserver(ourObserver);
 

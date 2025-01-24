@@ -129,7 +129,7 @@ public:
 
     void resetObserver(SignalTracker& owningTracker, const std::string& name, std::function<void(TArgs...)> callback);
 
-    void connect(Signal<TArgs...>& signal);
+    void connectTo(Signal<TArgs...>& signal);
  
 private:
     std::shared_ptr<SignalObserver_<TArgs...>> mSignalObserver_;
@@ -214,7 +214,7 @@ void SignalObserver<TArgs...>::resetObserver(SignalTracker& owningTracker, const
     mSignalObserver_ = owningTracker.declareSignalObserver<TArgs...>(name, callback);
 }
 template <typename ...TArgs>
-void SignalObserver<TArgs...>::connect(Signal<TArgs...>& signal) {
+void SignalObserver<TArgs...>::connectTo(Signal<TArgs...>& signal) {
     signal.registerObserver(*this);
 }
 

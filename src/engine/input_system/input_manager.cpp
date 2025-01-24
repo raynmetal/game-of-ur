@@ -95,7 +95,7 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
     double value {0.f};
 
     int windowWidth, windowHeight;
-    SDL_GetWindowSize(WindowContextManager::getInstance().getSDLWindow(), &windowWidth, &windowHeight);
+    SDL_GetWindowSize(WindowContext::getInstance().getSDLWindow(), &windowWidth, &windowHeight);
 
     switch(inputFilter.mControl.mDeviceType) {
 

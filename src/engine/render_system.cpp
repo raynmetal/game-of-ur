@@ -165,7 +165,7 @@ void RenderSystem::execute(float simulationProgress) {
     mTonemappingRenderStage->execute();
     mScreenRenderStage->execute();
 
-    WindowContextManager::getInstance().swapBuffers();
+    WindowContext::getInstance().swapBuffers();
 }
 
 void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
