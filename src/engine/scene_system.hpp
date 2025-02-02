@@ -18,6 +18,7 @@
 
 class SceneNodeCore;
 class SceneNode;
+class ViewportNode;
 class SceneSystem;
 
 enum class RelativeTo : uint8_t {
@@ -33,6 +34,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(RelativeTo, {
 enum SpecialEntity: EntityID {
     ENTITY_ROOT = kMaxEntities,
 };
+
+extern const std::string kSceneRootName;
 
 class SceneNodeCore: public std::enable_shared_from_this<SceneNodeCore> {
 public:
@@ -64,6 +67,7 @@ public:
 
     EntityID getEntityID() const;
     WorldID getWorldID() const;
+    UniversalEntityID getUniversalEntityID() const;
     ECSWorld& getWorld() const;
 
     // TODO: How can we be certain that the value returned by this method here,
@@ -110,6 +114,11 @@ protected:
 
     static void validateName(const std::string& nodeName);
 private:
+    struct Key {};
+
+    template<typename ...TComponents>
+    SceneNodeCore(const Key&, const Placement& placement, const std::string& name, TComponents...components);
+
     enum StateFlags: uint8_t {
         ENABLED=0x1,
         ACTIVE=0x2,
@@ -139,10 +148,11 @@ private:
     std::unordered_map<std::string, std::shared_ptr<SceneNodeCore>> mChildren {};
 
     Signature mSystemMask {Signature{}.set()};
-friend class SceneSystem;
 
+friend class SceneSystem;
 template<typename TSceneNode>
 friend class BaseSceneNode;
+friend class ViewportNode;
 };
 
 
@@ -152,10 +162,16 @@ public:
 
 protected:
     template <typename ...TComponents>
+    static std::shared_ptr<TSceneNode> create(const Key&, const Placement& placement, const std::string& name, TComponents...components);
+    template <typename ...TComponents>
     static std::shared_ptr<TSceneNode> create(const Placement& placement, const std::string& name, TComponents...components);
     static std::shared_ptr<TSceneNode> create(const nlohmann::json& sceneNodeDescription);
     static std::shared_ptr<TSceneNode> copy(const std::shared_ptr<const TSceneNode> sceneNode);
+    template <typename...TComponents>
 
+    BaseSceneNode(const Key& key, const Placement& placement, const std::string& name, TComponents...components):
+    SceneNodeCore{ key, placement, name, components... }
+    {}
     template<typename ...TComponents>
     BaseSceneNode(const Placement& placement, const std::string& name, TComponents...components):
     SceneNodeCore{ placement, name, components... }
@@ -202,7 +218,8 @@ public:
     static inline std::string getResourceTypeName() { return "ViewportNode"; }
 
 protected:
-    ViewportNode(const Placement& placement, const std::string& name, bool inheritsWorld):
+
+    ViewportNode(const Placement& placement, const std::string& name):
     BaseSceneNode<ViewportNode>{placement, name},
     Resource<ViewportNode>{0}
     {}
@@ -215,8 +232,14 @@ protected:
     Resource<ViewportNode>{0}
     {}
     std::unique_ptr<ECSWorld> mOwnWorld { nullptr };
-private:
+    void onActivated() override;
 
+private:
+    static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld);
+    ViewportNode(const Key& key, const Placement& placement, const std::string& name):
+    BaseSceneNode<ViewportNode>{key, Placement{}, name},
+    Resource<ViewportNode>{0}
+    {}
     std::shared_ptr<SceneNodeCore> clone() const override;
 friend class BaseSceneNode<ViewportNode>;
 friend class SceneSystem;
@@ -238,6 +261,7 @@ public:
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
     static std::string getSystemTypeName() { return "SceneSystem"; }
     ECSWorld& getRootWorld() const;
+
 private:
     class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
     public:
@@ -259,10 +283,10 @@ private:
         void onEntityUpdated(EntityID entityID) override;
     };
     bool isActive(std::shared_ptr<const SceneNodeCore> sceneNode) const;
-    bool isActive(EntityID entityID, WorldID worldID) const;
+    bool isActive(UniversalEntityID UniversalEntityID) const;
     bool inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const;
-    bool inScene(EntityID entityID, WorldID worldID) const;
-    void markDirty(EntityID entity, WorldID worldID);
+    bool inScene(UniversalEntityID UniversalEntityID) const;
+    void markDirty(UniversalEntityID UniversalEntityID);
     void updateTransforms();
 
     Transform getLocalTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const;
@@ -273,15 +297,15 @@ private:
     void activateSubtree(std::shared_ptr<SceneNodeCore> sceneNode);
     void deactivateSubtree(std::shared_ptr<SceneNodeCore> sceneNode);
 
-    void onWorldEntityUpdate(EntityID entityID, WorldID worldID);
+    void onWorldEntityUpdate(UniversalEntityID UniversalEntityID);
 
 
     std::shared_ptr<ViewportNode> mRootNode{ nullptr };
 
     std::shared_ptr<ApploopEventHandler> mApploopEventHandler { ApploopEventHandler::registerHandler(this) };
-    std::map<std::pair<WorldID, EntityID>, std::shared_ptr<SceneNodeCore>, std::less<std::pair<WorldID, EntityID>>> mEntityToNode {};
-    std::set<std::pair<WorldID, EntityID>, std::less<std::pair<WorldID, EntityID>>> mActiveEntities {};
-    std::set<std::pair<WorldID, EntityID>, std::less<std::pair<WorldID, EntityID>>> mComputeTransformQueue {};
+    std::map<UniversalEntityID, std::shared_ptr<SceneNodeCore>, std::less<UniversalEntityID>> mEntityToNode {};
+    std::set<UniversalEntityID, std::less<UniversalEntityID>> mActiveEntities {};
+    std::set<UniversalEntityID, std::less<UniversalEntityID>> mComputeTransformQueue {};
 
 friend class SceneSystem::ApploopEventHandler;
 friend class SceneNodeCore;
@@ -292,6 +316,13 @@ template <typename TSceneNode>
 template <typename ...TComponents>
 std::shared_ptr<TSceneNode> BaseSceneNode<TSceneNode>::create(const Placement& placement, const std::string& name, TComponents...components) {
     std::shared_ptr<SceneNodeCore> newNode ( new TSceneNode(placement, name, components...), &SceneNodeCore_del_);
+    newNode->onCreated();
+    return std::static_pointer_cast<TSceneNode>(newNode);
+}
+template <typename TSceneNode>
+template <typename ...TComponents>
+std::shared_ptr<TSceneNode> BaseSceneNode<TSceneNode>::create(const Key& key, const Placement& placement, const std::string& name, TComponents...components) {
+    std::shared_ptr<SceneNodeCore> newNode( new TSceneNode(key, placement, name, components...), &SceneNodeCore_del_);
     newNode->onCreated();
     return std::static_pointer_cast<TSceneNode>(newNode);
 }
@@ -343,10 +374,19 @@ struct SceneNodeCore::getByPath_Helper<std::shared_ptr<TObject>, typename std::e
 };
 
 template <typename ...TComponents>
-SceneNodeCore::SceneNodeCore(const Placement& placement, const std::string& name, TComponents...components)
-{
+SceneNodeCore::SceneNodeCore(const Placement& placement, const std::string& name, TComponents...components) {
     validateName(name);
-
+    mName = name;
+    mEntity = std::make_shared<Entity>(
+        ECSWorld::createEntityPrototype<Placement, Transform, TComponents...>(
+            placement,
+            Transform{glm::mat4{1.f}},
+            components...
+        )
+    );
+}
+template <typename ...TComponents>
+SceneNodeCore::SceneNodeCore(const Key&, const Placement& placement, const std::string& name, TComponents...components) {
     mName = name;
     mEntity = std::make_shared<Entity>(
         ECSWorld::createEntityPrototype<Placement, Transform, TComponents...>(

@@ -72,8 +72,6 @@ Application::Application(const std::string& projectPath) {
 }
 
 void Application::execute() {
-    ApploopEventDispatcher::applicationInitialize();
-    mSceneSystem.lock()->getRootWorld().initialize();
     mSceneSystem.lock()->addNode(
         ResourceDatabase::getRegisteredResource<SimObject>("root_scene"),
         "/"
@@ -161,6 +159,7 @@ void Application::initialize(const nlohmann::json& windowProperties) {
     // dependence
     ResourceDatabase::getInstance();
     Material::Init();
+    ApploopEventDispatcher::applicationInitialize();
 }
 
 void Application::cleanup() {

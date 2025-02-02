@@ -30,6 +30,7 @@ class from Morlan's implementation
 */
 using EntityID = std::uint64_t;
 using WorldID = std::uint64_t;
+using UniversalEntityID = std::pair<WorldID, EntityID>;
 using ECSType = std::uint8_t;
 using ComponentType = ECSType;
 using SystemType = ECSType;
