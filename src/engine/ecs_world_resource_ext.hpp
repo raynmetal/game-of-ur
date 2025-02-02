@@ -4,7 +4,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 #include "resource_database.hpp"
 
 template <typename TResource>

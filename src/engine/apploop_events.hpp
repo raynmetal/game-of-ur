@@ -10,6 +10,7 @@ class INTERNAL_ApploopEventHandler_;
 
 class ApploopEventDispatcher {
 public:
+    static void applicationInitialize();
     static void applicationStart();
     static void simulationStep(uint32_t simulationTimestep);
     static void postSimulationStep(float simulationProgress);
@@ -34,6 +35,7 @@ public:
     ~INTERNAL_ApploopEventHandler_() = default;
     INTERNAL_ApploopEventHandler_(Private) {}
 private:
+    virtual void onApplicationInitialize() {}
     virtual void onApplicationStart() {}
     virtual void onSimulationStep(uint32_t simulationTimestep) {}
     virtual void onPostSimulationStep(float simulationProgress) {}

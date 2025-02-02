@@ -13,7 +13,7 @@
 #include "registrator.hpp"
 #include "input_system/input_system.hpp"
 #include "apploop_events.hpp" 
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 #include "scene_system.hpp"
 #include "signals.hpp"
 
@@ -33,8 +33,8 @@ inline void to_json(nlohmann::json& json, const SimCore& simCore) {}
 
 class SimSystem: public System<SimSystem, SimCore> {
 public:
-    SimSystem():
-    System<SimSystem, SimCore>{0}
+    SimSystem(ECSWorld& world):
+    System<SimSystem, SimCore>{world}
     {}
 
     static std::string getSystemTypeName() { return "SimSystem"; }
@@ -50,6 +50,9 @@ public:
     };
 
     bool aspectRegistered(const std::string& aspectName) const;
+
+protected:
+    virtual std::shared_ptr<BaseSystem> instantiate(ECSWorld& world) override;
 
 private:
     template <typename TSimObjectAspect>
@@ -94,7 +97,6 @@ protected:
     template <typename ...TComponents>
     SimObject(const Placement& placement, const std::string& name, TComponents...components);
     SimObject(const nlohmann::json& jsonSimObject);
-    SimObject(const SceneNodeCore& sceneNode);
     SimObject(const SimObject& other);
 
     // // TODO: sit down and figure out whether this operator will ever actually be useful
@@ -155,7 +157,7 @@ protected:
         simSystemRegistrator.emptyFunc();
 
         // Let SimSystem know that this type of aspect exists
-        SimpleECS::getSystem<SimSystem>()->registerAspect<TSimObjectAspectDerived>();
+        ECSWorld::getSystemPrototype<SimSystem>()->registerAspect<TSimObjectAspectDerived>();
     }
 
     template <typename TComponent>
@@ -182,12 +184,9 @@ protected:
 
 
     std::weak_ptr<FixedActionBinding> declareFixedActionBinding(const std::string& context, const std::string& action, std::function<void(const ActionData&, const ActionDefinition&)>);
-
     EntityID getEntityID() const;
-
+    ECSWorld& getWorld() const;
     virtual std::string getAspectTypeName() const = 0;
-
-
 private:
     void activateFixedActionBindings();
     void deactivateFixedActionBindings();
@@ -325,7 +324,7 @@ struct SceneNodeCore::getByPath_Helper<BaseSimObjectAspect&> {
         // extract the node path from full path
         const std::string nodePath { where.substr(0, div - where.begin()) };
         const std::string aspectName { where.substr(1 + (div - where.begin())) };
-        assert(SimpleECS::getSystem<SimSystem>()->aspectRegistered(aspectName) && "No aspect of this type has been registered with the Sim System");
+        assert(rootNode->getWorld().getSystem<SimSystem>()->aspectRegistered(aspectName) && "No aspect of this type has been registered with the Sim System");
 
         std::shared_ptr<SimObject> node { rootNode->getByPath<std::shared_ptr<SimObject>>(nodePath) };
         return node->getAspect(aspectName);

@@ -9,7 +9,7 @@
 
 void RenderDebugViewer::onUpdateGamma(const ActionData& actionData, const ActionDefinition& actionDefinition) {
     std::shared_ptr<RenderSystem> renderSystem {
-        Application::getInstance().getObject<std::shared_ptr<RenderSystem>>()
+        getWorld().getSystem<RenderSystem>()
     };
     renderSystem->setGamma(
         renderSystem->getGamma() 
@@ -18,7 +18,7 @@ void RenderDebugViewer::onUpdateGamma(const ActionData& actionData, const Action
 }
 void RenderDebugViewer::onUpdateExposure(const ActionData& actionData, const ActionDefinition& actionDefinition) {
     std::shared_ptr<RenderSystem> renderSystem {
-        Application::getInstance().getObject<std::shared_ptr<RenderSystem>>()
+        getWorld().getSystem<RenderSystem>()
     };
     renderSystem->setExposure(
         renderSystem->getExposure()
@@ -26,9 +26,7 @@ void RenderDebugViewer::onUpdateExposure(const ActionData& actionData, const Act
     );
 }
 void RenderDebugViewer::onRenderNextTexture(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-    std::shared_ptr<RenderSystem> renderSystem {
-        Application::getInstance().getObject<std::shared_ptr<RenderSystem>>()
-    };
+    std::shared_ptr<RenderSystem> renderSystem { getWorld().getSystem<RenderSystem>() };
     renderSystem->renderNextTexture();
 }
 

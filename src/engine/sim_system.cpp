@@ -23,7 +23,7 @@ std::shared_ptr<SimObject> SimObject::copy(const std::shared_ptr<const SimObject
 std::shared_ptr<SceneNodeCore> SimObject::clone() const {
     // since SceneNode enables shared from this, we must ensure that the
     // associated SceneNode control block is created
-    std::shared_ptr<SceneNodeCore> newSimObject { new SimObject{ *this } };
+    std::shared_ptr<SceneNodeCore> newSimObject { new SimObject{ *this }, &SceneNodeCore_del_ };
     std::shared_ptr<SimObject> downcastSimObject { std::static_pointer_cast<SimObject>(newSimObject) };
 
     downcastSimObject->copyAspects(*this);
@@ -33,13 +33,6 @@ std::shared_ptr<SceneNodeCore> SimObject::clone() const {
 
 SimObject::SimObject(const nlohmann::json& jsonSimObject):
 BaseSceneNode<SimObject>{jsonSimObject},
-Resource<SimObject>{0}
-{
-    addComponent<SimCore>({this}, true);
-}
-
-SimObject::SimObject(const SceneNodeCore& sceneNode):
-BaseSceneNode<SimObject>{ sceneNode },
 Resource<SimObject>{0}
 {
     addComponent<SimCore>({this}, true);
@@ -82,6 +75,12 @@ bool SimSystem::aspectRegistered(const std::string& aspectName) const {
     return mAspectConstructors.find(aspectName) != mAspectConstructors.end();
 }
 
+std::shared_ptr<BaseSystem> SimSystem::instantiate(ECSWorld& world) {
+    std::shared_ptr<SimSystem> newSimSystem { std::static_pointer_cast<SimSystem>(System<SimSystem, SimCore>::instantiate(world)) };
+    newSimSystem->mAspectConstructors = mAspectConstructors;
+    return newSimSystem;
+}
+
 std::shared_ptr<BaseSimObjectAspect> SimSystem::constructAspect(const nlohmann::json& jsonAspectProperties) {
     return mAspectConstructors.at(jsonAspectProperties.at("type").get<std::string>())(jsonAspectProperties);
 }
@@ -120,7 +119,7 @@ void SimObject::addAspect(const nlohmann::json& jsonAspectProperties) {
     const std::string& aspectType { jsonAspectProperties.at("type").get<std::string>() };
     mSimObjectAspects.try_emplace(
         aspectType,
-        SimpleECS::getSystem<SimSystem>()->constructAspect(jsonAspectProperties)
+        getWorld().getSystem<SimSystem>()->constructAspect(jsonAspectProperties)
     );
     mSimObjectAspects.at(aspectType)->attach(this);
 }
@@ -218,6 +217,11 @@ void BaseSimObjectAspect::deactivateFixedActionBindings() {
                 shared_from_this()
         );
     }
+}
+
+ECSWorld& BaseSimObjectAspect::getWorld() const {
+    assert((mState&AspectState::ACTIVE) && "This aspect is not active, and therefore does not have access to its SimObject's world");
+    return mSimObject->getWorld();
 }
 
 void BaseSimObjectAspect::onAttached_() {

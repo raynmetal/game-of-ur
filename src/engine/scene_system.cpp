@@ -4,13 +4,12 @@
 #include <memory>
 
 #include "util.hpp"
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 #include "scene_system.hpp"
 
 void SceneNodeCore::SceneNodeCore_del_(SceneNodeCore* sceneNode) {
     if(!sceneNode) return;
     sceneNode->onDestroyed();
-    // sceneNode.rese;
     delete sceneNode;
 }
 
@@ -26,6 +25,7 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::copy(const std::shared_ptr<const S
     return newSceneNode;
 }
 
+
 std::shared_ptr<SceneNode> SceneNode::create(const nlohmann::json& sceneNodeDescription) {
     return BaseSceneNode<SceneNode>::create(sceneNodeDescription);
 }
@@ -34,19 +34,50 @@ std::shared_ptr<SceneNode> SceneNode::copy(const std::shared_ptr<const SceneNode
     return BaseSceneNode<SceneNode>::copy(sceneNode);
 }
 
+std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld) {
+    std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(Placement{}, name, inheritsWorld) };
+    if(!inheritsWorld) {
+        newViewport->mOwnWorld = std::unique_ptr<ECSWorld>(new ECSWorld { ECSWorld::getPrototype().instantiate() });
+        newViewport->joinWorld(*newViewport->mOwnWorld);
+    }
+    return newViewport;
+}
+std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewportNodeDescription) {
+    std::shared_ptr<ViewportNode> newViewport {BaseSceneNode<ViewportNode>::create(viewportNodeDescription)};
+    newViewport->updateComponent<Placement>(Placement {});
+    assert(viewportNodeDescription.find("inherits_world") != viewportNodeDescription.end() && "Viewport descriptions must contain the \"inherits_world\" boolean attribute");
+    if(viewportNodeDescription.at("inherits_world").get<bool>() == false) {
+        newViewport->mOwnWorld = std::unique_ptr<ECSWorld>(new ECSWorld { ECSWorld::getPrototype().instantiate() });
+        newViewport->joinWorld(*newViewport->mOwnWorld);
+    }
+    return newViewport;
+}
+std::shared_ptr<ViewportNode> ViewportNode::copy(const std::shared_ptr<const ViewportNode> viewportNode) {
+    std::shared_ptr<ViewportNode> newViewport {BaseSceneNode<ViewportNode>::copy(viewportNode)};
+    return newViewport;
+}
+std::shared_ptr<SceneNodeCore> ViewportNode::clone() const {
+    std::shared_ptr<SceneNodeCore> newSceneNode { new ViewportNode{*this}, &SceneNodeCore_del_ };
+    std::shared_ptr<ViewportNode> newViewport { std::static_pointer_cast<ViewportNode>(newSceneNode) };
+    if(mOwnWorld) {
+        newViewport->mOwnWorld = std::unique_ptr<ECSWorld>(new ECSWorld{ ECSWorld::getPrototype().instantiate() });
+        newViewport->joinWorld(*newViewport->mOwnWorld);
+    }
+    return newViewport;
+}
 std::shared_ptr<SceneNodeCore> SceneNodeCore::clone() const {
     // construct a new scene node with the same components as this one
     std::shared_ptr<SceneNodeCore> newSceneNode{ new SceneNodeCore{*this}, &SceneNodeCore_del_ };
-    newSceneNode->onCreated();
     return newSceneNode;
 }
+
 
 SceneNodeCore::SceneNodeCore(const nlohmann::json& sceneNodeDescription)
 {
     validateName(sceneNodeDescription.at("name").get<std::string>());
     mName = sceneNodeDescription.at("name").get<std::string>();
     mEntity = std::make_shared<Entity>(
-        SimpleECS::createEntity()
+        ECSWorld::createEntityPrototype()
     );
     // bypass own implementation of addComponent. We shouldn't trigger methods that
     // require a shared pointer to this to be present
@@ -93,7 +124,7 @@ SceneNodeCore::SceneNodeCore(const SceneNodeCore& other)
 void SceneNodeCore::copyAndReplaceAttributes(const SceneNodeCore& other) {
     // copy the other entity and its components
     std::shared_ptr<Entity> newEntity { 
-        std::make_shared<Entity>(SimpleECS::createEntity())
+        std::make_shared<Entity>(mEntity->getWorld().createEntity())
     };
     newEntity->copy(*(other.mEntity));
     mEntity = newEntity;
@@ -189,7 +220,7 @@ void SceneNodeCore::addNode(std::shared_ptr<SceneNodeCore> node, const std::stri
         mChildren[node->mName] = node;
         node->mParent = shared_from_this();
         assert(!detectCycle(node) && "Cycle detected, ancestor node added as child to its descendant.");
-        SimpleECS::getSystem<SceneSystem>()->nodeAdded(node);
+        mEntity->getWorld().getSystem<SceneSystem>()->nodeAdded(node);
         return;
     }
 
@@ -243,7 +274,7 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::getParentNode() {
 std::shared_ptr<SceneNodeCore> SceneNodeCore::disconnectNode(std::shared_ptr<SceneNodeCore> node) {
     // let system know that this node is being disconnected, in case it was part
     // of the scene tree
-    SimpleECS::getSystem<SceneSystem>()->nodeRemoved(node);
+    node->mEntity->getWorld().getSystem<SceneSystem>()->nodeRemoved(node);
 
     //disconnect this node from its parent
     std::shared_ptr<SceneNodeCore> parent { node->mParent };
@@ -287,9 +318,16 @@ std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::getDescendants() {
 }
 
 EntityID SceneNodeCore::getEntityID() const {
-    if(mEntity) {
-        return mEntity->getID();
-    } return SpecialEntity::ENTITY_ROOT;
+    return mEntity->getID();
+}
+WorldID SceneNodeCore::getWorldID() const {
+    return mEntity->getWorld().getID();
+}
+ECSWorld& SceneNodeCore::getWorld() const {
+    return mEntity->getWorld();
+}
+void SceneNodeCore::joinWorld(ECSWorld& world) {
+    mEntity->joinWorld(world);
 }
 
 void SceneSystem::ApploopEventHandler::onApplicationEnd() {
@@ -297,17 +335,17 @@ void SceneSystem::ApploopEventHandler::onApplicationEnd() {
 }
 
 bool SceneSystem::inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const {
-    return inScene(sceneNode->getEntityID());
+    return inScene(sceneNode->getEntityID(), sceneNode->getWorldID());
 }
-bool SceneSystem::inScene(EntityID entityID) const {
-    return mEntityToNode.find(entityID) != mEntityToNode.end();
+bool SceneSystem::inScene(EntityID entityID, WorldID worldID) const {
+    return mEntityToNode.find({worldID, entityID}) != mEntityToNode.end();
 }
 
 bool SceneSystem::isActive(std::shared_ptr<const SceneNodeCore> sceneNode) const {
-    return isActive(sceneNode->getEntityID());
+    return isActive(sceneNode->getEntityID(), sceneNode->getWorldID());
 }
-bool SceneSystem::isActive(EntityID entityID) const {
-    return mActiveEntities.find(entityID) != mActiveEntities.end();
+bool SceneSystem::isActive(EntityID entityID, WorldID worldID) const {
+    return mActiveEntities.find({worldID, entityID}) != mActiveEntities.end();
 }
 
 std::shared_ptr<SceneNodeCore> SceneSystem::getNode(const std::string& where) {
@@ -320,6 +358,10 @@ std::shared_ptr<SceneNodeCore> SceneSystem::removeNode(const std::string& where)
     return mRootNode->removeNode(where);
 }
 
+ECSWorld& SceneSystem::getRootWorld() const {
+    return mRootNode->getWorld();
+}
+
 void SceneSystem::addNode(std::shared_ptr<SceneNodeCore> sceneNode, const std::string& where) {
     mRootNode->addNode(sceneNode, where);
 }
@@ -327,11 +369,32 @@ void SceneSystem::addNode(std::shared_ptr<SceneNodeCore> sceneNode, const std::s
 void SceneSystem::nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode) {
     if(!inScene(sceneNode->mParent.lock())) return;
 
-    mEntityToNode[sceneNode->getEntityID()] = sceneNode;
+    // Move this node to the world to which it belongs, where viewport nodes (may) mark 
+    // the boundary between worlds
+    {
+        std::shared_ptr<ViewportNode> viewport { std::dynamic_pointer_cast<ViewportNode>(sceneNode) };
+        if(viewport && viewport->mOwnWorld) {
+            viewport->joinWorld(*viewport->mOwnWorld);
+        } else {
+            sceneNode->joinWorld(sceneNode->getParentNode()->getWorld());
+        }
+    }
+    mEntityToNode[{sceneNode->getWorldID(), sceneNode->getEntityID()}] = sceneNode;
+
     // when a node is added to the scene, all its children should
-    // be in the scene also, so have them registered
+    // be in the scene also, so have them registered. Also move every
+    // node to its world, and switch worlds if a viewport
+    // node is found
     for(auto& descendant: sceneNode->getDescendants()) {
-        mEntityToNode[descendant->getEntityID()] = descendant;
+        {
+            std::shared_ptr<ViewportNode> viewport { std::dynamic_pointer_cast<ViewportNode>(descendant) };
+            if(viewport && viewport->mOwnWorld) {
+                viewport->joinWorld(*viewport->mOwnWorld);
+            } else {
+                descendant->joinWorld(descendant->getParentNode()->getWorld());
+            }
+        }
+        mEntityToNode[{descendant->getWorldID(), descendant->getEntityID()}] = descendant;
     }
 
     // let the scene system enable systems on those nodes that
@@ -349,9 +412,9 @@ void SceneSystem::nodeRemoved(std::shared_ptr<SceneNodeCore> sceneNode) {
 
         // lose all references to the node and its descendants
         for(auto& descendant: sceneNode->getDescendants()) {
-            mEntityToNode.erase(descendant->getEntityID());
+            mEntityToNode.erase({descendant->getWorldID(), descendant->getEntityID()});
         }
-        mEntityToNode.erase(sceneNode->getEntityID());
+        mEntityToNode.erase({sceneNode->getWorldID(), sceneNode->getEntityID()});
     }
 }
 
@@ -361,7 +424,7 @@ void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNodeCore> sceneNode
     // early exit if this node isn't in the scene, or if its parent
     // isn't active, or node is already in requested state
     if(
-        !sceneNode->inScene() 
+        !inScene(sceneNode)
         || !isActive(sceneNode->mParent.lock())
         || (isActive(sceneNode) && state) 
         || (!isActive(sceneNode) && !state)
@@ -378,8 +441,8 @@ void SceneSystem::activateSubtree(std::shared_ptr<SceneNodeCore> rootNode) {
 
     rootNode->mStateFlags |= SceneNodeCore::StateFlags::ACTIVE;
     rootNode->mEntity->enableSystems(rootNode->mSystemMask);
-    mActiveEntities.emplace(rootNode->getEntityID());
-    mComputeTransformQueue.emplace(rootNode->getEntityID());
+    mActiveEntities.insert({rootNode->getWorldID(), rootNode->getEntityID()});
+    mComputeTransformQueue.insert({rootNode->getWorldID(), rootNode->getEntityID()});
 
     rootNode->onActivated();
 }
@@ -388,8 +451,8 @@ void SceneSystem::deactivateSubtree(std::shared_ptr<SceneNodeCore> rootNode) {
     rootNode->onDeactivated();
 
     rootNode->mEntity->disableSystems();
-    mActiveEntities.erase(rootNode->getEntityID());
-    mComputeTransformQueue.erase(rootNode->getEntityID());
+    mActiveEntities.erase({rootNode->getWorldID(), rootNode->getEntityID()});
+    mComputeTransformQueue.erase({rootNode->getWorldID(), rootNode->getEntityID()});
     rootNode->mStateFlags &= ~SceneNodeCore::StateFlags::ACTIVE;
 
     for(auto& childNode: rootNode->getChildren()) {
@@ -400,31 +463,31 @@ void SceneSystem::deactivateSubtree(std::shared_ptr<SceneNodeCore> rootNode) {
 void SceneSystem::updateTransforms() {
     // Prune the transform queue of nodes that will be
     // covered by their ancestor's update
-    std::set<EntityID> entitiesToIgnore {};
-    for(EntityID entity: mComputeTransformQueue) {
-        std::shared_ptr<SceneNodeCore> sceneNode { mEntityToNode.at(entity)->mParent };
+    std::set<std::pair<WorldID, EntityID>> entitiesToIgnore {};
+    for(std::pair<WorldID, EntityID> entityWorldPair: mComputeTransformQueue) {
+        std::shared_ptr<SceneNodeCore> sceneNode { mEntityToNode.at(entityWorldPair)->mParent };
         while(sceneNode != nullptr) {
-            if(mComputeTransformQueue.find(sceneNode->getEntityID()) != mComputeTransformQueue.end()) {
-                entitiesToIgnore.emplace(entity);
+            if(mComputeTransformQueue.find({sceneNode->getWorldID(), sceneNode->getEntityID()}) != mComputeTransformQueue.end()) {
+                entitiesToIgnore.insert(entityWorldPair);
                 break;
             }
             sceneNode = sceneNode->mParent.lock();
         }
     }
-    for(EntityID entity: entitiesToIgnore) {
-        mComputeTransformQueue.erase(entity);
+    for(std::pair<WorldID, EntityID> entityWorldPair: entitiesToIgnore) {
+        mComputeTransformQueue.erase(entityWorldPair);
     }
 
     // Apply transform updates to all subtrees present in the queue
-    for(EntityID entityID: mComputeTransformQueue) {
-        std::vector<std::shared_ptr<SceneNodeCore>> toVisit { {mEntityToNode.at(entityID)} };
+    for(std::pair<WorldID, EntityID> entityWorldPair: mComputeTransformQueue) {
+        std::vector<std::shared_ptr<SceneNodeCore>> toVisit { {mEntityToNode.at(entityWorldPair)} };
         while(!toVisit.empty()) {
             std::shared_ptr<SceneNodeCore> currentNode { toVisit.back() };
             toVisit.pop_back();
 
             glm::mat4 localModelMatrix { getLocalTransform(currentNode).mModelMatrix };
             glm::mat4 worldMatrix { getCachedWorldTransform(currentNode->mParent.lock()).mModelMatrix };
-            updateComponent<Transform>(currentNode->getEntityID(), {worldMatrix * localModelMatrix});
+            currentNode->updateComponent<Transform>({worldMatrix * localModelMatrix});
 
             for(std::shared_ptr<SceneNodeCore> child: currentNode->getChildren()) {
                 toVisit.push_back(child);
@@ -437,11 +500,8 @@ Transform SceneSystem::getLocalTransform(std::shared_ptr<const SceneNodeCore> sc
     constexpr Transform rootTransform {
         glm::mat4{1.f}
     };   
-    if(
-        !sceneNode
-        || sceneNode->getEntityID() == SpecialEntity::ENTITY_ROOT
-    ) { return rootTransform; }
-    Placement nodePlacement { sceneNode->getComponent<Placement>() };
+    if(!sceneNode) { return rootTransform; }
+    const Placement nodePlacement { sceneNode->getComponent<Placement>() };
     return Transform{ buildModelMatrix (
         nodePlacement.mPosition,
         nodePlacement.mOrientation,
@@ -450,30 +510,30 @@ Transform SceneSystem::getLocalTransform(std::shared_ptr<const SceneNodeCore> sc
 }
 
 Transform SceneSystem::getCachedWorldTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const {
-    constexpr Transform rootTransform {
-        glm::mat4{1.f}
-    };
-    if(
-        !sceneNode 
-        || sceneNode->getEntityID() == SpecialEntity::ENTITY_ROOT
-    ) { return rootTransform; }
+    constexpr Transform rootTransform { glm::mat4{1.f} };
+    if(!sceneNode) { return rootTransform; }
     return sceneNode->getComponent<Transform>();
 }
 
-void SceneSystem::markDirty(EntityID entityID) {
-    if(!isActive(entityID)) return;
-    mComputeTransformQueue.emplace(entityID);
+void SceneSystem::markDirty(EntityID entityID, WorldID worldID) {
+    if(!isActive(entityID, worldID)) return;
+    mComputeTransformQueue.insert({worldID, entityID});
 }
 
-void SceneSystem::onEntityUpdated(EntityID entityID) {
-    markDirty(entityID);
+void SceneSystem::onWorldEntityUpdate(EntityID entityID, WorldID worldID) {
+    markDirty(entityID, worldID);
 }
 
 void SceneSystem::ApploopEventHandler::onPostSimulationStep(float simulationProgress) {
     mSystem->updateTransforms();
 }
 
-void SceneSystem::ApploopEventHandler::onApplicationStart() {
+void SceneSystem::ApploopEventHandler::onApplicationInitialize() {
+    mSystem->mRootNode = ViewportNode::create("hiddenRoot", false);
+    mSystem->mRootNode->mStateFlags |= SceneNodeCore::StateFlags::ACTIVE | SceneNodeCore::StateFlags::ENABLED;
+    mSystem->mEntityToNode.insert({{mSystem->mRootNode->getWorldID(), mSystem->mRootNode->getEntityID()}, mSystem->mRootNode});
+    mSystem->mActiveEntities.insert({mSystem->mRootNode->getWorldID(), mSystem->mRootNode->getEntityID()});
+    mSystem->mRootNode->updateComponent<Transform>({glm::mat4{1.f}});
     mSystem->updateTransforms();
 }
 
@@ -487,4 +547,9 @@ void SceneNodeCore::validateName(const std::string& nodeName) {
     };
     assert(nodeName.size() > 0 && "Scene node must have a name");
     assert(containsValidCharacters && "Scene node name may contain only alphanumeric characters and underscores");
+}
+
+void SceneSystem::SceneSubworld::onEntityUpdated(EntityID entityID) {
+    if(getComponent<Placement>(entityID, 0.f) == getComponent<Placement>(entityID, 1.f)) return;
+    mWorld.getSystem<SceneSystem>()->onWorldEntityUpdate(entityID, mWorld.getID());
 }

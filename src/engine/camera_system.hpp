@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 #include "apploop_events.hpp"
 
 struct CameraProperties {
@@ -28,8 +28,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(CameraProperties::ProjectionType, {
 
 class CameraSystem: public System<CameraSystem, Transform, CameraProperties> {
 public:
-    CameraSystem():
-    System<CameraSystem, Transform, CameraProperties>{0}
+    CameraSystem(ECSWorld& world):
+    System<CameraSystem, Transform, CameraProperties>{world}
     {}
     void updateActiveCameraMatrices();
     void onEntityUpdated(EntityID entityID) override;

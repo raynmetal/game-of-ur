@@ -3,7 +3,7 @@
 
 #include <string>
 
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 #include "scene_system.hpp"
 #include "input_system/input_system.hpp"
 #include "window_context_manager.hpp"
@@ -21,7 +21,6 @@ public:
 
     template <typename TObject>
     TObject getObject(const std::string& path="");
-
 
 private:
 
@@ -45,6 +44,7 @@ private:
     static bool s_instantiated;
 
     static std::shared_ptr<Application> instantiate(const std::string& projectPath);
+    std::weak_ptr<SceneSystem> mSceneSystem {};
 friend int main(int, char* []);
 };
 
@@ -61,21 +61,6 @@ TObject Application::getByPath_Helper<TObject, Enable>::get(const std::string& p
 
 template <typename TObject>
 struct Application::getByPath_Helper<
-    std::shared_ptr<TObject>,
-    typename std::enable_if_t<
-        std::is_base_of_v<BaseSystem, TObject>
-    >
-> {
-    getByPath_Helper(Application* application): mApplication {application} {}
-    std::shared_ptr<TObject> get(const std::string& path) {
-        assert(path == "" && "Getter for ECS Systems does not accept any path parameter");
-        return SimpleECS::getSystem<TObject>();
-    }
-    Application* mApplication;
-};
-
-template <typename TObject>
-struct Application::getByPath_Helper<
     TObject,
     typename std::enable_if_t<
         SceneNodeCore::getByPath_Helper<TObject>::s_valid
@@ -83,7 +68,7 @@ struct Application::getByPath_Helper<
 > {
     getByPath_Helper(Application* application): mApplication {application} {}
     TObject get(const std::string& path) {
-        return SimpleECS::getSystem<SceneSystem>()->getByPath<TObject>(path);
+        return mApplication->mSceneSystem.lock()->getByPath<TObject>(path);
     }
     Application* mApplication;
 };

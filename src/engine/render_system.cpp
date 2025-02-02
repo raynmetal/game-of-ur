@@ -1,3 +1,4 @@
+#include <iostream>
 #include <array>
 
 #include <glm/glm.hpp>
@@ -5,7 +6,7 @@
 
 #include "resource_database.hpp"
 #include "window_context_manager.hpp"
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 
 #include "light.hpp"
 #include "camera_system.hpp"
@@ -155,15 +156,20 @@ void RenderSystem::execute(float simulationProgress) {
     updateCameraMatrices(simulationProgress);
 
     // Execute each rendering stage in its proper order
-    SimpleECS::getSystem<OpaqueQueue>()->enqueueTo(*mGeometryRenderStage, simulationProgress);
+    mWorld.getSystem<OpaqueQueue>()->enqueueTo(*mGeometryRenderStage, simulationProgress);
     mGeometryRenderStage->execute();
 
-    SimpleECS::getSystem<LightQueue>()->enqueueTo(*mLightingRenderStage, simulationProgress);
+    mWorld.getSystem<LightQueue>()->enqueueTo(*mLightingRenderStage, simulationProgress);
     mLightingRenderStage->execute();
 
     mBlurRenderStage->execute();
     mTonemappingRenderStage->execute();
     mScreenRenderStage->execute();
+
+    if(GLenum openglError = glGetError()) {
+        std::cout << "OpenGL error: " << openglError << ", " << glewGetErrorString(openglError) << std::endl;
+        assert(!openglError && "Error during render system execution step");
+    }
 
     WindowContext::getInstance().swapBuffers();
 }

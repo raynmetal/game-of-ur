@@ -5,13 +5,23 @@
 #include <glm/gtc/quaternion.hpp>
 #include <nlohmann/json.hpp>
 
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 
 struct Placement {
     glm::vec4 mPosition {glm::vec3{ 0.f }, 1.f};
     glm::quat mOrientation { glm::vec3{ 0.f } };
     glm::vec3 mScale { 1.f, 1.f, 1.f };
     inline static std::string getComponentTypeName() { return "Placement"; }
+    inline bool operator==(const Placement& other) {
+        return (
+            mPosition == other.mPosition 
+            && mOrientation == other.mOrientation
+            && mScale == other.mScale
+        );
+    }
+    inline bool operator!=(const Placement& other) { 
+        return !(*this == other);
+    }
 };
 
 struct PlacementPosition {

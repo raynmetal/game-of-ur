@@ -7,7 +7,7 @@
 #include <array>
 
 #include "input_system/input_system.hpp"
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 #include "shapegen.hpp"
 #include "material.hpp"
 #include "render_stage.hpp"
@@ -15,16 +15,16 @@
 
 class RenderSystem: public System<RenderSystem, CameraProperties> {
 public:
-    RenderSystem():
-    System<RenderSystem, CameraProperties>{0}
+    RenderSystem(ECSWorld& world):
+    System<RenderSystem, CameraProperties>{world}
     {}
 
     static std::string getSystemTypeName() { return "RenderSystem"; }
 
     class LightQueue: public System<LightQueue, Transform, LightEmissionData>{
     public:
-        LightQueue():
-        System<RenderSystem::LightQueue, Transform, LightEmissionData>{0}
+        LightQueue(ECSWorld& world):
+        System<RenderSystem::LightQueue, Transform, LightEmissionData>{world}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
         static std::string getSystemTypeName() { return "RenderSystem::LightQueue"; }
@@ -35,8 +35,8 @@ public:
     };
     class OpaqueQueue: public System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>> {
     public:
-        OpaqueQueue():
-        System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>>{0}
+        OpaqueQueue(ECSWorld& world):
+        System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>>{world}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
         static std::string getSystemTypeName() { return "RenderSystem::OpaqueQueue"; }

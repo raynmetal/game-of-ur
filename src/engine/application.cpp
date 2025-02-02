@@ -6,7 +6,7 @@
 #include <SDL2/SDL.h>
 #include <nlohmann/json.hpp>
 
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 #include "resource_database.hpp"
 #include "window_context_manager.hpp"
 #include "input_system/input_system.hpp"
@@ -45,6 +45,8 @@ Application::Application(const std::string& projectPath) {
         assert(mSimulationStep >= kMinSimStep && mSimulationStep <= kMaxSimStep && assertionMessage);
     }
 
+    mSceneSystem = ECSWorld::getSingletonSystem<SceneSystem>();
+
     initialize(projectJSON[0].at("window_configuration"));
 
     const std::string& inputFile{ projectJSON[0].at("input_map_path").get<std::string>() };
@@ -70,7 +72,9 @@ Application::Application(const std::string& projectPath) {
 }
 
 void Application::execute() {
-    SimpleECS::getSystem<SceneSystem>()->addNode(
+    ApploopEventDispatcher::applicationInitialize();
+    mSceneSystem.lock()->getRootWorld().initialize();
+    mSceneSystem.lock()->addNode(
         ResourceDatabase::getRegisteredResource<SimObject>("root_scene"),
         "/"
     );
@@ -79,19 +83,13 @@ void Application::execute() {
     // Timing related variables
     uint32_t previousTicks { SDL_GetTicks() };
     uint32_t simulationTicks { previousTicks };
-    // Current frame
-    GLuint simFrame { 0 };
-    GLuint renderFrame { 0 };
-    // Framerate measuring variables
-    float framerate {0.f};
-    const float frameratePoll {1.f};
-    float framerateCounter {0.f};
 
     // Application loop begins
     SDL_Event event;
     bool quit {false};
+    ECSWorld& rootWorld { mSceneSystem.lock()->getRootWorld() };
     ApploopEventDispatcher::applicationStart();
-    SimpleECS::beginFrame();
+    rootWorld.beginFrame();
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
@@ -110,15 +108,12 @@ void Application::execute() {
             if(quit) break;
         }
         if(quit) break;
-        ++renderFrame;
-
         // update time related variables
         GLuint currentTicks { SDL_GetTicks() };
 
         // Apply simulation updates, if possible
         while(currentTicks - simulationTicks >= mSimulationStep) {
-            SimpleECS::beginFrame();
-            ++simFrame;
+            rootWorld.beginFrame();
             simulationTicks += mSimulationStep;
 
             // Send inputs, if any, to their various listeners
@@ -131,21 +126,9 @@ void Application::execute() {
         const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / mSimulationStep};
         ApploopEventDispatcher::postSimulationStep(simulationProgress);
 
-        // Measure average framerate, biased towards previously measured framerate
-        float deltaTime {
-            (currentTicks - previousTicks)/1000.f
-        };
-        previousTicks = currentTicks;
-        const float framerateBias { .8f };
-        framerate = framerate * (framerateBias) + (1.f - framerateBias)/(deltaTime > .0001f? deltaTime: .0001f);
-        framerateCounter += deltaTime;
-        while(framerateCounter > frameratePoll) {
-            framerateCounter -= frameratePoll;
-        }
-
         // Render a frame
         ApploopEventDispatcher::preRenderStep(simulationProgress);
-        SimpleECS::getSystem<RenderSystem>()->execute(simulationProgress);
+        rootWorld.getSystem<RenderSystem>()->execute(simulationProgress);
         ApploopEventDispatcher::postRenderStep(simulationProgress);
     }
     ApploopEventDispatcher::applicationEnd();
@@ -178,11 +161,9 @@ void Application::initialize(const nlohmann::json& windowProperties) {
     // dependence
     ResourceDatabase::getInstance();
     Material::Init();
-
-    SimpleECS::initialize();
 }
 
 void Application::cleanup() {
-    SimpleECS::cleanup();
+    mSceneSystem.lock()->getRootWorld().cleanup();
     Material::Clear();
 }

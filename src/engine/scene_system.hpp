@@ -11,7 +11,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 #include "resource_database.hpp"
 #include "apploop_events.hpp"
 #include "scene_components.hpp"
@@ -63,6 +63,8 @@ public:
     bool getEnabled() const;
 
     EntityID getEntityID() const;
+    WorldID getWorldID() const;
+    ECSWorld& getWorld() const;
 
     // TODO: How can we be certain that the value returned by this method here,
     // and the one in SceneSystem, are both in sync? Yet more redundancy
@@ -84,10 +86,11 @@ public:
     std::shared_ptr<SceneNodeCore> getParentNode();
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
     std::vector<std::shared_ptr<SceneNodeCore>> removeChildren();
-
     const std::string getName() const;
 
 protected:
+
+    void joinWorld(ECSWorld& world);
     static std::shared_ptr<SceneNodeCore> copy(const std::shared_ptr<const SceneNodeCore> other);
 
     template<typename ...TComponents>
@@ -106,7 +109,6 @@ protected:
     virtual void onDestroyed();
 
     static void validateName(const std::string& nodeName);
-
 private:
     enum StateFlags: uint8_t {
         ENABLED=0x1,
@@ -118,8 +120,6 @@ private:
         static TObject get(std::shared_ptr<SceneNodeCore> rootNode, const std::string& where);
         static constexpr bool s_valid { false };
     };
-
-    SceneNodeCore(){} // special constructor used to create the root node in the scene system
 
     virtual std::shared_ptr<SceneNodeCore> clone() const;
     void copyDescendants(const SceneNodeCore& other);
@@ -194,11 +194,41 @@ protected:
 friend class BaseSceneNode<SceneNode>;
 };
 
-class SceneSystem : public System<SceneSystem, Placement, Transform> {
+class ViewportNode: public BaseSceneNode<ViewportNode>, public Resource<ViewportNode> {
 public:
-    SceneSystem():
-    System<SceneSystem, Placement, Transform>{0}
-    { mRootNode->mStateFlags |= SceneNodeCore::ACTIVE; }
+    static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld);
+    static std::shared_ptr<ViewportNode> create(const nlohmann::json& sceneNodeDescription);
+    static std::shared_ptr<ViewportNode> copy(const std::shared_ptr<const ViewportNode> other);
+    static inline std::string getResourceTypeName() { return "ViewportNode"; }
+
+protected:
+    ViewportNode(const Placement& placement, const std::string& name, bool inheritsWorld):
+    BaseSceneNode<ViewportNode>{placement, name},
+    Resource<ViewportNode>{0}
+    {}
+    ViewportNode(const nlohmann::json& jsonSceneNode):
+    BaseSceneNode<ViewportNode>{jsonSceneNode},
+    Resource<ViewportNode>{0}
+    {}
+    ViewportNode(const ViewportNode& sceneObject):
+    BaseSceneNode<ViewportNode>{sceneObject},
+    Resource<ViewportNode>{0}
+    {}
+    std::unique_ptr<ECSWorld> mOwnWorld { nullptr };
+private:
+
+    std::shared_ptr<SceneNodeCore> clone() const override;
+friend class BaseSceneNode<ViewportNode>;
+friend class SceneSystem;
+};
+
+class SceneSystem: public System<SceneSystem, Placement, Transform> {
+public:
+    SceneSystem(ECSWorld& world):
+    System<SceneSystem, Placement, Transform> { world }
+    { }
+
+    bool isSingleton() const override { return true; }
 
     template<typename TObject=std::shared_ptr<SceneNode>>
     TObject getByPath(const std::string& where);
@@ -206,8 +236,8 @@ public:
     std::shared_ptr<SceneNodeCore> getNode(const std::string& where);
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
-
     static std::string getSystemTypeName() { return "SceneSystem"; }
+    ECSWorld& getRootWorld() const;
 private:
     class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
     public:
@@ -215,15 +245,24 @@ private:
         inline void initializeEventHandler(SceneSystem* pSystem){ mSystem = pSystem; }
     private:
         void onPostSimulationStep(float simulationProgress) override;
-        void onApplicationStart() override;
+        void onApplicationInitialize() override;
         void onApplicationEnd() override;
         SceneSystem* mSystem;
     };
+    class SceneSubworld: public System<SceneSubworld, Placement, Transform> {
+    public:
+        SceneSubworld(ECSWorld& world):
+        System<SceneSubworld, Placement, Transform> { world }
+        {}
+        static std::string getSystemTypeName() { return "SceneSubworld"; }
+    private:
+        void onEntityUpdated(EntityID entityID) override;
+    };
     bool isActive(std::shared_ptr<const SceneNodeCore> sceneNode) const;
-    bool isActive(EntityID entityID) const;
+    bool isActive(EntityID entityID, WorldID worldID) const;
     bool inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const;
-    bool inScene(EntityID entityID) const;
-    void markDirty(EntityID entity);
+    bool inScene(EntityID entityID, WorldID worldID) const;
+    void markDirty(EntityID entity, WorldID worldID);
     void updateTransforms();
 
     Transform getLocalTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const;
@@ -234,16 +273,15 @@ private:
     void activateSubtree(std::shared_ptr<SceneNodeCore> sceneNode);
     void deactivateSubtree(std::shared_ptr<SceneNodeCore> sceneNode);
 
-    void onEntityUpdated(EntityID entityID) override;
+    void onWorldEntityUpdate(EntityID entityID, WorldID worldID);
 
-    std::shared_ptr<SceneNodeCore> mRootNode{ new SceneNodeCore {}, &SceneNodeCore::SceneNodeCore_del_ };
+
+    std::shared_ptr<ViewportNode> mRootNode{ nullptr };
 
     std::shared_ptr<ApploopEventHandler> mApploopEventHandler { ApploopEventHandler::registerHandler(this) };
-    std::unordered_map<EntityID, std::shared_ptr<SceneNodeCore>> mEntityToNode {
-        {SpecialEntity::ENTITY_ROOT, mRootNode}
-    };
-    std::set<EntityID> mActiveEntities { {SpecialEntity::ENTITY_ROOT} };
-    std::set<EntityID> mComputeTransformQueue {};
+    std::map<std::pair<WorldID, EntityID>, std::shared_ptr<SceneNodeCore>, std::less<std::pair<WorldID, EntityID>>> mEntityToNode {};
+    std::set<std::pair<WorldID, EntityID>, std::less<std::pair<WorldID, EntityID>>> mActiveEntities {};
+    std::set<std::pair<WorldID, EntityID>, std::less<std::pair<WorldID, EntityID>>> mComputeTransformQueue {};
 
 friend class SceneSystem::ApploopEventHandler;
 friend class SceneNodeCore;
@@ -260,14 +298,16 @@ std::shared_ptr<TSceneNode> BaseSceneNode<TSceneNode>::create(const Placement& p
 
 template <typename TSceneNode>
 std::shared_ptr<TSceneNode> BaseSceneNode<TSceneNode>::create(const nlohmann::json& sceneNodeDescription) {
-    std::shared_ptr<SceneNodeCore> newNode{ new TSceneNode{ sceneNodeDescription } };
+    std::shared_ptr<SceneNodeCore> newNode{ new TSceneNode{ sceneNodeDescription }, &SceneNodeCore_del_};
     newNode->onCreated();
     return std::static_pointer_cast<TSceneNode>(newNode);
 }
 
 template <typename TSceneNode>
 std::shared_ptr<TSceneNode> BaseSceneNode<TSceneNode>::copy(const std::shared_ptr<const TSceneNode> sceneNode) {
-    return std::static_pointer_cast<TSceneNode>(SceneNodeCore::copy(sceneNode));
+    std::shared_ptr<SceneNodeCore> newNode { SceneNodeCore::copy(sceneNode) };
+    newNode->onCreated();
+    return std::static_pointer_cast<TSceneNode>(newNode);
 }
 
 template<typename ...TComponents>
@@ -303,14 +343,13 @@ struct SceneNodeCore::getByPath_Helper<std::shared_ptr<TObject>, typename std::e
 };
 
 template <typename ...TComponents>
-SceneNodeCore::SceneNodeCore(const Placement& placement, const std::string& name, TComponents...components):
-Resource<SceneNodeCore>{0}
+SceneNodeCore::SceneNodeCore(const Placement& placement, const std::string& name, TComponents...components)
 {
     validateName(name);
 
     mName = name;
     mEntity = std::make_shared<Entity>(
-        SimpleECS::createEntity<Placement, Transform, TComponents...>(
+        ECSWorld::createEntityPrototype<Placement, Transform, TComponents...>(
             placement,
             Transform{glm::mat4{1.f}},
             components...
@@ -359,7 +398,7 @@ bool SceneNodeCore::getEnabled() const {
 
 template <typename TSystem>
 void SceneNodeCore::setEnabled(bool state) {
-    const SystemType systemType { SimpleECS::getSystemType<TSystem>() };
+    const SystemType systemType { mEntity->getWorld().getSystemType<TSystem>() };
     mSystemMask.set(systemType, state);
 
     // since the system mask has been changed, we'll want the scene
@@ -374,14 +413,14 @@ void SceneNodeCore::setEnabled(bool state) {
 // enabled or disabled
 template <>
 inline void SceneNodeCore::setEnabled<SceneSystem>(bool state) {
-    const SystemType systemType { SimpleECS::getSystemType<SceneSystem>() };
+    const SystemType systemType { mEntity->getWorld().getSystemType<SceneSystem>() };
     // TODO: enabled entities are tracked in both SceneSystem's 
     // mActiveNodes and ECS getEnabledEntities, which is 
     // redundant and may eventually cause errors
     mSystemMask.set(systemType, state);
     //TODO: More redundancy. Why?
     mStateFlags = state? (mStateFlags | SceneNodeCore::StateFlags::ENABLED): (mStateFlags & ~SceneNodeCore::StateFlags::ENABLED);
-    SimpleECS::getSystem<SceneSystem>()->nodeActivationChanged(
+    mEntity->getWorld().getSystem<SceneSystem>()->nodeActivationChanged(
         shared_from_this(),
         state
     );

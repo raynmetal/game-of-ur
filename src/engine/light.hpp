@@ -13,7 +13,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "simple_ecs.hpp"
+#include "ecs_world.hpp"
 #include "shapegen.hpp"
 #include "instance.hpp"
 #include "scene_system.hpp"
