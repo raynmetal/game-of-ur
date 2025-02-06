@@ -140,6 +140,7 @@ public:
     virtual void update(uint32_t deltaSimTimeMillis) {}
 
     void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override final;
+    ViewportNode& getLocalViewport();
 
 protected:
     BaseSimObjectAspect()=default;

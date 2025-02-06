@@ -59,7 +59,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( LightEmissionData::LightType, {
     {LightEmissionData::LightType::directional, "directional"},
     {LightEmissionData::LightType::point, "point"},
     {LightEmissionData::LightType::spot, "spot"},
-})
+});
 
 inline void from_json(const nlohmann::json& json, LightEmissionData& lightEmissionData) {
     assert(json.at("type") == LightEmissionData::getComponentTypeName() && "Type mismatch. Light component json must have type LightEmissionData");

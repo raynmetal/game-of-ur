@@ -97,60 +97,38 @@ ActionData ActionContext::ApplyInput(const ActionDefinition& actionDefinition, c
     return newActionData;
 }
 
-void ActionContext::registerAction(const std::string& name, InputAttributesType attributes) {
-    assert(mActions.find(ActionDefinition{.mName{name}}) == mActions.end() && "Another action with this name has already been registered");
+void ActionContext::registerAction(const ActionName& name, InputAttributesType attributes) {
+    assert(mActions.find(ActionDefinition{{mName, name}}) == mActions.end() && "Another action with this name has already been registered");
     assert(
         !(
             (attributes&InputAttributes::HAS_CHANGE_VALUE) && (attributes&InputAttributes::HAS_STATE_VALUE)
         ) && "Action may either have a change value or a state value but not both"
     );
 
-    ActionDefinition actionDefinition { name, attributes };
+    ActionDefinition actionDefinition {{mName,name}};
+    actionDefinition.mAttributes = attributes;
     // TODO: redundant
     actionDefinition.mValueType = attributes&InputAttributes::HAS_CHANGE_VALUE? ActionValueType::CHANGE: ActionValueType::STATE;
-    actionDefinition.mContext = mName;
     ActionData initialActionData { static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES) };
 
     mActions.emplace(std::pair<ActionDefinition, ActionData>{actionDefinition, initialActionData});
     mActionToInputBinds.emplace(std::pair<ActionDefinition, std::set<InputCombo>>{actionDefinition, {}});
-    mActionHandlers.emplace(
-        std::piecewise_construct,
-        std::forward_as_tuple(actionDefinition),
-        std::forward_as_tuple<std::set<std::weak_ptr<IActionHandler>, std::owner_less<std::weak_ptr<IActionHandler>>>>({})
-    );
 }
 
 void ActionContext::registerAction(const nlohmann::json& actionParameters) {
     std::string actionName { actionParameters.at("name").get<std::string>() };
-    assert(mActions.find(ActionDefinition{.mName{actionName}}) == mActions.end() && "An action with this name has previously been registered");
+    assert(mActions.find(ActionDefinition{{mName, actionName}}) == mActions.end() && "An action with this name has previously been registered");
     ActionDefinition actionDefinition = actionParameters;
     registerAction(actionDefinition.mName, actionDefinition.mAttributes);
 }
 
-void ActionContext::unregisterAction(const std::string& name) {
-    const auto& actionIter {mActions.find(ActionDefinition{.mName{name}})};
+void ActionContext::unregisterAction(const ActionName& name) {
+    const auto& actionIter {mActions.find(ActionDefinition{{mName, name}})};
     assert(actionIter != mActions.end() && "This action is not registered with this context");
     const auto& actionDefinition { actionIter->first };
 
-    mActionHandlers.erase(actionDefinition);
     unregisterInputBinds(actionDefinition.mName);
     mActions.erase(actionDefinition);
-}
-
-void ActionContext::registerActionHandler(const std::string& action, std::weak_ptr<IActionHandler> actionHandler) {
-    ActionDefinition actionDefinition { .mName{action} };
-    mActionHandlers.at(actionDefinition).insert(actionHandler);
-}
-
-void ActionContext::unregisterActionHandler(const std::string& action, std::weak_ptr<IActionHandler> actionHandler) {
-    const ActionDefinition& actionDefinition { .mName{action} };
-    mActionHandlers.at(actionDefinition).erase(actionHandler);
-}
-
-void ActionContext::unregisterActionHandler(std::weak_ptr<IActionHandler> actionHandler) {
-    for(const auto& actionValuePairs: mActions) {
-        mActionHandlers.at(actionValuePairs.first).erase(actionHandler);
-    }
 }
 
 void ActionContext::registerInputBind(const nlohmann::json& inputBindParameters) {
@@ -160,8 +138,8 @@ void ActionContext::registerInputBind(const nlohmann::json& inputBindParameters)
     registerInputBind(actionName, targetAxis, inputCombo);
 }
 
-void ActionContext::registerInputBind(const std::string& forAction, AxisFilter targetAxis, const InputCombo& withInput){
-    const auto& actionDefinitionIter {mActions.find(ActionDefinition{.mName{forAction}})};
+void ActionContext::registerInputBind(const ActionName& forAction, AxisFilter targetAxis, const InputCombo& withInput){
+    const auto& actionDefinitionIter {mActions.find(ActionDefinition{{mName, forAction}})};
     assert(mInputBindToAction.find(withInput) == mInputBindToAction.end() && "This input combination has already been registered with another action");
     assert(actionDefinitionIter != mActions.end() && "This action has not been registered");
 
@@ -197,8 +175,8 @@ void ActionContext::unregisterInputBind(const InputCombo& inputCombo) {
     mInputManager.unregisterInputCombo(mName, inputCombo);
 }
 
-void ActionContext::unregisterInputBinds(const std::string& forAction) {
-    const auto& actionIter { mActions.find(ActionDefinition{.mName{ forAction }}) };
+void ActionContext::unregisterInputBinds(const ActionName& forAction) {
+    const auto& actionIter { mActions.find(ActionDefinition{{mName, forAction}}) };
     assert(actionIter != mActions.end() && "This action has not been registered");
 
     while(!mActionToInputBinds[actionIter->first].empty()) {
@@ -215,9 +193,9 @@ void ActionContext::unregisterInputBinds() {
     }
 }
 
-void ActionContext::resetActionData(const std::string& forAction, uint32_t timestamp) {
+void ActionContext::resetActionData(const ActionName& forAction, uint32_t timestamp) {
     // TODO: Figure out how to handle this properly. When will this take place anyway?
-    const ActionDefinition& actionDefinition { mActions.find(ActionDefinition{ forAction })->first };
+    const ActionDefinition& actionDefinition { mActions.find(ActionDefinition{{mName, forAction}})->first };
 
     // Let action listeners know that a reset has occurred
     ActionData actionData { static_cast<uint8_t>(actionDefinition.mAttributes&InputAttributes::N_AXES) };
@@ -268,7 +246,25 @@ void ActionContext::mapToAction(const UnmappedInputValue& inputValue, const Inpu
     mActions[actionDefinition] = actionData;
 }
 
-void ActionContext::dispatch() {
+std::vector<std::pair<ActionDefinition, ActionData>> ActionContext::getTriggeredActions() {
+    std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions {};
+    std::swap<std::pair<ActionDefinition, ActionData>> (mPendingTriggeredActions, triggeredActions);
+    return triggeredActions;
+}
+
+void ActionDispatch::registerActionHandler(const QualifiedActionName& contextActionPair, std::weak_ptr<IActionHandler> actionHandler) {
+    mActionHandlers[contextActionPair].insert(actionHandler);
+}
+void ActionDispatch::unregisterActionHandler(const QualifiedActionName& contextActionPair, std::weak_ptr<IActionHandler> actionHandler) {
+    mActionHandlers.at(contextActionPair).erase(actionHandler);
+}
+void ActionDispatch::unregisterActionHandler(std::weak_ptr<IActionHandler> actionHandler) {
+    for(auto& actionHandlerGroup: mActionHandlers) {
+        actionHandlerGroup.second.erase(actionHandler);
+    }
+}
+
+void ActionDispatch::dispatchActions() {
     for(const auto& pendingAction: mPendingTriggeredActions) {
         std::vector<std::weak_ptr<IActionHandler>> handlersToUnregister {};
         for(auto handler: mActionHandlers[pendingAction.first]) {
@@ -283,4 +279,14 @@ void ActionContext::dispatch() {
         }
     }
     mPendingTriggeredActions.clear();
+}
+void ActionDispatch::dispatchActions(std::vector<std::pair<ActionDefinition, ActionData>> actions) {
+    queueActions(actions);
+    dispatchActions();
+}
+void ActionDispatch::queueAction(std::pair<ActionDefinition, ActionData> action) {
+    mPendingTriggeredActions.push_back(action);
+}
+void ActionDispatch::queueActions(std::vector<std::pair<ActionDefinition, ActionData>> actions) {
+    mPendingTriggeredActions.insert(mPendingTriggeredActions.end(), actions.begin(), actions.end());
 }

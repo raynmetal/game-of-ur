@@ -12,7 +12,9 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "ecs_world.hpp"
+#include "texture.hpp"
 #include "resource_database.hpp"
+#include "input_system/input_system.hpp"
 #include "apploop_events.hpp"
 #include "scene_components.hpp"
 
@@ -29,7 +31,7 @@ enum class RelativeTo : uint8_t {
 
 NLOHMANN_JSON_SERIALIZE_ENUM(RelativeTo, {
     {RelativeTo::PARENT, "parent"},
-})
+});
 
 enum SpecialEntity: EntityID {
     ENTITY_ROOT = kMaxEntities,
@@ -86,6 +88,7 @@ public:
     std::vector<std::shared_ptr<SceneNodeCore>> getDescendants();
     template <typename TObject=std::shared_ptr<SceneNode>>
     TObject getByPath(const std::string& where);
+    virtual std::shared_ptr<ViewportNode> getLocalViewport();
     std::shared_ptr<SceneNodeCore> getNode(const std::string& where);
     std::shared_ptr<SceneNodeCore> getParentNode();
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
@@ -133,11 +136,10 @@ private:
     virtual std::shared_ptr<SceneNodeCore> clone() const;
     void copyDescendants(const SceneNodeCore& other);
 
+    static void setParentViewport(std::shared_ptr<SceneNodeCore> node, std::shared_ptr<ViewportNode> newViewport);
     static std::shared_ptr<SceneNodeCore> disconnectNode(std::shared_ptr<SceneNodeCore> node);
-
     static bool detectCycle(std::shared_ptr<SceneNodeCore> node);
     static std::tuple<std::string, std::string> nextInPath(const std::string& where);
-
     void copyAndReplaceAttributes(const SceneNodeCore& other);
 
     std::string mName {};
@@ -145,6 +147,7 @@ private:
     RelativeTo mRelativeTo{ RelativeTo::PARENT };
     std::shared_ptr<Entity> mEntity { nullptr };
     std::weak_ptr<SceneNodeCore> mParent {};
+    std::weak_ptr<ViewportNode> mParentViewport {};
     std::unordered_map<std::string, std::shared_ptr<SceneNodeCore>> mChildren {};
 
     Signature mSystemMask {Signature{}.set()};
@@ -212,11 +215,48 @@ friend class BaseSceneNode<SceneNode>;
 
 class ViewportNode: public BaseSceneNode<ViewportNode>, public Resource<ViewportNode> {
 public:
+    enum class Stretch: uint8_t {
+        OFF=0,
+        PER_SUBOBJECT, // Viewport transform configured per stretch mode and requested dimensions
+        POST_VIEWPORT_RENDER,
+    };
+
+    /**
+     * Determines which dimensions the end result of the viewport
+     * is allowed to expand on. 
+     */
+    enum class StretchMode: uint8_t {
+        OFF=0, // no expansion takes place, extra space is left blank
+        EXPAND_VERTICALLY,
+        EXPAND_HORIZONTALLY,
+        EXPAND,
+        STRETCH_FIXED_ASPECT,
+        STRETCH_VERTICALLY,
+        STRETCH_HORIZONTALLY,
+        STRETCH_FILL,
+    };
+
+    enum class UpdateMode: uint8_t {
+        ON_FETCH=0,
+        // Who ensures this gets done? For that matter, who ensures that 
+        // simulation steps get done?
+        ONCE_EVERY_X_RENDER_FRAMES, 
+    };
+
     static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld);
     static std::shared_ptr<ViewportNode> create(const nlohmann::json& sceneNodeDescription);
     static std::shared_ptr<ViewportNode> copy(const std::shared_ptr<const ViewportNode> other);
     static inline std::string getResourceTypeName() { return "ViewportNode"; }
 
+    std::shared_ptr<ViewportNode> getLocalViewport() override;
+
+    // void requestDimensions(glm::u16vec2 requestedDimensions);
+    // void setStretch(Stretch stretch);
+    // void setStretchMode(StretchMode stretchMode);
+    // void setUpdateMode(UpdateMode updateMode);
+    // std::shared_ptr<Texture> fetchTexture(float simulationProgress=1.f);
+
+    ActionDispatch& getActionDispatch();
 protected:
 
     ViewportNode(const Placement& placement, const std::string& name):
@@ -241,15 +281,47 @@ private:
     Resource<ViewportNode>{0}
     {}
     std::shared_ptr<SceneNodeCore> clone() const override;
+
+    ActionDispatch mActionDispatch {};
+    // std::shared_ptr<Texture> mTextureResult { nullptr };
+    // glm::u16vec2 mBaseDimensions { 800, 600 };
+    // glm::u16vec2 mComputedDimensions { 800, 600 };
+    // glm::u16vec2 mRequestedDimensions { 800, 600 };
+    // glm::u16vec2 mComputedOffset { 0, 0 };
+
 friend class BaseSceneNode<ViewportNode>;
 friend class SceneSystem;
 };
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::Stretch, {
+    {ViewportNode::Stretch::OFF, "off"},
+    {ViewportNode::Stretch::PER_SUBOBJECT, "per_subobject"},
+    {ViewportNode::Stretch::POST_VIEWPORT_RENDER, "post_viewport_render"},
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::StretchMode, {
+    {ViewportNode::StretchMode::OFF, "off"},
+    {ViewportNode::StretchMode::EXPAND, "expand"},
+    {ViewportNode::StretchMode::EXPAND_VERTICALLY, "expand_vertically"},
+    {ViewportNode::StretchMode::EXPAND_HORIZONTALLY, "expand_horizontally"},
+    {ViewportNode::StretchMode::STRETCH_FIXED_ASPECT, "stretch_fixed_aspect"},
+    {ViewportNode::StretchMode::STRETCH_VERTICALLY, "stretch_vertically"},
+    {ViewportNode::StretchMode::STRETCH_HORIZONTALLY, "stretch_horizontally"},
+    {ViewportNode::StretchMode::STRETCH_FILL, "stretch_fill"},
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::UpdateMode, {
+    {ViewportNode::UpdateMode::ON_FETCH, "on_fetch"},
+    {ViewportNode::UpdateMode::ONCE_EVERY_X_RENDER_FRAMES, "once_every_x_render_frames"},
+});
 
 class SceneSystem: public System<SceneSystem, Placement, Transform> {
 public:
     SceneSystem(ECSWorld& world):
     System<SceneSystem, Placement, Transform> { world }
     { }
+
+    static std::string getSystemTypeName() { return "SceneSystem"; }
 
     bool isSingleton() const override { return true; }
 
@@ -259,8 +331,10 @@ public:
     std::shared_ptr<SceneNodeCore> getNode(const std::string& where);
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
-    static std::string getSystemTypeName() { return "SceneSystem"; }
+
+
     ECSWorld& getRootWorld() const;
+    ViewportNode& getRootViewport() const;
 
 private:
     class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {

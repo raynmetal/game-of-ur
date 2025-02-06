@@ -12,9 +12,8 @@
 #include "input_data.hpp"
 
 class ActionContext;
-
+class ActionDispatch;
 class InputManager;
-
 /*
  *   Processes raw SDL input events into unmapped inputs, and later
  * reports bind value changes to an ActionContext for conversion into
@@ -55,7 +54,7 @@ public:
      *  Dispatches mapped all inputs received before the target
      * time to any action contexts that can handle them.
      */
-    void dispatch(uint32_t targetTimeMillis);
+    std::vector<std::pair<ActionDefinition, ActionData>> getTriggeredActions(uint32_t targetTimeMillis);
 
 private:
     friend class ActionContext;
@@ -79,12 +78,10 @@ private:
      */
     void unregisterInputCombos();
 
-    typedef std::string ActionContextName;
-
     /**  
      * All action context name->objects
      */
-    std::unordered_map<ActionContextName, std::pair<ActionContext, ActionContextPriority>> mActionContexts {};
+    std::unordered_map<ContextName, std::pair<ActionContext, ActionContextPriority>> mActionContexts {};
 
     /**
      * The current, raw state of the control+axis associated with each input
@@ -103,7 +100,7 @@ private:
      * by priority
     */
     std::unordered_map<InputCombo, std::array<
-        std::set<ActionContextName>, ActionContextPriority::TOTAL
+        std::set<ContextName>, ActionContextPriority::TOTAL
     >> mInputComboToActionContexts {};
 
     /**
@@ -141,39 +138,34 @@ public:
 private:
     virtual void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {};
 
-friend class ActionContext;
+friend class ActionDispatch;
 };
 
 class ActionContext {
 public:
-    ActionContext(InputManager& inputManager, const std::string& name): mInputManager{inputManager}, mName {name} {}
-    ActionContext(InputManager&& inputManager, const std::string& name) = delete;
+    ActionContext(InputManager& inputManager, const ContextName& name): mInputManager{inputManager}, mName {name} {}
+    ActionContext(InputManager&& inputManager, const ContextName& name) = delete;
 
     // Apply the input value to its target action-axis combination
     static ActionData ApplyInput(const ActionDefinition& actionDefinition, const ActionData& actionData, const AxisFilter targetAxis, const UnmappedInputValue& inputValue);
 
+    std::vector<std::pair<ActionDefinition, ActionData>> getTriggeredActions();
+
     // Creates an action of the same name and attributes
-    void registerAction(const std::string& name, InputAttributesType attributes);
+    void registerAction(const ActionName& name, InputAttributesType attributes);
     void registerAction(const nlohmann::json& actionParameters);
     // Remove the action with this name
-    void unregisterAction(const std::string& name);
-
-    // Register a handler that will handle a particular action
-    void registerActionHandler(const std::string& action, std::weak_ptr<IActionHandler> actionHandler);
-    // Remove the handler from the list of active handlers for this action
-    void unregisterActionHandler(const std::string& action, std::weak_ptr<IActionHandler> actionHandler);
-    // Remove the handler from all actions it is subscribed to
-    void unregisterActionHandler(std::weak_ptr<IActionHandler> actionHandler);
+    void unregisterAction(const ActionName& name);
 
     // Register a binding from an input-sign-axis-modifier combination to a specific axis
     // of the action named.
-    void registerInputBind(const std::string& forAction, AxisFilter targetAxis, const InputCombo& withInput);
+    void registerInputBind(const ActionName& forAction, AxisFilter targetAxis, const InputCombo& withInput);
     void registerInputBind(const nlohmann::json& inputBindParameters);
     // Remove the binding from this input-sign-axis-modifier combination to whatever
     // action it's bound to
    void unregisterInputBind(const InputCombo& inputCombo);
     // Remove all bindings that map to any axis for this action
-    void unregisterInputBinds(const std::string& forAction);
+    void unregisterInputBinds(const ActionName& forAction);
     // Remove all input combo -> action bindings
     void unregisterInputBinds();
 
@@ -190,17 +182,13 @@ public:
 
 private:
     // Set all action data for this action to 0.f or false, and queue a RESET action
-    void resetActionData(const std::string& forAction, uint32_t timestamp);
+    void resetActionData(const ActionName& forAction, uint32_t timestamp);
     // Set all action data to 0.f or false, queue RESET actions for
     // each action
     void resetActionData(uint32_t timestamp);
 
     // Maps the given input value to its assigned action state
     void mapToAction(const UnmappedInputValue& inputValue, const InputCombo& inputCombo);
-
-    // Send all queued action event data to its listeners, emptying the
-    // event queue in the process
-    void dispatch();
 
     /* 
      *  Reference to the input manager that created this 
@@ -214,7 +202,7 @@ private:
     /*
      * The name of this action context
      */
-    const std::string& mName;
+    const ContextName& mName;
 
     /**
      * Determines whether this action context is active and allowed to
@@ -250,12 +238,31 @@ private:
      */
     std::unordered_map<InputCombo, std::pair<AxisFilter, ActionDefinition>> mInputBindToAction {};
 
+friend class InputManager;
+};
+
+class ActionDispatch {
+public:
+    void registerActionHandler(const QualifiedActionName& contextActionPair, std::weak_ptr<IActionHandler> actionHandler);
+    void unregisterActionHandler(const QualifiedActionName& contextActionPair, std::weak_ptr<IActionHandler> actionHandler);
+    void unregisterActionHandler(std::weak_ptr<IActionHandler> actionHandler);
+
+    void dispatchActions();
+    void dispatchActions(std::vector<std::pair<ActionDefinition, ActionData>> actions);
+    void queueAction(std::pair<ActionDefinition, ActionData> action);
+    void queueActions(std::vector<std::pair<ActionDefinition, ActionData>> actions);
+private:
+
     /**
      * Pointers to all action handler instances waiting for a particular action
      */
-    std::unordered_map<ActionDefinition, std::set<std::weak_ptr<IActionHandler>, std::owner_less<std::weak_ptr<IActionHandler>>>> mActionHandlers {};
+    std::map<QualifiedActionName, std::set<std::weak_ptr<IActionHandler>, std::owner_less<std::weak_ptr<IActionHandler>>>, std::less<QualifiedActionName>> mActionHandlers {};
 
-friend class InputManager;
+    /**
+     * Action state changes that have recently been triggered, in the order that they
+     * were triggered
+     */
+    std::vector<std::pair<ActionDefinition, ActionData>> mPendingTriggeredActions {};
 };
 
 #endif

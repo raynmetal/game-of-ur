@@ -241,7 +241,7 @@ void SystemManager::handleEntityUpdated(EntityID entityID, Signature signature) 
         if((systemSignature&signature) != systemSignature) continue;
 
         BaseSystem& system { *(mNameToSystem[pair.first]).get() };
-        if(!system.isEnabled(entityID)) continue;
+        if(system.isSingleton() || !system.isEnabled(entityID)) continue;
 
         system.onEntityUpdated(entityID);
     }

@@ -103,6 +103,7 @@ void SceneNodeCore::copyAndReplaceAttributes(const SceneNodeCore& other) {
     mChildren.clear();
     mName = other.mName;
     mParent.reset();
+    mParentViewport.reset();
     mSystemMask = other.mSystemMask;
 }
 
@@ -117,6 +118,7 @@ void SceneNodeCore::copyDescendants(const SceneNodeCore& other) {
         // from this depends on the existence of a shared pointer
         // to the current object
         mChildren[childName]->mParent = shared_from_this();
+        mChildren[childName]->mParentViewport = getLocalViewport();
     }
 }
 
@@ -190,6 +192,7 @@ void SceneNodeCore::addNode(std::shared_ptr<SceneNodeCore> node, const std::stri
         assert(mChildren.find(node->mName) == mChildren.end() && "A node with this name already exists at this location");
         mChildren[node->mName] = node;
         node->mParent = shared_from_this();
+        setParentViewport(node, getLocalViewport());
         assert(!detectCycle(node) && "Cycle detected, ancestor node added as child to its descendant.");
         mEntity->getWorld().getSystem<SceneSystem>()->nodeAdded(node);
         return;
@@ -233,12 +236,23 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::getNode(const std::string& where) 
     return mChildren.at(nextNodeName)->getNode(remainingWhere);
 }
 
+void SceneNodeCore::setParentViewport(std::shared_ptr<SceneNodeCore> node, std::shared_ptr<ViewportNode> newViewport)  {
+    node->mParentViewport = newViewport;
+    for(auto& descendant: node->getDescendants()) {
+        descendant->mParentViewport = descendant->mParent.lock()->getLocalViewport();
+    }
+}
+
+std::shared_ptr<ViewportNode> SceneNodeCore::getLocalViewport() {
+    return mParentViewport.lock();
+}
+
 std::shared_ptr<SceneNodeCore> SceneNodeCore::getParentNode() {
     // TODO: Find a more efficient way to prevent access to the scene root
     // Guard against indirect access to scene root owned by the scene system via
     // its descendants.
     std::shared_ptr<SceneNodeCore> parent { mParent };
-    if(parent) assert(parent->getName() != "" && "Cannot retrieve reference to root node of the scene");
+    if(parent) assert(parent->getName() != kSceneRootName && "Cannot retrieve reference to root node of the scene");
     return parent;
 }
 
@@ -253,11 +267,13 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::disconnectNode(std::shared_ptr<Sce
         parent->mChildren.erase(node->mName);
     }
     node->mParent.reset();
+    setParentViewport(node, nullptr);
     return node;
 }
 
 std::shared_ptr<SceneNodeCore> SceneNodeCore::removeNode(const std::string& where) {
     if(where == "/") {
+        assert(mName != kSceneRootName && "Cannot remove the hidden scene root node");
         return disconnectNode(shared_from_this());
     }
 
@@ -361,6 +377,14 @@ void ViewportNode::onActivated() {
     if(mOwnWorld) mOwnWorld->initialize();
 }
 
+ActionDispatch& ViewportNode::getActionDispatch() {
+    return mActionDispatch;
+}
+
+std::shared_ptr<ViewportNode> ViewportNode::getLocalViewport() {
+    return std::static_pointer_cast<ViewportNode>(shared_from_this());
+}
+
 void SceneSystem::ApploopEventHandler::onApplicationEnd() {
     mSystem->mRootNode->removeChildren();
 }
@@ -391,6 +415,10 @@ std::shared_ptr<SceneNodeCore> SceneSystem::removeNode(const std::string& where)
 
 ECSWorld& SceneSystem::getRootWorld() const {
     return mRootNode->getWorld();
+}
+
+ViewportNode& SceneSystem::getRootViewport() const {
+    return *mRootNode;
 }
 
 void SceneSystem::addNode(std::shared_ptr<SceneNodeCore> sceneNode, const std::string& where) {

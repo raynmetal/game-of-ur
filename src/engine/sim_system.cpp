@@ -171,6 +171,10 @@ bool BaseSimObjectAspect::hasAspect(const std::string& aspectType) const {
     return mSimObject->hasAspect(aspectType);
 }
 
+ViewportNode& BaseSimObjectAspect::getLocalViewport() {
+    return *(mSimObject->getLocalViewport());
+}
+
 std::weak_ptr<FixedActionBinding> BaseSimObjectAspect::declareFixedActionBinding(
     const std::string& context,
     const std::string& action,
@@ -190,11 +194,8 @@ void BaseSimObjectAspect::activateFixedActionBindings(){
     for(const auto& contextActionHandlerPair: mFixedActionBindings) {
         const std::string& context{ contextActionHandlerPair.first.first };
         const std::string& action { contextActionHandlerPair.first.second };
-        Application::getInstance()
-            .getObject<InputManager&>()[context]
-            .registerActionHandler(
-                action,
-                shared_from_this()
+        getLocalViewport().getActionDispatch().registerActionHandler(
+            {context, action}, shared_from_this()
         );
     }
 }
@@ -210,11 +211,8 @@ void BaseSimObjectAspect::deactivateFixedActionBindings() {
     for(const auto& contextActionHandlerPair: mFixedActionBindings) {
         const std::string& context{ contextActionHandlerPair.first.first };
         const std::string& action { contextActionHandlerPair.first.second };
-        Application::getInstance()
-            .getObject<InputManager&>()[context]
-            .unregisterActionHandler(
-                action,
-                shared_from_this()
+        getLocalViewport().getActionDispatch().unregisterActionHandler(
+            {context, action}, shared_from_this()
         );
     }
 }

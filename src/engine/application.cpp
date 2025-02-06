@@ -86,6 +86,7 @@ void Application::execute() {
     SDL_Event event;
     bool quit {false};
     ECSWorld& rootWorld { mSceneSystem.lock()->getRootWorld() };
+    ViewportNode& rootViewport { mSceneSystem.lock()->getRootViewport() };
     ApploopEventDispatcher::applicationStart();
     rootWorld.beginFrame();
     while(true) {
@@ -115,7 +116,8 @@ void Application::execute() {
             simulationTicks += mSimulationStep;
 
             // Send inputs, if any, to their various listeners
-            mInputManager.dispatch(simulationTicks);
+            std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions { mInputManager.getTriggeredActions(simulationTicks) };
+            rootViewport.getActionDispatch().dispatchActions(triggeredActions);
 
             // update objects according to calculated delta
             ApploopEventDispatcher::simulationStep(mSimulationStep);

@@ -24,7 +24,7 @@ struct CameraProperties {
 NLOHMANN_JSON_SERIALIZE_ENUM(CameraProperties::ProjectionType, {
     {CameraProperties::ProjectionType::FRUSTUM, "frustum"},
     {CameraProperties::ProjectionType::ORTHOGRAPHIC, "orthographic"},
-})
+});
 
 class CameraSystem: public System<CameraSystem, Transform, CameraProperties> {
 public:

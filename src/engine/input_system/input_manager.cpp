@@ -602,12 +602,14 @@ void InputManager::unregisterActionContext(const std::string& actionContextName)
     mActionContexts.erase(actionContextName);
 }
 
-void InputManager::dispatch(uint32_t targetTimeMillis) {
-    if(mUnmappedInputs.empty()) return;
+std::vector<std::pair<ActionDefinition, ActionData>> InputManager::getTriggeredActions(uint32_t targetTimeMillis) {
+    if(mUnmappedInputs.empty()) {
+        return {};
+    }
 
     // Send each pending input event to all action contexts 
     // that are listenining for it
-    std::set<ActionContextName> updatedActionContexts {};
+    std::set<ContextName> updatedActionContexts {};
     while(
         !mUnmappedInputs.empty() 
         && mUnmappedInputs.front().second.mTimestamp <= targetTimeMillis
@@ -616,9 +618,9 @@ void InputManager::dispatch(uint32_t targetTimeMillis) {
         bool allowPropagate { true };
 
         // each set of associated actions, in descending order of priority
-        for(const std::set<ActionContextName>& actionSet: mInputComboToActionContexts[inputPair.first]) {
+        for(const std::set<ContextName>& actionSet: mInputComboToActionContexts[inputPair.first]) {
             // each action in this priority level
-            for(const ActionContextName& actionContextName: actionSet) {
+            for(const ContextName& actionContextName: actionSet) {
                 ActionContext& actionContext{ mActionContexts.at(actionContextName).first };
                 if(actionContext.enabled()) {
                     actionContext.mapToAction(inputPair.second, inputPair.first);
@@ -634,11 +636,15 @@ void InputManager::dispatch(uint32_t targetTimeMillis) {
         mUnmappedInputs.pop();
     }
 
+
     // Let each updated context dispatch actions to their subscribed
     // action handlers
-    for(const ActionContextName& name: updatedActionContexts) {
-        mActionContexts.at(name).first.dispatch();
+    std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions {};
+    for(const ContextName& name: updatedActionContexts) {
+        std::vector<std::pair<ActionDefinition, ActionData>> contextActions {mActionContexts.at(name).first.getTriggeredActions()};
+        triggeredActions.insert(triggeredActions.end(), contextActions.begin(), contextActions.end());
     }
+    return triggeredActions;
 }
 
 void InputManager::registerInputCombo(const std::string& actionContext, const InputCombo& inputCombo) {

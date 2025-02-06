@@ -8,6 +8,8 @@
 
 #include <glm/glm.hpp>
 
+using ActionName = std::string;
+using ContextName = std::string;
 struct InputSourceDescription;
 enum class DeviceType: uint8_t {
     NA,
@@ -23,7 +25,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM ( DeviceType, {
     {DeviceType::KEYBOARD, "keyboard"},
     {DeviceType::TOUCH, "touch"},
     {DeviceType::CONTROLLER, "controller"},
-})
+});
 
 enum class ControlType: uint8_t {
     NA,
@@ -41,7 +43,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ControlType, {
     {ControlType::POINT, "point"},
     {ControlType::BUTTON, "button"},
     {ControlType::RADIO, "radio"},
-})
+});
 
 typedef uint8_t AxisFilterType;
 typedef uint8_t InputAttributesValueType;
@@ -142,7 +144,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( AxisFilter, {
     {AxisFilter::Y_CHANGE_NEG, "-dy"},
     {AxisFilter::Z_CHANGE_POS, "+dz"},
     {AxisFilter::Z_CHANGE_NEG, "-dz"},
-})
+});
 
 enum AxisFilterMask: AxisFilterType {
     ID=0x3,
@@ -242,7 +244,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM( InputCombo::Trigger, {
     {InputCombo::Trigger::ON_PRESS, "onPress"},
     {InputCombo::Trigger::ON_RELEASE, "onRelease"},
     {InputCombo::Trigger::ON_CHANGE, "onChange"},
-})
+});
 
 /**
  *  An input state that hasn't yet been mapped to its 
@@ -262,22 +264,35 @@ enum class ActionValueType: uint8_t {
 NLOHMANN_JSON_SERIALIZE_ENUM( ActionValueType, {
     {ActionValueType::STATE, "state"},
     {ActionValueType::CHANGE, "change"},
-})
+});
+
+using QualifiedActionName = std::pair<ContextName, ActionName>;
 
 /*
  * The definition of a single action
  */
 struct ActionDefinition {
+    ActionDefinition(const QualifiedActionName& contextActionNamePair):
+    mName{contextActionNamePair.second},
+    mContext{contextActionNamePair.first} 
+    {}
+    ActionDefinition()=default;
+
     std::string mName {};
     InputAttributesType mAttributes {};
     ActionValueType mValueType {};
     std::string mContext {};
 
-    bool operator==(const ActionDefinition& other) const {
-        return !(mName < other.mName) && !(other.mName < mName);
+    inline bool operator==(const ActionDefinition& other) const {
+        return !(*this < other) && !(other < *this);
     }
-    bool operator<(const ActionDefinition& other) const {
-        return mName < other.mName;
+
+    inline bool operator<(const ActionDefinition& other) const {
+        return mContext < other.mContext || mName < other.mName;
+    }
+
+    operator QualifiedActionName() const {
+        return {mContext, mName};
     }
 };
 
