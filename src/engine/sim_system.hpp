@@ -12,7 +12,6 @@
 #include "resource_database.hpp"
 #include "registrator.hpp"
 #include "input_system/input_system.hpp"
-#include "apploop_events.hpp" 
 #include "ecs_world.hpp"
 #include "scene_system.hpp"
 #include "signals.hpp"
@@ -38,16 +37,6 @@ public:
     {}
 
     static std::string getSystemTypeName() { return "SimSystem"; }
-    class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
-    public:
-        ApploopEventHandler(){}
-        inline void initializeEventHandler(SimSystem* pSystem) {mSystem = pSystem;}
-
-    private:
-        void onSimulationStep(uint32_t simulationTicks) override;
-        SimSystem* mSystem;
-    friend class SimSystem;
-    };
 
     bool aspectRegistered(const std::string& aspectName) const;
 
@@ -59,10 +48,9 @@ private:
     void registerAspect();
 
     std::shared_ptr<BaseSimObjectAspect> constructAspect(const nlohmann::json& jsonAspectProperties);
+    void onSimulationPostStep(uint32_t simulationTicks) override;
 
     std::unordered_map<std::string, std::shared_ptr<BaseSimObjectAspect> (*)(const nlohmann::json& jsonAspectProperties)> mAspectConstructors {};
-    std::shared_ptr<SimSystem::ApploopEventHandler> mApploopEventHandler { SimSystem::ApploopEventHandler::registerHandler(this) };
-friend class SimSystem::ApploopEventHandler;
 friend class BaseSimObjectAspect;
 friend class SimObject;
 };

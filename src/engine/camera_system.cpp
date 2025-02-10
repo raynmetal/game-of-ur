@@ -13,20 +13,8 @@ void CameraSystem::updateActiveCameraMatrices() {
 
     // Build a list of active cameras that require projection or
     // view updates
-    std::set<EntityID> requiresProjectionUpdate {};
-    std::set<EntityID> requiresViewUpdate {};
-    std::set_intersection(mProjectionUpdateQueue.begin(), mProjectionUpdateQueue.end(),
-        enabledEntities.begin(), enabledEntities.end(),
-        std::inserter(requiresProjectionUpdate, requiresProjectionUpdate.end())
-    );
-    std::set_intersection(mViewUpdateQueue.begin(), mViewUpdateQueue.end(),
-        enabledEntities.begin(), enabledEntities.end(),
-        std::inserter(requiresViewUpdate, requiresViewUpdate.begin())
-    );
-    // any matrices remaining in these queues were disabled or removed
-    // before updateActiveCameraMatrices was called
-    mViewUpdateQueue.clear();
-    mProjectionUpdateQueue.clear();
+    std::set<EntityID> requiresProjectionUpdate {mViewUpdateQueue};
+    std::set<EntityID> requiresViewUpdate {mProjectionUpdateQueue};
 
     // Apply pending updates
     for(EntityID entity: requiresProjectionUpdate) {
@@ -50,6 +38,15 @@ void CameraSystem::updateActiveCameraMatrices() {
         cameraProperties.mViewMatrix = glm::inverse(getComponent<Transform>(entity).mModelMatrix);
         updateComponent<CameraProperties>(entity, cameraProperties);
     }
+}
+
+void CameraSystem::onEntityEnabled(EntityID entity) {
+    mViewUpdateQueue.insert(entity);
+    mProjectionUpdateQueue.insert(entity);
+}
+void CameraSystem::onEntityDisabled(EntityID entity) {
+    mViewUpdateQueue.erase(entity);
+    mProjectionUpdateQueue.erase(entity);
 }
 
 void CameraSystem::onEntityUpdated(EntityID entity)  {
@@ -78,14 +75,14 @@ void CameraSystem::onEntityUpdated(EntityID entity)  {
     }
 }
 
-void CameraSystem::ApploopEventHandler::onPreRenderStep(float simulationProgress) {
-    mSystem->updateActiveCameraMatrices();
+void CameraSystem::onPreRenderStep(float simulationProgress) {
+    updateActiveCameraMatrices();
 }
 
-void CameraSystem::ApploopEventHandler::onApplicationStart() {
-    for(EntityID entity : mSystem->getEnabledEntities()) {
-        mSystem->mViewUpdateQueue.insert(entity);
-        mSystem->mProjectionUpdateQueue.insert(entity);
+void CameraSystem::onSimulationActivated() {
+    for(EntityID entity : getEnabledEntities()) {
+        mViewUpdateQueue.insert(entity);
+        mProjectionUpdateQueue.insert(entity);
     }
-    mSystem->updateActiveCameraMatrices();
+    updateActiveCameraMatrices();
 }

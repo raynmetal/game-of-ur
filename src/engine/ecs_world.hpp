@@ -56,7 +56,7 @@ public:
     BaseComponentArray(ECSWorld& world): mWorld{world} {}
     virtual ~BaseComponentArray()=default;
     virtual void handleEntityDestroyed(EntityID entityID)=0;
-    virtual void handleFrameBegin() = 0;
+    virtual void handlePreSimulationStep() = 0;
     virtual void copyComponent(EntityID to, EntityID from)=0;
     virtual void copyComponent(EntityID to, EntityID from, BaseComponentArray& other) = 0;
     virtual void addComponent(EntityID to, const nlohmann::json& jsonComponent)=0;
@@ -130,7 +130,7 @@ private:
     bool hasComponent(EntityID entityID) const override;
     void updateComponent(EntityID entityID, const TComponent& newValue);
     virtual void handleEntityDestroyed(EntityID entityID) override;
-    virtual void handleFrameBegin() override;
+    virtual void handlePreSimulationStep() override;
     virtual void copyComponent(EntityID to, EntityID from) override;
     virtual void copyComponent(EntityID to, EntityID from, BaseComponentArray& other) override;
 
@@ -201,7 +201,7 @@ private:
 
     void handleEntityDestroyed(EntityID entityID);
 
-    void handleFrameBegin();
+    void handlePreSimulationStep();
 
     void unregisterAll();
 
@@ -242,11 +242,19 @@ private:
     void enableEntity(EntityID entityID);
     void disableEntity(EntityID entityID);
 
-    virtual void onCreated(){};
-    virtual void onDestroyed(){};
-    virtual void onEntityEnabled(EntityID entityID){};
-    virtual void onEntityDisabled(EntityID entityID){};
-    virtual void onEntityUpdated(EntityID entityID){};
+    virtual void onEntityEnabled(EntityID entityID) {}
+    virtual void onEntityDisabled(EntityID entityID) {}
+    virtual void onEntityUpdated(EntityID entityID) {}
+
+    virtual void onInitialize() {}
+    virtual void onSimulationActivated() {}
+    virtual void onSimulationPreStep(uint32_t simStepMillis) {}
+    virtual void onSimulationPostStep(uint32_t simStepMillis) {}
+    virtual void onPostSimulationLoop(float simulationProgress) {}
+    virtual void onPreRenderStep(float simulationProgress) {}
+    virtual void onPostRenderStep(float simulationProgress) {}
+    virtual void onSimulationDeactivated() {}
+    virtual void onDestroyed()  {}
 
     std::set<EntityID> mEnabledEntities {};
     std::set<EntityID> mDisabledEntities {};
@@ -290,7 +298,6 @@ private:
 
     void unregisterAll();
 
-    void initialize();
 
     template<typename TSystem>
     std::shared_ptr<TSystem> getSystem();
@@ -312,13 +319,19 @@ private:
     bool isEnabled(EntityID entityID);
 
     void handleEntitySignatureChanged(EntityID entityID, Signature signature);
-
     void handleEntityDestroyed(EntityID entityID);
-
     void handleEntityUpdated(EntityID entityID, Signature signature);
-
     template<typename TSystem>
     void handleEntityUpdatedBySystem(EntityID entityID, Signature signature);
+
+    void handleInitialize();
+    void handleSimulationActivated();
+    void handleSimulationPreStep(uint32_t simStepMillis);
+    void handleSimulationPostStep(uint32_t simStepMillis);
+    void handlePostSimulationLoop(float simulationProgress);
+    void handlePreRenderStep(float simulationProgress);
+    void handlePostRenderStep(float simulationProgress);
+    void handleSimulationDeactivated();
 
     std::unordered_map<std::string, Signature> mNameToSignature {};
     std::unordered_map<std::string, SystemType> mNameToSystemType {};
@@ -360,9 +373,20 @@ public:
     template <typename ...TComponents>
     static Entity createEntityPrototype(TComponents...components);
 
+    // Simulation lifecycle events
     void initialize();
+    void activateSimulation();
+    void deactivateSimulation();
+
+    // Simulation loop events
+    void preSimulationStep(uint32_t simStepMillis);
+    void simulationStep(uint32_t simStepMillis);
+    void postSimulationLoop(float simulationProgress);
+    void preRenderStep(float simulationProgress);
+    void postRenderStep(float simulationProgress);
+
+
     void cleanup();
-    void beginFrame();
     inline WorldID getID() const { return mID; }
 
 private:
@@ -560,7 +584,7 @@ void ComponentArray<TComponent>::handleEntityDestroyed(EntityID entityID) {
 }
 
 template<typename TComponent>
-void ComponentArray<TComponent>::handleFrameBegin() {
+void ComponentArray<TComponent>::handlePreSimulationStep() {
     std::copy<typename std::vector<TComponent>::iterator, typename std::vector<TComponent>::iterator>(
         mComponentsNext.begin(), mComponentsNext.end(), 
         mComponentsPrevious.begin()

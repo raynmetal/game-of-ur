@@ -4,6 +4,7 @@
 #include <memory>
 
 #include "util.hpp"
+#include "render_system.hpp"
 #include "ecs_world.hpp"
 #include "scene_system.hpp"
 
@@ -237,9 +238,21 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::getNode(const std::string& where) 
 }
 
 void SceneNodeCore::setParentViewport(std::shared_ptr<SceneNodeCore> node, std::shared_ptr<ViewportNode> newViewport)  {
+    assert(node && "Cannot modify the parent viewport of a nonexistent node");
+
+    if(auto nodeAsViewport = std::dynamic_pointer_cast<ViewportNode>(node)) {
+        if(auto previousParentViewport = node->mParentViewport.lock()) {
+            previousParentViewport->mChildViewports.erase(nodeAsViewport);
+        }
+        if(newViewport) {
+            newViewport->mChildViewports.insert(nodeAsViewport);
+        }
+    }
+
     node->mParentViewport = newViewport;
-    for(auto& descendant: node->getDescendants()) {
-        descendant->mParentViewport = descendant->mParent.lock()->getLocalViewport();
+
+    for(auto& child: node->getChildren()) {
+        setParentViewport(child, node->getLocalViewport());
     }
 }
 
@@ -266,8 +279,9 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::disconnectNode(std::shared_ptr<Sce
     if(parent) {
         parent->mChildren.erase(node->mName);
     }
-    node->mParent.reset();
+
     setParentViewport(node, nullptr);
+    node->mParent.reset();
     return node;
 }
 
@@ -335,8 +349,7 @@ void SceneNodeCore::validateName(const std::string& nodeName) {
 std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(Placement{}, name) };
     if(!inheritsWorld) {
-        newViewport->mOwnWorld = std::unique_ptr<ECSWorld>(new ECSWorld { ECSWorld::getPrototype().instantiate() });
-        newViewport->joinWorld(*newViewport->mOwnWorld);
+        newViewport->createAndJoinWorld();
     }
     return newViewport;
 }
@@ -344,18 +357,16 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool
 std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::string& name, bool inheritsWorld) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(key, Placement{}, name) };
     if(!inheritsWorld) {
-        newViewport->mOwnWorld = std::unique_ptr<ECSWorld>(new ECSWorld { ECSWorld::getPrototype().instantiate() });
-        newViewport->joinWorld(*newViewport->mOwnWorld);
+        newViewport->createAndJoinWorld();
     }
     return newViewport;
 }
 std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewportNodeDescription) {
     std::shared_ptr<ViewportNode> newViewport {BaseSceneNode<ViewportNode>::create(viewportNodeDescription)};
-    newViewport->updateComponent<Placement>(Placement {});
+    newViewport->updateComponent<Placement>(Placement {}); // override scene file placement
     assert(viewportNodeDescription.find("inherits_world") != viewportNodeDescription.end() && "Viewport descriptions must contain the \"inherits_world\" boolean attribute");
     if(viewportNodeDescription.at("inherits_world").get<bool>() == false) {
-        newViewport->mOwnWorld = std::unique_ptr<ECSWorld>(new ECSWorld { ECSWorld::getPrototype().instantiate() });
-        newViewport->joinWorld(*newViewport->mOwnWorld);
+        newViewport->createAndJoinWorld();
     }
     return newViewport;
 }
@@ -367,14 +378,36 @@ std::shared_ptr<SceneNodeCore> ViewportNode::clone() const {
     std::shared_ptr<SceneNodeCore> newSceneNode { new ViewportNode{*this}, &SceneNodeCore_del_ };
     std::shared_ptr<ViewportNode> newViewport { std::static_pointer_cast<ViewportNode>(newSceneNode) };
     if(mOwnWorld) {
-        newViewport->mOwnWorld = std::unique_ptr<ECSWorld>(new ECSWorld{ ECSWorld::getPrototype().instantiate() });
-        newViewport->joinWorld(*newViewport->mOwnWorld);
+        newViewport->createAndJoinWorld();
     }
     return newViewport;
 }
 
+void ViewportNode::createAndJoinWorld() {
+    mOwnWorld = std::unique_ptr<ECSWorld>(new ECSWorld { ECSWorld::getPrototype().instantiate() });
+    joinWorld(*mOwnWorld);
+    mOwnWorld->initialize();
+}
 void ViewportNode::onActivated() {
-    if(mOwnWorld) mOwnWorld->initialize();
+    if(!mOwnWorld) return;
+    mOwnWorld->activateSimulation();
+}
+void ViewportNode::onDeactivated() {
+    if(!mOwnWorld) return;
+    mOwnWorld->deactivateSimulation();
+}
+
+std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgress) {
+    if(mUpdateMode != UpdateMode::NEVER) {
+        ECSWorld& world = getWorld();
+        world.preRenderStep(simulationProgress);
+        mTextureResult = world.getSystem<RenderSystem>()->execute(simulationProgress);
+        world.postRenderStep(simulationProgress);
+    }
+    if(mUpdateMode == UpdateMode::ONCE) {
+        mUpdateMode = UpdateMode::NEVER;
+    }
+    return mTextureResult;
 }
 
 ActionDispatch& ViewportNode::getActionDispatch() {
@@ -385,8 +418,61 @@ std::shared_ptr<ViewportNode> ViewportNode::getLocalViewport() {
     return std::static_pointer_cast<ViewportNode>(shared_from_this());
 }
 
-void SceneSystem::ApploopEventHandler::onApplicationEnd() {
-    mSystem->mRootNode->removeChildren();
+
+void SceneSystem::simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions) {
+    std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
+    while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
+        viewportsToVisit.pop();
+        if(!viewport->isActive()) continue;
+
+        if(viewport->mOwnWorld) {
+            viewport->mOwnWorld->preSimulationStep(simStepMillis);
+        }
+
+        for(auto& childViewport: viewport->mChildViewports) {
+            viewportsToVisit.push(childViewport);
+        }
+    }
+
+    mRootNode->mActionDispatch.dispatchActions(triggeredActions);
+
+    viewportsToVisit.push(mRootNode);
+    while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
+        viewportsToVisit.pop();
+        if(!viewport->isActive()) continue;
+
+        if(viewport->mOwnWorld) {
+            viewport->mOwnWorld->simulationStep(simStepMillis);
+        }
+        for(auto& childViewport: viewport->mChildViewports) {
+            viewportsToVisit.push(childViewport);
+        }
+    }
+}
+void SceneSystem::postSimulationLoop(float simulationProgress) {
+    updateTransforms();
+    std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
+    while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
+        viewportsToVisit.pop();
+        if(!viewport->isActive()) continue;
+        
+        if(viewport->mOwnWorld) {
+            viewport->mOwnWorld->postSimulationLoop(simulationProgress);
+        }
+
+        for(auto& childViewport: viewport->mChildViewports) {
+            viewportsToVisit.push(childViewport);
+        }
+    }
+}
+
+void SceneSystem::render(float simulationProgress) {
+    std::shared_ptr<Texture> result {mRootNode->fetchRenderResult(simulationProgress)};
+    mRootNode->mOwnWorld->getSystem<RenderSystem>()->renderToScreen(result);
+}
+
+void SceneSystem::onApplicationEnd() {
+    mRootNode->removeChildren();
 }
 
 bool SceneSystem::inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const {
@@ -583,21 +669,19 @@ void SceneSystem::onWorldEntityUpdate(UniversalEntityID UniversalEntityID) {
     markDirty(UniversalEntityID);
 }
 
-void SceneSystem::ApploopEventHandler::onPostSimulationStep(float simulationProgress) {
-    mSystem->updateTransforms();
-}
-
-void SceneSystem::ApploopEventHandler::onApplicationInitialize() {
-    mSystem->mRootNode = ViewportNode::create(SceneNodeCore::Key{}, kSceneRootName, false);
+void SceneSystem::onApplicationInitialize() {
+    mRootNode = ViewportNode::create(SceneNodeCore::Key{}, kSceneRootName, false);
 
     // Manual setup of root node, since it skips the normal activation procedure
-    mSystem->mRootNode->mStateFlags |= SceneNodeCore::StateFlags::ACTIVE | SceneNodeCore::StateFlags::ENABLED;
-    mSystem->mEntityToNode.insert({mSystem->mRootNode->getUniversalEntityID(), mSystem->mRootNode});
-    mSystem->mActiveEntities.insert(mSystem->mRootNode->getUniversalEntityID());
-    mSystem->mRootNode->updateComponent<Transform>({glm::mat4{1.f}});
-    mSystem->mRootNode->onActivated(); 
-
-    mSystem->updateTransforms();
+    mRootNode->mStateFlags |= SceneNodeCore::StateFlags::ACTIVE | SceneNodeCore::StateFlags::ENABLED;
+    mEntityToNode.insert({mRootNode->getUniversalEntityID(), mRootNode});
+    mActiveEntities.insert(mRootNode->getUniversalEntityID());
+    mRootNode->updateComponent<Transform>({glm::mat4{1.f}});
+    mRootNode->onActivated(); 
+}
+void SceneSystem::onApplicationStart() {
+    mRootNode->mOwnWorld->preSimulationStep(0);
+    updateTransforms();
 }
 
 void SceneSystem::SceneSubworld::onEntityUpdated(EntityID entityID) {

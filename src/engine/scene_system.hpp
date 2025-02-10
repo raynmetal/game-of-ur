@@ -15,7 +15,6 @@
 #include "texture.hpp"
 #include "resource_database.hpp"
 #include "input_system/input_system.hpp"
-#include "apploop_events.hpp"
 #include "scene_components.hpp"
 
 class SceneNodeCore;
@@ -237,10 +236,12 @@ public:
     };
 
     enum class UpdateMode: uint8_t {
-        ON_FETCH=0,
+        NEVER=0,
+        ONCE,
+        ON_FETCH,
         // Who ensures this gets done? For that matter, who ensures that 
         // simulation steps get done?
-        ONCE_EVERY_X_RENDER_FRAMES, 
+        // ONCE_EVERY_X_RENDER_FRAMES,
     };
 
     static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld);
@@ -249,6 +250,7 @@ public:
     static inline std::string getResourceTypeName() { return "ViewportNode"; }
 
     std::shared_ptr<ViewportNode> getLocalViewport() override;
+    std::shared_ptr<Texture> fetchRenderResult(float simulationProgress);
 
     // void requestDimensions(glm::u16vec2 requestedDimensions);
     // void setStretch(Stretch stretch);
@@ -273,6 +275,7 @@ protected:
     {}
     std::unique_ptr<ECSWorld> mOwnWorld { nullptr };
     void onActivated() override;
+    void onDeactivated() override;
 
 private:
     static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld);
@@ -282,14 +285,21 @@ private:
     {}
     std::shared_ptr<SceneNodeCore> clone() const override;
 
+    void createAndJoinWorld();
+
     ActionDispatch mActionDispatch {};
-    // std::shared_ptr<Texture> mTextureResult { nullptr };
+    std::set<std::shared_ptr<ViewportNode>, std::owner_less<std::shared_ptr<ViewportNode>>> mChildViewports {};
+
+    std::shared_ptr<Texture> mTextureResult { nullptr };
+
+    UpdateMode mUpdateMode { UpdateMode::ON_FETCH };
     // glm::u16vec2 mBaseDimensions { 800, 600 };
     // glm::u16vec2 mComputedDimensions { 800, 600 };
     // glm::u16vec2 mRequestedDimensions { 800, 600 };
     // glm::u16vec2 mComputedOffset { 0, 0 };
 
 friend class BaseSceneNode<ViewportNode>;
+friend class SceneNodeCore;
 friend class SceneSystem;
 };
 
@@ -311,8 +321,10 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::StretchMode, {
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::UpdateMode, {
+    {ViewportNode::UpdateMode::NEVER, "never"},
+    {ViewportNode::UpdateMode::ONCE, "once"},
     {ViewportNode::UpdateMode::ON_FETCH, "on_fetch"},
-    {ViewportNode::UpdateMode::ONCE_EVERY_X_RENDER_FRAMES, "once_every_x_render_frames"},
+    // {ViewportNode::UpdateMode::ONCE_EVERY_X_RENDER_FRAMES, "once_every_x_render_frames"},
 });
 
 class SceneSystem: public System<SceneSystem, Placement, Transform> {
@@ -336,17 +348,17 @@ public:
     ECSWorld& getRootWorld() const;
     ViewportNode& getRootViewport() const;
 
+    void onApplicationInitialize();
+    void onApplicationStart();
+
+    void simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
+    void updateTransforms();
+    void postSimulationLoop(float simulationProgress);
+    void render(float simulationProgress);
+
+    void onApplicationEnd();
+
 private:
-    class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
-    public:
-        ApploopEventHandler(){}
-        inline void initializeEventHandler(SceneSystem* pSystem){ mSystem = pSystem; }
-    private:
-        void onPostSimulationStep(float simulationProgress) override;
-        void onApplicationInitialize() override;
-        void onApplicationEnd() override;
-        SceneSystem* mSystem;
-    };
     class SceneSubworld: public System<SceneSubworld, Placement, Transform> {
     public:
         SceneSubworld(ECSWorld& world):
@@ -361,7 +373,6 @@ private:
     bool inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const;
     bool inScene(UniversalEntityID UniversalEntityID) const;
     void markDirty(UniversalEntityID UniversalEntityID);
-    void updateTransforms();
 
     Transform getLocalTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const;
     Transform getCachedWorldTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const;
@@ -376,12 +387,10 @@ private:
 
     std::shared_ptr<ViewportNode> mRootNode{ nullptr };
 
-    std::shared_ptr<ApploopEventHandler> mApploopEventHandler { ApploopEventHandler::registerHandler(this) };
     std::map<UniversalEntityID, std::shared_ptr<SceneNodeCore>, std::less<UniversalEntityID>> mEntityToNode {};
     std::set<UniversalEntityID, std::less<UniversalEntityID>> mActiveEntities {};
     std::set<UniversalEntityID, std::less<UniversalEntityID>> mComputeTransformQueue {};
 
-friend class SceneSystem::ApploopEventHandler;
 friend class SceneNodeCore;
 };
 

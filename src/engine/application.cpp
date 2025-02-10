@@ -57,7 +57,6 @@ Application::Application(const std::string& projectPath) {
 
     const std::string& rootSceneFile { projectJSON[0].at("root_scene_path").get<std::string>() };
     currentResourcePath = projectRootDirectory / rootSceneFile;
-
     mInputManager.loadInputConfiguration(inputJSON[0]);
     ResourceDatabase::addResourceDescription(
         nlohmann::json {
@@ -69,26 +68,25 @@ Application::Application(const std::string& projectPath) {
             }},
         }
     );
-}
 
-void Application::execute() {
+    mSceneSystem.lock()->onApplicationInitialize();
     mSceneSystem.lock()->addNode(
         ResourceDatabase::getRegisteredResource<SimObject>("root_scene"),
         "/"
     );
-    WindowContext& windowContext { WindowContext::getInstance() };
+}
 
-    // Timing related variables
-    uint32_t previousTicks { SDL_GetTicks() };
-    uint32_t simulationTicks { previousTicks };
+void Application::execute() {
+    WindowContext& windowContext { WindowContext::getInstance() };
+    std::shared_ptr<SceneSystem> sceneSystem { mSceneSystem.lock() };
 
     // Application loop begins
     SDL_Event event;
     bool quit {false};
-    ECSWorld& rootWorld { mSceneSystem.lock()->getRootWorld() };
-    ViewportNode& rootViewport { mSceneSystem.lock()->getRootViewport() };
-    ApploopEventDispatcher::applicationStart();
-    rootWorld.beginFrame();
+    sceneSystem->onApplicationStart();
+    // Timing related variables
+    uint32_t previousTicks { SDL_GetTicks() };
+    uint32_t simulationTicks { previousTicks };
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
@@ -112,26 +110,18 @@ void Application::execute() {
 
         // Apply simulation updates, if possible
         while(currentTicks - simulationTicks >= mSimulationStep) {
-            rootWorld.beginFrame();
+            sceneSystem->simulate(mSimulationStep, mInputManager.getTriggeredActions(simulationTicks));
             simulationTicks += mSimulationStep;
-
-            // Send inputs, if any, to their various listeners
-            std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions { mInputManager.getTriggeredActions(simulationTicks) };
-            rootViewport.getActionDispatch().dispatchActions(triggeredActions);
-
-            // update objects according to calculated delta
-            ApploopEventDispatcher::simulationStep(mSimulationStep);
         }
+
         // Calculate progress towards the next simulation step
         const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / mSimulationStep};
-        ApploopEventDispatcher::postSimulationStep(simulationProgress);
+        sceneSystem->postSimulationLoop(simulationProgress);
 
         // Render a frame
-        ApploopEventDispatcher::preRenderStep(simulationProgress);
-        rootWorld.getSystem<RenderSystem>()->execute(simulationProgress);
-        ApploopEventDispatcher::postRenderStep(simulationProgress);
+        sceneSystem->render(simulationProgress);
     }
-    ApploopEventDispatcher::applicationEnd();
+    sceneSystem->onApplicationEnd();
 }
 
 Application::~Application() {
@@ -161,7 +151,6 @@ void Application::initialize(const nlohmann::json& windowProperties) {
     // dependence
     ResourceDatabase::getInstance();
     Material::Init();
-    ApploopEventDispatcher::applicationInitialize();
 }
 
 void Application::cleanup() {

@@ -29,7 +29,7 @@ public:
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
         static std::string getSystemTypeName() { return "RenderSystem::LightQueue"; }
     private:
-        void onCreated() override;
+        void onInitialize() override;
         std::shared_ptr<StaticMesh> mSphereMesh { nullptr };
         std::shared_ptr<Material> mLightMaterial{ std::make_shared<Material>() };
     };
@@ -42,7 +42,7 @@ public:
         static std::string getSystemTypeName() { return "RenderSystem::OpaqueQueue"; }
     };
 
-    void execute(float simulationProgress);
+    std::shared_ptr<Texture> execute(float simulationProgress);
 
     void updateCameraMatrices(float simulationProgress);
 
@@ -53,10 +53,12 @@ public:
     float getGamma();
     void setExposure(float exposure);
     float getExposure();
-    std::size_t getCurrentScreenTexture ();
+    std::shared_ptr<Texture> getCurrentScreenTexture ();
+
+    void renderToScreen(std::shared_ptr<Texture> texture);
 
 private:
-    void onCreated() override;
+    void onInitialize() override;
 
     std::size_t mCurrentScreenTexture {0};
     std::vector<std::shared_ptr<Texture>> mScreenTextures {};

@@ -5,7 +5,6 @@
 #include <nlohmann/json.hpp>
 
 #include "ecs_world.hpp"
-#include "apploop_events.hpp"
 
 struct CameraProperties {
     enum class ProjectionType: uint8_t {
@@ -32,24 +31,16 @@ public:
     System<CameraSystem, Transform, CameraProperties>{world}
     {}
     void updateActiveCameraMatrices();
-    void onEntityUpdated(EntityID entityID) override;
-
     static std::string getSystemTypeName() { return "CameraSystem"; }
 private:
-    class ApploopEventHandler : public IApploopEventHandler<ApploopEventHandler> {
-    public:
-        inline void initializeEventHandler(CameraSystem* pSystem)  { mSystem = pSystem; }
-    private:
-        void onPreRenderStep(float simulationProgress) override;
-        void onApplicationStart() override;
-        CameraSystem* mSystem;
-    friend class CameraSystem;
-    };
+    void onEntityEnabled(EntityID entityID) override;
+    void onEntityDisabled(EntityID entityID) override;
+    void onEntityUpdated(EntityID entityID) override;
+    void onSimulationActivated() override;
+    void onPreRenderStep(float simulationProgress) override;
 
-    std::shared_ptr<ApploopEventHandler> mApploopEventHandler { ApploopEventHandler::registerHandler(this) };
     std::set<EntityID> mProjectionUpdateQueue {};
     std::set<EntityID> mViewUpdateQueue {};
-friend class CameraSystem::ApploopEventHandler;
 };
 
 template<>

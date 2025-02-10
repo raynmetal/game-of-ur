@@ -20,7 +20,7 @@ constexpr float MIN_GAMMA { 1.6f };
 constexpr float MAX_EXPOSURE { 15.f };
 constexpr float MIN_EXPOSURE { 0.f };
 
-void RenderSystem::LightQueue::onCreated() {
+void RenderSystem::LightQueue::onInitialize() {
     if(!ResourceDatabase::hasResourceDescription("sphereLight-10lat-5long")) {
         nlohmann::json sphereLightDescription {
             {"name", "sphereLight-10lat-5long"},
@@ -36,7 +36,7 @@ void RenderSystem::LightQueue::onCreated() {
     mSphereMesh = ResourceDatabase::getRegisteredResource<StaticMesh>("sphereLight-10lat-5long");
 }
 
-void RenderSystem::onCreated() {
+void RenderSystem::onInitialize() {
     mGeometryRenderStage = std::make_shared<GeometryRenderStage>("src/shader/geometryShader.json" );
     mLightingRenderStage = std::make_shared<LightingRenderStage>("src/shader/lightingShader.json");
     mBlurRenderStage = std::make_shared<BlurRenderStage>("src/shader/gaussianblurShader.json");
@@ -124,7 +124,6 @@ void RenderSystem::onCreated() {
 
 void RenderSystem::renderNextTexture() {
     mCurrentScreenTexture = (mCurrentScreenTexture + 1) % mScreenTextures.size();
-    mScreenRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
 }
 
 void RenderSystem::updateCameraMatrices(float simulationProgress) {
@@ -146,11 +145,11 @@ void RenderSystem::updateCameraMatrices(float simulationProgress) {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
-std::size_t RenderSystem::getCurrentScreenTexture() {
-    return mCurrentScreenTexture;
+std::shared_ptr<Texture> RenderSystem::getCurrentScreenTexture() {
+    return mScreenTextures[mCurrentScreenTexture];
 }
 
-void RenderSystem::execute(float simulationProgress) {
+std::shared_ptr<Texture> RenderSystem::execute(float simulationProgress) {
     mActiveCamera = *(getEnabledEntities().begin());
 
     updateCameraMatrices(simulationProgress);
@@ -164,13 +163,17 @@ void RenderSystem::execute(float simulationProgress) {
 
     mBlurRenderStage->execute();
     mTonemappingRenderStage->execute();
-    mScreenRenderStage->execute();
 
     if(GLenum openglError = glGetError()) {
         std::cout << "OpenGL error: " << openglError << ", " << glewGetErrorString(openglError) << std::endl;
         assert(!openglError && "Error during render system execution step");
     }
+    return mScreenTextures[mCurrentScreenTexture];
+}
 
+void RenderSystem::renderToScreen(std::shared_ptr<Texture> texture) {
+    mScreenRenderStage->attachTexture("renderSource", texture);
+    mScreenRenderStage->execute();
     WindowContext::getInstance().swapBuffers();
 }
 

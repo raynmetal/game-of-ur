@@ -145,9 +145,52 @@ bool BaseSystem::isRegistered(EntityID entityID) const {
     );
 }
 
-void SystemManager::initialize() {
+void SystemManager::handleInitialize() {
     for(auto& pair: mNameToSystem) {
-        pair.second->onCreated();
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onInitialize();
+    }
+}
+void SystemManager::handleSimulationActivated() {
+    for(auto& pair: mNameToSystem) {
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onSimulationActivated();
+    }
+}
+void SystemManager::handleSimulationPreStep(uint32_t simStepMillis) {
+    for(auto& pair: mNameToSystem) {
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onSimulationPreStep(simStepMillis);
+    }
+}
+void SystemManager::handleSimulationPostStep(uint32_t simStepMillis) {
+    for(auto& pair: mNameToSystem) {
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onSimulationPostStep(simStepMillis);
+    }
+}
+void SystemManager::handlePostSimulationLoop(float simulationProgress) {
+    for(auto& pair: mNameToSystem) {
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onPostSimulationLoop(simulationProgress);
+    }
+}
+void SystemManager::handlePreRenderStep(float simulationProgress) {
+    for(auto& pair: mNameToSystem) {
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onPreRenderStep(simulationProgress);
+    }
+}
+void SystemManager::handlePostRenderStep(float simulationProgress) {
+    for(auto& pair: mNameToSystem) {
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onPostRenderStep(simulationProgress);
+    }
+}
+void SystemManager::handleSimulationDeactivated() {
+    for(auto& pair: mNameToSystem) {
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onSimulationDeactivated();
     }
 }
 
@@ -342,10 +385,6 @@ ECSWorld ECSWorld::instantiate() const {
     return newWorld;
 }
 
-void ECSWorld::initialize() {
-    mSystemManager.initialize();
-}
-
 void ECSWorld::disableEntity(EntityID entityID) {
     Signature entitySignature {mComponentManager.getSignature(entityID)};
     mSystemManager.disableEntity(entityID, entitySignature);
@@ -367,10 +406,10 @@ void ECSWorld::destroyEntity(EntityID entityID) {
     mDeletedIDs.push_back(entityID);
 }
 
-void ComponentManager::handleFrameBegin() {
+void ComponentManager::handlePreSimulationStep() {
     for(auto& pair: mHashToComponentArray) {
         // copy "Next" buffer into "Previous" buffer
-        pair.second->handleFrameBegin();
+        pair.second->handlePreSimulationStep();
     }
 }
 
@@ -385,8 +424,32 @@ void ECSWorld::copyComponents(EntityID to, EntityID from, ECSWorld& other) {
     mSystemManager.handleEntitySignatureChanged(to, signature);
 }
 
-void ECSWorld::beginFrame() {
-    mComponentManager.handleFrameBegin();
+void ECSWorld::initialize() {
+    mSystemManager.handleInitialize();
+}
+void ECSWorld::activateSimulation() {
+    mSystemManager.handleSimulationActivated();
+}
+void ECSWorld::deactivateSimulation() {
+    mSystemManager.handleSimulationDeactivated();
+}
+
+
+void ECSWorld::preSimulationStep(uint32_t simStepMillis) {
+    mComponentManager.handlePreSimulationStep();
+    mSystemManager.handleSimulationPreStep(simStepMillis);
+}
+void ECSWorld::simulationStep(uint32_t simStepMillis) {
+    mSystemManager.handleSimulationPostStep(simStepMillis);
+}
+void ECSWorld::postSimulationLoop(float simulationProgress) {
+    mSystemManager.handlePostSimulationLoop(simulationProgress);
+}
+void ECSWorld::preRenderStep(float simulationProgress) {
+    mSystemManager.handlePreRenderStep(simulationProgress);
+}
+void ECSWorld::postRenderStep(float simulationProgress) {
+    mSystemManager.handlePostRenderStep(simulationProgress);
 }
 
 void ECSWorld::cleanup() {
