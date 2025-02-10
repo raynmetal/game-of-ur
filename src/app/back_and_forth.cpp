@@ -6,8 +6,8 @@
 
 #include "back_and_forth.hpp"
 
-void BackAndForth::update(uint32_t deltaSimtimeMillis) {
-    mElapsedTime += deltaSimtimeMillis;
+void BackAndForth::variableUpdate(uint32_t variableStepMillis) {
+    mElapsedTime += variableStepMillis;
     Placement placement  { getComponent<Placement>() };
     const float prevZ { placement.mPosition.z };
     placement.mPosition.z = glm::sin(glm::radians(mElapsedTime/10.f + getEntityID()*45.f));
@@ -22,7 +22,7 @@ void BackAndForth::update(uint32_t deltaSimtimeMillis) {
     updateComponent<Placement>(placement);
 }
 
-std::shared_ptr<BaseSimObjectAspect> BackAndForth::makeCopy() const {
+std::shared_ptr<BaseSimObjectAspect> BackAndForth::clone() const {
     return std::shared_ptr<BackAndForth>(new BackAndForth{});
 }
 

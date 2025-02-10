@@ -249,8 +249,8 @@ private:
     virtual void onInitialize() {}
     virtual void onSimulationActivated() {}
     virtual void onSimulationPreStep(uint32_t simStepMillis) {}
-    virtual void onSimulationPostStep(uint32_t simStepMillis) {}
-    virtual void onPostSimulationLoop(float simulationProgress) {}
+    virtual void onSimulationStep(uint32_t simStepMillis) {}
+    virtual void onVariableStep(float simulationProgress, uint32_t variableStepMillis) {}
     virtual void onPreRenderStep(float simulationProgress) {}
     virtual void onPostRenderStep(float simulationProgress) {}
     virtual void onSimulationDeactivated() {}
@@ -327,8 +327,8 @@ private:
     void handleInitialize();
     void handleSimulationActivated();
     void handleSimulationPreStep(uint32_t simStepMillis);
-    void handleSimulationPostStep(uint32_t simStepMillis);
-    void handlePostSimulationLoop(float simulationProgress);
+    void handleSimulationStep(uint32_t simStepMillis);
+    void handleVariableStep(float simulationProgress, uint32_t variableStepMillis);
     void handlePreRenderStep(float simulationProgress);
     void handlePostRenderStep(float simulationProgress);
     void handleSimulationDeactivated();
@@ -381,7 +381,7 @@ public:
     // Simulation loop events
     void preSimulationStep(uint32_t simStepMillis);
     void simulationStep(uint32_t simStepMillis);
-    void postSimulationLoop(float simulationProgress);
+    void variableStep(float simulationProgress, uint32_t variableStepMillis);
     void preRenderStep(float simulationProgress);
     void postRenderStep(float simulationProgress);
 

@@ -4,12 +4,12 @@ std::shared_ptr<BaseSimObjectAspect> TickSecond::create(const nlohmann::json& js
     return std::shared_ptr<TickSecond>(new TickSecond {});
 }
 
-std::shared_ptr<BaseSimObjectAspect> TickSecond::makeCopy() const {
+std::shared_ptr<BaseSimObjectAspect> TickSecond::clone() const {
     return std::shared_ptr<TickSecond>(new TickSecond {});
 }
 
-void TickSecond::update(uint32_t deltaSimTimeMillis) {
-    mTimeSinceLastTick += deltaSimTimeMillis;
+void TickSecond::variableUpdate(uint32_t variableStepMillis) {
+    mTimeSinceLastTick += variableStepMillis;
     while(mTimeSinceLastTick >= 1000) {
         mSigSecondPassed.emit();
         mTimeSinceLastTick -= 1000;

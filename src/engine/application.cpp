@@ -116,7 +116,8 @@ void Application::execute() {
 
         // Calculate progress towards the next simulation step
         const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / mSimulationStep};
-        sceneSystem->postSimulationLoop(simulationProgress);
+        sceneSystem->variableStep(simulationProgress, currentTicks - previousTicks);
+        previousTicks = currentTicks;
 
         // Render a frame
         sceneSystem->render(simulationProgress);

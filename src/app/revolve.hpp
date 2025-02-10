@@ -9,9 +9,9 @@ public:
     inline static std::string getSimObjectAspectTypeName() { return "Revolve"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
 
-    void update(uint32_t deltaSimtimeMillis) override;
+    void variableUpdate(uint32_t variableStepMillis) override;
 
-    std::shared_ptr<BaseSimObjectAspect> makeCopy() const override;
+    std::shared_ptr<BaseSimObjectAspect> clone() const override;
 private:
     Revolve (): SimObjectAspect<Revolve>{0} {}
 };

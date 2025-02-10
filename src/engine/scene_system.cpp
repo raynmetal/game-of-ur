@@ -449,7 +449,7 @@ void SceneSystem::simulate(uint32_t simStepMillis, std::vector<std::pair<ActionD
         }
     }
 }
-void SceneSystem::postSimulationLoop(float simulationProgress) {
+void SceneSystem::variableStep(float simulationProgress, uint32_t variableStepMillis) {
     updateTransforms();
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
     while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
@@ -457,13 +457,14 @@ void SceneSystem::postSimulationLoop(float simulationProgress) {
         if(!viewport->isActive()) continue;
         
         if(viewport->mOwnWorld) {
-            viewport->mOwnWorld->postSimulationLoop(simulationProgress);
+            viewport->mOwnWorld->variableStep(simulationProgress, variableStepMillis);
         }
 
         for(auto& childViewport: viewport->mChildViewports) {
             viewportsToVisit.push(childViewport);
         }
     }
+    updateTransforms();
 }
 
 void SceneSystem::render(float simulationProgress) {

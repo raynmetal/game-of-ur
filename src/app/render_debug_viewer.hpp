@@ -7,7 +7,7 @@
 class RenderDebugViewer: public SimObjectAspect<RenderDebugViewer> {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "RenderDebugViewer"; }
-    std::shared_ptr<BaseSimObjectAspect> makeCopy() const override;
+    std::shared_ptr<BaseSimObjectAspect> clone() const override;
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     SignalObserver<> mObserveWindowResized { *this, "WindowResizedObserved", [this]() { std::cout << "RenderDebugViewer: Window was resized\n"; this->printWindowProps(); } };
     SignalObserver<> mObserveWindowMinimized { *this, "WindowMinimizedObserved", [this]() { std::cout << "RenderDebugViewer: Window was minimized\n"; this->printWindowProps(); } };

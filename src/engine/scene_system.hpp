@@ -352,8 +352,8 @@ public:
     void onApplicationStart();
 
     void simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
+    void variableStep(float simulationProgress, uint32_t variableStepMillis);
     void updateTransforms();
-    void postSimulationLoop(float simulationProgress);
     void render(float simulationProgress);
 
     void onApplicationEnd();

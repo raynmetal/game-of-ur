@@ -48,7 +48,8 @@ private:
     void registerAspect();
 
     std::shared_ptr<BaseSimObjectAspect> constructAspect(const nlohmann::json& jsonAspectProperties);
-    void onSimulationPostStep(uint32_t simulationTicks) override;
+    void onSimulationStep(uint32_t simulationStepMillis) override;
+    void onVariableStep(float simulationProgress, uint32_t variableStepMillis) override;
 
     std::unordered_map<std::string, std::shared_ptr<BaseSimObjectAspect> (*)(const nlohmann::json& jsonAspectProperties)> mAspectConstructors {};
 friend class BaseSimObjectAspect;
@@ -91,7 +92,8 @@ protected:
     // SimObject& operator=(const SimObject& other);
 
 private:
-    void update(uint32_t deltaSimTimeMillis);
+    void simulationUpdate(uint32_t simStepMillis);
+    void variableUpdate(uint32_t variableStepMillis);
 
     void onActivated() override;
     void onDeactivated() override;
@@ -125,7 +127,8 @@ friend class BaseSimObjectAspect;
 class BaseSimObjectAspect : public std::enable_shared_from_this<BaseSimObjectAspect>, public SignalTracker, public IActionHandler {
 public:
     virtual ~BaseSimObjectAspect()=default;
-    virtual void update(uint32_t deltaSimTimeMillis) {}
+    virtual void simulationUpdate(uint32_t simStepMillis) {}
+    virtual void variableUpdate(uint32_t variableStepMillis) {}
 
     void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override final;
     ViewportNode& getLocalViewport();
@@ -192,7 +195,7 @@ private:
 
     void attach(SimObject* owner);
     void detach();
-    virtual std::shared_ptr<BaseSimObjectAspect> makeCopy() const = 0;
+    virtual std::shared_ptr<BaseSimObjectAspect> clone() const = 0;
 
     std::map<
         std::pair<std::string, std::string>, 

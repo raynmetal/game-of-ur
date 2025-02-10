@@ -30,7 +30,7 @@ void RenderDebugViewer::onRenderNextTexture(const ActionData& actionData, const 
     renderSystem->renderNextTexture();
 }
 
-std::shared_ptr<BaseSimObjectAspect> RenderDebugViewer::makeCopy() const {
+std::shared_ptr<BaseSimObjectAspect> RenderDebugViewer::clone() const {
     return std::shared_ptr<RenderDebugViewer>(new RenderDebugViewer {});
 }
 

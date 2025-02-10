@@ -11,7 +11,7 @@ const float ZOOM_SENSITIVITY { 1.5f };
 const float MAX_FOV {100.f};
 const float MIN_FOV {40.f};
 
-void FlyCamera::update(uint32_t deltaSimTimeMillis) {
+void FlyCamera::variableUpdate(uint32_t variableStepMillis) {
     if(!mActive) return;
 
     Placement placement { getComponent<Placement>() };
@@ -21,16 +21,13 @@ void FlyCamera::update(uint32_t deltaSimTimeMillis) {
     const glm::vec4 localRight { rotationMatrix * glm::vec4{1.f, 0.f, 0.f, 0.f} };
 
     placement.mPosition += (
-        (deltaSimTimeMillis/1000.f) * (
+        (variableStepMillis/1000.f) * (
             mVelocity.z * localForward
             +  mVelocity.x * localRight
         )
     );
     updateComponent<Placement>(placement);
 }
-
-// void FlyCamera::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-    // Enable or disable this camera's visibility in the camera system
 
 void FlyCamera::onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition){
     setActive(!mActive);
@@ -120,7 +117,7 @@ void FlyCamera::updateFOV(float dFOV) {
     updateComponent<CameraProperties>(cameraProps);
 }
 
-std::shared_ptr<BaseSimObjectAspect> FlyCamera::makeCopy() const {
+std::shared_ptr<BaseSimObjectAspect> FlyCamera::clone() const {
     return std::shared_ptr<FlyCamera>(new FlyCamera{});
 }
 

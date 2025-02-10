@@ -85,22 +85,33 @@ std::shared_ptr<BaseSimObjectAspect> SimSystem::constructAspect(const nlohmann::
     return mAspectConstructors.at(jsonAspectProperties.at("type").get<std::string>())(jsonAspectProperties);
 }
 
-void SimSystem::onSimulationPostStep(uint32_t deltaSimTimeMillis) {
+void SimSystem::onSimulationStep(uint32_t simulationStepMillis) {
     for(EntityID entity: getEnabledEntities()) {
-        getComponent<SimCore>(entity).mSimObject->update(deltaSimTimeMillis);
+        getComponent<SimCore>(entity).mSimObject->simulationUpdate(simulationStepMillis);
+    }
+}
+void SimSystem::onVariableStep(float simulationProgress, uint32_t variableStepMillis) {
+    for(EntityID entity: getEnabledEntities()) {
+        getComponent<SimCore>(entity).mSimObject->variableUpdate(variableStepMillis);
     }
 }
 
-void SimObject::update(uint32_t deltaSimTimeMillis) {
+void SimObject::simulationUpdate(uint32_t simStepMillis) {
     for(auto& pair: mSimObjectAspects) {
-        pair.second->update(deltaSimTimeMillis);
+        pair.second->simulationUpdate(simStepMillis);
+    }
+}
+
+void SimObject::variableUpdate(uint32_t variableStepMillis) {
+    for(auto& pair: mSimObjectAspects) {
+        pair.second->variableUpdate(variableStepMillis);
     }
 }
 
 void SimObject::copyAspects(const SimObject& other) {
     mSimObjectAspects.clear();
     for(auto& aspectPair: other.mSimObjectAspects) {
-        mSimObjectAspects[aspectPair.first] = aspectPair.second->makeCopy();
+        mSimObjectAspects[aspectPair.first] = aspectPair.second->clone();
         mSimObjectAspects[aspectPair.first]->mSimObject = this;
     }
 }
@@ -111,7 +122,7 @@ EntityID BaseSimObjectAspect::getEntityID() const {
 
 void SimObject::addAspect(const BaseSimObjectAspect& aspect) {
     const std::string& aspectType { aspect.getAspectTypeName() };
-    mSimObjectAspects.try_emplace(aspect.getAspectTypeName(), aspect.makeCopy());
+    mSimObjectAspects.try_emplace(aspect.getAspectTypeName(), aspect.clone());
     mSimObjectAspects.at(aspectType)->attach(this);
 }
 
