@@ -346,16 +346,19 @@ void SceneNodeCore::validateName(const std::string& nodeName) {
     assert(containsValidCharacters && "Scene node name may contain only alphanumeric characters and underscores");
 }
 
-std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld) {
+std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(Placement{}, name) };
+    newViewport->mBaseDimensions = baseDimensions;
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
     return newViewport;
 }
 
-std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::string& name, bool inheritsWorld) {
+
+std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(key, Placement{}, name) };
+    newViewport->mBaseDimensions = baseDimensions;
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
@@ -377,6 +380,7 @@ std::shared_ptr<ViewportNode> ViewportNode::copy(const std::shared_ptr<const Vie
 std::shared_ptr<SceneNodeCore> ViewportNode::clone() const {
     std::shared_ptr<SceneNodeCore> newSceneNode { new ViewportNode{*this}, &SceneNodeCore_del_ };
     std::shared_ptr<ViewportNode> newViewport { std::static_pointer_cast<ViewportNode>(newSceneNode) };
+    newViewport->mBaseDimensions = mBaseDimensions;
     if(mOwnWorld) {
         newViewport->createAndJoinWorld();
     }
@@ -391,22 +395,150 @@ void ViewportNode::createAndJoinWorld() {
 void ViewportNode::onActivated() {
     if(!mOwnWorld) return;
     mOwnWorld->activateSimulation();
+    mOwnWorld->preSimulationStep(0);
 }
 void ViewportNode::onDeactivated() {
     if(!mOwnWorld) return;
     mOwnWorld->deactivateSimulation();
 }
 
-std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgress) {
-    if(mUpdateMode != UpdateMode::NEVER) {
-        ECSWorld& world = getWorld();
-        world.preRenderStep(simulationProgress);
-        mTextureResult = world.getSystem<RenderSystem>()->execute(simulationProgress);
-        world.postRenderStep(simulationProgress);
+void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
+    assert(requestDimensions.x * requestDimensions.y > 0 && "Request dimensions cannot contain 0");
+    std::shared_ptr<RenderSystem> renderSystem { getWorld().getSystem<RenderSystem>() };
+    const float requestAspect { static_cast<float>(requestDimensions.x)/static_cast<float>(requestDimensions.y) };
+    const float baseAspect { static_cast<float>(mBaseDimensions.x)/static_cast<float>(mBaseDimensions.y) };
+    glm::vec2 requestToBaseRatio { 
+        static_cast<float>(requestDimensions.x) / static_cast<float>(mBaseDimensions.x),
+        static_cast<float>(requestDimensions.y) / static_cast<float>(mBaseDimensions.y)
+    };
+    mRequestedDimensions = requestDimensions;
+
+    if(mResizeType != ResizeType::OFF) {
+        switch(mResizeMode)  {
+            case ResizeMode::FIXED_ASPECT:
+                if(requestAspect > baseAspect) {
+                    mComputedDimensions = { requestToBaseRatio.y * mBaseDimensions.x, mRequestedDimensions.y };
+
+                } else {
+                    mComputedDimensions = { mRequestedDimensions.x, requestToBaseRatio.x * mBaseDimensions.y };
+                }
+
+            break;
+            case ResizeMode::EXPAND_HORIZONTALLY:
+                mComputedDimensions.x = mRequestedDimensions.x;
+
+                // Bigger, so aspect ratio does not matter. Clamp Y
+                if(requestToBaseRatio.y > 1.f && requestToBaseRatio.x > 1.f) { 
+                    mComputedDimensions.y = mBaseDimensions.y;
+                
+                // Shorter but wider aspect. Y is full height of request
+                } else if (requestToBaseRatio.y <= 1.f && requestAspect > baseAspect) {
+                    mComputedDimensions.y = mRequestedDimensions.y;
+
+                // Taller aspect, but narrower than base. Shrink Y in proportion to X, preserving aspect in render
+                } else /*if (requestToBaseRatio.x <= 1.f && requestAspect <= baseAspect)*/ {
+                    mComputedDimensions.y = requestToBaseRatio.x * mBaseDimensions.y;
+                } 
+
+            break;
+            case ResizeMode::EXPAND_VERTICALLY:
+                mComputedDimensions.y = mRequestedDimensions.y;
+
+                // Bigger, so aspect ratio does not matter. Clamp X
+                if(requestToBaseRatio.x > 1.f && requestToBaseRatio.y > 1.f) {
+                    mComputedDimensions.x = mBaseDimensions.x;
+                
+                // Narrower, but taller aspect. X is full width of the request.
+                } else if (requestToBaseRatio.x <= 1.f && requestAspect <= baseAspect) {
+                    mComputedDimensions.x = mRequestedDimensions.x;
+
+                // Wider aspect, but shorter than base. Shrink X in proportion to Y, preserving aspect in render
+                } else {
+                    mComputedDimensions.x = requestToBaseRatio.y * mBaseDimensions.x;
+                }
+            break;
+            case ResizeMode::EXPAND_FILL:
+                mComputedDimensions = mRequestedDimensions;
+            break;
+        }
     }
-    if(mUpdateMode == UpdateMode::ONCE) {
-        mUpdateMode = UpdateMode::NEVER;
+
+    switch(mResizeType) {
+        case ResizeType::OFF:
+            mComputedDimensions = mBaseDimensions;
+            renderSystem->setRenderProperties(
+                mBaseDimensions, 
+                requestDimensions,
+                {0,0,mComputedDimensions.x, mComputedDimensions.y}
+            );
+        break;
+        case ResizeType::TEXTURE_DIMENSIONS:
+           renderSystem->setRenderProperties(
+                glm::mat2{mRenderScale} * mBaseDimensions,
+                requestDimensions,
+                {0,0,mComputedDimensions.x, mComputedDimensions.y}
+            );
+        break;
+        case ResizeType::VIEWPORT_DIMENSIONS:
+            renderSystem->setRenderProperties(
+                glm::mat2{mRenderScale} * mComputedDimensions, 
+                requestDimensions,
+                {0,0,mComputedDimensions.x, mComputedDimensions.y}
+            );
+        break;
     }
+}
+
+void ViewportNode::setResizeType(ResizeType resizeType) {
+    if(mResizeType == resizeType) return;
+    mResizeType = resizeType;
+    requestDimensions(mRequestedDimensions);
+}
+void ViewportNode::setResizeMode(ResizeMode resizeMode) {
+    if(mResizeMode == resizeMode) return;
+    mResizeMode = resizeMode;
+    requestDimensions(mRequestedDimensions);
+}
+void ViewportNode::setUpdateMode(UpdateMode updateMode) {
+    if(mUpdateMode == updateMode) return;
+    mUpdateMode = updateMode;
+}
+void ViewportNode::setFPSCap(float fpsCap) {
+    assert(mFPSCap > 0.f && "FPS cap cannot be negative or zero");
+    mFPSCap = mFPSCap;
+}
+void ViewportNode::setRenderScale(float renderScale) {
+    assert(mFPSCap > 0.f && "Render scale cannot be negative or zero");
+    mRenderScale = renderScale;
+    requestDimensions(mRequestedDimensions);
+}
+
+std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgress, uint32_t variableStep) {
+    assert(mFPSCap > 0.f && "FPS cannot be negative or zero");
+    const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mFPSCap)};
+    ECSWorld& world = getWorld();
+    mTimeSinceLastRender += variableStep;
+    if(mTimeSinceLastRender > thresholdTime) mTimeSinceLastRender = thresholdTime;
+    bool renderOnce { false };
+    switch (mUpdateMode) {
+        case UpdateMode::ONCE:
+            mUpdateMode = UpdateMode::NEVER;
+            renderOnce = true;
+
+        case UpdateMode::CAP_FPS:
+            if(!renderOnce && mTimeSinceLastRender < thresholdTime)
+                break;
+
+        case UpdateMode::ON_FETCH:
+            mTimeSinceLastRender = 0;
+            world.preRenderStep(simulationProgress);
+            world.getSystem<RenderSystem>()->execute(simulationProgress);
+            world.postRenderStep(simulationProgress);
+            mTextureResult = world.getSystem<RenderSystem>()->getCurrentScreenTexture();
+        case UpdateMode::NEVER:
+        break;
+    }
+
     return mTextureResult;
 }
 
@@ -444,13 +576,14 @@ void SceneSystem::simulate(uint32_t simStepMillis, std::vector<std::pair<ActionD
         if(viewport->mOwnWorld) {
             viewport->mOwnWorld->simulationStep(simStepMillis);
         }
+
         for(auto& childViewport: viewport->mChildViewports) {
             viewportsToVisit.push(childViewport);
         }
     }
+    updateTransforms();
 }
 void SceneSystem::variableStep(float simulationProgress, uint32_t variableStepMillis) {
-    updateTransforms();
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
     while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
         viewportsToVisit.pop();
@@ -467,9 +600,9 @@ void SceneSystem::variableStep(float simulationProgress, uint32_t variableStepMi
     updateTransforms();
 }
 
-void SceneSystem::render(float simulationProgress) {
-    std::shared_ptr<Texture> result {mRootNode->fetchRenderResult(simulationProgress)};
-    mRootNode->mOwnWorld->getSystem<RenderSystem>()->renderToScreen(result);
+void SceneSystem::render(float simulationProgress, uint32_t variableStep) {
+    mRootNode->fetchRenderResult(simulationProgress, variableStep);
+    mRootNode->mOwnWorld->getSystem<RenderSystem>()->renderToScreen();
 }
 
 void SceneSystem::onApplicationEnd() {
@@ -671,7 +804,7 @@ void SceneSystem::onWorldEntityUpdate(UniversalEntityID UniversalEntityID) {
 }
 
 void SceneSystem::onApplicationInitialize() {
-    mRootNode = ViewportNode::create(SceneNodeCore::Key{}, kSceneRootName, false);
+    mRootNode = ViewportNode::create(SceneNodeCore::Key{}, kSceneRootName, false, {800, 600});
 
     // Manual setup of root node, since it skips the normal activation procedure
     mRootNode->mStateFlags |= SceneNodeCore::StateFlags::ACTIVE | SceneNodeCore::StateFlags::ENABLED;
@@ -680,8 +813,8 @@ void SceneSystem::onApplicationInitialize() {
     mRootNode->updateComponent<Transform>({glm::mat4{1.f}});
     mRootNode->onActivated(); 
 }
+
 void SceneSystem::onApplicationStart() {
-    mRootNode->mOwnWorld->preSimulationStep(0);
     updateTransforms();
 }
 

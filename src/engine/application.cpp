@@ -70,6 +70,7 @@ Application::Application(const std::string& projectPath) {
     );
 
     mSceneSystem.lock()->onApplicationInitialize();
+    mSceneSystem.lock()->getRootViewport().requestDimensions(WindowContext::getInstance().getDimensions());
     mSceneSystem.lock()->addNode(
         ResourceDatabase::getRegisteredResource<SimObject>("root_scene"),
         "/"
@@ -80,13 +81,21 @@ void Application::execute() {
     WindowContext& windowContext { WindowContext::getInstance() };
     std::shared_ptr<SceneSystem> sceneSystem { mSceneSystem.lock() };
 
+    SignalObserver<> onWindowResized { mSignalTracker, "onWindowResized", [this, &sceneSystem, &windowContext]() {
+        sceneSystem->getRootViewport().requestDimensions(windowContext.getDimensions());
+    }};
+    onWindowResized.connectTo(windowContext.mSigWindowResized);
+    windowContext.mSigWindowResized.emit();
+
+
+    // Timing related variables
+    uint32_t previousTicks { SDL_GetTicks() };
+    uint32_t simulationTicks { previousTicks };
+
     // Application loop begins
     SDL_Event event;
     bool quit {false};
     sceneSystem->onApplicationStart();
-    // Timing related variables
-    uint32_t previousTicks { SDL_GetTicks() };
-    uint32_t simulationTicks { previousTicks };
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
@@ -105,22 +114,25 @@ void Application::execute() {
             if(quit) break;
         }
         if(quit) break;
+
         // update time related variables
-        GLuint currentTicks { SDL_GetTicks() };
-
-        // Apply simulation updates, if possible
-        while(currentTicks - simulationTicks >= mSimulationStep) {
-            sceneSystem->simulate(mSimulationStep, mInputManager.getTriggeredActions(simulationTicks));
-            simulationTicks += mSimulationStep;
-        }
-
-        // Calculate progress towards the next simulation step
-        const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / mSimulationStep};
-        sceneSystem->variableStep(simulationProgress, currentTicks - previousTicks);
+        uint32_t currentTicks { SDL_GetTicks() };
+        uint32_t variableStep { currentTicks - previousTicks };
         previousTicks = currentTicks;
 
-        // Render a frame
-        sceneSystem->render(simulationProgress);
+        // apply simulation updates, if possible
+        while(currentTicks - simulationTicks >= mSimulationStep) {
+            const uint32_t updatedSimulationTicks = simulationTicks + mSimulationStep;
+            sceneSystem->simulate(mSimulationStep, mInputManager.getTriggeredActions(updatedSimulationTicks));
+            simulationTicks = updatedSimulationTicks;
+        }
+
+        // calculate progress towards the next simulation step, apply variable update
+        const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / mSimulationStep};
+        sceneSystem->variableStep(simulationProgress, variableStep);
+
+        // render a frame (or, well, leave it up to the root viewport configuration really)
+        sceneSystem->render(simulationProgress, variableStep);
     }
     sceneSystem->onApplicationEnd();
 }
@@ -143,14 +155,12 @@ Application& Application::getInstance() {
 }
 
 void Application::initialize(const nlohmann::json& windowProperties) {
-    // IMPORTANT: call get instance, just to initialize the window
-    // TODO: stupid name bound to trip me up sooner or later. Replace it.
     WindowContext::initialize(windowProperties);
 
-    // The framebuffer resource manager depends on the texture resource manager existing (especially 
-    // during destruction at end of program.) Instantiate these managers in reverse order of their
-    // dependence
+    // IMPORTANT: call get instance, just to initialize the window
+    // TODO: stupid name bound to trip me up sooner or later. Replace it.
     ResourceDatabase::getInstance();
+
     Material::Init();
 }
 

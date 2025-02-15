@@ -42,23 +42,26 @@ public:
         static std::string getSystemTypeName() { return "RenderSystem::OpaqueQueue"; }
     };
 
-    std::shared_ptr<Texture> execute(float simulationProgress);
+    void execute(float simulationProgress);
 
     void updateCameraMatrices(float simulationProgress);
 
 
     /* Set the texture to be rendered to the screen by its relative index */
     void renderNextTexture ();
+    void setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions);
+
     void setGamma(float gamma);
     float getGamma();
     void setExposure(float exposure);
     float getExposure();
-    std::shared_ptr<Texture> getCurrentScreenTexture ();
 
-    void renderToScreen(std::shared_ptr<Texture> texture);
+    std::shared_ptr<Texture> getCurrentScreenTexture ();
+    void renderToScreen();
 
 private:
     void onInitialize() override;
+    void copyAndResize();
 
     std::size_t mCurrentScreenTexture {0};
     std::vector<std::shared_ptr<Texture>> mScreenTextures {};
@@ -71,10 +74,12 @@ private:
     std::shared_ptr<LightingRenderStage> mLightingRenderStage { nullptr };
     std::shared_ptr<BlurRenderStage> mBlurRenderStage { nullptr };
     std::shared_ptr<TonemappingRenderStage> mTonemappingRenderStage { nullptr };
+    std::shared_ptr<ResizeRenderStage> mResizeRenderStage { nullptr };
     std::shared_ptr<ScreenRenderStage> mScreenRenderStage { nullptr };
 
     float mGamma { 2.f };
     float mExposure { 1.f };
+    bool mRerendered { true };
 };
 
 #endif

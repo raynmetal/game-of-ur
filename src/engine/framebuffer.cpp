@@ -174,17 +174,13 @@ std::shared_ptr<IResource> FramebufferFromDescription::createResource(const nloh
             std::string colorBufferName {
                 "framebuffer_" + std::to_string(framebuffer) + "::color_buffer_" + std::to_string(i)
             };
-            nlohmann::json colorBufferDescription { 
-                {"name", colorBufferName},
+            nlohmann::json colorBufferDescription {
                 {"type", Texture::getResourceTypeName()},
                 {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
-                {"parameters", colorBufferParams[i]}
+                {"parameters", colorBufferParams[i]},
             };
-            ResourceDatabase::addResourceDescription(
-                colorBufferDescription
-            );
             textureHandles.push_back(
-                ResourceDatabase::getRegisteredResource<Texture>(colorBufferName)
+                ResourceDatabase::constructAnonymousResource<Texture>(colorBufferDescription)
             );
             //Assume the first n color buffers become the first n
             //framebuffer attachments

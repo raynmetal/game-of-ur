@@ -50,10 +50,10 @@ public:
     bool isExclusiveFullscreen() const;
     bool isBorderless() const;
     int getDisplayID() const;
-    const glm::uvec2& getPosition() const;
-    const glm::uvec2& getDimensions() const;
-    const glm::uvec2& getDimensionsMinimum() const;
-    const glm::uvec2& getDimensionsMaximum() const;
+    const glm::ivec2 getPosition() const;
+    const glm::uvec2 getDimensions() const;
+    const glm::uvec2 getDimensionsMinimum() const;
+    const glm::uvec2 getDimensionsMaximum() const;
 
     void setPosition(const glm::uvec2& position);
     void setDimensions(const glm::uvec2& dimensions);
@@ -112,10 +112,10 @@ private:
     Assimp::Importer* mpAssetImporter;
 
     SDL_WindowFlags mCachedWindowFlags {};
-    glm::uvec2 mCachedWindowPosition {};
-    glm::uvec2 mCachedWindowDimensions {};
-    glm::uvec2 mCachedWindowMinimumDimensions {};
-    glm::uvec2 mCachedWindowMaximumDimensions {};
+    glm::i16vec2 mCachedWindowPosition {};
+    glm::u16vec2 mCachedWindowDimensions {};
+    glm::u16vec2 mCachedWindowMinimumDimensions {};
+    glm::u16vec2 mCachedWindowMaximumDimensions {};
     int mCachedDisplayID {0};
     std::string mCachedTitle {};
     inline static std::unique_ptr<WindowContext> s_windowContextManager { nullptr };

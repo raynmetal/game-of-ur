@@ -196,16 +196,16 @@ bool WindowContext::isShown() const {
 int WindowContext::getDisplayID() const {
     return mCachedDisplayID;
 }
-const glm::uvec2& WindowContext::getPosition() const {
+const glm::ivec2 WindowContext::getPosition() const {
     return mCachedWindowPosition;
 }
-const glm::uvec2& WindowContext::getDimensions() const {
+const glm::uvec2 WindowContext::getDimensions() const {
     return mCachedWindowDimensions;
 }
-const glm::uvec2& WindowContext::getDimensionsMinimum() const {
+const glm::uvec2 WindowContext::getDimensionsMinimum() const {
     return mCachedWindowMinimumDimensions;
 }
-const glm::uvec2& WindowContext::getDimensionsMaximum() const {
+const glm::uvec2 WindowContext::getDimensionsMaximum() const {
     return mCachedWindowMaximumDimensions;
 }
 const std::string& WindowContext::getTitle() const {

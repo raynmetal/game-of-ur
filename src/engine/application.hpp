@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include "signals.hpp"
 #include "ecs_world.hpp"
 #include "scene_system.hpp"
 #include "input_system/input_system.hpp"
@@ -22,6 +23,8 @@ public:
     template <typename TObject>
     TObject getObject(const std::string& path="");
 
+    inline SignalTracker& getSignalTracker() { return mSignalTracker; }
+
 private:
 
     Application(const std::string& projectPath);
@@ -37,6 +40,7 @@ private:
     void initialize(const nlohmann::json& windowProperties);
     void cleanup();
 
+    SignalTracker mSignalTracker{};
     uint32_t mSimulationStep { 1000/30 }; // simulation stepsize in ms
     InputManager mInputManager {};
 

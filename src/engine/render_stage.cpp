@@ -10,7 +10,8 @@
 
 BaseRenderStage::BaseRenderStage(
     const std::string& shaderFilepath
-) : mShaderHandle {nullptr}
+) : 
+mShaderHandle {nullptr}
 {
     if(!ResourceDatabase::hasResourceDescription(shaderFilepath)){
         nlohmann::json shaderDescription {
@@ -33,11 +34,13 @@ BaseRenderStage::~BaseRenderStage() {
     }
 }
 
-BaseOffscreenRenderStage::BaseOffscreenRenderStage(
-    const std::string& shaderFilepath
-):
-    BaseRenderStage{shaderFilepath}
-{}
+void BaseRenderStage::setTargetViewport(const SDL_Rect& targetViewport) {
+    mTargetViewport = targetViewport;
+}
+
+void BaseRenderStage::useViewport() {
+    glViewport(mTargetViewport.x, mTargetViewport.y, mTargetViewport.w, mTargetViewport.h);
+}
 
 void BaseRenderStage::attachMesh(
     const std::string& name,
@@ -80,6 +83,14 @@ void BaseRenderStage::submitToRenderQueue(LightRenderUnit renderLightUnit) {
     mLightQueue.push(renderLightUnit);
 }
 
+BaseOffscreenRenderStage::BaseOffscreenRenderStage(
+    const std::string& shaderFilepath, const nlohmann::json& templateFramebufferDescription
+):
+BaseRenderStage{ shaderFilepath }
+{
+    mTemplateFramebufferDescription = templateFramebufferDescription;
+}
+
 void BaseOffscreenRenderStage::declareRenderTarget(const std::string& name, unsigned int index) {
     assert(index < mFramebufferHandle->getColorBufferHandles().size());
     mRenderTargets.insert_or_assign(name, index);
@@ -89,38 +100,18 @@ std::shared_ptr<Texture> BaseOffscreenRenderStage::getRenderTarget(const std::st
     return mFramebufferHandle->getColorBufferHandles()[mRenderTargets.at(name)];
 }
 
-void GeometryRenderStage::setup() {
-    if(!ResourceDatabase::hasResourceDescription("geometryFramebuffer")) {
-        nlohmann::json framebufferDescription {
-            {"name", "geometryFramebuffer"},
-            {"type", Framebuffer::getResourceTypeName()},
-            {"method", FramebufferFromDescription::getResourceConstructorName()},
-            {"parameters", {
-                {"nColorAttachments", 3},
-                {"dimensions", {
-                    800, 600
-                }},
-                {"useRBO", true },
-                {"colorBufferDefinitions",{
-                    ColorBufferDefinition{
-                        .mDataType=GL_FLOAT,
-                        .mComponentCount=4
-                    },
-                    ColorBufferDefinition{
-                        .mDataType=GL_FLOAT,
-                        .mComponentCount=4
-                    },
-                    ColorBufferDefinition{
-                        .mDataType=GL_UNSIGNED_BYTE,
-                        .mComponentCount=4
-                    }
-                }},
-            }}
-        };
-        ResourceDatabase::addResourceDescription(framebufferDescription);
+void GeometryRenderStage::setup(const glm::u16vec2& textureDimensions) {
+    setTargetViewport({0,0, textureDimensions.x, textureDimensions.y});
+    nlohmann::json framebufferDescription = mTemplateFramebufferDescription;
+    framebufferDescription["parameters"]["dimensions"][0] = textureDimensions.x;
+    framebufferDescription["parameters"]["dimensions"][1] = textureDimensions.y;
+    for(nlohmann::json& colorBufferDefinition: framebufferDescription["parameters"]["colorBufferDefinitions"]) {
+        colorBufferDefinition["dimensions"][0] = textureDimensions.x;
+        colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
-    mFramebufferHandle = ResourceDatabase::getRegisteredResource<Framebuffer>("geometryFramebuffer");
+    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
 
+    mRenderTargets.clear();
     declareRenderTarget("geometryPosition", 0);
     declareRenderTarget("geometryNormal", 1);
     declareRenderTarget("geometryAlbedoSpecular", 2);
@@ -161,6 +152,7 @@ void GeometryRenderStage::validate() {
 
 void GeometryRenderStage::execute() {
     mShaderHandle->use();
+    useViewport();
     mFramebufferHandle->bind();
         glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -182,7 +174,7 @@ void GeometryRenderStage::execute() {
             instanceData.push_back(mOpaqueMeshQueue.top().mModelMatrix);
             mOpaqueMeshQueue.pop();
 
-            while(
+            while (
                 !mOpaqueMeshQueue.empty() 
                 && mOpaqueMeshQueue.top().mMeshHandle == first.mMeshHandle
                 && mOpaqueMeshQueue.top().mMaterialHandle == first.mMaterialHandle
@@ -197,7 +189,6 @@ void GeometryRenderStage::execute() {
                 first.mMeshHandle->bind(vertexLayout);
                 BuiltinModelMatrixAllocator modelMatrixAllocator{instanceData};
                 modelMatrixAllocator.bind(BuiltinModelMatrixLayout);
-
 
                 mShaderHandle->setUFloat(
                     "uMaterial.mSpecularExponent",
@@ -235,33 +226,18 @@ void GeometryRenderStage::execute() {
     mFramebufferHandle->unbind();
 }
 
-void LightingRenderStage::setup() {
-    if(!ResourceDatabase::hasResourceDescription("lightingFramebuffer")) {
-        nlohmann::json framebufferDescription {
-            {"name", "lightingFramebuffer"},
-            {"type", Framebuffer::getResourceTypeName()},
-            {"method", FramebufferFromDescription::getResourceConstructorName()},
-            {"parameters", {
-                {"nColorAttachments", 2},
-                {"dimensions", {
-                    800, 600
-                }},
-                {"useRBO", true },
-                {"colorBufferDefinitions",{
-                    ColorBufferDefinition{
-                        .mDataType=GL_FLOAT,
-                        .mComponentCount=4
-                    },
-                    ColorBufferDefinition{
-                        .mDataType=GL_FLOAT,
-                        .mComponentCount=4
-                    },
-                }},
-            }}
-        };
-        ResourceDatabase::addResourceDescription(framebufferDescription);
+void LightingRenderStage::setup(const glm::u16vec2& textureDimensions) {
+    setTargetViewport({0,0, textureDimensions.x, textureDimensions.y});
+    nlohmann::json framebufferDescription = mTemplateFramebufferDescription;
+    framebufferDescription["parameters"]["dimensions"][0] = textureDimensions.x;
+    framebufferDescription["parameters"]["dimensions"][1] = textureDimensions.y;
+    for(nlohmann::json& colorBufferDefinition: framebufferDescription["parameters"]["colorBufferDefinitions"]) {
+        colorBufferDefinition["dimensions"][0] = textureDimensions.x;
+        colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
-    mFramebufferHandle = ResourceDatabase::getRegisteredResource<Framebuffer>("lightingFramebuffer");
+    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
+
+    mRenderTargets.clear();
     declareRenderTarget("litScene", 0);
     declareRenderTarget("brightCutoff", 1);
     mShaderHandle->use();
@@ -285,6 +261,7 @@ void LightingRenderStage::validate() {
 
 void LightingRenderStage::execute() {
     mShaderHandle->use();
+    useViewport();
     mFramebufferHandle->bind();
         glDisable(GL_FRAMEBUFFER_SRGB);
         glDisable(GL_DEPTH_TEST);
@@ -313,7 +290,6 @@ void LightingRenderStage::execute() {
                 modelMatrices.push_back(renderLightUnit.mModelMatrix);
                 lightEmissionList.push_back(renderLightUnit.mLightAttributes);
             }
-
 
             mShaderHandle->use();
             std::vector<std::string> gBufferAliases {
@@ -363,53 +339,23 @@ void LightingRenderStage::execute() {
     mFramebufferHandle->unbind();
 }
 
-void BlurRenderStage::setup() {
-    if(!ResourceDatabase::hasResourceDescription("bloomFramebuffer")) {
-        nlohmann::json framebufferDescription {
-            {"name", "bloomFramebuffer"},
-            {"type", Framebuffer::getResourceTypeName()},
-            {"method", FramebufferFromDescription::getResourceConstructorName()},
-            {"parameters", {
-                {"nColorAttachments", 2},
-                {"dimensions", {
-                    800, 600
-                }},
-                {"useRBO", false},
-                {"colorBufferDefinitions",{
-                    ColorBufferDefinition{
-                        .mDataType=GL_FLOAT,
-                        .mComponentCount=4
-                    },
-                    ColorBufferDefinition{
-                        .mDataType=GL_FLOAT,
-                        .mComponentCount=4
-                    },
-                }},
-            }}
-        };
-        ResourceDatabase::addResourceDescription(framebufferDescription);
+void BlurRenderStage::setup(const glm::u16vec2& textureDimensions) {
+    setTargetViewport({0,0, textureDimensions.x, textureDimensions.y});
+    nlohmann::json framebufferDescription = mTemplateFramebufferDescription;
+    framebufferDescription["parameters"]["dimensions"][0] = textureDimensions.x;
+    framebufferDescription["parameters"]["dimensions"][1] = textureDimensions.y;
+    for(nlohmann::json& colorBufferDefinition: framebufferDescription["parameters"]["colorBufferDefinitions"]) {
+        colorBufferDefinition["dimensions"][0] = textureDimensions.x;
+        colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
-    if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
-        nlohmann::json rectangleMeshDefinition {
-            {"name", "screenRectangleMesh"},
-            {"type", StaticMesh::getResourceTypeName()},
-            {"method", StaticMeshRectangleDimensions::getResourceConstructorName()},
-            {"parameters", {
-                {"width", 2.f},
-                {"height", 2.f},
-            }}
-        };
-        ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
-    }
-    mFramebufferHandle = ResourceDatabase::getRegisteredResource<Framebuffer>("bloomFramebuffer");
+    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
+    Material::RegisterIntProperty("nBlurPasses", 12);
 
+    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
+    mRenderTargets.clear();
     declareRenderTarget("pingBuffer", 0);
     declareRenderTarget("pongBuffer", 1);
-    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
-    attachMaterial("screenMaterial",
-        std::make_shared<Material>()
-    );
-    Material::RegisterIntProperty("nBlurPasses", 12);
+    attachMaterial("screenMaterial", std::make_shared<Material>());
 }
 
 void BlurRenderStage::validate() {
@@ -423,6 +369,7 @@ void BlurRenderStage::validate() {
 
 void BlurRenderStage::execute() {
     mShaderHandle->use();
+    useViewport();
     mFramebufferHandle->bind();
         const std::vector<GLenum> drawbufferEnums {
             {GL_COLOR_ATTACHMENT0},
@@ -471,50 +418,25 @@ void BlurRenderStage::execute() {
     mFramebufferHandle->unbind();
 }
 
-void TonemappingRenderStage::setup() {
-    if(!ResourceDatabase::hasResourceDescription("tonemappingFramebuffer")) {
-        nlohmann::json framebufferDescription {
-            {"name", "tonemappingFramebuffer"},
-            {"type", Framebuffer::getResourceTypeName()},
-            {"method", FramebufferFromDescription::getResourceConstructorName()},
-            {"parameters", {
-                {"nColorAttachments", 1},
-                {"dimensions", {
-                    800, 600
-                }},
-                {"useRBO", false},
-                {"colorBufferDefinitions",{
-                    ColorBufferDefinition{
-                        .mDataType=GL_UNSIGNED_BYTE,
-                        .mComponentCount=4
-                    },
-                }},
-            }}
-        };
-        ResourceDatabase::addResourceDescription(framebufferDescription);
+void TonemappingRenderStage::setup(const glm::u16vec2& textureDimensions) {
+    setTargetViewport({0,0, textureDimensions.x, textureDimensions.y});
+    nlohmann::json framebufferDescription = mTemplateFramebufferDescription;
+    framebufferDescription["parameters"]["dimensions"][0] = textureDimensions.x;
+    framebufferDescription["parameters"]["dimensions"][1] = textureDimensions.y;
+    for(nlohmann::json& colorBufferDefinition: framebufferDescription["parameters"]["colorBufferDefinitions"]) {
+        colorBufferDefinition["dimensions"][0] = textureDimensions.x;
+        colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
-    if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
-        nlohmann::json rectangleMeshDefinition {
-            {"name", "screenRectangleMesh"},
-            {"type", StaticMesh::getResourceTypeName()},
-            {"method", StaticMeshRectangleDimensions::getResourceConstructorName()},
-            {"parameters", {
-                {"width", 2.f},
-                {"height", 2.f},
-            }}
-        };
-        ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
-    }
-    mFramebufferHandle = ResourceDatabase::getRegisteredResource<Framebuffer>("tonemappingFramebuffer");
-    declareRenderTarget("tonemappedScene", 0);
-    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
-    attachMaterial("screenMaterial",
-        std::make_shared<Material>()
-    );
+    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
 
     Material::RegisterFloatProperty("exposure", 1.f);
     Material::RegisterFloatProperty("gamma", 2.2f);
     Material::RegisterIntProperty("combine", true);
+
+    mRenderTargets.clear();
+    declareRenderTarget("tonemappedScene", 0);
+    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
+    attachMaterial("screenMaterial", std::make_shared<Material>());
 }
 
 void TonemappingRenderStage::validate() {
@@ -526,6 +448,7 @@ void TonemappingRenderStage::validate() {
 
 void TonemappingRenderStage::execute() {
     mShaderHandle->use();
+    useViewport();
     std::shared_ptr<Material> screenMaterial {getMaterial("screenMaterial")};
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
@@ -560,19 +483,8 @@ void TonemappingRenderStage::execute() {
     mFramebufferHandle->unbind();
 }
 
-void ScreenRenderStage::setup() {
-    if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
-        nlohmann::json rectangleMeshDefinition {
-            {"name", "screenRectangleMesh"},
-            {"type", StaticMesh::getResourceTypeName()},
-            {"method", StaticMeshRectangleDimensions::getResourceConstructorName()},
-            {"parameters", {
-                {"width", 2.f},
-                {"height", 2.f},
-            }}
-        };
-        ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
-    }
+void ScreenRenderStage::setup(const glm::u16vec2& targetDimensions) {
+    setTargetViewport({0,0, targetDimensions.x, targetDimensions.y});
     attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
 }
 
@@ -583,9 +495,10 @@ void ScreenRenderStage::validate() {
 
 void ScreenRenderStage::execute() {
     mShaderHandle->use();
+    useViewport();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_BLEND);
-    glDisable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVertexArrayObject);
@@ -604,4 +517,51 @@ void ScreenRenderStage::execute() {
             1
         );
     glBindVertexArray(0);
+}
+
+void ResizeRenderStage::setup(const glm::u16vec2& textureDimensions) {
+    setTargetViewport({0, 0, textureDimensions.x, textureDimensions.y});
+    nlohmann::json framebufferDescription = mTemplateFramebufferDescription;
+    framebufferDescription["parameters"]["dimensions"][0] = textureDimensions.x;
+    framebufferDescription["parameters"]["dimensions"][1] = textureDimensions.y;
+    for(nlohmann::json& colorBufferDefinition: framebufferDescription["parameters"]["colorBufferDefinitions"]) {
+        colorBufferDefinition["dimensions"][0] = textureDimensions.x;
+        colorBufferDefinition["dimensions"][1] = textureDimensions.y;
+    }
+    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
+    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
+    mRenderTargets.clear();
+    declareRenderTarget("resizedTexture", 0);
+}
+
+void ResizeRenderStage::validate() {
+    assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
+    assert(mTextureAttachments.find("renderSource") != mTextureAttachments.end());
+}
+
+void ResizeRenderStage::execute() {
+    mShaderHandle->use();
+    useViewport();
+    glDisable(GL_BLEND);
+    glDisable(GL_FRAMEBUFFER_SRGB);
+    glDisable(GL_DEPTH_TEST);
+    glClear(GL_COLOR_BUFFER_BIT);
+    mFramebufferHandle->bind();
+        glBindVertexArray(mVertexArrayObject);
+            mTextureAttachments.at("renderSource")->bind(0);
+            mShaderHandle->setUInt("uGenericTexture", 0);
+            mMeshAttachments.at("screenMesh")->bind({{
+                {"position", LOCATION_POSITION, 4, GL_FLOAT},
+                {"color", LOCATION_COLOR, 4, GL_FLOAT},
+                {"UV1", LOCATION_UV1, 2, GL_FLOAT}
+            }});
+            glDrawElementsInstanced(
+                GL_TRIANGLES,
+                mMeshAttachments.at("screenMesh")->getElementCount(),
+                GL_UNSIGNED_INT,
+                nullptr,
+                1
+            );
+        glBindVertexArray(0);
+    mFramebufferHandle->unbind();
 }

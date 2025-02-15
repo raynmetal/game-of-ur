@@ -15,7 +15,6 @@
 #include "light.hpp"
 #include "util.hpp"
 
-
 /*
     Creates a simple sort key with the following priority:
         Mesh > Material Texture > Material Everything Else
@@ -47,9 +46,9 @@ struct OpaqueRenderUnit {
 
 struct LightRenderUnit {
     LightRenderUnit(std::shared_ptr<StaticMesh> meshHandle, std::shared_ptr<Material> materialHandle, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
-        mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle },
-        mModelMatrix{ modelMatrix },
-        mLightAttributes { lightEmissionData }
+    mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle },
+    mModelMatrix{ modelMatrix },
+    mLightAttributes { lightEmissionData }
     {
         setSortKey();
     }
@@ -83,7 +82,7 @@ public:
 
     virtual ~BaseRenderStage();
 
-    virtual void setup() = 0;
+    virtual void setup(const glm::u16vec2& targetDimensions) = 0;
     virtual void validate() = 0;
     virtual void execute() = 0;
 
@@ -95,6 +94,8 @@ public:
     std::shared_ptr<StaticMesh> getMesh(const std::string& name);
     std::shared_ptr<Material> getMaterial(const std::string& name);
 
+    void useViewport();
+    void setTargetViewport(const SDL_Rect& targetViewport);
     void submitToRenderQueue(OpaqueRenderUnit renderUnit);
     void submitToRenderQueue(LightRenderUnit lightRenderUnit);
 protected:
@@ -107,13 +108,13 @@ protected:
 
     std::priority_queue<OpaqueRenderUnit> mOpaqueMeshQueue {};
     std::priority_queue<LightRenderUnit> mLightQueue {};
+    SDL_Rect mTargetViewport {0, 0, 800, 600};
 };
 
 class BaseOffscreenRenderStage: public BaseRenderStage {
 public:
-    BaseOffscreenRenderStage(const std::string& shaderFilepath);
+    BaseOffscreenRenderStage(const std::string& shaderFilepath, const nlohmann::json& templateFramebufferDescription);
 
-    virtual void setup() = 0;
     virtual void validate() = 0;
     virtual void execute() = 0;
 
@@ -122,16 +123,41 @@ public:
 
 protected:
     std::shared_ptr<Framebuffer> mFramebufferHandle;
+    nlohmann::json mTemplateFramebufferDescription;
     std::map<std::string, unsigned int> mRenderTargets {};
 };
 
 class GeometryRenderStage : public BaseOffscreenRenderStage {
 public:
     GeometryRenderStage(const std::string& shaderFilepath) 
-        : BaseOffscreenRenderStage(shaderFilepath)
+    : BaseOffscreenRenderStage{shaderFilepath, nlohmann::json::object({
+        {"type", Framebuffer::getResourceTypeName()},
+        {"method", FramebufferFromDescription::getResourceConstructorName()},
+        {"parameters", {
+            {"nColorAttachments", 3},
+            {"dimensions", nlohmann::json::array({
+                800, 600
+            })},
+            {"useRBO", true },
+            {"colorBufferDefinitions",{
+                ColorBufferDefinition{
+                    .mDataType=GL_FLOAT,
+                    .mComponentCount=4
+                },
+                ColorBufferDefinition{
+                    .mDataType=GL_FLOAT,
+                    .mComponentCount=4
+                },
+                ColorBufferDefinition{
+                    .mDataType=GL_UNSIGNED_BYTE,
+                    .mComponentCount=4
+                }
+            }},
+        }}
+    })}
     {}
 
-    virtual void setup() override;
+    virtual void setup(const glm::u16vec2& textureDimensions) override;
     virtual void validate() override;
     virtual void execute() override;
 };
@@ -139,9 +165,29 @@ public:
 class LightingRenderStage : public BaseOffscreenRenderStage {
 public:
     LightingRenderStage(const std::string& shaderFilepath)
-        : BaseOffscreenRenderStage(shaderFilepath)
+    : BaseOffscreenRenderStage{shaderFilepath, nlohmann::json::object({
+        {"type", Framebuffer::getResourceTypeName()},
+        {"method", FramebufferFromDescription::getResourceConstructorName()},
+        {"parameters", {
+            {"nColorAttachments", 2},
+            {"dimensions", nlohmann::json::array({
+                800, 600
+            })},
+            {"useRBO", true },
+            {"colorBufferDefinitions",{
+                ColorBufferDefinition{
+                    .mDataType=GL_FLOAT,
+                    .mComponentCount=4
+                },
+                ColorBufferDefinition{
+                    .mDataType=GL_FLOAT,
+                    .mComponentCount=4
+                },
+            }},
+        }}
+    })}
     {}
-    virtual void setup() override;
+    virtual void setup(const glm::u16vec2& textureDimensions) override;
     virtual void validate() override;
     virtual void execute() override;
 };
@@ -149,9 +195,29 @@ public:
 class BlurRenderStage : public BaseOffscreenRenderStage {
 public:
     BlurRenderStage(const std::string& shaderFilepath)
-        : BaseOffscreenRenderStage{shaderFilepath}
+    : BaseOffscreenRenderStage{shaderFilepath, nlohmann::json::object({
+        {"type", Framebuffer::getResourceTypeName()},
+        {"method", FramebufferFromDescription::getResourceConstructorName()},
+        {"parameters", {
+            {"nColorAttachments", 2},
+            {"dimensions", nlohmann::json::array({
+                800, 600 
+            })},
+            {"useRBO", false},
+            {"colorBufferDefinitions",{
+                ColorBufferDefinition{
+                    .mDataType=GL_FLOAT,
+                    .mComponentCount=4
+                },
+                ColorBufferDefinition{
+                    .mDataType=GL_FLOAT,
+                    .mComponentCount=4
+                },
+            }},
+        }}
+    })}
     {}
-    virtual void setup() override;
+    virtual void setup(const glm::u16vec2& textureDimensions) override;
     virtual void validate() override;
     virtual void execute() override;
 };
@@ -159,10 +225,26 @@ public:
 class TonemappingRenderStage : public BaseOffscreenRenderStage {
 public:
     TonemappingRenderStage(const std::string& shaderFilepath)
-        : BaseOffscreenRenderStage{shaderFilepath}
+    : BaseOffscreenRenderStage{shaderFilepath, nlohmann::json::object({
+        {"type", Framebuffer::getResourceTypeName()},
+        {"method", FramebufferFromDescription::getResourceConstructorName()},
+        {"parameters", {
+            {"nColorAttachments", 1},
+            {"dimensions", nlohmann::json::array({
+                800, 600
+            })},
+            {"useRBO", false},
+            {"colorBufferDefinitions",{
+                ColorBufferDefinition{
+                    .mDataType=GL_UNSIGNED_BYTE,
+                    .mComponentCount=4
+                },
+            }},
+        }}
+    })}
     {}
 
-    virtual void setup() override;
+    virtual void setup(const glm::u16vec2& textureDimensions) override;
     virtual void validate() override;
     virtual void execute() override;
 };
@@ -173,9 +255,39 @@ public:
         : BaseRenderStage(shaderFilepath)
     {}
 
-    virtual void setup() override;
+    virtual void setup(const glm::u16vec2& targetDimensions) override;
     virtual void validate() override;
     virtual void execute() override;
+};
+
+class ResizeRenderStage : public BaseOffscreenRenderStage {
+public:
+    ResizeRenderStage(const std::string& shaderFilepath)
+    : BaseOffscreenRenderStage{shaderFilepath, nlohmann::json::object({
+        {"type", Framebuffer::getResourceTypeName()},
+        {"method", FramebufferFromDescription::getResourceConstructorName()},
+        {"parameters", {
+            {"nColorAttachments", 1},
+            {"dimensions", nlohmann::json::array({
+                800, 600
+            })},
+            {"useRBO", false},
+            {"colorBufferDefinitions",{
+                ColorBufferDefinition{
+                    .mDataType=GL_UNSIGNED_BYTE,
+                    .mComponentCount=4,
+                    .mUsesWebColors=true
+                },
+            }},
+        }}
+    })}
+    {}
+
+    virtual void setup(const glm::u16vec2& textureDimensions) override;
+    virtual void validate() override;
+    virtual void execute() override;
+
+private:
 };
 
 #endif

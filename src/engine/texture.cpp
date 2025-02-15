@@ -16,15 +16,15 @@ const std::map<std::string, GLenum> kStringToFilter {
     {"linear", GL_LINEAR},
     {"nearest", GL_NEAREST},
 };
+const std::map<GLenum, std::string> kFilterToString {
+    {GL_LINEAR, "linear"},
+    {GL_NEAREST, "nearest"},
+};
 const std::map<std::string, GLenum> kStringToWrap {
     { "clamp-border", GL_CLAMP_TO_BORDER },
     { "clamp-edge", GL_CLAMP_TO_EDGE },
     { "repeat", GL_REPEAT },
     { "repeat-mirrored", GL_MIRRORED_REPEAT },
-};
-const std::map<GLenum, std::string> kFilterToString {
-    {GL_LINEAR, "linear"},
-    {GL_NEAREST, "nearest"},
 };
 const std::map<GLenum, std::string> kWrapToString {
     {GL_CLAMP_TO_BORDER, "clamp-border"},
@@ -178,7 +178,6 @@ void Texture::copyImage(const Texture& other)  {
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 
     // Blit other's data into our colour buffer
-    glViewport(0, 0, mColorBufferDefinition.mDimensions.x, mColorBufferDefinition.mDimensions.y);
     glBindFramebuffer(GL_READ_FRAMEBUFFER, tempReadFBO);
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, tempWriteFBO);
         glBlitFramebuffer(0, 0, 

@@ -214,49 +214,44 @@ friend class BaseSceneNode<SceneNode>;
 
 class ViewportNode: public BaseSceneNode<ViewportNode>, public Resource<ViewportNode> {
 public:
-    enum class Stretch: uint8_t {
+    enum class ResizeType: uint8_t {
         OFF=0,
-        PER_SUBOBJECT, // Viewport transform configured per stretch mode and requested dimensions
-        POST_VIEWPORT_RENDER,
+        VIEWPORT_DIMENSIONS, // Viewport transform configured per stretch mode and requested dimensions
+        TEXTURE_DIMENSIONS, // Texture result rendered in base dimensions, and then warped to fit request dimensions
     };
 
     /**
      * Determines which dimensions the end result of the viewport
      * is allowed to expand on. 
      */
-    enum class StretchMode: uint8_t {
-        OFF=0, // no expansion takes place, extra space is left blank
+    enum class ResizeMode: uint8_t {
+        FIXED_ASPECT=0,
         EXPAND_VERTICALLY,
         EXPAND_HORIZONTALLY,
-        EXPAND,
-        STRETCH_FIXED_ASPECT,
-        STRETCH_VERTICALLY,
-        STRETCH_HORIZONTALLY,
-        STRETCH_FILL,
+        EXPAND_FILL,
     };
 
     enum class UpdateMode: uint8_t {
         NEVER=0,
         ONCE,
         ON_FETCH,
-        // Who ensures this gets done? For that matter, who ensures that 
-        // simulation steps get done?
-        // ONCE_EVERY_X_RENDER_FRAMES,
+        CAP_FPS,
     };
 
-    static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld);
+    static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions);
     static std::shared_ptr<ViewportNode> create(const nlohmann::json& sceneNodeDescription);
     static std::shared_ptr<ViewportNode> copy(const std::shared_ptr<const ViewportNode> other);
     static inline std::string getResourceTypeName() { return "ViewportNode"; }
 
     std::shared_ptr<ViewportNode> getLocalViewport() override;
-    std::shared_ptr<Texture> fetchRenderResult(float simulationProgress);
+    std::shared_ptr<Texture> fetchRenderResult(float simulationProgress, uint32_t variableStep);
 
-    // void requestDimensions(glm::u16vec2 requestedDimensions);
-    // void setStretch(Stretch stretch);
-    // void setStretchMode(StretchMode stretchMode);
-    // void setUpdateMode(UpdateMode updateMode);
-    // std::shared_ptr<Texture> fetchTexture(float simulationProgress=1.f);
+    void requestDimensions(glm::u16vec2 requestedDimensions);
+    void setResizeType(ResizeType type);
+    void setResizeMode(ResizeMode mode);
+    void setRenderScale(float renderScale);
+    void setUpdateMode(UpdateMode updateMode);
+    void setFPSCap(float fpsCap);
 
     ActionDispatch& getActionDispatch();
 protected:
@@ -278,7 +273,7 @@ protected:
     void onDeactivated() override;
 
 private:
-    static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld);
+    static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions);
     ViewportNode(const Key& key, const Placement& placement, const std::string& name):
     BaseSceneNode<ViewportNode>{key, Placement{}, name},
     Resource<ViewportNode>{0}
@@ -292,39 +287,40 @@ private:
 
     std::shared_ptr<Texture> mTextureResult { nullptr };
 
-    UpdateMode mUpdateMode { UpdateMode::ON_FETCH };
-    // glm::u16vec2 mBaseDimensions { 800, 600 };
-    // glm::u16vec2 mComputedDimensions { 800, 600 };
-    // glm::u16vec2 mRequestedDimensions { 800, 600 };
-    // glm::u16vec2 mComputedOffset { 0, 0 };
+    ResizeType mResizeType { ResizeType::TEXTURE_DIMENSIONS };
+    ResizeMode mResizeMode { ResizeMode::EXPAND_VERTICALLY };
+    glm::u16vec2 mBaseDimensions { 800, 600 };
+    glm::u16vec2 mComputedDimensions { 800, 600 };
+    glm::u16vec2 mRequestedDimensions { 800, 600 };
+
+    UpdateMode mUpdateMode { UpdateMode::CAP_FPS };
+    float mFPSCap { 60.f };
+    float mRenderScale { .3f };
+    uint32_t mTimeSinceLastRender { static_cast<uint32_t>(1000/mFPSCap) };
 
 friend class BaseSceneNode<ViewportNode>;
 friend class SceneNodeCore;
 friend class SceneSystem;
 };
 
-NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::Stretch, {
-    {ViewportNode::Stretch::OFF, "off"},
-    {ViewportNode::Stretch::PER_SUBOBJECT, "per_subobject"},
-    {ViewportNode::Stretch::POST_VIEWPORT_RENDER, "post_viewport_render"},
+NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::ResizeType, {
+    {ViewportNode::ResizeType::OFF, "off"},
+    {ViewportNode::ResizeType::VIEWPORT_DIMENSIONS, "per-subobject"},
+    {ViewportNode::ResizeType::TEXTURE_DIMENSIONS, "post-viewport-render"},
 });
 
-NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::StretchMode, {
-    {ViewportNode::StretchMode::OFF, "off"},
-    {ViewportNode::StretchMode::EXPAND, "expand"},
-    {ViewportNode::StretchMode::EXPAND_VERTICALLY, "expand_vertically"},
-    {ViewportNode::StretchMode::EXPAND_HORIZONTALLY, "expand_horizontally"},
-    {ViewportNode::StretchMode::STRETCH_FIXED_ASPECT, "stretch_fixed_aspect"},
-    {ViewportNode::StretchMode::STRETCH_VERTICALLY, "stretch_vertically"},
-    {ViewportNode::StretchMode::STRETCH_HORIZONTALLY, "stretch_horizontally"},
-    {ViewportNode::StretchMode::STRETCH_FILL, "stretch_fill"},
+NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::ResizeMode, {
+    {ViewportNode::ResizeMode::FIXED_ASPECT,"fixed-aspect"},
+    {ViewportNode::ResizeMode::EXPAND_VERTICALLY, "expand-vertically"},
+    {ViewportNode::ResizeMode::EXPAND_HORIZONTALLY, "expand-horizontally"},
+    {ViewportNode::ResizeMode::EXPAND_FILL, "expand-fill"},
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::UpdateMode, {
     {ViewportNode::UpdateMode::NEVER, "never"},
     {ViewportNode::UpdateMode::ONCE, "once"},
-    {ViewportNode::UpdateMode::ON_FETCH, "on_fetch"},
-    // {ViewportNode::UpdateMode::ONCE_EVERY_X_RENDER_FRAMES, "once_every_x_render_frames"},
+    {ViewportNode::UpdateMode::ON_FETCH, "on-fetch"},
+    {ViewportNode::UpdateMode::CAP_FPS, "cap-fps"},
 });
 
 class SceneSystem: public System<SceneSystem, Placement, Transform> {
@@ -354,7 +350,7 @@ public:
     void simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
     void variableStep(float simulationProgress, uint32_t variableStepMillis);
     void updateTransforms();
-    void render(float simulationProgress);
+    void render(float simulationProgress, uint32_t variableStep);
 
     void onApplicationEnd();
 

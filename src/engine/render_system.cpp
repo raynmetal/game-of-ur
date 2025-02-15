@@ -41,32 +41,9 @@ void RenderSystem::onInitialize() {
     mLightingRenderStage = std::make_shared<LightingRenderStage>("src/shader/lightingShader.json");
     mBlurRenderStage = std::make_shared<BlurRenderStage>("src/shader/gaussianblurShader.json");
     mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>( "src/shader/tonemappingShader.json" );
+    mResizeRenderStage = std::make_shared<ResizeRenderStage>("src/shader/screenShader.json");
     mScreenRenderStage = std::make_shared<ScreenRenderStage>("src/shader/screenShader.json");
 
-    mGeometryRenderStage->setup();
-    mLightingRenderStage->setup();
-    mBlurRenderStage->setup();
-    mTonemappingRenderStage->setup();
-    mScreenRenderStage->setup();
-
-    if(!ResourceDatabase::hasResourceDescription("lightMaterial")) {
-        nlohmann::json lightMaterialDescription{
-            {"name", "lightMaterial"},
-            {"type", Material::getResourceTypeName()},
-            {"method", MaterialFromDescription::getResourceConstructorName()},
-            {"parameters", {
-                {"properties", nlohmann::json::array()},
-            }}
-        };
-        ResourceDatabase::addResourceDescription(lightMaterialDescription);
-    }
-    mLightMaterialHandle = ResourceDatabase::getRegisteredResource<Material>("lightMaterial");
-    mLightMaterialHandle->updateIntProperty("screenWidth", 800);
-    mLightMaterialHandle->updateIntProperty("screenHeight", 600);
-
-    // TODO: Make it so that we can control which camera is used by the render
-    // system, and what portion of the screen it renders to
-    mActiveCamera = *(getEnabledEntities().begin());
     // Set up a uniform buffer for shared matrices
     glGenBuffers(1, &mMatrixUniformBufferIndex);
     glBindBuffer(GL_UNIFORM_BUFFER, mMatrixUniformBufferIndex);
@@ -87,8 +64,52 @@ void RenderSystem::onInitialize() {
         2*sizeof(glm::mat4)
     );
 
+    setRenderProperties({800, 600}, {800, 600}, {0, 0, 800, 600});
+}
+
+void RenderSystem::setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions) {
+    if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
+        nlohmann::json rectangleMeshDefinition {
+            {"name", "screenRectangleMesh"},
+            {"type", StaticMesh::getResourceTypeName()},
+            {"method", StaticMeshRectangleDimensions::getResourceConstructorName()},
+            {"parameters", {
+                {"width", 2.f},
+                {"height", 2.f},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
+    }
+    if(!ResourceDatabase::hasResourceDescription("lightMaterial")) {
+        nlohmann::json lightMaterialDescription{
+            {"name", "lightMaterial"},
+            {"type", Material::getResourceTypeName()},
+            {"method", MaterialFromDescription::getResourceConstructorName()},
+            {"parameters", {
+                {"properties", nlohmann::json::array()},
+            }}
+        };
+        ResourceDatabase::addResourceDescription(lightMaterialDescription);
+    }
+
+    mGeometryRenderStage->setup(renderDimensions);
+    mLightingRenderStage->setup(renderDimensions);
+    mBlurRenderStage->setup(renderDimensions);
+    mTonemappingRenderStage->setup(renderDimensions);
+    mResizeRenderStage->setup(targetDimensions);
+    mScreenRenderStage->setup(targetDimensions);
+
+    mResizeRenderStage->setTargetViewport(viewportDimensions);
+
+    mLightMaterialHandle = ResourceDatabase::getRegisteredResource<Material>("lightMaterial");
+    mLightMaterialHandle->updateIntProperty("screenWidth", renderDimensions.x);
+    mLightMaterialHandle->updateIntProperty("screenHeight", renderDimensions.y);
+
+    // TODO: Make it so that we can control which camera is used by the render
+    // system, and what portion of the screen it renders to
+    mActiveCamera = *(getEnabledEntities().begin());
     // Debug: list of screen textures that may be rendered
-    mCurrentScreenTexture = 0;
+    mScreenTextures.clear();
     mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryPosition")});
     mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryNormal")});
     mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryAlbedoSpecular")});
@@ -105,7 +126,8 @@ void RenderSystem::onInitialize() {
     mBlurRenderStage->attachTexture("unblurredImage", mLightingRenderStage->getRenderTarget("brightCutoff"));
     mTonemappingRenderStage->attachTexture("litScene", mLightingRenderStage->getRenderTarget("litScene"));
     mTonemappingRenderStage->attachTexture("bloomEffect", mBlurRenderStage->getRenderTarget("pingBuffer"));
-    mScreenRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+    mResizeRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+    mScreenRenderStage->attachTexture("renderSource", mResizeRenderStage->getRenderTarget("resizedTexture"));
 
     // Set initial configuration for the tonemapper
     setGamma(mGamma);
@@ -117,13 +139,18 @@ void RenderSystem::onInitialize() {
     mLightingRenderStage->validate();
     mBlurRenderStage->validate();
     mTonemappingRenderStage->validate();
+    mResizeRenderStage->validate();
     mScreenRenderStage->validate();
 
     glClearColor(0.f, 0.f, 0.f, 1.f);
+    mRerendered = true;
 }
 
 void RenderSystem::renderNextTexture() {
     mCurrentScreenTexture = (mCurrentScreenTexture + 1) % mScreenTextures.size();
+    mResizeRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+    mResizeRenderStage->validate();
+    mRerendered=true;
 }
 
 void RenderSystem::updateCameraMatrices(float simulationProgress) {
@@ -146,10 +173,14 @@ void RenderSystem::updateCameraMatrices(float simulationProgress) {
 }
 
 std::shared_ptr<Texture> RenderSystem::getCurrentScreenTexture() {
-    return mScreenTextures[mCurrentScreenTexture];
+    if(mRerendered) {
+        copyAndResize();
+        mRerendered = false;
+    }
+    return mResizeRenderStage->getRenderTarget("resizedTexture");
 }
 
-std::shared_ptr<Texture> RenderSystem::execute(float simulationProgress) {
+void RenderSystem::execute(float simulationProgress) {
     mActiveCamera = *(getEnabledEntities().begin());
 
     updateCameraMatrices(simulationProgress);
@@ -168,13 +199,16 @@ std::shared_ptr<Texture> RenderSystem::execute(float simulationProgress) {
         std::cout << "OpenGL error: " << openglError << ", " << glewGetErrorString(openglError) << std::endl;
         assert(!openglError && "Error during render system execution step");
     }
-    return mScreenTextures[mCurrentScreenTexture];
+    mRerendered = true;
 }
 
-void RenderSystem::renderToScreen(std::shared_ptr<Texture> texture) {
-    mScreenRenderStage->attachTexture("renderSource", texture);
+void RenderSystem::renderToScreen() {
     mScreenRenderStage->execute();
     WindowContext::getInstance().swapBuffers();
+}
+
+void RenderSystem::copyAndResize() {
+    mResizeRenderStage->execute();
 }
 
 void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
