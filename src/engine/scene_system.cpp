@@ -65,34 +65,6 @@ SceneNodeCore::SceneNodeCore(const SceneNodeCore& other)
     copyAndReplaceAttributes(other);
 }
 
-// NOTE: save this for the day I find a use for it.
-// SceneNode& SceneNode::operator=(const SceneNode& other) {
-//     // avoid doing anything if other is just a reference to self
-//     if(this == &other) return *this;
-
-//     // disconnect self from parent, and if we were 
-//     // part of the scene, make scene system forget about
-//     // us.
-//     std::shared_ptr<SceneNode> parent{ mParent };
-//     removeNode("/");
-
-//     copyAndReplaceAttributes(other);
-
-//     // should be safe because if assignment is invoked, a shared
-//     // pointer to `this` must already exist
-//     copyDescendants(other); 
-        
-
-//     // add self back to our parent node complete with our new subtree
-//     if(parent) {
-//         // should be safe because if assignment is invoked, a shared
-//         // pointer to `this` must already exist
-//         parent->addNode(shared_from_this(), "/");
-//     }
-
-//     return *this;
-// }
-
 void SceneNodeCore::copyAndReplaceAttributes(const SceneNodeCore& other) {
     // copy the other entity and its components
     std::shared_ptr<Entity> newEntity { 
@@ -195,7 +167,7 @@ void SceneNodeCore::addNode(std::shared_ptr<SceneNodeCore> node, const std::stri
         node->mParent = shared_from_this();
         setParentViewport(node, getLocalViewport());
         assert(!detectCycle(node) && "Cycle detected, ancestor node added as child to its descendant.");
-        mEntity->getWorld().getSystem<SceneSystem>()->nodeAdded(node);
+        getWorld().getSystem<SceneSystem>()->nodeAdded(node);
         return;
     }
 
@@ -240,17 +212,34 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::getNode(const std::string& where) 
 void SceneNodeCore::setParentViewport(std::shared_ptr<SceneNodeCore> node, std::shared_ptr<ViewportNode> newViewport)  {
     assert(node && "Cannot modify the parent viewport of a nonexistent node");
 
+    // If the node whose viewport is being set is a viewport itself,
     if(auto nodeAsViewport = std::dynamic_pointer_cast<ViewportNode>(node)) {
+        // remove it from its previous parent viewport's list of children,
         if(auto previousParentViewport = node->mParentViewport.lock()) {
             previousParentViewport->mChildViewports.erase(nodeAsViewport);
         }
+        // and add it to the new parent viewport's list of children
         if(newViewport) {
             newViewport->mChildViewports.insert(nodeAsViewport);
         }
+    } 
+
+    // Otherwise, if this is a camera node,
+    else if(node->mEntity->isRegistered<CameraSystem>()) {
+        // remove it from its previous viewport's domain camera list,
+        if(auto previousParentViewport = node->getLocalViewport()) {
+            previousParentViewport->unregisterDomainCamera(node);
+        }
+        // add it to the new viewport domain camera list
+        if(newViewport) {
+            newViewport->registerDomainCamera(node);
+        }
     }
 
+    // finally set the parent viewport property
     node->mParentViewport = newViewport;
 
+    // propagate parent viewport changes to descendants
     for(auto& child: node->getChildren()) {
         setParentViewport(child, node->getLocalViewport());
     }
@@ -318,6 +307,19 @@ std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::getDescendants() {
     return descendants;
 }
 
+std::string SceneNodeCore::getPathFromAncestor(std::shared_ptr<const SceneNodeCore> ancestor) {
+    assert(ancestor->isAncestorOf(shared_from_this()) && "The node in the argument is not an ancestor of this node");
+
+    std::shared_ptr<SceneNodeCore> currentNode { shared_from_this() };
+    std::string path {"/"};
+    while(currentNode != ancestor) {
+        path = path + currentNode->mName + "/";
+        currentNode = currentNode->getParentNode();
+    }
+
+    return path;
+}
+
 EntityID SceneNodeCore::getEntityID() const {
     return mEntity->getID();
 }
@@ -346,12 +348,18 @@ void SceneNodeCore::validateName(const std::string& nodeName) {
     assert(containsValidCharacters && "Scene node name may contain only alphanumeric characters and underscores");
 }
 
+void ViewportNode::onDestroyed() {
+    getWorld().getSystem<RenderSystem>()->deleteRenderSet(mRenderSet);
+    getWorld().cleanup();
+}
+
 std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(Placement{}, name) };
     newViewport->mBaseDimensions = baseDimensions;
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
+    newViewport->mRenderSet = newViewport->getWorld().getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
     return newViewport;
 }
 
@@ -362,15 +370,18 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::st
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
+    newViewport->mRenderSet = newViewport->getWorld().getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
     return newViewport;
 }
 std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewportNodeDescription) {
     std::shared_ptr<ViewportNode> newViewport {BaseSceneNode<ViewportNode>::create(viewportNodeDescription)};
     newViewport->updateComponent<Placement>(Placement {}); // override scene file placement
+
     assert(viewportNodeDescription.find("inherits_world") != viewportNodeDescription.end() && "Viewport descriptions must contain the \"inherits_world\" boolean attribute");
     if(viewportNodeDescription.at("inherits_world").get<bool>() == false) {
         newViewport->createAndJoinWorld();
     }
+    newViewport->mRenderSet = newViewport->getWorld().getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
     return newViewport;
 }
 std::shared_ptr<ViewportNode> ViewportNode::copy(const std::shared_ptr<const ViewportNode> viewportNode) {
@@ -384,7 +395,8 @@ std::shared_ptr<SceneNodeCore> ViewportNode::clone() const {
     if(mOwnWorld) {
         newViewport->createAndJoinWorld();
     }
-    return newViewport;
+    newViewport->mRenderSet = newViewport->getWorld().getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
+    return newSceneNode;
 }
 
 void ViewportNode::createAndJoinWorld() {
@@ -393,6 +405,12 @@ void ViewportNode::createAndJoinWorld() {
     mOwnWorld->initialize();
 }
 void ViewportNode::onActivated() {
+    if(!mActiveCamera) {
+        setActiveCamera(findFallbackCamera());
+    }
+    assert(mActiveCamera && "No cameras exist in this viewports domain, or none are enabled");
+    assert(mActiveCamera->mEntity->isEnabled<CameraSystem>() && "The camera marked active for this viewport is not visible to the camera system");
+
     if(!mOwnWorld) return;
     mOwnWorld->activateSimulation();
     mOwnWorld->preSimulationStep(0);
@@ -402,9 +420,31 @@ void ViewportNode::onDeactivated() {
     mOwnWorld->deactivateSimulation();
 }
 
+void ViewportNode::setActiveCamera(const std::string& cameraPath) {
+    std::shared_ptr<SceneNodeCore> cameraNode { getByPath(cameraPath) };
+    setActiveCamera(cameraNode);
+}
+
+void ViewportNode::setActiveCamera(std::shared_ptr<SceneNodeCore> cameraNode) {
+    assert((cameraNode || !isActive()) && "Active camera may only be unset if this viewport is inactive");
+    if(!cameraNode) { 
+        mActiveCamera = nullptr;
+        return;
+    }
+
+    assert(mDomainCameras.find(cameraNode) != mDomainCameras.end() && "This camera is under another viewport's domain, and cannot be used by this viewport");
+    assert(cameraNode->mEntity->isRegistered<CameraSystem>() && "This node does not have all the required components to qualify as a camera");
+    assert((!isActive() || cameraNode->isActive()) && "If a viewport is active, the camera it intends to use must also be active");
+
+    mActiveCamera = cameraNode;
+    getWorld().getSystem<RenderSystem>()->useRenderSet(mRenderSet);
+    getWorld().getSystem<RenderSystem>()->setCamera(mActiveCamera->getEntityID());
+}
+
 void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
     assert(requestDimensions.x * requestDimensions.y > 0 && "Request dimensions cannot contain 0");
     std::shared_ptr<RenderSystem> renderSystem { getWorld().getSystem<RenderSystem>() };
+    renderSystem->useRenderSet(mRenderSet);
     const float requestAspect { static_cast<float>(requestDimensions.x)/static_cast<float>(requestDimensions.y) };
     const float baseAspect { static_cast<float>(mBaseDimensions.x)/static_cast<float>(mBaseDimensions.y) };
     glm::vec2 requestToBaseRatio { 
@@ -430,7 +470,7 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
                 // Bigger, so aspect ratio does not matter. Clamp Y
                 if(requestToBaseRatio.y > 1.f && requestToBaseRatio.x > 1.f) { 
                     mComputedDimensions.y = mBaseDimensions.y;
-                
+
                 // Shorter but wider aspect. Y is full height of request
                 } else if (requestToBaseRatio.y <= 1.f && requestAspect > baseAspect) {
                     mComputedDimensions.y = mRequestedDimensions.y;
@@ -447,7 +487,7 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
                 // Bigger, so aspect ratio does not matter. Clamp X
                 if(requestToBaseRatio.x > 1.f && requestToBaseRatio.y > 1.f) {
                     mComputedDimensions.x = mBaseDimensions.x;
-                
+
                 // Narrower, but taller aspect. X is full width of the request.
                 } else if (requestToBaseRatio.x <= 1.f && requestAspect <= baseAspect) {
                     mComputedDimensions.x = mRequestedDimensions.x;
@@ -513,6 +553,29 @@ void ViewportNode::setRenderScale(float renderScale) {
     requestDimensions(mRequestedDimensions);
 }
 
+void ViewportNode::registerDomainCamera(std::shared_ptr<SceneNodeCore> cameraNode) {
+    assert(isAncestorOf(cameraNode) && "This node is not the camera node's ancestor");
+    mDomainCameras.insert(cameraNode);
+}
+void ViewportNode::unregisterDomainCamera(std::shared_ptr<SceneNodeCore> cameraNode) {
+    mDomainCameras.erase(cameraNode);
+    if(mActiveCamera == cameraNode) {
+        setActiveCamera(findFallbackCamera());
+    }
+}
+std::shared_ptr<SceneNodeCore> ViewportNode::findFallbackCamera() {
+    if(mDomainCameras.empty()) return nullptr;
+    // pick a camera at random from our domain
+    std::shared_ptr<SceneNodeCore> fallbackCamera {*mDomainCameras.begin()};
+    for(std::shared_ptr<SceneNodeCore> domainCamera: mDomainCameras) {
+        if(domainCamera->mEntity->isEnabled<CameraSystem>()) {
+            fallbackCamera = domainCamera;
+            break;
+        }
+    }
+    return fallbackCamera;
+}
+
 std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgress, uint32_t variableStep) {
     assert(mFPSCap > 0.f && "FPS cannot be negative or zero");
     const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mFPSCap)};
@@ -531,6 +594,7 @@ std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgres
 
         case UpdateMode::ON_FETCH:
             mTimeSinceLastRender = 0;
+            world.getSystem<RenderSystem>()->useRenderSet(mRenderSet);
             world.preRenderStep(simulationProgress);
             world.getSystem<RenderSystem>()->execute(simulationProgress);
             world.postRenderStep(simulationProgress);
@@ -549,7 +613,6 @@ ActionDispatch& ViewportNode::getActionDispatch() {
 std::shared_ptr<ViewportNode> ViewportNode::getLocalViewport() {
     return std::static_pointer_cast<ViewportNode>(shared_from_this());
 }
-
 
 void SceneSystem::simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions) {
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
@@ -583,12 +646,13 @@ void SceneSystem::simulate(uint32_t simStepMillis, std::vector<std::pair<ActionD
     }
     updateTransforms();
 }
+
 void SceneSystem::variableStep(float simulationProgress, uint32_t variableStepMillis) {
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
     while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
         viewportsToVisit.pop();
         if(!viewport->isActive()) continue;
-        
+
         if(viewport->mOwnWorld) {
             viewport->mOwnWorld->variableStep(simulationProgress, variableStepMillis);
         }
@@ -606,7 +670,8 @@ void SceneSystem::render(float simulationProgress, uint32_t variableStep) {
 }
 
 void SceneSystem::onApplicationEnd() {
-    mRootNode->removeChildren();
+    nodeActivationChanged(mRootNode, false);
+    mRootNode = nullptr;
 }
 
 bool SceneSystem::inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const {
@@ -704,7 +769,7 @@ void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNodeCore> sceneNode
     // isn't active, or node is already in requested state
     if(
         !inScene(sceneNode)
-        || !isActive(sceneNode->mParent.lock())
+        || (sceneNode->mName != kSceneRootName && !isActive(sceneNode->mParent.lock()))
         || (isActive(sceneNode) && state) 
         || (!isActive(sceneNode) && !state)
     ) { return; }
@@ -744,6 +809,7 @@ void SceneSystem::updateTransforms() {
     // covered by their ancestor's update
     std::set<std::pair<WorldID, EntityID>> entitiesToIgnore {};
     for(std::pair<WorldID, EntityID> entityWorldPair: mComputeTransformQueue) {
+        if(mEntityToNode.at(entityWorldPair) == mRootNode) continue;
         std::shared_ptr<SceneNodeCore> sceneNode { mEntityToNode.at(entityWorldPair)->mParent };
         while(sceneNode != nullptr) {
             if(mComputeTransformQueue.find(sceneNode->getUniversalEntityID()) != mComputeTransformQueue.end()) {
@@ -807,14 +873,13 @@ void SceneSystem::onApplicationInitialize() {
     mRootNode = ViewportNode::create(SceneNodeCore::Key{}, kSceneRootName, false, {800, 600});
 
     // Manual setup of root node, since it skips the normal activation procedure
-    mRootNode->mStateFlags |= SceneNodeCore::StateFlags::ACTIVE | SceneNodeCore::StateFlags::ENABLED;
+    mRootNode->mStateFlags |= SceneNodeCore::StateFlags::ENABLED;
     mEntityToNode.insert({mRootNode->getUniversalEntityID(), mRootNode});
-    mActiveEntities.insert(mRootNode->getUniversalEntityID());
     mRootNode->updateComponent<Transform>({glm::mat4{1.f}});
-    mRootNode->onActivated(); 
 }
 
 void SceneSystem::onApplicationStart() {
+    nodeActivationChanged(mRootNode, true);
     updateTransforms();
 }
 

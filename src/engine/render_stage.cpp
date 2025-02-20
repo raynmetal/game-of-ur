@@ -260,7 +260,16 @@ void LightingRenderStage::validate() {
 }
 
 void LightingRenderStage::execute() {
+    std::shared_ptr<Material> lightMaterial{ getMaterial("lightMaterial") };
     mShaderHandle->use();
+    mShaderHandle->setUInt(
+        "uScreenWidth",
+        lightMaterial->getIntProperty("screenWidth")
+    );
+    mShaderHandle->setUInt(
+        "uScreenHeight",
+        lightMaterial->getIntProperty("screenHeight")
+    );
     useViewport();
     mFramebufferHandle->bind();
         glDisable(GL_FRAMEBUFFER_SRGB);
@@ -282,7 +291,6 @@ void LightingRenderStage::execute() {
             while(
                 !mLightQueue.empty() 
                 && mLightQueue.top().mMeshHandle == first.mMeshHandle
-                && mLightQueue.top().mMaterialHandle == first.mMaterialHandle
             ) {
                 const LightRenderUnit renderLightUnit {mLightQueue.top()};
                 mLightQueue.pop();
@@ -301,15 +309,6 @@ void LightingRenderStage::execute() {
             mShaderHandle->setUInt("uGeometryPositionMap", 0);
             mShaderHandle->setUInt("uGeometryNormalMap", 1);
             mShaderHandle->setUInt("uGeometryAlbedoSpecMap", 2);
-            mShaderHandle->setUInt(
-                "uScreenWidth",
-                first.mMaterialHandle->getIntProperty("screenWidth")
-            );
-            mShaderHandle->setUInt(
-                "uScreenHeight",
-                first.mMaterialHandle->getIntProperty("screenHeight")
-            );
-
             glBindVertexArray(mVertexArrayObject);
                 first.mMeshHandle->bind(VertexLayout{{
                     {"position", LOCATION_POSITION, 4, GL_FLOAT}

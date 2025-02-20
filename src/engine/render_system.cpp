@@ -37,13 +37,6 @@ void RenderSystem::LightQueue::onInitialize() {
 }
 
 void RenderSystem::onInitialize() {
-    mGeometryRenderStage = std::make_shared<GeometryRenderStage>("src/shader/geometryShader.json" );
-    mLightingRenderStage = std::make_shared<LightingRenderStage>("src/shader/lightingShader.json");
-    mBlurRenderStage = std::make_shared<BlurRenderStage>("src/shader/gaussianblurShader.json");
-    mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>( "src/shader/tonemappingShader.json" );
-    mResizeRenderStage = std::make_shared<ResizeRenderStage>("src/shader/screenShader.json");
-    mScreenRenderStage = std::make_shared<ScreenRenderStage>("src/shader/screenShader.json");
-
     // Set up a uniform buffer for shared matrices
     glGenBuffers(1, &mMatrixUniformBufferIndex);
     glBindBuffer(GL_UNIFORM_BUFFER, mMatrixUniformBufferIndex);
@@ -63,11 +56,6 @@ void RenderSystem::onInitialize() {
         0,
         2*sizeof(glm::mat4)
     );
-
-    setRenderProperties({800, 600}, {800, 600}, {0, 0, 800, 600});
-}
-
-void RenderSystem::setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions) {
     if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
         nlohmann::json rectangleMeshDefinition {
             {"name", "screenRectangleMesh"},
@@ -80,81 +68,34 @@ void RenderSystem::setRenderProperties(glm::u16vec2 renderDimensions, glm::u16ve
         };
         ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
     }
-    if(!ResourceDatabase::hasResourceDescription("lightMaterial")) {
-        nlohmann::json lightMaterialDescription{
-            {"name", "lightMaterial"},
-            {"type", Material::getResourceTypeName()},
-            {"method", MaterialFromDescription::getResourceConstructorName()},
-            {"parameters", {
-                {"properties", nlohmann::json::array()},
-            }}
-        };
-        ResourceDatabase::addResourceDescription(lightMaterialDescription);
-    }
-
-    mGeometryRenderStage->setup(renderDimensions);
-    mLightingRenderStage->setup(renderDimensions);
-    mBlurRenderStage->setup(renderDimensions);
-    mTonemappingRenderStage->setup(renderDimensions);
-    mResizeRenderStage->setup(targetDimensions);
-    mScreenRenderStage->setup(targetDimensions);
-
-    mResizeRenderStage->setTargetViewport(viewportDimensions);
-
-    mLightMaterialHandle = ResourceDatabase::getRegisteredResource<Material>("lightMaterial");
-    mLightMaterialHandle->updateIntProperty("screenWidth", renderDimensions.x);
-    mLightMaterialHandle->updateIntProperty("screenHeight", renderDimensions.y);
-
-    // TODO: Make it so that we can control which camera is used by the render
-    // system, and what portion of the screen it renders to
-    mActiveCamera = *(getEnabledEntities().begin());
-    // Debug: list of screen textures that may be rendered
-    mScreenTextures.clear();
-    mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryPosition")});
-    mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryNormal")});
-    mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryAlbedoSpecular")});
-    mScreenTextures.push_back({mLightingRenderStage->getRenderTarget("litScene")}); 
-    mScreenTextures.push_back({mLightingRenderStage->getRenderTarget("brightCutoff")});
-    mScreenTextures.push_back({mBlurRenderStage->getRenderTarget("pingBuffer")});
-    mScreenTextures.push_back({mTonemappingRenderStage->getRenderTarget("tonemappedScene")});
-
-    // Last pieces of pipeline setup, where we connect all the
-    // render stages together
-    mLightingRenderStage->attachTexture("positionMap", mGeometryRenderStage->getRenderTarget("geometryPosition"));
-    mLightingRenderStage->attachTexture("normalMap", mGeometryRenderStage->getRenderTarget("geometryNormal"));
-    mLightingRenderStage->attachTexture("albedoSpecularMap", mGeometryRenderStage->getRenderTarget("geometryAlbedoSpecular"));
-    mBlurRenderStage->attachTexture("unblurredImage", mLightingRenderStage->getRenderTarget("brightCutoff"));
-    mTonemappingRenderStage->attachTexture("litScene", mLightingRenderStage->getRenderTarget("litScene"));
-    mTonemappingRenderStage->attachTexture("bloomEffect", mBlurRenderStage->getRenderTarget("pingBuffer"));
-    mResizeRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
-    mScreenRenderStage->attachTexture("renderSource", mResizeRenderStage->getRenderTarget("resizedTexture"));
-
-    // Set initial configuration for the tonemapper
-    setGamma(mGamma);
-    setExposure(mExposure);
-
-    // Functions containing a set of asserts, ensuring that valid connections have
-    // been made between the rendering stages
-    mGeometryRenderStage->validate();
-    mLightingRenderStage->validate();
-    mBlurRenderStage->validate();
-    mTonemappingRenderStage->validate();
-    mResizeRenderStage->validate();
-    mScreenRenderStage->validate();
-
-    glClearColor(0.f, 0.f, 0.f, 1.f);
-    mRerendered = true;
 }
 
-void RenderSystem::renderNextTexture() {
-    mCurrentScreenTexture = (mCurrentScreenTexture + 1) % mScreenTextures.size();
-    mResizeRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
-    mResizeRenderStage->validate();
-    mRerendered=true;
+void RenderSystem::execute(float simulationProgress) {
+    assert(mRenderSets.find(mActiveRenderSetID) != mRenderSets.end() && "No render set corresponding to the currently set active render set exists");
+    assert(getEnabledEntities().find(mRenderSets.at(mActiveRenderSetID).mActiveCamera) != getEnabledEntities().end() && "The camera specified for this render set is not enabled or does not exist");
+
+    updateCameraMatrices(simulationProgress);
+
+    // Execute each rendering stage in its proper order
+    mWorld.getSystem<OpaqueQueue>()->enqueueTo(*mRenderSets.at(mActiveRenderSetID).mGeometryRenderStage, simulationProgress);
+    mRenderSets.at(mActiveRenderSetID).mGeometryRenderStage->execute();
+
+    mWorld.getSystem<LightQueue>()->enqueueTo(*mRenderSets.at(mActiveRenderSetID).mLightingRenderStage, simulationProgress);
+    mRenderSets.at(mActiveRenderSetID).mLightingRenderStage->execute();
+
+    mRenderSets.at(mActiveRenderSetID).mBlurRenderStage->execute();
+    mRenderSets.at(mActiveRenderSetID).mTonemappingRenderStage->execute();
+
+    if(GLenum openglError = glGetError()) {
+        std::cout << "OpenGL error: " << openglError << ", " << glewGetErrorString(openglError) << std::endl;
+        assert(!openglError && "Error during render system execution step");
+    }
+
+    mRenderSets.at(mActiveRenderSetID).mRerendered = true;
 }
 
 void RenderSystem::updateCameraMatrices(float simulationProgress) {
-    CameraProperties cameraProps { getComponent<CameraProperties>(mActiveCamera, simulationProgress) };
+    CameraProperties cameraProps { getComponent<CameraProperties>(mRenderSets[mActiveRenderSetID].mActiveCamera, simulationProgress) };
     // Send shared matrices to the uniform buffer
     glBindBuffer(GL_UNIFORM_BUFFER, mMatrixUniformBufferIndex);
         glBufferSubData(
@@ -172,7 +113,118 @@ void RenderSystem::updateCameraMatrices(float simulationProgress) {
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 }
 
+RenderSetID RenderSystem::createRenderSet(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions) {
+    RenderSetID newRenderSetID;
+    if(!mDeletedRenderSetIDs.empty()) {
+        newRenderSetID = *mDeletedRenderSetIDs.begin();
+        mDeletedRenderSetIDs.erase(newRenderSetID);
+    } else {
+        assert(mNextRenderSetID + 1 < kMaxRenderSetIDs && "Maximum allocatable render sets have been created");
+        newRenderSetID = mNextRenderSetID++;
+    }
+
+    RenderSet&& newRenderSet {};
+    newRenderSet.mGeometryRenderStage = std::make_shared<GeometryRenderStage>("src/shader/geometryShader.json" );
+    newRenderSet.mLightingRenderStage= std::make_shared<LightingRenderStage>("src/shader/lightingShader.json");
+    newRenderSet.mBlurRenderStage = std::make_shared<BlurRenderStage>("src/shader/gaussianblurShader.json");
+    newRenderSet.mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>( "src/shader/tonemappingShader.json" );
+    newRenderSet.mResizeRenderStage = std::make_shared<ResizeRenderStage>("src/shader/screenShader.json");
+    newRenderSet.mScreenRenderStage = std::make_shared<ScreenRenderStage>("src/shader/screenShader.json");
+    newRenderSet.mLightMaterialHandle = ResourceDatabase::constructAnonymousResource<Material>({
+        {"type", Material::getResourceTypeName()},
+        {"method", MaterialFromDescription::getResourceConstructorName()},
+        {"parameters", {
+            {"properties", nlohmann::json::array()},
+        }}
+    });
+
+    // TODO: Make it so that we can control which camera is used by the render
+    // system, and what portion of the screen it renders to
+    newRenderSet.setRenderProperties(renderDimensions, targetDimensions, viewportDimensions);
+    newRenderSet.setGamma(newRenderSet.mGamma);
+    newRenderSet.setExposure(newRenderSet.mExposure);
+
+    mRenderSets[newRenderSetID] = std::move(newRenderSet);
+
+    return newRenderSetID;
+}
+
+void RenderSystem::useRenderSet(RenderSetID renderSet) {
+    assert(mRenderSets.find(renderSet) != mRenderSets.end() && "No render set corresponding to the id provided was found");
+    mActiveRenderSetID = renderSet;
+}
+
+void RenderSystem::setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions) {
+    mRenderSets.at(mActiveRenderSetID).setRenderProperties(renderDimensions, targetDimensions, viewportDimensions);
+}
+void RenderSet::setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions) {
+    mGeometryRenderStage->setup(renderDimensions);
+    mLightingRenderStage->setup(renderDimensions);
+    mBlurRenderStage->setup(renderDimensions);
+    mTonemappingRenderStage->setup(renderDimensions);
+    mResizeRenderStage->setup(targetDimensions);
+    mScreenRenderStage->setup(targetDimensions);
+
+    mResizeRenderStage->setTargetViewport(viewportDimensions);
+
+    mLightMaterialHandle->updateIntProperty("screenWidth", renderDimensions.x);
+    mLightMaterialHandle->updateIntProperty("screenHeight", renderDimensions.y);
+
+    // Debug: list of screen textures that may be rendered
+    mScreenTextures.clear();
+    mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryPosition")});
+    mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryNormal")});
+    mScreenTextures.push_back({mGeometryRenderStage->getRenderTarget("geometryAlbedoSpecular")});
+    mScreenTextures.push_back({mLightingRenderStage->getRenderTarget("litScene")}); 
+    mScreenTextures.push_back({mLightingRenderStage->getRenderTarget("brightCutoff")});
+    mScreenTextures.push_back({mBlurRenderStage->getRenderTarget("pingBuffer")});
+    mScreenTextures.push_back({mTonemappingRenderStage->getRenderTarget("tonemappedScene")});
+
+    // Last pieces of pipeline setup, where we connect all the
+    // render stages together
+    mLightingRenderStage->attachTexture("positionMap", mGeometryRenderStage->getRenderTarget("geometryPosition"));
+    mLightingRenderStage->attachTexture("normalMap", mGeometryRenderStage->getRenderTarget("geometryNormal"));
+    mLightingRenderStage->attachTexture("albedoSpecularMap", mGeometryRenderStage->getRenderTarget("geometryAlbedoSpecular"));
+    mLightingRenderStage->attachMaterial("lightMaterial", mLightMaterialHandle);
+    mBlurRenderStage->attachTexture("unblurredImage", mLightingRenderStage->getRenderTarget("brightCutoff"));
+    mTonemappingRenderStage->attachTexture("litScene", mLightingRenderStage->getRenderTarget("litScene"));
+    mTonemappingRenderStage->attachTexture("bloomEffect", mBlurRenderStage->getRenderTarget("pingBuffer"));
+    mResizeRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+    mScreenRenderStage->attachTexture("renderSource", mResizeRenderStage->getRenderTarget("resizedTexture"));
+
+    // Functions containing a set of asserts, ensuring that valid connections have
+    // been made between the rendering stages
+    mGeometryRenderStage->validate();
+    mLightingRenderStage->validate();
+    mBlurRenderStage->validate();
+    mTonemappingRenderStage->validate();
+    mResizeRenderStage->validate();
+    mScreenRenderStage->validate();
+
+    glClearColor(0.f, 0.f, 0.f, 1.f);
+    mRerendered = true;
+}
+void RenderSystem::deleteRenderSet(RenderSetID renderSet) {
+    if(mRenderSets.find(renderSet) == mRenderSets.end()) { return; }
+    mRenderSets.erase(renderSet);
+    mDeletedRenderSetIDs.insert(renderSet);
+}
+
+void RenderSystem::renderNextTexture() {
+    mRenderSets.at(mActiveRenderSetID).renderNextTexture();
+}
+void RenderSet::renderNextTexture() {
+    mCurrentScreenTexture = (mCurrentScreenTexture + 1) % mScreenTextures.size();
+    mResizeRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+    mResizeRenderStage->validate();
+    mRerendered=true;
+}
+
 std::shared_ptr<Texture> RenderSystem::getCurrentScreenTexture() {
+    return mRenderSets.at(mActiveRenderSetID).getCurrentScreenTexture();
+}
+
+std::shared_ptr<Texture> RenderSet::getCurrentScreenTexture() {
     if(mRerendered) {
         copyAndResize();
         mRerendered = false;
@@ -180,34 +232,16 @@ std::shared_ptr<Texture> RenderSystem::getCurrentScreenTexture() {
     return mResizeRenderStage->getRenderTarget("resizedTexture");
 }
 
-void RenderSystem::execute(float simulationProgress) {
-    mActiveCamera = *(getEnabledEntities().begin());
-
-    updateCameraMatrices(simulationProgress);
-
-    // Execute each rendering stage in its proper order
-    mWorld.getSystem<OpaqueQueue>()->enqueueTo(*mGeometryRenderStage, simulationProgress);
-    mGeometryRenderStage->execute();
-
-    mWorld.getSystem<LightQueue>()->enqueueTo(*mLightingRenderStage, simulationProgress);
-    mLightingRenderStage->execute();
-
-    mBlurRenderStage->execute();
-    mTonemappingRenderStage->execute();
-
-    if(GLenum openglError = glGetError()) {
-        std::cout << "OpenGL error: " << openglError << ", " << glewGetErrorString(openglError) << std::endl;
-        assert(!openglError && "Error during render system execution step");
-    }
-    mRerendered = true;
-}
-
 void RenderSystem::renderToScreen() {
-    mScreenRenderStage->execute();
+    getCurrentScreenTexture();
+    mRenderSets.at(mActiveRenderSetID).mScreenRenderStage->execute();
     WindowContext::getInstance().swapBuffers();
 }
 
-void RenderSystem::copyAndResize() {
+void RenderSystem::copyAndResize() { 
+    mRenderSets.at(mActiveRenderSetID).copyAndResize();
+}
+void RenderSet::copyAndResize() {
     mResizeRenderStage->execute();
 }
 
@@ -229,22 +263,28 @@ void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float si
 }
 
 void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
-    std::shared_ptr<Material> lightMaterialHandle { 
-        ResourceDatabase::getRegisteredResource<Material>("lightMaterial")
-    };
+
     for(EntityID entity: getEnabledEntities()) {
         Transform entityTransform { getComponent<Transform>(entity, simulationProgress)};
         LightEmissionData lightEmissionData { getComponent<LightEmissionData>(entity, simulationProgress) };
         renderStage.submitToRenderQueue(LightRenderUnit {
             mSphereMesh,
-            lightMaterialHandle,
             lightEmissionData,
             entityTransform.mModelMatrix
         });
     }
 }
 
-void RenderSystem::setGamma(float gamma) {
+void RenderSystem::setCamera(EntityID cameraEntity) {
+    mRenderSets.at(mActiveRenderSetID).setCamera(cameraEntity);
+}
+void RenderSet::setCamera(EntityID cameraEntity) {
+    mActiveCamera = cameraEntity;
+}
+void RenderSystem::setGamma(float gamma) { 
+    mRenderSets.at(mActiveRenderSetID).setGamma(gamma);
+}
+void RenderSet::setGamma(float gamma) {
     if(gamma > MAX_GAMMA) gamma = MAX_GAMMA;
     else if (gamma < MIN_GAMMA) gamma = MIN_GAMMA;
 
@@ -255,10 +295,16 @@ void RenderSystem::setGamma(float gamma) {
     mGamma = gamma;
 }
 float RenderSystem::getGamma() {
+    return mRenderSets.at(mActiveRenderSetID).getGamma();
+}
+float RenderSet::getGamma() {
     return mGamma;
 }
 
 void RenderSystem::setExposure(float exposure) {
+    mRenderSets.at(mActiveRenderSetID).setExposure(exposure);
+}
+void RenderSet::setExposure(float exposure) {
     if(exposure > MAX_EXPOSURE) exposure = MAX_EXPOSURE;
     else if (exposure < MIN_EXPOSURE) exposure = MIN_EXPOSURE;
 
@@ -268,6 +314,10 @@ void RenderSystem::setExposure(float exposure) {
 
     mExposure = exposure;
 }
+
 float RenderSystem::getExposure() {
+    return mRenderSets[mActiveRenderSetID].getExposure();
+}
+float RenderSet::getExposure() {
     return mExposure;
 }

@@ -11,11 +11,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include "scene_components.hpp"
+#include "render_system.hpp"
 #include "ecs_world.hpp"
 #include "texture.hpp"
 #include "resource_database.hpp"
 #include "input_system/input_system.hpp"
-#include "scene_components.hpp"
 
 class SceneNodeCore;
 class SceneNode;
@@ -87,6 +88,7 @@ public:
     std::vector<std::shared_ptr<SceneNodeCore>> getDescendants();
     template <typename TObject=std::shared_ptr<SceneNode>>
     TObject getByPath(const std::string& where);
+    std::string getPathFromAncestor(std::shared_ptr<const SceneNodeCore> ancestor);
     virtual std::shared_ptr<ViewportNode> getLocalViewport();
     std::shared_ptr<SceneNodeCore> getNode(const std::string& where);
     std::shared_ptr<SceneNodeCore> getParentNode();
@@ -224,6 +226,7 @@ public:
      * Determines which dimensions the end result of the viewport
      * is allowed to expand on. 
      */
+
     enum class ResizeMode: uint8_t {
         FIXED_ASPECT=0,
         EXPAND_VERTICALLY,
@@ -245,7 +248,8 @@ public:
 
     std::shared_ptr<ViewportNode> getLocalViewport() override;
     std::shared_ptr<Texture> fetchRenderResult(float simulationProgress, uint32_t variableStep);
-
+    void setActiveCamera(const std::string& cameraPath);
+    void setActiveCamera(std::shared_ptr<SceneNodeCore> cameraNode);
     void requestDimensions(glm::u16vec2 requestedDimensions);
     void setResizeType(ResizeType type);
     void setResizeMode(ResizeMode mode);
@@ -254,8 +258,8 @@ public:
     void setFPSCap(float fpsCap);
 
     ActionDispatch& getActionDispatch();
-protected:
 
+protected:
     ViewportNode(const Placement& placement, const std::string& name):
     BaseSceneNode<ViewportNode>{placement, name},
     Resource<ViewportNode>{0}
@@ -271,6 +275,7 @@ protected:
     std::unique_ptr<ECSWorld> mOwnWorld { nullptr };
     void onActivated() override;
     void onDeactivated() override;
+    void onDestroyed() override;
 
 private:
     static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions);
@@ -281,9 +286,15 @@ private:
     std::shared_ptr<SceneNodeCore> clone() const override;
 
     void createAndJoinWorld();
+    void registerDomainCamera(std::shared_ptr<SceneNodeCore> cameraNode);
+    void unregisterDomainCamera(std::shared_ptr<SceneNodeCore> cameraNode);
+    std::shared_ptr<SceneNodeCore> findFallbackCamera();
 
     ActionDispatch mActionDispatch {};
     std::set<std::shared_ptr<ViewportNode>, std::owner_less<std::shared_ptr<ViewportNode>>> mChildViewports {};
+    std::shared_ptr<SceneNodeCore> mActiveCamera { nullptr };
+    std::set<std::shared_ptr<SceneNodeCore>, std::owner_less<std::shared_ptr<SceneNodeCore>>> mDomainCameras {};
+    RenderSetID mRenderSet;
 
     std::shared_ptr<Texture> mTextureResult { nullptr };
 
@@ -424,7 +435,6 @@ template<typename ...TComponents>
 std::shared_ptr<SceneNode> SceneNode::create(const Placement& placement, const std::string& name,  TComponents...components) {
     return BaseSceneNode<SceneNode>::create<TComponents...>(placement, name, components...);
 }
-
 
 template <typename TObject>
 TObject SceneNodeCore::getByPath(const std::string& where) {

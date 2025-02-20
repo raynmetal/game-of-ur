@@ -5,6 +5,7 @@
 #include <nlohmann/json.hpp>
 
 #include "ecs_world.hpp"
+#include "scene_components.hpp"
 
 struct CameraProperties {
     enum class ProjectionType: uint8_t {

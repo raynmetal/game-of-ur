@@ -70,7 +70,6 @@ Application::Application(const std::string& projectPath) {
     );
 
     mSceneSystem.lock()->onApplicationInitialize();
-    mSceneSystem.lock()->getRootViewport().requestDimensions(WindowContext::getInstance().getDimensions());
     mSceneSystem.lock()->addNode(
         ResourceDatabase::getRegisteredResource<SimObject>("root_scene"),
         "/"
@@ -85,7 +84,6 @@ void Application::execute() {
         sceneSystem->getRootViewport().requestDimensions(windowContext.getDimensions());
     }};
     onWindowResized.connectTo(windowContext.mSigWindowResized);
-    windowContext.mSigWindowResized.emit();
 
 
     // Timing related variables
@@ -96,6 +94,7 @@ void Application::execute() {
     SDL_Event event;
     bool quit {false};
     sceneSystem->onApplicationStart();
+    sceneSystem->getRootViewport().requestDimensions(WindowContext::getInstance().getDimensions());
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
@@ -165,6 +164,5 @@ void Application::initialize(const nlohmann::json& windowProperties) {
 }
 
 void Application::cleanup() {
-    mSceneSystem.lock()->getRootWorld().cleanup();
     Material::Clear();
 }

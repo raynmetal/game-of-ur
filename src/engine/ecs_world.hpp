@@ -318,6 +318,9 @@ private:
     template<typename TSystem>
     bool isEnabled(EntityID entityID);
 
+    template <typename TSystem>
+    bool isRegistered(EntityID entityID);
+
     void handleEntitySignatureChanged(EntityID entityID, Signature signature);
     void handleEntityDestroyed(EntityID entityID);
     void handleEntityUpdated(EntityID entityID, Signature signature);
@@ -367,6 +370,9 @@ public:
 
     template <typename TSystem>
     bool isEnabled(EntityID entityID);
+
+    template <typename TSystem>
+    bool isRegistered(EntityID entityID);
 
     template<typename ...TComponents>
     Entity createEntity(TComponents...components);
@@ -488,6 +494,9 @@ public:
 
     template<typename TSystem>
     bool isEnabled() const;
+
+    template <typename TSystem>
+    bool isRegistered() const;
 
     template<typename TSystem>
     void enableSystem();
@@ -685,6 +694,10 @@ template <typename TSystem>
 bool ECSWorld::isEnabled(EntityID entityID) {
     return mSystemManager.isEnabled<TSystem>(entityID);
 }
+template <typename TSystem>
+bool ECSWorld::isRegistered(EntityID entityID) {
+    return mSystemManager.isRegistered<TSystem>(entityID);
+}
 
 template <typename TComponent>
 bool ECSWorld::hasComponent(EntityID entityID) const {
@@ -765,6 +778,11 @@ bool Entity::isEnabled() const {
 }
 
 template <typename TSystem>
+bool Entity::isRegistered() const {
+    return mWorld.get().isRegistered<TSystem>(mID);
+}
+
+template <typename TSystem>
 void Entity::disableSystem() {
     mWorld.get().disableEntity<TSystem>(mID);
 }
@@ -773,6 +791,12 @@ template <typename TSystem>
 bool SystemManager::isEnabled(EntityID entityID) {
     const std::string systemTypeName { TSystem::getSystemTypeName() };
     return mNameToSystem[systemTypeName]->isEnabled(entityID);
+}
+
+template <typename TSystem>
+bool SystemManager::isRegistered(EntityID entityID) {
+    const std::string systemTypeName { TSystem::getSystemTypeName() };
+    return mNameToSystem[systemTypeName]->isRegistered(entityID);
 }
 
 template<typename ...TComponents>

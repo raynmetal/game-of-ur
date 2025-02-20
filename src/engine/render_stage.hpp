@@ -5,6 +5,8 @@
 #include <map>
 #include <queue>
 
+#include <SDL2/SDL.h>
+
 #include "texture.hpp"
 #include "shader_program.hpp"
 #include "framebuffer.hpp"
@@ -45,13 +47,11 @@ struct OpaqueRenderUnit {
 };
 
 struct LightRenderUnit {
-    LightRenderUnit(std::shared_ptr<StaticMesh> meshHandle, std::shared_ptr<Material> materialHandle, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
-    mMeshHandle{ meshHandle }, mMaterialHandle{ materialHandle },
+    LightRenderUnit(std::shared_ptr<StaticMesh> meshHandle, const LightEmissionData& lightEmissionData, const glm::mat4& modelMatrix):
+    mMeshHandle{ meshHandle },
     mModelMatrix{ modelMatrix },
     mLightAttributes { lightEmissionData }
-    {
-        setSortKey();
-    }
+    { setSortKey(); }
 
     bool operator<(const LightRenderUnit& other) const {
         return mSortKey < other.mSortKey;
@@ -59,15 +59,12 @@ struct LightRenderUnit {
 
     std::uint32_t mSortKey {};
     std::shared_ptr<StaticMesh> mMeshHandle;
-    std::shared_ptr<Material> mMaterialHandle;
     glm::mat4 mModelMatrix;
     LightEmissionData mLightAttributes;
 
     void setSortKey() {
         std::uint32_t meshHash { static_cast<uint32_t>(std::hash<StaticMesh*>{}(mMeshHandle.get())) };
-        std::uint32_t materialHash { static_cast<uint32_t>(std::hash<Material*>{}(mMaterialHandle.get()))};
-        mSortKey |= (meshHash << ((sizeof(uint32_t)/2)*8)) & 0xFFFF0000;
-        mSortKey |= (materialHash << 0) & 0x0000FFFF;
+        mSortKey = meshHash;
     }
 };
 
@@ -98,6 +95,7 @@ public:
     void setTargetViewport(const SDL_Rect& targetViewport);
     void submitToRenderQueue(OpaqueRenderUnit renderUnit);
     void submitToRenderQueue(LightRenderUnit lightRenderUnit);
+
 protected:
     GLuint mVertexArrayObject {};
     std::shared_ptr<ShaderProgram> mShaderHandle;
@@ -105,18 +103,15 @@ protected:
     std::map<std::string, std::shared_ptr<Texture>> mTextureAttachments {};
     std::map<std::string, std::shared_ptr<StaticMesh>> mMeshAttachments {};
     std::map<std::string, std::shared_ptr<Material>> mMaterialAttachments {};
-
     std::priority_queue<OpaqueRenderUnit> mOpaqueMeshQueue {};
     std::priority_queue<LightRenderUnit> mLightQueue {};
+
     SDL_Rect mTargetViewport {0, 0, 800, 600};
 };
 
 class BaseOffscreenRenderStage: public BaseRenderStage {
 public:
     BaseOffscreenRenderStage(const std::string& shaderFilepath, const nlohmann::json& templateFramebufferDescription);
-
-    virtual void validate() = 0;
-    virtual void execute() = 0;
 
     void declareRenderTarget(const std::string& name, unsigned int index);
     std::shared_ptr<Texture> getRenderTarget(const std::string& name);
