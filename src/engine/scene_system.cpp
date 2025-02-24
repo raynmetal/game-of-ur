@@ -543,21 +543,30 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
             renderSystem->setRenderProperties(
                 mRenderConfiguration.mBaseDimensions, 
                 requestDimensions,
-                {0,0, mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y}
+                {
+                    requestDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, requestDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
+                    mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
+                }
             );
         break;
         case RenderConfiguration::ResizeType::TEXTURE_DIMENSIONS:
            renderSystem->setRenderProperties(
                 glm::mat2{mRenderConfiguration.mRenderScale} * mRenderConfiguration.mBaseDimensions,
                 requestDimensions,
-                {0,0,mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y}
+                {
+                    requestDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, requestDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
+                    mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
+                }
             );
         break;
         case RenderConfiguration::ResizeType::VIEWPORT_DIMENSIONS:
             renderSystem->setRenderProperties(
                 glm::mat2{mRenderConfiguration.mRenderScale} * mRenderConfiguration.mComputedDimensions, 
                 requestDimensions,
-                {0,0,mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y}
+                {
+                    requestDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, requestDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
+                    mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
+                }
             );
         break;
     }
