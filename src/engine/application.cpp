@@ -69,7 +69,7 @@ Application::Application(const std::string& projectPath) {
         }
     );
 
-    mSceneSystem.lock()->onApplicationInitialize();
+    mSceneSystem.lock()->onApplicationInitialize(projectJSON[0].at("root_viewport_render_configuration"));
     mSceneSystem.lock()->addNode(
         ResourceDatabase::getRegisteredResource<SimObject>("root_scene"),
         "/"

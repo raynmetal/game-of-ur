@@ -59,12 +59,14 @@
                 }
             ],
             "inherits_world": true,
-            "base_dimensions": [512, 512],
-            "update_mode": "on-render-cap-fps",
-            "resize_type": "texture-dimensions",
-            "resize_mode": "fixed-dimensions",
-            "fps_cap": 15,
-            "render_scale": 1.0
+            "render_configuration": {
+                "base_dimensions": [512, 512],
+                "update_mode": "on-render-cap-fps",
+                "resize_type": "texture-dimensions",
+                "resize_mode": "fixed-dimensions",
+                "fps_cap": 15,
+                "render_scale": 1.0
+            }
         },
 
         {

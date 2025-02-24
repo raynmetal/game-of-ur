@@ -216,34 +216,45 @@ friend class BaseSceneNode<SceneNode>;
 
 class ViewportNode: public BaseSceneNode<ViewportNode>, public Resource<ViewportNode> {
 public:
-    enum class ResizeType: uint8_t {
-        OFF=0,
-        VIEWPORT_DIMENSIONS, // Viewport transform configured per stretch mode and requested dimensions
-        TEXTURE_DIMENSIONS, // Texture result rendered in base dimensions, and then warped to fit request dimensions
+    struct RenderConfiguration {
+        enum class ResizeType: uint8_t {
+            OFF=0,
+            VIEWPORT_DIMENSIONS, // Viewport transform configured per stretch mode and requested dimensions
+            TEXTURE_DIMENSIONS, // Texture result rendered in base dimensions, and then warped to fit request dimensions
+        };
+
+        /**
+         * Determines which dimensions the end result of the viewport
+         * is allowed to expand on. 
+         */
+        enum class ResizeMode: uint8_t {
+            FIXED_ASPECT=0, // both, while retaining aspect ratio
+            EXPAND_VERTICALLY,
+            EXPAND_HORIZONTALLY, 
+            EXPAND_FILL, // no constraint in either dimension
+        };
+
+        enum class UpdateMode: uint8_t {
+            NEVER=0,
+            ONCE, // update on next render frame, then set to never
+            ON_FETCH, // update whenever a request for the texture is made
+            ON_FETCH_CAP_FPS, // update on request, but ignore requests exceeding FPS cap
+            ON_RENDER, // update every render call
+            ON_RENDER_CAP_FPS, // update on render call when fps cap isn't exceeded
+        };
+
+        ResizeType mResizeType { ResizeType::VIEWPORT_DIMENSIONS };
+        ResizeMode mResizeMode { ResizeMode::EXPAND_HORIZONTALLY };
+        glm::u16vec2 mBaseDimensions { 800, 600 };
+        glm::u16vec2 mComputedDimensions { 800, 600 };
+        glm::u16vec2 mRequestedDimensions { 800, 600 };
+        float mRenderScale { 1.f };
+
+        UpdateMode mUpdateMode { UpdateMode::ON_RENDER_CAP_FPS };
+        float mFPSCap { 60.f };
     };
 
-    /**
-     * Determines which dimensions the end result of the viewport
-     * is allowed to expand on. 
-     */
-
-    enum class ResizeMode: uint8_t {
-        FIXED_ASPECT=0,
-        EXPAND_VERTICALLY,
-        EXPAND_HORIZONTALLY,
-        EXPAND_FILL,
-    };
-
-    enum class UpdateMode: uint8_t {
-        NEVER=0,
-        ONCE,
-        ON_FETCH,
-        ON_FETCH_CAP_FPS,
-        ON_RENDER,
-        ON_RENDER_CAP_FPS,
-    };
-
-    static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions);
+    static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration);
     static std::shared_ptr<ViewportNode> create(const nlohmann::json& sceneNodeDescription);
     static std::shared_ptr<ViewportNode> copy(const std::shared_ptr<const ViewportNode> other);
     static inline std::string getResourceTypeName() { return "ViewportNode"; }
@@ -252,12 +263,16 @@ public:
     std::shared_ptr<Texture> fetchRenderResult(float simulationProgress);
     void setActiveCamera(const std::string& cameraPath);
     void setActiveCamera(std::shared_ptr<SceneNodeCore> cameraNode);
-    void requestDimensions(glm::u16vec2 requestedDimensions);
-    void setResizeType(ResizeType type);
-    void setResizeMode(ResizeMode mode);
+
+    RenderConfiguration getRenderConfiguration() const;
+    void setRenderConfiguration(const RenderConfiguration& renderConfiguration);
+    void setResizeType(RenderConfiguration::ResizeType type);
+    void setResizeMode(RenderConfiguration::ResizeMode mode);
     void setRenderScale(float renderScale);
-    void setUpdateMode(UpdateMode updateMode);
+    void setUpdateMode(RenderConfiguration::UpdateMode updateMode);
     void setFPSCap(float fpsCap);
+
+    void requestDimensions(glm::u16vec2 requestedDimensions);
 
     ActionDispatch& getActionDispatch();
 
@@ -282,11 +297,12 @@ protected:
     void joinWorld(ECSWorld& world) override;
 
 private:
-    static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions);
+    static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration);
     ViewportNode(const Key& key, const Placement& placement, const std::string& name):
     BaseSceneNode<ViewportNode>{key, Placement{}, name},
     Resource<ViewportNode>{0}
     {}
+
     std::shared_ptr<SceneNodeCore> clone() const override;
 
     void createAndJoinWorld();
@@ -306,43 +322,14 @@ private:
     RenderSetID mRenderSet;
 
     std::shared_ptr<Texture> mTextureResult { nullptr };
+    RenderConfiguration mRenderConfiguration {};
 
-    ResizeType mResizeType { ResizeType::TEXTURE_DIMENSIONS };
-    ResizeMode mResizeMode { ResizeMode::EXPAND_VERTICALLY };
-    glm::u16vec2 mBaseDimensions { 800, 600 };
-    glm::u16vec2 mComputedDimensions { 800, 600 };
-    glm::u16vec2 mRequestedDimensions { 800, 600 };
-
-    UpdateMode mUpdateMode { UpdateMode::ON_RENDER_CAP_FPS };
-    float mFPSCap { 60.f };
-    float mRenderScale { .3f };
-    uint32_t mTimeSinceLastRender { static_cast<uint32_t>(1000/mFPSCap) };
+    uint32_t mTimeSinceLastRender { static_cast<uint32_t>(1000/mRenderConfiguration.mFPSCap) };
 
 friend class BaseSceneNode<ViewportNode>;
 friend class SceneNodeCore;
 friend class SceneSystem;
 };
-
-NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::ResizeType, {
-    {ViewportNode::ResizeType::OFF, "off"},
-    {ViewportNode::ResizeType::VIEWPORT_DIMENSIONS, "viewport-dimensions"},
-    {ViewportNode::ResizeType::TEXTURE_DIMENSIONS, "texture-dimensions"},
-});
-
-NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::ResizeMode, {
-    {ViewportNode::ResizeMode::FIXED_ASPECT,"fixed-aspect"},
-    {ViewportNode::ResizeMode::EXPAND_VERTICALLY, "expand-vertically"},
-    {ViewportNode::ResizeMode::EXPAND_HORIZONTALLY, "expand-horizontally"},
-    {ViewportNode::ResizeMode::EXPAND_FILL, "expand-fill"},
-});
-
-NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::UpdateMode, {
-    {ViewportNode::UpdateMode::NEVER, "never"},
-    {ViewportNode::UpdateMode::ONCE, "once"},
-    {ViewportNode::UpdateMode::ON_FETCH, "on-fetch"},
-    {ViewportNode::UpdateMode::ON_RENDER, "on-render"},
-    {ViewportNode::UpdateMode::ON_RENDER_CAP_FPS, "on-render-cap-fps"},
-});
 
 class SceneSystem: public System<SceneSystem, Placement, Transform> {
 public:
@@ -365,7 +352,7 @@ public:
     std::weak_ptr<ECSWorld> getRootWorld() const;
     ViewportNode& getRootViewport() const;
 
-    void onApplicationInitialize();
+    void onApplicationInitialize(const ViewportNode::RenderConfiguration& rootViewportRenderConfiguration);
     void onApplicationStart();
 
     void simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
@@ -577,6 +564,64 @@ inline void SceneNodeCore::removeComponent<Placement>() {
 template <>
 inline void SceneNodeCore::removeComponent<Transform>() {
     assert(false && "Cannot remove a scene node's transform component");
+}
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::ResizeType, {
+    {ViewportNode::RenderConfiguration::ResizeType::OFF, "off"},
+    {ViewportNode::RenderConfiguration::ResizeType::VIEWPORT_DIMENSIONS, "viewport-dimensions"},
+    {ViewportNode::RenderConfiguration::ResizeType::TEXTURE_DIMENSIONS, "texture-dimensions"},
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::ResizeMode, {
+    {ViewportNode::RenderConfiguration::ResizeMode::FIXED_ASPECT,"fixed-aspect"},
+    {ViewportNode::RenderConfiguration::ResizeMode::EXPAND_VERTICALLY, "expand-vertically"},
+    {ViewportNode::RenderConfiguration::ResizeMode::EXPAND_HORIZONTALLY, "expand-horizontally"},
+    {ViewportNode::RenderConfiguration::ResizeMode::EXPAND_FILL, "expand-fill"},
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::UpdateMode, {
+    {ViewportNode::RenderConfiguration::UpdateMode::NEVER, "never"},
+    {ViewportNode::RenderConfiguration::UpdateMode::ONCE, "once"},
+    {ViewportNode::RenderConfiguration::UpdateMode::ON_FETCH, "on-fetch"},
+    {ViewportNode::RenderConfiguration::UpdateMode::ON_RENDER, "on-render"},
+    {ViewportNode::RenderConfiguration::UpdateMode::ON_RENDER_CAP_FPS, "on-render-cap-fps"},
+});
+
+inline void to_json(nlohmann::json& json, const ViewportNode::RenderConfiguration& renderConfiguration) {
+    json = {
+        {"base_dimensions", nlohmann::json::array({renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y})},
+        {"update_mode", renderConfiguration.mUpdateMode},
+        {"resize_type", renderConfiguration.mResizeType},
+        {"resize_mode", renderConfiguration.mResizeMode},
+        {"render_scale", renderConfiguration.mRenderScale},
+        {"fps_cap", renderConfiguration.mFPSCap},
+    };
+}
+
+inline void from_json(const nlohmann::json& json, ViewportNode::RenderConfiguration& renderConfiguration) {
+    assert(json.find("base_dimensions") != json.end() && "Viewport descriptions must contain the \"base_dimensions\" size 2 array of Numbers attribute");
+    json.at("base_dimensions")[0].get_to(renderConfiguration.mBaseDimensions.x);
+    json.at("base_dimensions")[1].get_to(renderConfiguration.mBaseDimensions.y);
+    renderConfiguration.mRequestedDimensions = renderConfiguration.mBaseDimensions;
+    renderConfiguration.mComputedDimensions = renderConfiguration.mBaseDimensions;
+    assert(renderConfiguration.mBaseDimensions.x > 0 && renderConfiguration.mBaseDimensions.y > 0 && "Base dimensions cannot include a 0 in either dimension");
+
+    assert(json.find("update_mode") != json.end() && "Viewport render configuration must include the \"update_mode\" enum attribute");
+    json.at("update_mode").get_to(renderConfiguration.mUpdateMode);
+
+    assert(json.find("resize_type") != json.end() && "Viewport render configuration must include the \"resize_type\" enum attribute");
+    json.at("resize_type").get_to(renderConfiguration.mResizeType);
+
+    assert(json.find("resize_mode") != json.end() && "Viewport render configuration must include the \"resize_mode\" enum attribute");
+    json.at("resize_mode").get_to(renderConfiguration.mResizeMode);
+
+    assert(json.find("render_scale") != json.end() && "Viewport render configuration must include the \"render_scale\" float attribute");
+    json.at("render_scale").get_to(renderConfiguration.mRenderScale);
+    assert(renderConfiguration.mRenderScale > 0.f && "Render scale must be a positive non-zero decimal number");
+
+    assert(json.find("fps_cap") != json.end() && "Viewport must include the \"fps_cap\" float attribute");
+    json.at("fps_cap").get_to(renderConfiguration.mFPSCap);
+    assert(renderConfiguration.mFPSCap > 0.f && "FPS cap must be a positive non-zero decimal number");
 }
 
 #endif

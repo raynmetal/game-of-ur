@@ -346,7 +346,7 @@ void ViewportNode::joinWorld(ECSWorld& world) {
     SceneNodeCore::joinWorld(world);
 
     if(!mOwnWorld) {
-        mRenderSet = getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(mBaseDimensions, mBaseDimensions, {0, 0, mBaseDimensions.x, mBaseDimensions.y});
+        mRenderSet = getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(mRenderConfiguration.mBaseDimensions, mRenderConfiguration.mBaseDimensions, {0, 0, mRenderConfiguration.mBaseDimensions.x, mRenderConfiguration.mBaseDimensions.y});
     }
 }
 
@@ -370,26 +370,25 @@ void ViewportNode::onDestroyed() {
     }
 }
 
-std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions) {
+std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, const ViewportNode::RenderConfiguration& renderConfiguration) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(Placement{}, name) };
-    newViewport->mBaseDimensions = baseDimensions;
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
-    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
+    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(renderConfiguration.mBaseDimensions, renderConfiguration.mBaseDimensions, {0, 0, renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y});
+    newViewport->setRenderConfiguration(renderConfiguration);
     return newViewport;
 }
-
-
-std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions) {
+std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(key, Placement{}, name) };
-    newViewport->mBaseDimensions = baseDimensions;
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
-    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
+    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(renderConfiguration.mBaseDimensions, renderConfiguration.mBaseDimensions, {0, 0, renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y});
+    newViewport->setRenderConfiguration(renderConfiguration);
     return newViewport;
 }
+
 std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewportNodeDescription) {
     std::shared_ptr<ViewportNode> newViewport {BaseSceneNode<ViewportNode>::create(viewportNodeDescription)};
     newViewport->updateComponent<Placement>(Placement {}); // override scene file placement
@@ -399,46 +398,37 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewpor
         newViewport->createAndJoinWorld();
     }
 
-    assert(viewportNodeDescription.find("base_dimensions") != viewportNodeDescription.end() && "Viewport descriptions must contain the \"base_dimensions\" size 2 array of Numbers attribute");
-    newViewport->mBaseDimensions.x = viewportNodeDescription.at("base_dimensions")[0].get<uint16_t>();
-    newViewport->mBaseDimensions.y = viewportNodeDescription.at("base_dimensions")[1].get<uint16_t>();
-    newViewport->mRequestedDimensions = newViewport->mBaseDimensions;
-    newViewport->mComputedDimensions = newViewport->mBaseDimensions;
-    assert(newViewport->mBaseDimensions.x > 0 && newViewport->mBaseDimensions.y > 0 && "Base dimensions cannot include a 0 in either dimension");
+    assert(viewportNodeDescription.find("render_configuration") != viewportNodeDescription.end() && "Viewport description must contain a valid render configuration");
+    viewportNodeDescription.at("render_configuration").get_to(newViewport->mRenderConfiguration);
+    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mRenderConfiguration.mBaseDimensions, newViewport->mRenderConfiguration.mBaseDimensions, {0, 0, newViewport->mRenderConfiguration.mBaseDimensions.x, newViewport->mRenderConfiguration.mBaseDimensions.y});
+    newViewport->setRenderConfiguration(newViewport->mRenderConfiguration);
 
-    assert(viewportNodeDescription.find("update_mode") != viewportNodeDescription.end() && "Viewport must include the \"update_mode\" enum attribute");
-    newViewport->mUpdateMode = viewportNodeDescription.at("update_mode");
-
-    assert(viewportNodeDescription.find("resize_type") != viewportNodeDescription.end() && "Viewport must include the \"resize_type\" enum attribute");
-    newViewport->mResizeType = viewportNodeDescription.at("resize_type");
-
-    assert(viewportNodeDescription.find("resize_mode") != viewportNodeDescription.end() && "Viewport must include the \"resize_mode\" enum attribute");
-    newViewport->mResizeMode = viewportNodeDescription.at("resize_mode");
-
-    assert(viewportNodeDescription.find("render_scale") != viewportNodeDescription.end() && "Viewport must include the \"render_scale\" float attribute");
-    newViewport->mRenderScale = viewportNodeDescription.at("render_scale");
-    assert(newViewport->mRenderScale > 0.f && "Render scale must be a positive non-zero decimal number");
-
-    assert(viewportNodeDescription.find("fps_cap") != viewportNodeDescription.end() && "Viewport must include the \"fps_cap\" float attribute");
-    newViewport->mFPSCap = viewportNodeDescription.at("fps_cap");
-    assert(newViewport->mFPSCap > 0.f && "FPS cap must be a positive non-zero decimal number");
-
-    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
     return newViewport;
 }
 std::shared_ptr<ViewportNode> ViewportNode::copy(const std::shared_ptr<const ViewportNode> viewportNode) {
     std::shared_ptr<ViewportNode> newViewport {BaseSceneNode<ViewportNode>::copy(viewportNode)};
     return newViewport;
 }
+
 std::shared_ptr<SceneNodeCore> ViewportNode::clone() const {
     std::shared_ptr<SceneNodeCore> newSceneNode { new ViewportNode{*this}, &SceneNodeCore_del_ };
     std::shared_ptr<ViewportNode> newViewport { std::static_pointer_cast<ViewportNode>(newSceneNode) };
-    newViewport->mBaseDimensions = mBaseDimensions;
     if(mOwnWorld) {
         newViewport->createAndJoinWorld();
     }
-    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
+    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(mRenderConfiguration.mBaseDimensions, mRenderConfiguration.mBaseDimensions, {0, 0, mRenderConfiguration.mBaseDimensions.x, mRenderConfiguration.mBaseDimensions.y});
+    newViewport->setRenderConfiguration(mRenderConfiguration);
     return newSceneNode;
+}
+
+void ViewportNode::setRenderConfiguration(const ViewportNode::RenderConfiguration& renderConfiguration) {
+    mRenderConfiguration = renderConfiguration;
+    assert(mRenderConfiguration.mRequestedDimensions.x > 0 && mRenderConfiguration.mRequestedDimensions.y > 0 && "Cannot request negative dimensions for viewport renders");
+    requestDimensions(mRenderConfiguration.mRequestedDimensions);
+}
+
+ViewportNode::RenderConfiguration ViewportNode::getRenderConfiguration() const {
+    return mRenderConfiguration;
 }
 
 void ViewportNode::createAndJoinWorld() {
@@ -490,111 +480,111 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
     std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
     renderSystem->useRenderSet(mRenderSet);
     const float requestAspect { static_cast<float>(requestDimensions.x)/static_cast<float>(requestDimensions.y) };
-    const float baseAspect { static_cast<float>(mBaseDimensions.x)/static_cast<float>(mBaseDimensions.y) };
+    const float baseAspect { static_cast<float>(mRenderConfiguration.mBaseDimensions.x)/static_cast<float>(mRenderConfiguration.mBaseDimensions.y) };
     glm::vec2 requestToBaseRatio { 
-        static_cast<float>(requestDimensions.x) / static_cast<float>(mBaseDimensions.x),
-        static_cast<float>(requestDimensions.y) / static_cast<float>(mBaseDimensions.y)
+        static_cast<float>(requestDimensions.x) / static_cast<float>(mRenderConfiguration.mBaseDimensions.x),
+        static_cast<float>(requestDimensions.y) / static_cast<float>(mRenderConfiguration.mBaseDimensions.y)
     };
-    mRequestedDimensions = requestDimensions;
+    mRenderConfiguration.mRequestedDimensions = requestDimensions;
 
-    if(mResizeType != ResizeType::OFF) {
-        switch(mResizeMode)  {
-            case ResizeMode::FIXED_ASPECT:
+    if(mRenderConfiguration.mResizeType != RenderConfiguration::ResizeType::OFF) {
+        switch(mRenderConfiguration.mResizeMode)  {
+            case RenderConfiguration::ResizeMode::FIXED_ASPECT:
                 if(requestAspect > baseAspect) {
-                    mComputedDimensions = { requestToBaseRatio.y * mBaseDimensions.x, mRequestedDimensions.y };
+                    mRenderConfiguration.mComputedDimensions = { requestToBaseRatio.y * mRenderConfiguration.mBaseDimensions.x, mRenderConfiguration.mRequestedDimensions.y };
 
                 } else {
-                    mComputedDimensions = { mRequestedDimensions.x, requestToBaseRatio.x * mBaseDimensions.y };
+                    mRenderConfiguration.mComputedDimensions = { mRenderConfiguration.mRequestedDimensions.x, requestToBaseRatio.x * mRenderConfiguration.mBaseDimensions.y };
                 }
 
             break;
-            case ResizeMode::EXPAND_HORIZONTALLY:
-                mComputedDimensions.x = mRequestedDimensions.x;
+            case RenderConfiguration::ResizeMode::EXPAND_HORIZONTALLY:
+                mRenderConfiguration.mComputedDimensions.x = mRenderConfiguration.mRequestedDimensions.x;
 
                 // Bigger, so aspect ratio does not matter. Clamp Y
                 if(requestToBaseRatio.y > 1.f && requestToBaseRatio.x > 1.f) { 
-                    mComputedDimensions.y = mBaseDimensions.y;
+                    mRenderConfiguration.mComputedDimensions.y = mRenderConfiguration.mBaseDimensions.y;
 
                 // Shorter but wider aspect. Y is full height of request
                 } else if (requestToBaseRatio.y <= 1.f && requestAspect > baseAspect) {
-                    mComputedDimensions.y = mRequestedDimensions.y;
+                    mRenderConfiguration.mComputedDimensions.y = mRenderConfiguration.mRequestedDimensions.y;
 
                 // Taller aspect, but narrower than base. Shrink Y in proportion to X, preserving aspect in render
                 } else /*if (requestToBaseRatio.x <= 1.f && requestAspect <= baseAspect)*/ {
-                    mComputedDimensions.y = requestToBaseRatio.x * mBaseDimensions.y;
+                    mRenderConfiguration.mComputedDimensions.y = requestToBaseRatio.x * mRenderConfiguration.mBaseDimensions.y;
                 } 
 
             break;
-            case ResizeMode::EXPAND_VERTICALLY:
-                mComputedDimensions.y = mRequestedDimensions.y;
+            case RenderConfiguration::ResizeMode::EXPAND_VERTICALLY:
+                mRenderConfiguration.mComputedDimensions.y = mRenderConfiguration.mRequestedDimensions.y;
 
                 // Bigger, so aspect ratio does not matter. Clamp X
                 if(requestToBaseRatio.x > 1.f && requestToBaseRatio.y > 1.f) {
-                    mComputedDimensions.x = mBaseDimensions.x;
+                    mRenderConfiguration.mComputedDimensions.x = mRenderConfiguration.mBaseDimensions.x;
 
                 // Narrower, but taller aspect. X is full width of the request.
                 } else if (requestToBaseRatio.x <= 1.f && requestAspect <= baseAspect) {
-                    mComputedDimensions.x = mRequestedDimensions.x;
+                    mRenderConfiguration.mComputedDimensions.x = mRenderConfiguration.mRequestedDimensions.x;
 
                 // Wider aspect, but shorter than base. Shrink X in proportion to Y, preserving aspect in render
                 } else {
-                    mComputedDimensions.x = requestToBaseRatio.y * mBaseDimensions.x;
+                    mRenderConfiguration.mComputedDimensions.x = requestToBaseRatio.y * mRenderConfiguration.mBaseDimensions.x;
                 }
             break;
-            case ResizeMode::EXPAND_FILL:
-                mComputedDimensions = mRequestedDimensions;
+            case RenderConfiguration::ResizeMode::EXPAND_FILL:
+                mRenderConfiguration.mComputedDimensions = mRenderConfiguration.mRequestedDimensions;
             break;
         }
     }
 
-    switch(mResizeType) {
-        case ResizeType::OFF:
-            mComputedDimensions = mBaseDimensions;
+    switch(mRenderConfiguration.mResizeType) {
+        case RenderConfiguration::ResizeType::OFF:
+            mRenderConfiguration.mComputedDimensions = mRenderConfiguration.mBaseDimensions;
             renderSystem->setRenderProperties(
-                mBaseDimensions, 
+                mRenderConfiguration.mBaseDimensions, 
                 requestDimensions,
-                {0,0,mComputedDimensions.x, mComputedDimensions.y}
+                {0,0, mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y}
             );
         break;
-        case ResizeType::TEXTURE_DIMENSIONS:
+        case RenderConfiguration::ResizeType::TEXTURE_DIMENSIONS:
            renderSystem->setRenderProperties(
-                glm::mat2{mRenderScale} * mBaseDimensions,
+                glm::mat2{mRenderConfiguration.mRenderScale} * mRenderConfiguration.mBaseDimensions,
                 requestDimensions,
-                {0,0,mComputedDimensions.x, mComputedDimensions.y}
+                {0,0,mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y}
             );
         break;
-        case ResizeType::VIEWPORT_DIMENSIONS:
+        case RenderConfiguration::ResizeType::VIEWPORT_DIMENSIONS:
             renderSystem->setRenderProperties(
-                glm::mat2{mRenderScale} * mComputedDimensions, 
+                glm::mat2{mRenderConfiguration.mRenderScale} * mRenderConfiguration.mComputedDimensions, 
                 requestDimensions,
-                {0,0,mComputedDimensions.x, mComputedDimensions.y}
+                {0,0,mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y}
             );
         break;
     }
 }
 
-void ViewportNode::setResizeType(ResizeType resizeType) {
-    if(mResizeType == resizeType) return;
-    mResizeType = resizeType;
-    requestDimensions(mRequestedDimensions);
+void ViewportNode::setResizeType(RenderConfiguration::ResizeType resizeType) {
+    if(mRenderConfiguration.mResizeType == resizeType) return;
+    mRenderConfiguration.mResizeType = resizeType;
+    requestDimensions(mRenderConfiguration.mRequestedDimensions);
 }
-void ViewportNode::setResizeMode(ResizeMode resizeMode) {
-    if(mResizeMode == resizeMode) return;
-    mResizeMode = resizeMode;
-    requestDimensions(mRequestedDimensions);
+void ViewportNode::setResizeMode(RenderConfiguration::ResizeMode resizeMode) {
+    if(mRenderConfiguration.mResizeMode == resizeMode) return;
+    mRenderConfiguration.mResizeMode = resizeMode;
+    requestDimensions(mRenderConfiguration.mRequestedDimensions);
 }
-void ViewportNode::setUpdateMode(UpdateMode updateMode) {
-    if(mUpdateMode == updateMode) return;
-    mUpdateMode = updateMode;
+void ViewportNode::setUpdateMode(RenderConfiguration::UpdateMode updateMode) {
+    if(mRenderConfiguration.mUpdateMode == updateMode) return;
+    mRenderConfiguration.mUpdateMode = updateMode;
 }
 void ViewportNode::setFPSCap(float fpsCap) {
-    assert(mFPSCap > 0.f && "FPS cap cannot be negative or zero");
-    mFPSCap = mFPSCap;
+    assert(fpsCap> 0.f && "FPS cap cannot be negative or zero");
+    mRenderConfiguration.mFPSCap = fpsCap;
 }
 void ViewportNode::setRenderScale(float renderScale) {
-    assert(mFPSCap > 0.f && "Render scale cannot be negative or zero");
-    mRenderScale = renderScale;
-    requestDimensions(mRequestedDimensions);
+    assert(renderScale > 0.f && "Render scale cannot be negative or zero");
+    mRenderConfiguration.mRenderScale = renderScale;
+    requestDimensions(mRenderConfiguration.mRequestedDimensions);
 }
 
 void ViewportNode::registerDomainCamera(std::shared_ptr<SceneNodeCore> cameraNode) {
@@ -621,25 +611,25 @@ std::shared_ptr<SceneNodeCore> ViewportNode::findFallbackCamera() {
 }
 
 std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgress) {
-    assert(mFPSCap > 0.f && "FPS cannot be negative or zero");
-    const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mFPSCap)};
+    assert(mRenderConfiguration.mFPSCap > 0.f && "FPS cannot be negative or zero");
+    const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mRenderConfiguration.mFPSCap)};
     std::shared_ptr<ECSWorld> world = getWorld().lock();
 
-    switch (mUpdateMode) {
-        case UpdateMode::ON_FETCH_CAP_FPS:
+    switch (mRenderConfiguration.mUpdateMode) {
+        case RenderConfiguration::UpdateMode::ON_FETCH_CAP_FPS:
             if(mTimeSinceLastRender < thresholdTime) {
                 break;
             }
 
-        case UpdateMode::ON_FETCH:
+        case RenderConfiguration::UpdateMode::ON_FETCH:
             mTimeSinceLastRender = 0;
             world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
             world->getSystem<RenderSystem>()->execute(simulationProgress);
             mTextureResult = world->getSystem<RenderSystem>()->getCurrentScreenTexture();
-        case UpdateMode::ONCE:
-        case UpdateMode::ON_RENDER_CAP_FPS:
-        case UpdateMode::ON_RENDER:
-        case UpdateMode::NEVER:
+        case RenderConfiguration::UpdateMode::ONCE:
+        case RenderConfiguration::UpdateMode::ON_RENDER_CAP_FPS:
+        case RenderConfiguration::UpdateMode::ON_RENDER:
+        case RenderConfiguration::UpdateMode::NEVER:
         break;
     }
 
@@ -647,32 +637,32 @@ std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgres
 }
 
 std::shared_ptr<Texture> ViewportNode::render(float simulationProgress, uint32_t variableStep) {
-    assert(mFPSCap > 0.f && "FPS cannot be negative or zero");
-    const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mFPSCap)};
+    assert(mRenderConfiguration.mFPSCap > 0.f && "FPS cannot be negative or zero");
+    const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mRenderConfiguration.mFPSCap)};
     std::shared_ptr<ECSWorld> world = getWorld().lock();
 
     mTimeSinceLastRender += variableStep;
     if(mTimeSinceLastRender > thresholdTime) mTimeSinceLastRender = thresholdTime;
     bool renderOnce { false };
 
-    switch (mUpdateMode) {
-        case UpdateMode::ONCE:
-            mUpdateMode = UpdateMode::NEVER;
+    switch (mRenderConfiguration.mUpdateMode) {
+        case RenderConfiguration::UpdateMode::ONCE:
+            mRenderConfiguration.mUpdateMode = RenderConfiguration::UpdateMode::NEVER;
             renderOnce = true;
 
-        case UpdateMode::ON_RENDER_CAP_FPS:
+        case RenderConfiguration::UpdateMode::ON_RENDER_CAP_FPS:
             if(!renderOnce && mTimeSinceLastRender < thresholdTime)
                 break;
 
-        case UpdateMode::ON_RENDER:
+        case RenderConfiguration::UpdateMode::ON_RENDER:
             mTimeSinceLastRender = 0;
             world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
             world->getSystem<RenderSystem>()->execute(simulationProgress);
             mTextureResult = world->getSystem<RenderSystem>()->getCurrentScreenTexture();
 
-        case UpdateMode::ON_FETCH:
-        case UpdateMode::ON_FETCH_CAP_FPS:
-        case UpdateMode::NEVER:
+        case RenderConfiguration::UpdateMode::ON_FETCH:
+        case RenderConfiguration::UpdateMode::ON_FETCH_CAP_FPS:
+        case RenderConfiguration::UpdateMode::NEVER:
         break;
     }
 
@@ -993,8 +983,8 @@ void SceneSystem::onWorldEntityUpdate(UniversalEntityID UniversalEntityID) {
     markDirty(UniversalEntityID);
 }
 
-void SceneSystem::onApplicationInitialize() {
-    mRootNode = ViewportNode::create(SceneNodeCore::Key{}, kSceneRootName, false, {800, 600});
+void SceneSystem::onApplicationInitialize(const ViewportNode::RenderConfiguration& rootViewportRenderConfiguration) {
+    mRootNode = ViewportNode::create(SceneNodeCore::Key{}, kSceneRootName, false, rootViewportRenderConfiguration);
 
     // Manual setup of root node, since it skips the normal activation procedure
     mRootNode->mStateFlags |= SceneNodeCore::StateFlags::ENABLED;
