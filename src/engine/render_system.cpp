@@ -77,10 +77,10 @@ void RenderSystem::execute(float simulationProgress) {
     updateCameraMatrices(simulationProgress);
 
     // Execute each rendering stage in its proper order
-    mWorld.getSystem<OpaqueQueue>()->enqueueTo(*mRenderSets.at(mActiveRenderSetID).mGeometryRenderStage, simulationProgress);
+    mWorld.lock()->getSystem<OpaqueQueue>()->enqueueTo(*mRenderSets.at(mActiveRenderSetID).mGeometryRenderStage, simulationProgress);
     mRenderSets.at(mActiveRenderSetID).mGeometryRenderStage->execute();
 
-    mWorld.getSystem<LightQueue>()->enqueueTo(*mRenderSets.at(mActiveRenderSetID).mLightingRenderStage, simulationProgress);
+    mWorld.lock()->getSystem<LightQueue>()->enqueueTo(*mRenderSets.at(mActiveRenderSetID).mLightingRenderStage, simulationProgress);
     mRenderSets.at(mActiveRenderSetID).mLightingRenderStage->execute();
 
     mRenderSets.at(mActiveRenderSetID).mBlurRenderStage->execute();

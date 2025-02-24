@@ -21,7 +21,7 @@ const RenderSetID kMaxRenderSetIDs { 10000 };
 class RenderSystem: public System<RenderSystem, CameraProperties> {
 public:
 
-    RenderSystem(ECSWorld& world):
+    RenderSystem(std::weak_ptr<ECSWorld> world):
     System<RenderSystem, CameraProperties>{world}
     {}
 
@@ -29,7 +29,7 @@ public:
 
     class LightQueue: public System<LightQueue, Transform, LightEmissionData>{
     public:
-        LightQueue(ECSWorld& world):
+        LightQueue(std::weak_ptr<ECSWorld> world):
         System<RenderSystem::LightQueue, Transform, LightEmissionData>{world}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
@@ -40,7 +40,7 @@ public:
     };
     class OpaqueQueue: public System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>> {
     public:
-        OpaqueQueue(ECSWorld& world):
+        OpaqueQueue(std::weak_ptr<ECSWorld> world):
         System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>>{world}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
@@ -92,7 +92,7 @@ struct RenderSet {
     float getExposure();
 
 
-    std::size_t mCurrentScreenTexture {0};
+    std::size_t mCurrentScreenTexture {6};
     std::vector<std::shared_ptr<Texture>> mScreenTextures {};
     EntityID mActiveCamera {};
     std::shared_ptr<Material> mLightMaterialHandle {nullptr};

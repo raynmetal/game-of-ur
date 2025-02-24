@@ -62,13 +62,16 @@ SceneNodeCore::SceneNodeCore(const nlohmann::json& sceneNodeDescription)
 
 SceneNodeCore::SceneNodeCore(const SceneNodeCore& other)
 {
+    mEntity = std::make_shared<Entity>(
+        ECSWorld::createEntityPrototype()
+    );
     copyAndReplaceAttributes(other);
 }
 
 void SceneNodeCore::copyAndReplaceAttributes(const SceneNodeCore& other) {
     // copy the other entity and its components
     std::shared_ptr<Entity> newEntity { 
-        std::make_shared<Entity>(mEntity->getWorld().createEntity())
+        std::make_shared<Entity>(mEntity->getWorld().lock()->createEntity())
     };
     newEntity->copy(*(other.mEntity));
     mEntity = newEntity;
@@ -91,7 +94,7 @@ void SceneNodeCore::copyDescendants(const SceneNodeCore& other) {
         // from this depends on the existence of a shared pointer
         // to the current object
         mChildren[childName]->mParent = shared_from_this();
-        mChildren[childName]->mParentViewport = getLocalViewport();
+        setParentViewport(mChildren[childName], getLocalViewport());
     }
 }
 
@@ -167,7 +170,7 @@ void SceneNodeCore::addNode(std::shared_ptr<SceneNodeCore> node, const std::stri
         node->mParent = shared_from_this();
         setParentViewport(node, getLocalViewport());
         assert(!detectCycle(node) && "Cycle detected, ancestor node added as child to its descendant.");
-        getWorld().getSystem<SceneSystem>()->nodeAdded(node);
+        getWorld().lock()->getSystem<SceneSystem>()->nodeAdded(node);
         return;
     }
 
@@ -261,7 +264,7 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::getParentNode() {
 std::shared_ptr<SceneNodeCore> SceneNodeCore::disconnectNode(std::shared_ptr<SceneNodeCore> node) {
     // let system know that this node is being disconnected, in case it was part
     // of the scene tree
-    node->mEntity->getWorld().getSystem<SceneSystem>()->nodeRemoved(node);
+    node->mEntity->getWorld().lock()->getSystem<SceneSystem>()->nodeRemoved(node);
 
     //disconnect this node from its parent
     std::shared_ptr<SceneNodeCore> parent { node->mParent };
@@ -324,16 +327,27 @@ EntityID SceneNodeCore::getEntityID() const {
     return mEntity->getID();
 }
 WorldID SceneNodeCore::getWorldID() const {
-    return mEntity->getWorld().getID();
+    return mEntity->getWorld().lock()->getID();
 }
 UniversalEntityID SceneNodeCore::getUniversalEntityID() const {
-    return { mEntity->getWorld().getID(), mEntity->getID() };
+    return { mEntity->getWorld().lock()->getID(), mEntity->getID() };
 }
-ECSWorld& SceneNodeCore::getWorld() const {
+std::weak_ptr<ECSWorld> SceneNodeCore::getWorld() const {
     return mEntity->getWorld();
 }
 void SceneNodeCore::joinWorld(ECSWorld& world) {
     mEntity->joinWorld(world);
+}
+void ViewportNode::joinWorld(ECSWorld& world) {
+    if(!mOwnWorld) {
+        getWorld().lock()->getSystem<RenderSystem>()->deleteRenderSet(mRenderSet);
+    }
+
+    SceneNodeCore::joinWorld(world);
+
+    if(!mOwnWorld) {
+        mRenderSet = getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(mBaseDimensions, mBaseDimensions, {0, 0, mBaseDimensions.x, mBaseDimensions.y});
+    }
 }
 
 void SceneNodeCore::validateName(const std::string& nodeName) {
@@ -349,8 +363,11 @@ void SceneNodeCore::validateName(const std::string& nodeName) {
 }
 
 void ViewportNode::onDestroyed() {
-    getWorld().getSystem<RenderSystem>()->deleteRenderSet(mRenderSet);
-    getWorld().cleanup();
+    getWorld().lock()->getSystem<RenderSystem>()->deleteRenderSet(mRenderSet);
+    if(mOwnWorld) {
+        mOwnWorld->cleanup();
+        mOwnWorld = nullptr;
+    }
 }
 
 std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions) {
@@ -359,7 +376,7 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
-    newViewport->mRenderSet = newViewport->getWorld().getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
+    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
     return newViewport;
 }
 
@@ -370,7 +387,7 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::st
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
-    newViewport->mRenderSet = newViewport->getWorld().getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
+    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
     return newViewport;
 }
 std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewportNodeDescription) {
@@ -381,7 +398,32 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewpor
     if(viewportNodeDescription.at("inherits_world").get<bool>() == false) {
         newViewport->createAndJoinWorld();
     }
-    newViewport->mRenderSet = newViewport->getWorld().getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
+
+    assert(viewportNodeDescription.find("base_dimensions") != viewportNodeDescription.end() && "Viewport descriptions must contain the \"base_dimensions\" size 2 array of Numbers attribute");
+    newViewport->mBaseDimensions.x = viewportNodeDescription.at("base_dimensions")[0].get<uint16_t>();
+    newViewport->mBaseDimensions.y = viewportNodeDescription.at("base_dimensions")[1].get<uint16_t>();
+    newViewport->mRequestedDimensions = newViewport->mBaseDimensions;
+    newViewport->mComputedDimensions = newViewport->mBaseDimensions;
+    assert(newViewport->mBaseDimensions.x > 0 && newViewport->mBaseDimensions.y > 0 && "Base dimensions cannot include a 0 in either dimension");
+
+    assert(viewportNodeDescription.find("update_mode") != viewportNodeDescription.end() && "Viewport must include the \"update_mode\" enum attribute");
+    newViewport->mUpdateMode = viewportNodeDescription.at("update_mode");
+
+    assert(viewportNodeDescription.find("resize_type") != viewportNodeDescription.end() && "Viewport must include the \"resize_type\" enum attribute");
+    newViewport->mResizeType = viewportNodeDescription.at("resize_type");
+
+    assert(viewportNodeDescription.find("resize_mode") != viewportNodeDescription.end() && "Viewport must include the \"resize_mode\" enum attribute");
+    newViewport->mResizeMode = viewportNodeDescription.at("resize_mode");
+
+    assert(viewportNodeDescription.find("render_scale") != viewportNodeDescription.end() && "Viewport must include the \"render_scale\" float attribute");
+    newViewport->mRenderScale = viewportNodeDescription.at("render_scale");
+    assert(newViewport->mRenderScale > 0.f && "Render scale must be a positive non-zero decimal number");
+
+    assert(viewportNodeDescription.find("fps_cap") != viewportNodeDescription.end() && "Viewport must include the \"fps_cap\" float attribute");
+    newViewport->mFPSCap = viewportNodeDescription.at("fps_cap");
+    assert(newViewport->mFPSCap > 0.f && "FPS cap must be a positive non-zero decimal number");
+
+    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
     return newViewport;
 }
 std::shared_ptr<ViewportNode> ViewportNode::copy(const std::shared_ptr<const ViewportNode> viewportNode) {
@@ -395,15 +437,16 @@ std::shared_ptr<SceneNodeCore> ViewportNode::clone() const {
     if(mOwnWorld) {
         newViewport->createAndJoinWorld();
     }
-    newViewport->mRenderSet = newViewport->getWorld().getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
+    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mBaseDimensions, newViewport->mBaseDimensions, {0, 0, newViewport->mBaseDimensions.x, newViewport->mBaseDimensions.y});
     return newSceneNode;
 }
 
 void ViewportNode::createAndJoinWorld() {
-    mOwnWorld = std::unique_ptr<ECSWorld>(new ECSWorld { ECSWorld::getPrototype().instantiate() });
+    mOwnWorld = std::shared_ptr<ECSWorld>{ECSWorld::getPrototype().lock()->instantiate() };
     joinWorld(*mOwnWorld);
     mOwnWorld->initialize();
 }
+
 void ViewportNode::onActivated() {
     if(!mActiveCamera) {
         setActiveCamera(findFallbackCamera());
@@ -415,6 +458,7 @@ void ViewportNode::onActivated() {
     mOwnWorld->activateSimulation();
     mOwnWorld->preSimulationStep(0);
 }
+
 void ViewportNode::onDeactivated() {
     if(!mOwnWorld) return;
     mOwnWorld->deactivateSimulation();
@@ -437,13 +481,13 @@ void ViewportNode::setActiveCamera(std::shared_ptr<SceneNodeCore> cameraNode) {
     assert((!isActive() || cameraNode->isActive()) && "If a viewport is active, the camera it intends to use must also be active");
 
     mActiveCamera = cameraNode;
-    getWorld().getSystem<RenderSystem>()->useRenderSet(mRenderSet);
-    getWorld().getSystem<RenderSystem>()->setCamera(mActiveCamera->getEntityID());
+    getWorld().lock()->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
+    getWorld().lock()->getSystem<RenderSystem>()->setCamera(mActiveCamera->getEntityID());
 }
 
 void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
     assert(requestDimensions.x * requestDimensions.y > 0 && "Request dimensions cannot contain 0");
-    std::shared_ptr<RenderSystem> renderSystem { getWorld().getSystem<RenderSystem>() };
+    std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
     renderSystem->useRenderSet(mRenderSet);
     const float requestAspect { static_cast<float>(requestDimensions.x)/static_cast<float>(requestDimensions.y) };
     const float baseAspect { static_cast<float>(mBaseDimensions.x)/static_cast<float>(mBaseDimensions.y) };
@@ -576,29 +620,58 @@ std::shared_ptr<SceneNodeCore> ViewportNode::findFallbackCamera() {
     return fallbackCamera;
 }
 
-std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgress, uint32_t variableStep) {
+std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgress) {
     assert(mFPSCap > 0.f && "FPS cannot be negative or zero");
     const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mFPSCap)};
-    ECSWorld& world = getWorld();
+    std::shared_ptr<ECSWorld> world = getWorld().lock();
+
+    switch (mUpdateMode) {
+        case UpdateMode::ON_FETCH_CAP_FPS:
+            if(mTimeSinceLastRender < thresholdTime) {
+                break;
+            }
+
+        case UpdateMode::ON_FETCH:
+            mTimeSinceLastRender = 0;
+            world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
+            world->getSystem<RenderSystem>()->execute(simulationProgress);
+            mTextureResult = world->getSystem<RenderSystem>()->getCurrentScreenTexture();
+        case UpdateMode::ONCE:
+        case UpdateMode::ON_RENDER_CAP_FPS:
+        case UpdateMode::ON_RENDER:
+        case UpdateMode::NEVER:
+        break;
+    }
+
+    return mTextureResult;
+}
+
+std::shared_ptr<Texture> ViewportNode::render(float simulationProgress, uint32_t variableStep) {
+    assert(mFPSCap > 0.f && "FPS cannot be negative or zero");
+    const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mFPSCap)};
+    std::shared_ptr<ECSWorld> world = getWorld().lock();
+
     mTimeSinceLastRender += variableStep;
     if(mTimeSinceLastRender > thresholdTime) mTimeSinceLastRender = thresholdTime;
     bool renderOnce { false };
+
     switch (mUpdateMode) {
         case UpdateMode::ONCE:
             mUpdateMode = UpdateMode::NEVER;
             renderOnce = true;
 
-        case UpdateMode::CAP_FPS:
+        case UpdateMode::ON_RENDER_CAP_FPS:
             if(!renderOnce && mTimeSinceLastRender < thresholdTime)
                 break;
 
-        case UpdateMode::ON_FETCH:
+        case UpdateMode::ON_RENDER:
             mTimeSinceLastRender = 0;
-            world.getSystem<RenderSystem>()->useRenderSet(mRenderSet);
-            world.preRenderStep(simulationProgress);
-            world.getSystem<RenderSystem>()->execute(simulationProgress);
-            world.postRenderStep(simulationProgress);
-            mTextureResult = world.getSystem<RenderSystem>()->getCurrentScreenTexture();
+            world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
+            world->getSystem<RenderSystem>()->execute(simulationProgress);
+            mTextureResult = world->getSystem<RenderSystem>()->getCurrentScreenTexture();
+
+        case UpdateMode::ON_FETCH:
+        case UpdateMode::ON_FETCH_CAP_FPS:
         case UpdateMode::NEVER:
         break;
     }
@@ -612,6 +685,34 @@ ActionDispatch& ViewportNode::getActionDispatch() {
 
 std::shared_ptr<ViewportNode> ViewportNode::getLocalViewport() {
     return std::static_pointer_cast<ViewportNode>(shared_from_this());
+}
+
+std::vector<std::shared_ptr<ViewportNode>> ViewportNode::getActiveDescendantViewports() {
+    assert(isActive() && "Can only find active descendant viewports of an active viewport node");
+
+    std::vector<std::shared_ptr<ViewportNode>> activeViewports { {std::static_pointer_cast<ViewportNode>(shared_from_this())} };
+    for(auto child: mChildViewports) {
+        if(!child->isActive()) continue;
+
+        std::vector<std::shared_ptr<ViewportNode>> activeDescendantViewports { child->getActiveDescendantViewports() };
+        activeViewports.insert(activeViewports.end(), activeDescendantViewports.begin(), activeDescendantViewports.end());
+    }
+
+    return activeViewports;
+}
+std::vector<std::weak_ptr<ECSWorld>> ViewportNode::getActiveDescendantWorlds() {
+    assert(isActive() && "Can only find active descendant worlds of an active viewportNode");
+
+    std::vector<std::weak_ptr<ECSWorld>> activeWorlds {};
+    if(mOwnWorld) activeWorlds.push_back(mOwnWorld);
+    for(auto child: mChildViewports) {
+        if(!child->isActive()) continue;
+
+        std::vector<std::weak_ptr<ECSWorld>> activeDescendantWorlds { child->getActiveDescendantWorlds() };
+        activeWorlds.insert(activeWorlds.end(), activeDescendantWorlds.begin(), activeDescendantWorlds.end());
+    }
+
+    return activeWorlds;
 }
 
 void SceneSystem::simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions) {
@@ -665,8 +766,24 @@ void SceneSystem::variableStep(float simulationProgress, uint32_t variableStepMi
 }
 
 void SceneSystem::render(float simulationProgress, uint32_t variableStep) {
-    mRootNode->fetchRenderResult(simulationProgress, variableStep);
-    mRootNode->mOwnWorld->getSystem<RenderSystem>()->renderToScreen();
+    std::vector<std::shared_ptr<ViewportNode>> activeViewports { getActiveViewports() };
+    std::vector<std::weak_ptr<ECSWorld>> activeWorlds { getActiveWorlds() };
+
+    for(std::weak_ptr<ECSWorld> world: activeWorlds) {
+        world.lock()->preRenderStep(variableStep);
+    }
+
+    for(std::shared_ptr<ViewportNode> viewport: activeViewports) {
+        viewport->render(simulationProgress, variableStep);
+    }
+
+    for(std::weak_ptr<ECSWorld> world: activeWorlds) {
+        world.lock()->postRenderStep(variableStep);
+    }
+
+    getRootWorld().lock()->getSystem<RenderSystem>()->useRenderSet(getRootViewport().mRenderSet);
+
+    getRootWorld().lock()->getSystem<RenderSystem>()->renderToScreen();
 }
 
 void SceneSystem::onApplicationEnd() {
@@ -698,8 +815,15 @@ std::shared_ptr<SceneNodeCore> SceneSystem::removeNode(const std::string& where)
     return mRootNode->removeNode(where);
 }
 
-ECSWorld& SceneSystem::getRootWorld() const {
+std::weak_ptr<ECSWorld> SceneSystem::getRootWorld() const {
     return mRootNode->getWorld();
+}
+
+std::vector<std::shared_ptr<ViewportNode>> SceneSystem::getActiveViewports() {
+    return mRootNode->getActiveDescendantViewports();
+}
+std::vector<std::weak_ptr<ECSWorld>> SceneSystem::getActiveWorlds() {
+    return mRootNode->getActiveDescendantWorlds();
 }
 
 ViewportNode& SceneSystem::getRootViewport() const {
@@ -720,7 +844,7 @@ void SceneSystem::nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode) {
         if(viewport && viewport->mOwnWorld) {
             viewport->joinWorld(*viewport->mOwnWorld);
         } else {
-            sceneNode->joinWorld(sceneNode->mParent.lock()->getWorld());
+            sceneNode->joinWorld(*sceneNode->mParent.lock()->getWorld().lock());
         }
     }
     mEntityToNode[sceneNode->getUniversalEntityID()] = sceneNode;
@@ -735,7 +859,7 @@ void SceneSystem::nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode) {
             if(viewport && viewport->mOwnWorld) {
                 viewport->joinWorld(*viewport->mOwnWorld);
             } else {
-                descendant->joinWorld(descendant->mParent.lock()->getWorld());
+                descendant->joinWorld(*descendant->mParent.lock()->getWorld().lock());
             }
         }
         mEntityToNode[descendant->getUniversalEntityID()] = descendant;
@@ -885,5 +1009,5 @@ void SceneSystem::onApplicationStart() {
 
 void SceneSystem::SceneSubworld::onEntityUpdated(EntityID entityID) {
     if(getComponent<Placement>(entityID, 0.f) == getComponent<Placement>(entityID, 1.f)) return;
-    mWorld.getSystem<SceneSystem>()->onWorldEntityUpdate({mWorld.getID(), entityID});
+    mWorld.lock()->getSystem<SceneSystem>()->onWorldEntityUpdate({mWorld.lock()->getID(), entityID});
 }

@@ -8,5 +8,5 @@
     "simulation_step": 33,
 
     "input_map_path": "input_bindings.json",
-    "root_scene_path": "test_scene_1.json"
+    "root_scene_path": "test_scene_2.json"
 }

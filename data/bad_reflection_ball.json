@@ -1,0 +1,98 @@
+{
+    "resources": [
+        {
+            "name": "not_really_reflective_ball_model",
+            "type": "StaticModel",
+            "method": "sphereLatLong",
+            "parameters": {
+                "nLatitudes": 10,
+                "nMeridians": 5
+            }
+        }
+    ],
+
+    "nodes": [
+
+        {
+            "name": "not_really_reflective_ball",
+            "parent": "",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        6.6356, 0.0, 0.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ]
+                },
+                {
+                    "type": "StaticModel",
+                    "resourceName": "not_really_reflective_ball_model"
+                }
+            ],
+            "aspects": [
+                {"type": "ReflectiveBall"}
+            ]
+        },
+
+        {
+            "name": "viewport",
+            "parent": "/",
+            "type": "ViewportNode",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ]
+                }
+            ],
+            "inherits_world": true,
+            "base_dimensions": [512, 512],
+            "update_mode": "on-render-cap-fps",
+            "resize_type": "texture-dimensions",
+            "resize_mode": "fixed-dimensions",
+            "fps_cap": 15,
+            "render_scale": 1.0
+        },
+
+        {
+            "name": "viewport_camera",
+            "parent": "/viewport/",
+            "type": "SceneNode",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [
+                        0.7071068, 0.7071068, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, -1.2, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ]
+                },
+                {
+                    "type": "CameraProperties",
+                    "projectionMode": "frustum",
+                    "orthographicScale": 3.0,
+                    "fov": 120.0
+                }
+            ]
+        }
+    ],
+
+    "connections": []
+}

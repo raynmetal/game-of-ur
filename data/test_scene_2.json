@@ -1,0 +1,217 @@
+{
+    "resources": [
+        {
+            "method": "fromFile",
+            "name": "boardPieceModel",
+            "parameters": {
+                "path": "data/models/Generic Board Piece.obj"
+            },
+            "type": "StaticModel"
+        },
+        {
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "name": "boardPieceRing",
+            "parameters": {
+                "path": "data/board_piece_ring.json"
+            }
+        },
+        {
+            "name": "reflectiveBall",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/bad_reflection_ball.json"
+            }
+        }
+    ],
+    "nodes": [
+        {
+            "components": [
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TickSecond"
+                },
+                {
+                    "type": "RenderDebugViewer"
+                }
+            ],
+            "name": "partial_scene_root",
+            "parent": "",
+            "type": "SimObject"
+        },
+        {
+            "aspects": [
+                {
+                    "type": "FlyCamera"
+                }
+            ],
+            "components": [
+                {
+                    "fov": 45.0,
+                    "orthographicScale": 3.0,
+                    "projectionMode": "frustum",
+                    "type": "CameraProperties"
+                },
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                }
+            ],
+            "name": "camera",
+            "parent": "/",
+            "type": "SimObject"
+        },
+        {
+            "components": [
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [
+                        0.20000000298023224,
+                        0.20000000298023224,
+                        0.20000000298023224
+                    ],
+                    "diffuse": [
+                        2.0,
+                        2.0,
+                        2.0
+                    ],
+                    "innerAngle": 4.0,
+                    "lightType": "spot",
+                    "linearConst": 0.07000000029802322,
+                    "outerAngle": 13.0,
+                    "quadraticConst": 0.029999999329447746,
+                    "specular": [
+                        4.0,
+                        4.0,
+                        4.0
+                    ],
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "flashlight",
+            "parent": "/camera/",
+            "type": "SceneNode"
+        },
+        {
+            "aspects": [
+                {
+                    "type": "Revolve"
+                }
+            ],
+            "components": [
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.4142135381698608,
+                        1.4142135381698608,
+                        1.0
+                    ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [
+                        0.4000000059604645,
+                        0.4000000059604645,
+                        0.4000000059604645
+                    ],
+                    "diffuse": [
+                        20.0,
+                        20.0,
+                        20.0
+                    ],
+                    "lightType": "directional",
+                    "specular": [
+                        20.0,
+                        20.0,
+                        20.0
+                    ],
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "sunlight",
+            "parent": "/",
+            "type": "SimObject"
+        },
+        {
+            "type": "Scene",
+            "name": "boardPieceRing",
+            "parent": "/",
+            "copy": false
+        },
+        {
+            "type": "Scene",
+            "name": "reflectiveBall",
+            "parent": "/",
+            "copy": true
+        }
+    ],
+    "connections": []
+}

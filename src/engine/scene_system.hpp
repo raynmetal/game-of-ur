@@ -70,7 +70,7 @@ public:
     EntityID getEntityID() const;
     WorldID getWorldID() const;
     UniversalEntityID getUniversalEntityID() const;
-    ECSWorld& getWorld() const;
+    std::weak_ptr<ECSWorld> getWorld() const;
 
     // TODO: How can we be certain that the value returned by this method here,
     // and the one in SceneSystem, are both in sync? Yet more redundancy
@@ -98,7 +98,7 @@ public:
 
 protected:
 
-    void joinWorld(ECSWorld& world);
+    virtual void joinWorld(ECSWorld& world);
     static std::shared_ptr<SceneNodeCore> copy(const std::shared_ptr<const SceneNodeCore> other);
 
     template<typename ...TComponents>
@@ -238,7 +238,9 @@ public:
         NEVER=0,
         ONCE,
         ON_FETCH,
-        CAP_FPS,
+        ON_FETCH_CAP_FPS,
+        ON_RENDER,
+        ON_RENDER_CAP_FPS,
     };
 
     static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions);
@@ -247,7 +249,7 @@ public:
     static inline std::string getResourceTypeName() { return "ViewportNode"; }
 
     std::shared_ptr<ViewportNode> getLocalViewport() override;
-    std::shared_ptr<Texture> fetchRenderResult(float simulationProgress, uint32_t variableStep);
+    std::shared_ptr<Texture> fetchRenderResult(float simulationProgress);
     void setActiveCamera(const std::string& cameraPath);
     void setActiveCamera(std::shared_ptr<SceneNodeCore> cameraNode);
     void requestDimensions(glm::u16vec2 requestedDimensions);
@@ -272,10 +274,12 @@ protected:
     BaseSceneNode<ViewportNode>{sceneObject},
     Resource<ViewportNode>{0}
     {}
-    std::unique_ptr<ECSWorld> mOwnWorld { nullptr };
+    std::shared_ptr<ECSWorld> mOwnWorld { nullptr };
     void onActivated() override;
     void onDeactivated() override;
     void onDestroyed() override;
+
+    void joinWorld(ECSWorld& world) override;
 
 private:
     static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld, const glm::u16vec2& baseDimensions);
@@ -289,6 +293,11 @@ private:
     void registerDomainCamera(std::shared_ptr<SceneNodeCore> cameraNode);
     void unregisterDomainCamera(std::shared_ptr<SceneNodeCore> cameraNode);
     std::shared_ptr<SceneNodeCore> findFallbackCamera();
+
+    std::vector<std::shared_ptr<ViewportNode>> getActiveDescendantViewports();
+    std::vector<std::weak_ptr<ECSWorld>> getActiveDescendantWorlds();
+
+    std::shared_ptr<Texture> render(float simulationProgress, uint32_t variableStep);
 
     ActionDispatch mActionDispatch {};
     std::set<std::shared_ptr<ViewportNode>, std::owner_less<std::shared_ptr<ViewportNode>>> mChildViewports {};
@@ -304,7 +313,7 @@ private:
     glm::u16vec2 mComputedDimensions { 800, 600 };
     glm::u16vec2 mRequestedDimensions { 800, 600 };
 
-    UpdateMode mUpdateMode { UpdateMode::CAP_FPS };
+    UpdateMode mUpdateMode { UpdateMode::ON_RENDER_CAP_FPS };
     float mFPSCap { 60.f };
     float mRenderScale { .3f };
     uint32_t mTimeSinceLastRender { static_cast<uint32_t>(1000/mFPSCap) };
@@ -316,8 +325,8 @@ friend class SceneSystem;
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::ResizeType, {
     {ViewportNode::ResizeType::OFF, "off"},
-    {ViewportNode::ResizeType::VIEWPORT_DIMENSIONS, "per-subobject"},
-    {ViewportNode::ResizeType::TEXTURE_DIMENSIONS, "post-viewport-render"},
+    {ViewportNode::ResizeType::VIEWPORT_DIMENSIONS, "viewport-dimensions"},
+    {ViewportNode::ResizeType::TEXTURE_DIMENSIONS, "texture-dimensions"},
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::ResizeMode, {
@@ -331,12 +340,13 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::UpdateMode, {
     {ViewportNode::UpdateMode::NEVER, "never"},
     {ViewportNode::UpdateMode::ONCE, "once"},
     {ViewportNode::UpdateMode::ON_FETCH, "on-fetch"},
-    {ViewportNode::UpdateMode::CAP_FPS, "cap-fps"},
+    {ViewportNode::UpdateMode::ON_RENDER, "on-render"},
+    {ViewportNode::UpdateMode::ON_RENDER_CAP_FPS, "on-render-cap-fps"},
 });
 
 class SceneSystem: public System<SceneSystem, Placement, Transform> {
 public:
-    SceneSystem(ECSWorld& world):
+    SceneSystem(std::weak_ptr<ECSWorld> world):
     System<SceneSystem, Placement, Transform> { world }
     { }
 
@@ -352,7 +362,7 @@ public:
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
 
 
-    ECSWorld& getRootWorld() const;
+    std::weak_ptr<ECSWorld> getRootWorld() const;
     ViewportNode& getRootViewport() const;
 
     void onApplicationInitialize();
@@ -368,7 +378,7 @@ public:
 private:
     class SceneSubworld: public System<SceneSubworld, Placement, Transform> {
     public:
-        SceneSubworld(ECSWorld& world):
+        SceneSubworld(std::weak_ptr<ECSWorld> world):
         System<SceneSubworld, Placement, Transform> { world }
         {}
         static std::string getSystemTypeName() { return "SceneSubworld"; }
@@ -380,6 +390,9 @@ private:
     bool inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const;
     bool inScene(UniversalEntityID UniversalEntityID) const;
     void markDirty(UniversalEntityID UniversalEntityID);
+
+    std::vector<std::shared_ptr<ViewportNode>> getActiveViewports();
+    std::vector<std::weak_ptr<ECSWorld>> getActiveWorlds();
 
     Transform getLocalTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const;
     Transform getCachedWorldTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const;
@@ -527,7 +540,7 @@ bool SceneNodeCore::getEnabled() const {
 
 template <typename TSystem>
 void SceneNodeCore::setEnabled(bool state) {
-    const SystemType systemType { mEntity->getWorld().getSystemType<TSystem>() };
+    const SystemType systemType { mEntity->getWorld().lock()->getSystemType<TSystem>() };
     mSystemMask.set(systemType, state);
 
     // since the system mask has been changed, we'll want the scene
@@ -542,14 +555,14 @@ void SceneNodeCore::setEnabled(bool state) {
 // enabled or disabled
 template <>
 inline void SceneNodeCore::setEnabled<SceneSystem>(bool state) {
-    const SystemType systemType { mEntity->getWorld().getSystemType<SceneSystem>() };
+    const SystemType systemType { mEntity->getWorld().lock()->getSystemType<SceneSystem>() };
     // TODO: enabled entities are tracked in both SceneSystem's 
     // mActiveNodes and ECS getEnabledEntities, which is 
     // redundant and may eventually cause errors
     mSystemMask.set(systemType, state);
     //TODO: More redundancy. Why?
     mStateFlags = state? (mStateFlags | SceneNodeCore::StateFlags::ENABLED): (mStateFlags & ~SceneNodeCore::StateFlags::ENABLED);
-    mEntity->getWorld().getSystem<SceneSystem>()->nodeActivationChanged(
+    mEntity->getWorld().lock()->getSystem<SceneSystem>()->nodeActivationChanged(
         shared_from_this(),
         state
     );

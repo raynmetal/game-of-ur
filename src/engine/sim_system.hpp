@@ -32,7 +32,7 @@ inline void to_json(nlohmann::json& json, const SimCore& simCore) {}
 
 class SimSystem: public System<SimSystem, SimCore> {
 public:
-    SimSystem(ECSWorld& world):
+    SimSystem(std::weak_ptr<ECSWorld> world):
     System<SimSystem, SimCore>{world}
     {}
 
@@ -41,7 +41,7 @@ public:
     bool aspectRegistered(const std::string& aspectName) const;
 
 protected:
-    virtual std::shared_ptr<BaseSystem> instantiate(ECSWorld& world) override;
+    virtual std::shared_ptr<BaseSystem> instantiate(std::weak_ptr<ECSWorld> world) override;
 
 private:
     template <typename TSimObjectAspect>
@@ -152,6 +152,8 @@ protected:
         ECSWorld::getSystemPrototype<SimSystem>()->registerAspect<TSimObjectAspectDerived>();
     }
 
+    SimObject& getSimObject();
+
     template <typename TComponent>
     void addComponent(const TComponent& component);
     template <typename TComponent>
@@ -174,10 +176,9 @@ protected:
     template <typename TSimObjectAspect>
     void removeAspect();
 
-
     std::weak_ptr<FixedActionBinding> declareFixedActionBinding(const std::string& context, const std::string& action, std::function<void(const ActionData&, const ActionDefinition&)>);
     EntityID getEntityID() const;
-    ECSWorld& getWorld() const;
+    std::weak_ptr<ECSWorld> getWorld() const;
     virtual std::string getAspectTypeName() const = 0;
 private:
     void activateFixedActionBindings();
@@ -192,6 +193,9 @@ private:
     virtual void onDetached(){}
     virtual void onActivated() {}
     virtual void onDeactivated() {}
+
+    inline bool isAttached() { return mState&AspectState::ATTACHED; }
+    inline bool isActive() { return mState&AspectState::ACTIVE; }
 
     void attach(SimObject* owner);
     void detach();
@@ -316,7 +320,7 @@ struct SceneNodeCore::getByPath_Helper<BaseSimObjectAspect&> {
         // extract the node path from full path
         const std::string nodePath { where.substr(0, div - where.begin()) };
         const std::string aspectName { where.substr(1 + (div - where.begin())) };
-        assert(rootNode->getWorld().getSystem<SimSystem>()->aspectRegistered(aspectName) && "No aspect of this type has been registered with the Sim System");
+        assert(rootNode->getWorld().lock()->getSystem<SimSystem>()->aspectRegistered(aspectName) && "No aspect of this type has been registered with the Sim System");
 
         std::shared_ptr<SimObject> node { rootNode->getByPath<std::shared_ptr<SimObject>>(nodePath) };
         return node->getAspect(aspectName);

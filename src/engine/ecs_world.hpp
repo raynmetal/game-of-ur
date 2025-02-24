@@ -53,7 +53,7 @@ class ECSWorld;
 
 class BaseComponentArray {
 public:
-    BaseComponentArray(ECSWorld& world): mWorld{world} {}
+    BaseComponentArray(std::weak_ptr<ECSWorld> world): mWorld{world} {}
     virtual ~BaseComponentArray()=default;
     virtual void handleEntityDestroyed(EntityID entityID)=0;
     virtual void handlePreSimulationStep() = 0;
@@ -61,10 +61,10 @@ public:
     virtual void copyComponent(EntityID to, EntityID from, BaseComponentArray& other) = 0;
     virtual void addComponent(EntityID to, const nlohmann::json& jsonComponent)=0;
     virtual bool hasComponent(EntityID entityID) const=0;
-    virtual std::shared_ptr<BaseComponentArray> instantiate(ECSWorld& world) const = 0;
+    virtual std::shared_ptr<BaseComponentArray> instantiate(std::weak_ptr<ECSWorld> world) const = 0;
 
 protected:
-    ECSWorld& mWorld;
+    std::weak_ptr<ECSWorld> mWorld {};
 };
 
 /*
@@ -116,9 +116,9 @@ private:
 template<typename TComponent>
 class ComponentArray : public BaseComponentArray {
 public:
-    ComponentArray(ECSWorld& world): BaseComponentArray{ world } {}
+    ComponentArray(std::weak_ptr<ECSWorld> world): BaseComponentArray{ world } {}
 private:
-    std::shared_ptr<BaseComponentArray> instantiate(ECSWorld& world) const override;
+    std::shared_ptr<BaseComponentArray> instantiate(std::weak_ptr<ECSWorld> world) const override;
     void addComponent(EntityID entityID, const TComponent& component);
     void addComponent(EntityID entityID, const nlohmann::json& componentJSON) override;
     /**
@@ -143,9 +143,9 @@ friend class ComponentManager;
 
 class ComponentManager {
 public:
-    ComponentManager(ECSWorld& world): mWorld { world } {};
+    ComponentManager(std::weak_ptr<ECSWorld> world): mWorld { world } {};
 private:
-    ComponentManager instantiate(ECSWorld& world) const;
+    ComponentManager instantiate(std::weak_ptr<ECSWorld> world) const;
 
     template<typename TComponent> 
     void registerComponentArray();
@@ -209,14 +209,14 @@ private:
     std::unordered_map<std::size_t, ComponentType> mHashToComponentType {};
     std::unordered_map<std::size_t, std::shared_ptr<BaseComponentArray>> mHashToComponentArray {};
     std::unordered_map<EntityID, Signature> mEntityToSignature {};
-    ECSWorld& mWorld;
+    std::weak_ptr<ECSWorld> mWorld;
 
 friend class ECSWorld;
 };
 
 class BaseSystem : public std::enable_shared_from_this<BaseSystem> {
 public:
-    BaseSystem(ECSWorld& world): mWorld { world } {}
+    BaseSystem(std::weak_ptr<ECSWorld> world): mWorld { world } {}
     virtual ~BaseSystem() = default;
     virtual bool isSingleton() const { return false; }
 protected:
@@ -232,9 +232,9 @@ protected:
     bool isRegistered(EntityID entityID) const;
 
 
-    virtual std::shared_ptr<BaseSystem> instantiate(ECSWorld& world)=0;
+    virtual std::shared_ptr<BaseSystem> instantiate(std::weak_ptr<ECSWorld> world) = 0;
 
-    ECSWorld& mWorld;
+    std::weak_ptr<ECSWorld> mWorld;
 private:
     void addEntity(EntityID entityID, bool enabled=true);
     void removeEntity(EntityID entityID);
@@ -267,7 +267,7 @@ template<typename TSystemDerived, typename ...TRequiredComponents>
 class System: public BaseSystem {
     static void registerSelf();
 protected:
-    System(ECSWorld& world): BaseSystem { world } { s_registrator.emptyFunc(); }
+    System(std::weak_ptr<ECSWorld> world): BaseSystem { world } { s_registrator.emptyFunc(); }
     template<typename TComponent>
     TComponent getComponent(EntityID entityID, float progress=1.f) {
         assert(!isSingleton() && "Singletons cannot retrieve components by EntityID alone");
@@ -278,7 +278,7 @@ protected:
         assert(!isSingleton() && "Singletons cannot retrieve components by EntityID alone");
         BaseSystem::updateComponent<TComponent, TSystemDerived>(entityID, component);
     }
-    std::shared_ptr<BaseSystem> instantiate(ECSWorld& world) override;
+    std::shared_ptr<BaseSystem> instantiate(std::weak_ptr<ECSWorld> world) override;
 private:
     inline static Registrator<System<TSystemDerived, TRequiredComponents...>>& s_registrator {
         Registrator<System<TSystemDerived, TRequiredComponents...>>::getRegistrator()
@@ -289,9 +289,9 @@ friend class Registrator<System<TSystemDerived, TRequiredComponents...>>;
 
 class SystemManager {
 public:
-    SystemManager(ECSWorld& world): mWorld{ world } {}
+    SystemManager(std::weak_ptr<ECSWorld> world): mWorld{ world } {}
 private: 
-    SystemManager instantiate(ECSWorld& world) const;
+    SystemManager instantiate(std::weak_ptr<ECSWorld> world) const;
 
     template<typename TSystem>
     void registerSystem(const Signature& signature);
@@ -339,16 +339,16 @@ private:
     std::unordered_map<std::string, Signature> mNameToSignature {};
     std::unordered_map<std::string, SystemType> mNameToSystemType {};
     std::unordered_map<std::string, std::shared_ptr<BaseSystem>> mNameToSystem {};
-    ECSWorld& mWorld;
+    std::weak_ptr<ECSWorld> mWorld;
 
 friend class ECSWorld;
 friend class BaseSystem;
 };
 
-class ECSWorld {
+class ECSWorld: public std::enable_shared_from_this<ECSWorld> {
 public:
-    static const ECSWorld& getPrototype();
-    ECSWorld instantiate() const;
+    static std::weak_ptr<const ECSWorld> getPrototype();
+    std::shared_ptr<ECSWorld> instantiate() const;
 
     template<typename ...TComponent>
     static void registerComponentTypes();
@@ -396,13 +396,9 @@ public:
     inline WorldID getID() const { return mID; }
 
 private:
-    static ECSWorld& getInstance();
+    static std::shared_ptr<ECSWorld> createWorld();
+    static std::weak_ptr<ECSWorld> getInstance();
     ECSWorld() = default;
-    ECSWorld(SystemManager&& systemManager, ComponentManager&& componentManager, WorldID worldID) :
-    mComponentManager { componentManager },
-    mSystemManager { systemManager },
-    mID { worldID }
-    {}
 
     void copyComponents(EntityID to, EntityID from);
     void copyComponents(EntityID to, EntityID from, ECSWorld& other);
@@ -449,8 +445,8 @@ private:
 
     void removeComponentsAll(EntityID entityID);
 
-    ComponentManager mComponentManager { *this };
-    SystemManager mSystemManager { *this };
+    std::unique_ptr<ComponentManager> mComponentManager {nullptr};
+    std::unique_ptr<SystemManager> mSystemManager {nullptr};
 
     std::vector<EntityID> mDeletedIDs {};
     EntityID mNextEntity {};
@@ -506,14 +502,14 @@ public:
 
     void disableSystems();
     void enableSystems(Signature systemMask);
-    inline ECSWorld& getWorld() { return mWorld.get(); }
+    inline std::weak_ptr<ECSWorld> getWorld() { return mWorld; }
     void joinWorld(ECSWorld& world);
 
 private:
-    Entity(EntityID entityID, ECSWorld& world): mID{ entityID }, mWorld{ world } {};
+    Entity(EntityID entityID, std::shared_ptr<ECSWorld> world): mID{ entityID }, mWorld{ world } {};
     EntityID mID;
 
-    std::reference_wrapper<ECSWorld> mWorld;
+    std::weak_ptr<ECSWorld> mWorld;
 friend class ECSWorld;
 };
 
@@ -692,16 +688,16 @@ SystemType SystemManager::getSystemType() const {
 
 template <typename TSystem>
 bool ECSWorld::isEnabled(EntityID entityID) {
-    return mSystemManager.isEnabled<TSystem>(entityID);
+    return mSystemManager->isEnabled<TSystem>(entityID);
 }
 template <typename TSystem>
 bool ECSWorld::isRegistered(EntityID entityID) {
-    return mSystemManager.isRegistered<TSystem>(entityID);
+    return mSystemManager->isRegistered<TSystem>(entityID);
 }
 
 template <typename TComponent>
 bool ECSWorld::hasComponent(EntityID entityID) const {
-    return mComponentManager.hasComponent<TComponent>(entityID);
+    return mComponentManager->hasComponent<TComponent>(entityID);
 }
 
 
@@ -744,47 +740,47 @@ void SystemManager::disableEntity(EntityID entityID) {
 
 template <typename TComponent>
 void Entity::addComponent(const TComponent& component) {
-    mWorld.get().addComponent<TComponent>(mID, component);
+    mWorld.lock()->addComponent<TComponent>(mID, component);
 }
 
 template <typename TComponent>
 bool Entity::hasComponent() const {
-    return mWorld.get().hasComponent<TComponent>(mID);
+    return mWorld.lock()->hasComponent<TComponent>(mID);
 }
 
 template<typename TComponent>
 TComponent Entity::getComponent(float simulationProgress) const {
-    return mWorld.get().getComponent<TComponent>(mID, simulationProgress);
+    return mWorld.lock()->getComponent<TComponent>(mID, simulationProgress);
 }
 
 template<typename TComponent>
 void Entity::updateComponent(const TComponent& newValue) {
-    mWorld.get().updateComponent<TComponent>(mID, newValue);
+    mWorld.lock()->updateComponent<TComponent>(mID, newValue);
 }
 
 template <typename TComponent>
 void Entity::removeComponent() {
-    mWorld.get().removeComponent<TComponent>(mID);
+    mWorld.lock()->removeComponent<TComponent>(mID);
 }
 
 template <typename TSystem>
 void Entity::enableSystem() {
-    mWorld.get().enableEntity<TSystem>(mID);
+    mWorld.lock()->enableEntity<TSystem>(mID);
 }
 
 template <typename TSystem>
 bool Entity::isEnabled() const {
-    return mWorld.get().isEnabled<TSystem>(mID);
+    return mWorld.lock()->isEnabled<TSystem>(mID);
 }
 
 template <typename TSystem>
 bool Entity::isRegistered() const {
-    return mWorld.get().isRegistered<TSystem>(mID);
+    return mWorld.lock()->isRegistered<TSystem>(mID);
 }
 
 template <typename TSystem>
 void Entity::disableSystem() {
-    mWorld.get().disableEntity<TSystem>(mID);
+    mWorld.lock()->disableEntity<TSystem>(mID);
 }
 
 template <typename TSystem>
@@ -811,8 +807,7 @@ Entity ECSWorld::privateCreateEntity(TComponents...components) {
         nextID = mNextEntity++;
     }
 
-    Entity entity { nextID, *this };
-    entity.mWorld = *this;
+    Entity entity { nextID, shared_from_this()};
 
     (addComponent<TComponents>(nextID, components), ...);
     return entity;
@@ -820,45 +815,45 @@ Entity ECSWorld::privateCreateEntity(TComponents...components) {
 
 template<typename TSystem>
 SystemType ECSWorld::getSystemType() {
-    return mSystemManager.getSystemType<TSystem>();
+    return mSystemManager->getSystemType<TSystem>();
 }
 
 template<typename TComponent>
 void ECSWorld::addComponent(EntityID entityID, const TComponent& component) {
     assert(entityID < kMaxEntities && "Cannot add a component to an entity that does not exist");
-    mComponentManager.addComponent<TComponent>(entityID, component);
-    Signature signature { mComponentManager.getSignature(entityID) };
-    mSystemManager.handleEntitySignatureChanged(entityID, signature);
+    mComponentManager->addComponent<TComponent>(entityID, component);
+    Signature signature { mComponentManager->getSignature(entityID) };
+    mSystemManager->handleEntitySignatureChanged(entityID, signature);
 }
 
 template<typename TComponent>
 void ECSWorld::removeComponent(EntityID entityID) {
-    mComponentManager.removeComponent<TComponent>(entityID);
-    Signature signature { mComponentManager.getSignature(entityID) };
-    mSystemManager.handleEntitySignatureChanged(entityID, signature);
+    mComponentManager->removeComponent<TComponent>(entityID);
+    Signature signature { mComponentManager->getSignature(entityID) };
+    mSystemManager->handleEntitySignatureChanged(entityID, signature);
 }
 
 template<typename TSystem>
 void ECSWorld::enableEntity(EntityID entityID) {
-    mSystemManager.enableEntity<TSystem>(entityID);
+    mSystemManager->enableEntity<TSystem>(entityID);
 }
 
 template<typename TSystem>
 void ECSWorld::disableEntity(EntityID entityID) {
-    mSystemManager.disableEntity<TSystem>(entityID);
+    mSystemManager->disableEntity<TSystem>(entityID);
 }
 
 template<typename TComponent>
 TComponent ECSWorld::getComponent(EntityID entityID, float progress) const {
-    return mComponentManager.getComponent<TComponent>(entityID, progress);
+    return mComponentManager->getComponent<TComponent>(entityID, progress);
 }
 
 template<typename TComponent, typename TSystem>
 TComponent ECSWorld::getComponent(EntityID entityID, float progress) const {
     assert(
         (
-            mSystemManager.mNameToSignature.at(TSystem::getSystemTypeName())
-                .test(mComponentManager.getComponentType<TComponent>())
+            mSystemManager->mNameToSignature.at(TSystem::getSystemTypeName())
+                .test(mComponentManager->getComponentType<TComponent>())
         )
         && "This system cannot access this kind of component"
     );
@@ -868,27 +863,27 @@ TComponent ECSWorld::getComponent(EntityID entityID, float progress) const {
 
 template<typename TComponent>
 void ECSWorld::updateComponent(EntityID entityID, const TComponent& newValue) {
-    mComponentManager.updateComponent<TComponent>(entityID, newValue);
-    mSystemManager.handleEntityUpdated(entityID, mComponentManager.getSignature(entityID));
+    mComponentManager->updateComponent<TComponent>(entityID, newValue);
+    mSystemManager->handleEntityUpdated(entityID, mComponentManager->getSignature(entityID));
 }
 
 template<typename TComponent, typename TSystem>
 void ECSWorld::updateComponent(EntityID entityID, const TComponent& newValue) {
     assert(
         (
-            mSystemManager.mNameToSignature.at(TSystem::getSystemTypeName())
-                .test(mComponentManager.getComponentType<TComponent>())
+            mSystemManager->mNameToSignature.at(TSystem::getSystemTypeName())
+                .test(mComponentManager->getComponentType<TComponent>())
         )
         && "This system cannot access this kind of component"
     );
-    mComponentManager.updateComponent<TComponent>(entityID, newValue);
-    mSystemManager.handleEntityUpdatedBySystem<TSystem>(entityID, mComponentManager.getSignature(entityID));
+    mComponentManager->updateComponent<TComponent>(entityID, newValue);
+    mSystemManager->handleEntityUpdatedBySystem<TSystem>(entityID, mComponentManager->getSignature(entityID));
 }
 
-template<typename ...TComponent>
+template<typename ...TComponents>
 void ECSWorld::registerComponentTypes() {
 
-    ((getInstance().mComponentManager.registerComponentArray<TComponent>()),...);
+    ((getInstance().lock()->mComponentManager->registerComponentArray<TComponents>()),...);
 }
 
 template<typename TSystem, typename ...TComponents>
@@ -897,11 +892,11 @@ void ECSWorld::registerSystem() {
         // expands into `1<<componentType1 | 1<<componentType2 | 1<<componentType3 | ...` during static
         // initialization to build this system's signature
         (
-            (0x1u << getInstance().mComponentManager.getComponentType<TComponents>()) 
+            (0x1u << getInstance().lock()->mComponentManager->getComponentType<TComponents>()) 
             | ... | 0x0u
         )
     };
-    getInstance().mSystemManager.registerSystem<TSystem>(signature);
+    getInstance().lock()->mSystemManager->registerSystem<TSystem>(signature);
 }
 
 template<typename ...TComponents>
@@ -911,22 +906,22 @@ Entity ECSWorld::createEntity(TComponents...components) {
 
 template <typename ...TComponents>
 Entity ECSWorld::createEntityPrototype(TComponents...components) {
-    return ECSWorld::getInstance().privateCreateEntity<TComponents...>(components...);
+    return ECSWorld::getInstance().lock()->privateCreateEntity<TComponents...>(components...);
 }
 
 template<typename TSystem>
 std::shared_ptr<TSystem> ECSWorld::getSystem() {
-    return mSystemManager.getSystem<TSystem>();
+    return mSystemManager->getSystem<TSystem>();
 }
 
 template<typename TSystem>
 std::shared_ptr<TSystem> ECSWorld::getSystemPrototype() {
-    return getInstance().mSystemManager.getSystem<TSystem>();
+    return getInstance().lock()->mSystemManager->getSystem<TSystem>();
 }
 
 template <typename TSingletonSystem>
 std::shared_ptr<TSingletonSystem> ECSWorld::getSingletonSystem() {
-    std::shared_ptr<TSingletonSystem> system { getInstance().getSystem<TSingletonSystem>() };
+    std::shared_ptr<TSingletonSystem> system { getInstance().lock()->getSystem<TSingletonSystem>() };
     assert(system->isSingleton() && "System specified is not an ECSWorld-aware singleton system");
     return system;
 }
@@ -934,23 +929,23 @@ std::shared_ptr<TSingletonSystem> ECSWorld::getSingletonSystem() {
 template<typename TComponent, typename TSystem>
 TComponent BaseSystem::getComponent(EntityID entityID, float progress) const {
     assert(!isSingleton() && "Singletons cannot retrieve entity components through entity ID alone");
-    return mWorld.getComponent<TComponent, TSystem>(entityID, progress);
+    return mWorld.lock()->getComponent<TComponent, TSystem>(entityID, progress);
 }
 template<typename TSystem, typename ...TRequiredComponents>
-std::shared_ptr<BaseSystem> System<TSystem, TRequiredComponents...>::instantiate(ECSWorld& world) {
+std::shared_ptr<BaseSystem> System<TSystem, TRequiredComponents...>::instantiate(std::weak_ptr<ECSWorld> world) {
     if(isSingleton()) return shared_from_this();
     return std::make_shared<TSystem>(world);
 }
 
 template <typename TComponent>
-std::shared_ptr<BaseComponentArray> ComponentArray<TComponent>::instantiate(ECSWorld& world) const {
+std::shared_ptr<BaseComponentArray> ComponentArray<TComponent>::instantiate(std::weak_ptr<ECSWorld> world) const {
     return std::make_shared<ComponentArray<TComponent>>(world);
 }
 
 template<typename TComponent, typename TSystem>
 void BaseSystem::updateComponent(EntityID entityID, const TComponent& component) {
     assert(!isSingleton() && "Singletons cannot retrieve entity components through entity ID alone");
-    mWorld.updateComponent<TComponent, TSystem>(entityID, component);
+    mWorld.lock()->updateComponent<TComponent, TSystem>(entityID, component);
 }
 
 template<typename TSystem>

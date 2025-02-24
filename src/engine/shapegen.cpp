@@ -5,6 +5,8 @@
 
 #include "resource_database.hpp"
 #include "vertex.hpp"
+#include "model.hpp"
+#include "material.hpp"
 #include "mesh.hpp"
 #include "shapegen.hpp"
 
@@ -25,6 +27,62 @@ std::shared_ptr<IResource> StaticMeshRectangleDimensions::createResource(const n
     );
 }
 
+std::shared_ptr<IResource> StaticModelSphereLatLong::createResource(const nlohmann::json& methodParameters) {
+    std::shared_ptr<StaticMesh> sphereMesh {
+        ResourceDatabase::constructAnonymousResource<StaticMesh>({
+            {"type", StaticMesh::getResourceTypeName()},
+            {"method", StaticMeshSphereLatLong::getResourceConstructorName()},
+            {"parameters", methodParameters}
+        })
+    };
+    std::shared_ptr<Material> sphereMaterial { 
+        ResourceDatabase::constructAnonymousResource<Material>({
+            {"type", Material::getResourceTypeName()},
+            {"method", MaterialFromDescription::getResourceConstructorName()},
+            {"parameters", {
+                {"properties", nlohmann::json::array()},
+            }}
+        })
+    };
+
+    std::shared_ptr<StaticModel> sphereModel { 
+        std::make_shared<StaticModel>(
+            std::vector<std::shared_ptr<StaticMesh>>{ sphereMesh },
+            std::vector<std::shared_ptr<Material>>{ sphereMaterial }
+        )
+    };
+
+    return sphereModel;
+}
+
+std::shared_ptr<IResource> StaticModelRectangleDimensions::createResource(const nlohmann::json& methodParameters) {
+    std::shared_ptr<StaticMesh> rectangleMesh {
+        ResourceDatabase::constructAnonymousResource<StaticMesh>({
+            {"type", StaticMesh::getResourceTypeName()},
+            {"method", StaticMeshRectangleDimensions::getResourceConstructorName()},
+            {"parameters", methodParameters}
+        })
+    };
+    std::shared_ptr<Material> rectangleMaterial { 
+        ResourceDatabase::constructAnonymousResource<Material>({
+            {"type", Material::getResourceTypeName()},
+            {"method", MaterialFromDescription::getResourceConstructorName()},
+            {"parameters", 
+                {"properties", nlohmann::json::array()},
+            }
+        })
+    };
+
+    std::shared_ptr<StaticModel> rectangleModel{
+        std::make_shared<StaticModel>(
+            std::vector<std::shared_ptr<StaticMesh>>{rectangleMesh},
+            std::vector<std::shared_ptr<Material>>{rectangleMaterial}
+        )
+    };
+
+    return rectangleModel;
+}
+
 std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian)  {
     assert(nLatitude >= 1);
     assert(nMeridian >= 2);
@@ -39,10 +97,10 @@ std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian)  {
     int currentIndex { 0 };
     for(int i{0}; i < 2 + nLatitude; ++i) {
         const float angleVertical { i * angleVerticalDelta };
-        const int nPoints {
+        const int nPointsCurrentLatitude {
             i % (1 + nLatitude)? nVerticesPerLatitude: 1
         };
-        for(int j{0}; j < nPoints; ++j) {
+        for(int j{0}; j < nPointsCurrentLatitude; ++j) {
             const float angleHorizontal { j * angleHorizontalDelta };
             vertices[currentIndex].mPosition = glm::vec4(
                 glm::sin(glm::radians(angleVertical)) * glm::sin(glm::radians(angleHorizontal)),
@@ -57,6 +115,10 @@ std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian)  {
                 glm::cos(glm::radians(angleHorizontal+90.f)),
                 0.f
             );
+            vertices[currentIndex].mUV3
+                = vertices[currentIndex].mUV2 
+                = vertices[currentIndex].mUV1 
+                = glm::vec2(static_cast<float>(j)/nPointsCurrentLatitude, angleVertical / 180.f);
             vertices[currentIndex].mColor = glm::vec4(1.f);
             ++currentIndex;
         }
@@ -70,22 +132,22 @@ std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian)  {
     int elementIndex {0};
     int previousBaseIndex {0};
     for(int i{1}; i < 2 + nLatitude; ++i) {
-        const int nPoints {
+        const int nPointsCurrentLatitude {
             i%(1+nLatitude)? nVerticesPerLatitude: 1
         };
-        const int nPointsPrevious {
+        const int nPointsPreviousLatitude {
             (i-1)%(1+nLatitude)? nVerticesPerLatitude: 1
         };
         const int currentBaseIndex {
-            previousBaseIndex + nPointsPrevious
+            previousBaseIndex + nPointsPreviousLatitude
         };
-        const int nJoiningFaces {std::max(nPoints, nPointsPrevious)};
+        const int nJoiningFaces {std::max(nPointsCurrentLatitude, nPointsPreviousLatitude)};
 
         for(int j{0}; j < nJoiningFaces; ++j) {
-            const int topleft { previousBaseIndex + (j % nPointsPrevious)};
-            const int topright { previousBaseIndex + ((1+j) % nPointsPrevious)};
-            const int bottomleft { currentBaseIndex + (j % nPoints) };
-            const int bottomright  { currentBaseIndex + ((1+j) % nPoints)};
+            const int topleft { previousBaseIndex + (j % nPointsPreviousLatitude)};
+            const int topright { previousBaseIndex + ((1+j) % nPointsPreviousLatitude)};
+            const int bottomleft { currentBaseIndex + (j % nPointsCurrentLatitude) };
+            const int bottomright  { currentBaseIndex + ((1+j) % nPointsCurrentLatitude)};
 
             if(bottomleft != bottomright) {
                 elements[elementIndex++] = topleft;

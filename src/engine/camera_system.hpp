@@ -28,7 +28,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(CameraProperties::ProjectionType, {
 
 class CameraSystem: public System<CameraSystem, Transform, CameraProperties> {
 public:
-    CameraSystem(ECSWorld& world):
+    CameraSystem(std::weak_ptr<ECSWorld> world):
     System<CameraSystem, Transform, CameraProperties>{world}
     {}
     void updateActiveCameraMatrices();

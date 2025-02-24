@@ -75,7 +75,7 @@ bool SimSystem::aspectRegistered(const std::string& aspectName) const {
     return mAspectConstructors.find(aspectName) != mAspectConstructors.end();
 }
 
-std::shared_ptr<BaseSystem> SimSystem::instantiate(ECSWorld& world) {
+std::shared_ptr<BaseSystem> SimSystem::instantiate(std::weak_ptr<ECSWorld> world) {
     std::shared_ptr<SimSystem> newSimSystem { std::static_pointer_cast<SimSystem>(System<SimSystem, SimCore>::instantiate(world)) };
     newSimSystem->mAspectConstructors = mAspectConstructors;
     return newSimSystem;
@@ -112,7 +112,7 @@ void SimObject::copyAspects(const SimObject& other) {
     mSimObjectAspects.clear();
     for(auto& aspectPair: other.mSimObjectAspects) {
         mSimObjectAspects[aspectPair.first] = aspectPair.second->clone();
-        mSimObjectAspects[aspectPair.first]->mSimObject = this;
+        mSimObjectAspects[aspectPair.first]->attach(this);
     }
 }
 
@@ -130,7 +130,7 @@ void SimObject::addAspect(const nlohmann::json& jsonAspectProperties) {
     const std::string& aspectType { jsonAspectProperties.at("type").get<std::string>() };
     mSimObjectAspects.try_emplace(
         aspectType,
-        getWorld().getSystem<SimSystem>()->constructAspect(jsonAspectProperties)
+        getWorld().lock()->getSystem<SimSystem>()->constructAspect(jsonAspectProperties)
     );
     mSimObjectAspects.at(aspectType)->attach(this);
 }
@@ -186,6 +186,11 @@ ViewportNode& BaseSimObjectAspect::getLocalViewport() {
     return *(mSimObject->getLocalViewport());
 }
 
+SimObject& BaseSimObjectAspect::getSimObject() {
+    assert(isAttached() && "Aspect must be attached");
+    return *mSimObject;
+}
+
 std::weak_ptr<FixedActionBinding> BaseSimObjectAspect::declareFixedActionBinding(
     const std::string& context,
     const std::string& action,
@@ -228,7 +233,7 @@ void BaseSimObjectAspect::deactivateFixedActionBindings() {
     }
 }
 
-ECSWorld& BaseSimObjectAspect::getWorld() const {
+std::weak_ptr<ECSWorld> BaseSimObjectAspect::getWorld() const {
     assert((mState&AspectState::ACTIVE) && "This aspect is not active, and therefore does not have access to its SimObject's world");
     return mSimObject->getWorld();
 }

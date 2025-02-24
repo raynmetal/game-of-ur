@@ -8,6 +8,8 @@
 
 class SceneFromDescription;
 class SceneNodeFromDescription;
+class SimObjectFromDescription;
+class ViewportNodeFromDescription;
 
 class SceneFromFile: public ResourceConstructor<SimObject, SceneFromFile> {
 public:
@@ -54,6 +56,18 @@ public:
     {}
 
     static std::string getResourceConstructorName() { return "fromDescription"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters);
+};
+
+class ViewportNodeFromDescription: public ResourceConstructor<ViewportNode, ViewportNodeFromDescription> {
+public:
+    ViewportNodeFromDescription():
+    ResourceConstructor<ViewportNode, ViewportNodeFromDescription> {0}
+    {}
+
+    static std::string getResourceConstructorName() { return "fromDescription"; }
+
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters);
 };

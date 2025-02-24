@@ -77,12 +77,21 @@ std::shared_ptr<SimObject> SceneFromDescription::loadSceneNodes(const nlohmann::
                 {"method", SimObjectFromDescription::getResourceConstructorName()},
                 {"parameters", nodeDescription},
             });
+
         } else if(nodeDescription.at("type") == SceneNode::getResourceTypeName()) {
             node = ResourceDatabase::constructAnonymousResource<SceneNode>({
                 {"type", SceneNode::getResourceTypeName()},
                 {"method", SceneNodeFromDescription::getResourceConstructorName()},
                 {"parameters", nodeDescription},
             });
+
+        } else if(nodeDescription.at("type") == ViewportNode::getResourceTypeName()) {
+            node = ResourceDatabase::constructAnonymousResource<ViewportNode>({
+                {"type", ViewportNode::getResourceTypeName()},
+                {"method", ViewportNodeFromDescription::getResourceConstructorName()},
+                {"parameters", nodeDescription},
+            });
+
         // TODO: make it so that certain resource constructors can define resource aliases
         // that refer to the same type (and by extension any tables associated with it)
         } else if(nodeDescription.at("type") == "Scene") {
@@ -92,9 +101,11 @@ std::shared_ptr<SimObject> SceneFromDescription::loadSceneNodes(const nlohmann::
             if(nodeDescription.at("copy").get<bool>()) {
                 node = SimObject::copy(std::static_pointer_cast<SimObject>(node));
             }
+
         } else {
             assert(false && "Scene nodes in file must be scene nodes, sim objects, or reference to a scene node file resource");
         }
+
         localRoot->addNode(node, nodeDescription.at("parent").get<std::string>());
     }
 
@@ -119,4 +130,8 @@ std::shared_ptr<IResource> SceneNodeFromDescription::createResource(const nlohma
 
 std::shared_ptr<IResource> SimObjectFromDescription::createResource(const nlohmann::json& methodParameters) {
     return SimObject::create(methodParameters);
+}
+
+std::shared_ptr<IResource> ViewportNodeFromDescription::createResource(const nlohmann::json& methodParameters) {
+    return ViewportNode::create(methodParameters);
 }
