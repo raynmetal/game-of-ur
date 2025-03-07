@@ -12,6 +12,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "scene_components.hpp"
+#include "spatial_query_components.hpp"
 #include "render_system.hpp"
 #include "ecs_world.hpp"
 #include "texture.hpp"
@@ -34,7 +35,7 @@ NLOHMANN_JSON_SERIALIZE_ENUM(RelativeTo, {
 });
 
 enum SpecialEntity: EntityID {
-    ENTITY_ROOT = kMaxEntities,
+    ENTITY_NULL = kMaxEntities,
 };
 
 extern const std::string kSceneRootName;
@@ -331,11 +332,11 @@ friend class SceneNodeCore;
 friend class SceneSystem;
 };
 
-class SceneSystem: public System<SceneSystem, Placement, Transform> {
+class SceneSystem: public System<SceneSystem, Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds> {
 public:
     SceneSystem(std::weak_ptr<ECSWorld> world):
-    System<SceneSystem, Placement, Transform> { world }
-    { }
+    System<SceneSystem, Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds> { world }
+    {}
 
     static std::string getSystemTypeName() { return "SceneSystem"; }
 
@@ -354,19 +355,18 @@ public:
 
     void onApplicationInitialize(const ViewportNode::RenderConfiguration& rootViewportRenderConfiguration);
     void onApplicationStart();
+    void onApplicationEnd();
 
     void simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
-    void variableStep(float simulationProgress, uint32_t variableStepMillis);
+    void variableStep(float simulationProgress, uint32_t simulationLagMillis, uint32_t variableStepMillis);
     void updateTransforms();
     void render(float simulationProgress, uint32_t variableStep);
 
-    void onApplicationEnd();
-
 private:
-    class SceneSubworld: public System<SceneSubworld, Placement, Transform> {
+    class SceneSubworld: public System<SceneSubworld, Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds> {
     public:
         SceneSubworld(std::weak_ptr<ECSWorld> world):
-        System<SceneSubworld, Placement, Transform> { world }
+        System<SceneSubworld, Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds> { world }
         {}
         static std::string getSystemTypeName() { return "SceneSubworld"; }
     private:
@@ -383,6 +383,10 @@ private:
 
     Transform getLocalTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const;
     Transform getCachedWorldTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const;
+
+    void updateHierarchyDataInsertion(std::shared_ptr<SceneNodeCore> insertedNode);
+    void updateHierarchyDataRemoval(std::shared_ptr<SceneNodeCore> removedNode);
+
     void nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode);
     void nodeRemoved(std::shared_ptr<SceneNodeCore> sceneNode);
     void nodeActivationChanged(std::shared_ptr<SceneNodeCore> sceneNode, bool state);
@@ -409,6 +413,7 @@ std::shared_ptr<TSceneNode> BaseSceneNode<TSceneNode>::create(const Placement& p
     newNode->onCreated();
     return std::static_pointer_cast<TSceneNode>(newNode);
 }
+
 template <typename TSceneNode>
 template <typename ...TComponents>
 std::shared_ptr<TSceneNode> BaseSceneNode<TSceneNode>::create(const Key& key, const Placement& placement, const std::string& name, TComponents...components) {
@@ -467,9 +472,12 @@ SceneNodeCore::SceneNodeCore(const Placement& placement, const std::string& name
     validateName(name);
     mName = name;
     mEntity = std::make_shared<Entity>(
-        ECSWorld::createEntityPrototype<Placement, Transform, TComponents...>(
+        ECSWorld::createEntityPrototype<Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds, TComponents...>(
             placement,
+            SceneHierarchyData{},
             Transform{glm::mat4{1.f}},
+            ObjectBounds {},
+            WorldBounds {},
             components...
         )
     );
@@ -478,13 +486,17 @@ template <typename ...TComponents>
 SceneNodeCore::SceneNodeCore(const Key&, const Placement& placement, const std::string& name, TComponents...components) {
     mName = name;
     mEntity = std::make_shared<Entity>(
-        ECSWorld::createEntityPrototype<Placement, Transform, TComponents...>(
+        ECSWorld::createEntityPrototype<Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds, TComponents...>(
             placement,
+            SceneHierarchyData{},
             Transform{glm::mat4{1.f}},
+            ObjectBounds {},
+            WorldBounds {},
             components...
         )
     );
 }
+
 template <typename TComponent>
 void SceneNodeCore::addComponent(const TComponent& component, bool bypassSceneActivityCheck) {
     mEntity->addComponent<TComponent>(component);
@@ -555,16 +567,16 @@ inline void SceneNodeCore::setEnabled<SceneSystem>(bool state) {
     );
 }
 
-
 // Prevent removal of components essential to a scene node
 template <>
 inline void SceneNodeCore::removeComponent<Placement>() {
-    assert(false && "Cannot remove a scene node's placement component");
+    assert(false && "Cannot remove a scene node's Placement component");
 }
 template <>
 inline void SceneNodeCore::removeComponent<Transform>() {
-    assert(false && "Cannot remove a scene node's transform component");
+    assert(false && "Cannot remove a scene node's Transform component");
 }
+
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::ResizeType, {
     {ViewportNode::RenderConfiguration::ResizeType::OFF, "off"},

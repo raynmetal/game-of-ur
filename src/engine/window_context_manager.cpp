@@ -54,6 +54,9 @@ WindowContext::WindowContext(const nlohmann::json& initialWindowConfiguration) {
     glEnable(GL_FRAMEBUFFER_SRGB);
     glClearColor(0.f, 0.f, 0.f, 1.f);
 
+    // Disable VSync
+    SDL_GL_SetSwapInterval(0);
+
     std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
 
     mpAssetImporter = new Assimp::Importer();

@@ -54,6 +54,9 @@ SceneNodeCore::SceneNodeCore(const nlohmann::json& sceneNodeDescription)
     // bypass own implementation of addComponent. We shouldn't trigger methods that
     // require a shared pointer to this to be present
     addComponent<Transform>({}, true);
+    addComponent<SceneHierarchyData>({}, true);
+    addComponent<WorldBounds>({}, true);
+    addComponent<ObjectBounds>({}, true);
     for(const nlohmann::json& componentDescription: sceneNodeDescription.at("components")) {
         addComponent(componentDescription, true);
     }
@@ -744,10 +747,26 @@ void SceneSystem::simulate(uint32_t simStepMillis, std::vector<std::pair<ActionD
             viewportsToVisit.push(childViewport);
         }
     }
+
+    updateTransforms();
+    viewportsToVisit.push(mRootNode);
+    while(std::shared_ptr<ViewportNode> viewport=viewportsToVisit.front()) {
+        viewportsToVisit.pop();
+
+        if(!viewport->isActive()) continue;
+
+        if(viewport->mOwnWorld) {
+            viewport->mOwnWorld->postTransformUpdate(simStepMillis);
+        }
+
+        for(auto& childViewport: viewport->mChildViewports) {
+            viewportsToVisit.push(childViewport);
+        }
+    }
     updateTransforms();
 }
 
-void SceneSystem::variableStep(float simulationProgress, uint32_t variableStepMillis) {
+void SceneSystem::variableStep(float simulationProgress, uint32_t simulationLagMillis, uint32_t variableStepMillis) {
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
     while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
         viewportsToVisit.pop();
@@ -755,6 +774,22 @@ void SceneSystem::variableStep(float simulationProgress, uint32_t variableStepMi
 
         if(viewport->mOwnWorld) {
             viewport->mOwnWorld->variableStep(simulationProgress, variableStepMillis);
+        }
+
+        for(auto& childViewport: viewport->mChildViewports) {
+            viewportsToVisit.push(childViewport);
+        }
+    }
+
+    updateTransforms();
+    viewportsToVisit.push({mRootNode});
+    while(std::shared_ptr<ViewportNode> viewport=viewportsToVisit.front()) {
+        viewportsToVisit.pop();
+
+        if(!viewport->isActive()) continue;
+
+        if(viewport->mOwnWorld) {
+            viewport->mOwnWorld->postTransformUpdate(simulationLagMillis);
         }
 
         for(auto& childViewport: viewport->mChildViewports) {
@@ -833,6 +868,83 @@ void SceneSystem::addNode(std::shared_ptr<SceneNodeCore> sceneNode, const std::s
     mRootNode->addNode(sceneNode, where);
 }
 
+void SceneSystem::updateHierarchyDataInsertion(std::shared_ptr<SceneNodeCore> insertedNode) {
+    SceneHierarchyData insertedNodeHierarchyData {};
+
+    std::shared_ptr<SceneNodeCore> parentNode { insertedNode->mParent.lock() };
+    if(!parentNode || parentNode->getWorldID() != insertedNode->getWorldID()) {
+        // a viewport with its own world or the root viewport of the scene is being added
+        insertedNode->updateComponent(insertedNodeHierarchyData);
+        return;
+    }
+
+    // find the end of the list of the inserted node's siblings
+    WorldID parentWorld { parentNode->getWorldID() };
+    std::shared_ptr<SceneNodeCore> siblingNode { 
+        parentNode->getComponent<SceneHierarchyData>().mChild != kMaxEntities? 
+        mEntityToNode[{parentWorld, parentNode->getComponent<SceneHierarchyData>().mChild}]:
+        nullptr
+    };
+
+    for(/*pass*/;
+        siblingNode != nullptr && siblingNode->getComponent<SceneHierarchyData>().mSibling != kMaxEntities;
+        siblingNode = mEntityToNode[{parentWorld, siblingNode->getComponent<SceneHierarchyData>().mSibling}]
+    );
+
+    // if current hierarchy node is that of a sibling, update the sibling link
+    if(siblingNode != nullptr) {
+        SceneHierarchyData siblingHierarchyData{ siblingNode->getComponent<SceneHierarchyData>() };
+        siblingHierarchyData.mSibling = insertedNode->getEntityID();
+        siblingNode->updateComponent<SceneHierarchyData>(siblingHierarchyData);
+
+    // otherwise update the parent's child link
+    } else {
+        SceneHierarchyData parentHierarchyData { parentNode->getComponent<SceneHierarchyData>() };
+        parentHierarchyData.mChild = insertedNode->getEntityID();
+        parentNode->updateComponent<SceneHierarchyData>(parentHierarchyData);
+    }
+
+    // finally, update the scene node's own hierarchy data
+    insertedNodeHierarchyData.mParent = parentNode->getEntityID();
+    insertedNode->updateComponent<SceneHierarchyData>(insertedNodeHierarchyData);
+}
+
+void SceneSystem::updateHierarchyDataRemoval(std::shared_ptr<SceneNodeCore> removedNode) {
+    SceneHierarchyData removedNodeHierarchyData { removedNode->getComponent<SceneHierarchyData>() };
+    std::shared_ptr<SceneNodeCore> parentNode { removedNode->mParent.lock() };
+
+    if(removedNodeHierarchyData.mParent == kMaxEntities || !parentNode) {
+        // this node is a viewport node that owns its own world, or the root node of the scene system
+        return;
+    }
+
+    // find the removed node's immediate sibling
+    WorldID parentWorld { parentNode->getWorldID() };
+    std::shared_ptr<SceneNodeCore> siblingNode { mEntityToNode[{parentWorld, parentNode->getComponent<SceneHierarchyData>().mChild}] };
+    EntityID removedNodeEntityID { removedNode->getEntityID() };
+
+    for( /*pass*/;
+        siblingNode->getComponent<SceneHierarchyData>().mSibling != removedNodeEntityID && siblingNode != removedNode;
+        siblingNode = mEntityToNode[ {parentWorld, siblingNode->getComponent<SceneHierarchyData>().mSibling} ]
+    );
+
+    // if current hierarchy data is that of a sibling, update the sibling link
+    if(siblingNode != removedNode) {
+        SceneHierarchyData siblingHierarchyData { siblingNode->getComponent<SceneHierarchyData>() };
+        siblingHierarchyData.mSibling = removedNodeHierarchyData.mSibling;
+        siblingNode->updateComponent(siblingHierarchyData);
+
+    // otherwise update the parent's child link
+    } else {
+        SceneHierarchyData parentHierarchyData { parentNode->getComponent<SceneHierarchyData>() };
+        parentHierarchyData.mChild = removedNodeHierarchyData.mSibling;
+        parentNode->updateComponent(parentHierarchyData);
+    }
+
+    // nothing more to be done, the removed node's hierarchy data is irrelevant now that it
+    // is being removed
+}
+
 void SceneSystem::nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode) {
     if(!inScene(sceneNode->mParent.lock())) return;
 
@@ -845,13 +957,15 @@ void SceneSystem::nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode) {
         } else {
             sceneNode->joinWorld(*sceneNode->mParent.lock()->getWorld().lock());
         }
+        updateHierarchyDataInsertion(sceneNode);
     }
     mEntityToNode[sceneNode->getUniversalEntityID()] = sceneNode;
 
+
     // when a node is added to the scene, all its children should
     // be in the scene also, so have them registered. Also move every
-    // node to its world, and switch worlds if a viewport
-    // node is found
+    // node to its world, and switch worlds if a viewport 
+    // node containing its own world is found
     for(auto& descendant: sceneNode->getDescendants()) {
         {
             std::shared_ptr<ViewportNode> viewport { std::dynamic_pointer_cast<ViewportNode>(descendant) };
@@ -860,29 +974,30 @@ void SceneSystem::nodeAdded(std::shared_ptr<SceneNodeCore> sceneNode) {
             } else {
                 descendant->joinWorld(*descendant->mParent.lock()->getWorld().lock());
             }
+            updateHierarchyDataInsertion(descendant);
         }
         mEntityToNode[descendant->getUniversalEntityID()] = descendant;
     }
 
-    // let the scene system enable systems on those nodes that
-    // should be enabled
+    // let the scene system activate systems on those nodes that
+    // are enabled
     nodeActivationChanged(sceneNode, sceneNode->mStateFlags&SceneNodeCore::StateFlags::ENABLED);
 }
 
 void SceneSystem::nodeRemoved(std::shared_ptr<SceneNodeCore> sceneNode) {
-    // forget about keeping this node alive if it used to be 
-    // a part of the scene tree
-    if(inScene(sceneNode)) {
-        // disable the node and its children so that it is no
-        // longer seen by any system
-        nodeActivationChanged(sceneNode, false);
+    if(!inScene(sceneNode)) return;
 
-        // lose all references to the node and its descendants
-        for(auto& descendant: sceneNode->getDescendants()) {
-            mEntityToNode.erase(descendant->getUniversalEntityID());
-        }
-        mEntityToNode.erase(sceneNode->getUniversalEntityID());
+    updateHierarchyDataRemoval(sceneNode);
+
+    // disable the node and its children so that it is no
+    // longer seen by any system
+    nodeActivationChanged(sceneNode, false);
+
+    // lose all references to the node and its descendants
+    for(auto& descendant: sceneNode->getDescendants()) {
+        mEntityToNode.erase(descendant->getUniversalEntityID());
     }
+    mEntityToNode.erase(sceneNode->getUniversalEntityID());
 }
 
 void SceneSystem::nodeActivationChanged(std::shared_ptr<SceneNodeCore> sceneNode, bool state) {

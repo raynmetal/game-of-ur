@@ -24,20 +24,16 @@ struct Placement {
     }
 };
 
-struct PlacementPosition {
-    glm::vec4 mPosition { 0.f, 0.f, 0.f, 1.f };
-};
-
-struct PlacementOrientation  {
-    glm::quat mOrientation { glm::vec3 { 0.f } };
-};
-struct PlacementScale {
-    glm::vec3 mScale { 1.f, 1.f, 1.f };
-};
-
 struct Transform {
     glm::mat4 mModelMatrix {1.f};
     inline static std::string getComponentTypeName() { return "Transform"; }
+};
+
+struct SceneHierarchyData {
+    EntityID mParent { kMaxEntities };
+    EntityID mSibling { kMaxEntities };
+    EntityID mChild { kMaxEntities };
+    inline static std::string getComponentTypeName() { return "SceneHierarchyData"; }
 };
 
 inline void from_json(const nlohmann::json& json, Placement& placement) {
@@ -79,14 +75,16 @@ inline void to_json(nlohmann::json& json, const Placement& placement) {
         }}
     };
 }
-inline void from_json(const nlohmann::json& json, Transform& transform) {
-    assert(json.at("type") == Transform::getComponentTypeName() && "Type mismatch. Component json must have type Transform");
-    transform.mModelMatrix = glm::mat4{1.f};
-}
+inline void to_json(nlohmann::json& json, const SceneHierarchyData& sceneHierarchyData) {}
+inline void from_json(const nlohmann::json& json, SceneHierarchyData& sceneHierarchyData) {}
 inline void to_json(nlohmann::json& json, const Transform& transform) {
     json = {
         {"type", Transform::getComponentTypeName()},
     };
+}
+inline void from_json(const nlohmann::json& json, Transform& transform) {
+    assert(json.at("type") == Transform::getComponentTypeName() && "Type mismatch. Component json must have type Transform");
+    transform.mModelMatrix = glm::mat4{1.f};
 }
 
 template<>
@@ -102,15 +100,6 @@ inline Placement Interpolator<Placement>::operator() (
     };
 }
 
-template <>
-inline PlacementPosition Interpolator<PlacementPosition>::operator() (
-    const PlacementPosition& previousState, const PlacementPosition& nextState,
-    float simulationProgress
-) const {
-    simulationProgress = mProgressLimits(simulationProgress);
-    return { (1.f - simulationProgress) * previousState.mPosition + simulationProgress * nextState.mPosition };
-}
-
 template<>
 inline Transform Interpolator<Transform>::operator() (
     const Transform& previousState, const Transform& nextState,
@@ -121,6 +110,14 @@ inline Transform Interpolator<Transform>::operator() (
         previousState.mModelMatrix * (1.f - simulationProgress)
         + nextState.mModelMatrix * (simulationProgress)
     };
+}
+
+template <>
+inline SceneHierarchyData Interpolator<SceneHierarchyData>::operator() (
+    const SceneHierarchyData& previousState, const SceneHierarchyData& nextState,
+    float simulationProgress
+) const {
+    return nextState;
 }
 
 #endif

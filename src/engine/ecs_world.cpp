@@ -169,6 +169,12 @@ void SystemManager::handleSimulationStep(uint32_t simStepMillis) {
         pair.second->onSimulationStep(simStepMillis);
     }
 }
+void SystemManager::handlePostTransformUpdate(uint32_t timestepMillis) {
+    for(auto& pair: mNameToSystem) {
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onPostTransformUpdate(timestepMillis);
+    }
+}
 void SystemManager::handleVariableStep(float simulationProgress, uint32_t variableStepMillis) {
     for(auto& pair: mNameToSystem) {
         if(pair.second->isSingleton()) { continue; }
@@ -448,6 +454,9 @@ void ECSWorld::preSimulationStep(uint32_t simStepMillis) {
 }
 void ECSWorld::simulationStep(uint32_t simStepMillis) {
     mSystemManager->handleSimulationStep(simStepMillis);
+}
+void ECSWorld::postTransformUpdate(uint32_t timestepMillis) {
+    mSystemManager->handlePostTransformUpdate(timestepMillis);
 }
 void ECSWorld::variableStep(float simulationProgress, uint32_t variableStepMillis) {
     mSystemManager->handleVariableStep(simulationProgress, variableStepMillis);

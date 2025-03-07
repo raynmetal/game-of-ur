@@ -36,8 +36,12 @@ public:
     void bind(const VertexLayout& shaderVertexLayout);
     void unbind();
 
+    std::vector<BuiltinVertexData>::const_iterator getVertexListBegin();
+    std::vector<BuiltinVertexData>::const_iterator getVertexListEnd();
+
     VertexLayout getVertexLayout() const;
     inline static std::string getResourceTypeName() { return "StaticMesh"; }
+
 
 private:
 

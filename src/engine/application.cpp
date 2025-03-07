@@ -26,6 +26,31 @@ constexpr uint32_t kMinSimStep { 1000/120 };
 std::weak_ptr<Application> Application::s_pInstance {};
 bool Application::s_instantiated { false };
 
+void printSceneHierarchyData(std::shared_ptr<SceneNodeCore> rootNode) {
+    std::vector<std::pair<std::shared_ptr<SceneNodeCore>, int>> nodeAndLevel {{rootNode, 0}};
+    while(!nodeAndLevel.empty()) {
+        std::shared_ptr<SceneNodeCore> currentNode { nodeAndLevel.back().first };
+        int indentation{ nodeAndLevel.back().second };
+        nodeAndLevel.pop_back();
+
+        for(std::shared_ptr<SceneNodeCore> child: currentNode->getChildren()) {
+            nodeAndLevel.push_back( { child, indentation+1 });
+        }
+
+        std::string indentString { "" };
+        for(int i{0}; i < indentation; ++i) {
+            indentString += "\t";
+        }
+
+        std::cout << indentString << currentNode->getName() 
+            << " (World: " << currentNode->getWorldID() << ", Entity: " << currentNode->getEntityID()
+            << "):\n" << indentString << "|\tparent ID: " << currentNode->getComponent<SceneHierarchyData>().mParent 
+            << ",\n" << indentString << "|\tnext sibling ID: " << currentNode->getComponent<SceneHierarchyData>().mSibling
+            << ",\n" << indentString << "|\tfirst child ID: " << currentNode->getComponent<SceneHierarchyData>().mChild 
+            << "\n";
+    }
+}
+
 Application::Application(const std::string& projectPath) {
     s_instantiated = true;
 
@@ -95,6 +120,7 @@ void Application::execute() {
     bool quit {false};
     sceneSystem->onApplicationStart();
     sceneSystem->getRootViewport().requestDimensions(WindowContext::getInstance().getDimensions());
+    printSceneHierarchyData(sceneSystem->getNode("/partial_scene_root/"));
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
@@ -115,8 +141,8 @@ void Application::execute() {
         if(quit) break;
 
         // update time related variables
-        uint32_t currentTicks { SDL_GetTicks() };
-        uint32_t variableStep { currentTicks - previousTicks };
+        const uint32_t currentTicks { SDL_GetTicks() };
+        const uint32_t variableStep { currentTicks - previousTicks };
         previousTicks = currentTicks;
 
         // apply simulation updates, if possible
@@ -125,10 +151,11 @@ void Application::execute() {
             sceneSystem->simulate(mSimulationStep, mInputManager.getTriggeredActions(updatedSimulationTicks));
             simulationTicks = updatedSimulationTicks;
         }
+        const uint32_t simulationLagMillis { currentTicks - simulationTicks};
 
         // calculate progress towards the next simulation step, apply variable update
-        const float simulationProgress { static_cast<float>(currentTicks - simulationTicks) / mSimulationStep};
-        sceneSystem->variableStep(simulationProgress, variableStep);
+        const float simulationProgress { static_cast<float>(simulationLagMillis) / mSimulationStep};
+        sceneSystem->variableStep(simulationProgress, simulationLagMillis, variableStep);
 
         // render a frame (or, well, leave it up to the root viewport configuration really)
         sceneSystem->render(simulationProgress, variableStep);
