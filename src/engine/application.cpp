@@ -39,14 +39,14 @@ void printSceneHierarchyData(std::shared_ptr<SceneNodeCore> rootNode) {
 
         std::string indentString { "" };
         for(int i{0}; i < indentation; ++i) {
-            indentString += "\t";
+            indentString += "|  ";
         }
 
         std::cout << indentString << currentNode->getName() 
             << " (World: " << currentNode->getWorldID() << ", Entity: " << currentNode->getEntityID()
-            << "):\n" << indentString << "|\tparent ID: " << currentNode->getComponent<SceneHierarchyData>().mParent 
-            << ",\n" << indentString << "|\tnext sibling ID: " << currentNode->getComponent<SceneHierarchyData>().mSibling
-            << ",\n" << indentString << "|\tfirst child ID: " << currentNode->getComponent<SceneHierarchyData>().mChild 
+            << "):\n" << indentString << "| \\ parent ID: " << currentNode->getComponent<SceneHierarchyData>().mParent 
+            << ",\n" << indentString << "| \\ next sibling ID: " << currentNode->getComponent<SceneHierarchyData>().mSibling
+            << ",\n" << indentString << "| \\ first child ID: " << currentNode->getComponent<SceneHierarchyData>().mChild 
             << "\n";
     }
 }
@@ -148,14 +148,14 @@ void Application::execute() {
         // apply simulation updates, if possible
         while(currentTicks - simulationTicks >= mSimulationStep) {
             const uint32_t updatedSimulationTicks = simulationTicks + mSimulationStep;
-            sceneSystem->simulate(mSimulationStep, mInputManager.getTriggeredActions(updatedSimulationTicks));
+            sceneSystem->simulationStep(mSimulationStep, mInputManager.getTriggeredActions(updatedSimulationTicks));
             simulationTicks = updatedSimulationTicks;
         }
         const uint32_t simulationLagMillis { currentTicks - simulationTicks};
 
         // calculate progress towards the next simulation step, apply variable update
         const float simulationProgress { static_cast<float>(simulationLagMillis) / mSimulationStep};
-        sceneSystem->variableStep(simulationProgress, simulationLagMillis, variableStep);
+        sceneSystem->variableStep(simulationProgress, simulationLagMillis, variableStep, mInputManager.getTriggeredActions(currentTicks));
 
         // render a frame (or, well, leave it up to the root viewport configuration really)
         sceneSystem->render(simulationProgress, variableStep);

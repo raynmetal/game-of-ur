@@ -516,11 +516,14 @@ private:
 friend class ECSWorld;
 };
 
+/** 
+ * By default, use a step interpolator which works with most types.  Create
+ * a specialization for a component T if custom interpolation is desired
+ */
 template<typename T>
 T Interpolator<T>::operator() (const T& previousState, const T& nextState, float simulationProgress) const {
-    // Clamp progress to acceptable values
-    simulationProgress = mProgressLimits(simulationProgress);
-    return simulationProgress * nextState + (1.f - simulationProgress) * previousState;
+    if(simulationProgress < .5f) return previousState;
+    return nextState;
 }
 
 template<typename TComponent>

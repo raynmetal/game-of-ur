@@ -36,8 +36,8 @@ public:
     void bind(const VertexLayout& shaderVertexLayout);
     void unbind();
 
-    std::vector<BuiltinVertexData>::const_iterator getVertexListBegin();
-    std::vector<BuiltinVertexData>::const_iterator getVertexListEnd();
+    std::vector<BuiltinVertexData>::const_iterator getVertexListBegin() const;
+    std::vector<BuiltinVertexData>::const_iterator getVertexListEnd() const;
 
     VertexLayout getVertexLayout() const;
     inline static std::string getResourceTypeName() { return "StaticMesh"; }
@@ -61,16 +61,6 @@ private:
     void destroyResource();
     void releaseResource();
 };
-
-// Not used as a component, and so doesn't require an interpolator
-// template<>
-// inline std::shared_ptr<StaticMesh> Interpolator<std::shared_ptr<StaticMesh>>::operator() (
-//     const std::shared_ptr<StaticMesh>& previousState,
-//     const std::shared_ptr<StaticMesh>& nextState,
-//     float simulationProgress
-// ) const {
-//     return nextState;
-// }
 
 class StaticMeshFromDescription: public ResourceConstructor<StaticMesh, StaticMeshFromDescription> {
 public:

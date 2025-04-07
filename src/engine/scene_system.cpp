@@ -55,7 +55,7 @@ SceneNodeCore::SceneNodeCore(const nlohmann::json& sceneNodeDescription)
     // require a shared pointer to this to be present
     addComponent<Transform>({}, true);
     addComponent<SceneHierarchyData>({}, true);
-    addComponent<WorldBounds>({}, true);
+    addComponent<AxisAlignedBounds>({}, true);
     addComponent<ObjectBounds>({}, true);
     for(const nlohmann::json& componentDescription: sceneNodeDescription.at("components")) {
         addComponent(componentDescription, true);
@@ -717,7 +717,7 @@ std::vector<std::weak_ptr<ECSWorld>> ViewportNode::getActiveDescendantWorlds() {
     return activeWorlds;
 }
 
-void SceneSystem::simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions) {
+void SceneSystem::simulationStep(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions) {
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
     while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
         viewportsToVisit.pop();
@@ -766,7 +766,8 @@ void SceneSystem::simulate(uint32_t simStepMillis, std::vector<std::pair<ActionD
     updateTransforms();
 }
 
-void SceneSystem::variableStep(float simulationProgress, uint32_t simulationLagMillis, uint32_t variableStepMillis) {
+void SceneSystem::variableStep(float simulationProgress, uint32_t simulationLagMillis, uint32_t variableStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions) {
+    mRootNode->mActionDispatch.dispatchActions(triggeredActions);
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
     while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
         viewportsToVisit.pop();
@@ -1038,7 +1039,9 @@ void SceneSystem::deactivateSubtree(std::shared_ptr<SceneNodeCore> rootNode) {
     rootNode->mStateFlags &= ~SceneNodeCore::StateFlags::ACTIVE;
 
     for(auto& childNode: rootNode->getChildren()) {
-        if(childNode->mStateFlags&SceneNodeCore::StateFlags::ENABLED) deactivateSubtree(childNode);
+        if(childNode->mStateFlags&SceneNodeCore::StateFlags::ENABLED) {
+            deactivateSubtree(childNode);
+        }
     }
 }
 
@@ -1057,6 +1060,7 @@ void SceneSystem::updateTransforms() {
             sceneNode = sceneNode->mParent.lock();
         }
     }
+
     for(std::pair<WorldID, EntityID> entityWorldPair: entitiesToIgnore) {
         mComputeTransformQueue.erase(entityWorldPair);
     }
@@ -1077,6 +1081,7 @@ void SceneSystem::updateTransforms() {
             }
         }
     }
+    mComputeTransformQueue.clear();
 }
 
 Transform SceneSystem::getLocalTransform(std::shared_ptr<const SceneNodeCore> sceneNode) const {

@@ -12,7 +12,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "scene_components.hpp"
-#include "spatial_query_components.hpp"
+#include "spatial_query_math.hpp"
 #include "render_system.hpp"
 #include "ecs_world.hpp"
 #include "texture.hpp"
@@ -332,10 +332,10 @@ friend class SceneNodeCore;
 friend class SceneSystem;
 };
 
-class SceneSystem: public System<SceneSystem, Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds> {
+class SceneSystem: public System<SceneSystem, Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds> {
 public:
     SceneSystem(std::weak_ptr<ECSWorld> world):
-    System<SceneSystem, Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds> { world }
+    System<SceneSystem, Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds> { world }
     {}
 
     static std::string getSystemTypeName() { return "SceneSystem"; }
@@ -357,16 +357,16 @@ public:
     void onApplicationStart();
     void onApplicationEnd();
 
-    void simulate(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
-    void variableStep(float simulationProgress, uint32_t simulationLagMillis, uint32_t variableStepMillis);
+    void simulationStep(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
+    void variableStep(float simulationProgress, uint32_t simulationLagMillis, uint32_t variableStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
     void updateTransforms();
     void render(float simulationProgress, uint32_t variableStep);
 
 private:
-    class SceneSubworld: public System<SceneSubworld, Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds> {
+    class SceneSubworld: public System<SceneSubworld, Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds> {
     public:
         SceneSubworld(std::weak_ptr<ECSWorld> world):
-        System<SceneSubworld, Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds> { world }
+        System<SceneSubworld, Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds> { world }
         {}
         static std::string getSystemTypeName() { return "SceneSubworld"; }
     private:
@@ -472,12 +472,12 @@ SceneNodeCore::SceneNodeCore(const Placement& placement, const std::string& name
     validateName(name);
     mName = name;
     mEntity = std::make_shared<Entity>(
-        ECSWorld::createEntityPrototype<Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds, TComponents...>(
+        ECSWorld::createEntityPrototype<Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds, TComponents...>(
             placement,
             SceneHierarchyData{},
             Transform{glm::mat4{1.f}},
             ObjectBounds {},
-            WorldBounds {},
+            AxisAlignedBounds {},
             components...
         )
     );
@@ -486,12 +486,12 @@ template <typename ...TComponents>
 SceneNodeCore::SceneNodeCore(const Key&, const Placement& placement, const std::string& name, TComponents...components) {
     mName = name;
     mEntity = std::make_shared<Entity>(
-        ECSWorld::createEntityPrototype<Placement, SceneHierarchyData, Transform, ObjectBounds, WorldBounds, TComponents...>(
+        ECSWorld::createEntityPrototype<Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds, TComponents...>(
             placement,
             SceneHierarchyData{},
             Transform{glm::mat4{1.f}},
             ObjectBounds {},
-            WorldBounds {},
+            AxisAlignedBounds{},
             components...
         )
     );

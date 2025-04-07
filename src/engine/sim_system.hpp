@@ -338,7 +338,9 @@ struct SceneNodeCore::getByPath_Helper<TAspect&, std::enable_if_t<std::is_base_o
 };
 
 template<>
-inline SimCore Interpolator<SimCore>::operator() (const SimCore& prev, const SimCore& next, float value) const {
+inline SimCore Interpolator<SimCore>::operator() (const SimCore&, const SimCore& next, float) const {
+    // Never return the previous state, as that is (supposed to be)
+    // an invalidated reference to this node
     return next;
 }
 

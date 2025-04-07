@@ -227,6 +227,13 @@ std::shared_ptr<IResource> StaticMeshFromDescription::createResource(const nlohm
     return std::make_shared<StaticMesh>(vertices, elements);
 }
 
+std::vector<BuiltinVertexData>::const_iterator StaticMesh::getVertexListBegin() const {
+    return mVertices.cbegin();
+}
+std::vector<BuiltinVertexData>::const_iterator StaticMesh::getVertexListEnd() const {
+    return mVertices.cend();
+}
+
 // BuiltinMesh::BuiltinMesh(aiMesh* pAiMesh) 
 // : BaseMesh{ BuiltinVertexLayout } 
 // {

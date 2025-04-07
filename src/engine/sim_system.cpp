@@ -1,5 +1,3 @@
-#include "application.hpp"
-
 #include "sim_system.hpp"
 
 SimObject::~SimObject() {

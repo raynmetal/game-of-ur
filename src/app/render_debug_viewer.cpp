@@ -1,7 +1,6 @@
 #include <glm/gtx/string_cast.hpp>
 
 #include "../engine/window_context_manager.hpp"
-#include "../engine/application.hpp"
 #include "../engine/render_system.hpp"
 
 #include "render_debug_viewer.hpp"

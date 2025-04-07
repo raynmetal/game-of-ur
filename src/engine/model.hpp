@@ -81,15 +81,6 @@ private:
     void releaseResource();
 };
 
-template<>
-inline std::shared_ptr<StaticModel> Interpolator<std::shared_ptr<StaticModel>>::operator() (
-    const std::shared_ptr<StaticModel>& previousState,
-    const std::shared_ptr<StaticModel>& nextState,
-    float simulationProgress
-) const {
-    return nextState;
-}
-
 class StaticModelFromFile: public ResourceConstructor<StaticModel, StaticModelFromFile> {
 public:
     StaticModelFromFile();
