@@ -46,7 +46,7 @@ private:
     void rebuildOctree();
 
     void onSimulationActivated() override;
-    void onPostTransformUpdate(uint32_t timestepMillis) override;
+    void onSimulationStep(uint32_t timestepMillis) override;
     void onEntityEnabled(EntityID entityID) override;
     void onEntityDisabled(EntityID entityID) override;
     void onEntityUpdated(EntityID entityID) override;

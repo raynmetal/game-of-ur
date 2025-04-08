@@ -15,6 +15,11 @@ public:
     using Depth = uint8_t;
     using Address = uint64_t;
 
+    enum OctantSpecifier: Octant {
+        RIGHT=0x1,
+        TOP=0x2,
+        FRONT=0x4,
+    };
 
     static constexpr uint8_t knDepthBits { 5 };
     static constexpr uint8_t kDepthBitOffset { sizeof(Address)*8 - knDepthBits };
@@ -43,12 +48,6 @@ public:
     static_assert(knDepthBits + kDepthBitOffset == sizeof(Address)*8 && "sum of depth bits and depth offset must add up to the size of the address in bits");
     static_assert(kDepthBitOffset >= knRouteBits && "There must be at least as many bits in the depth bit offset as those used to make the route");
     static_assert(kNoAddress == 0 && "NoAddress must correspond with 0");
-
-    enum OctantSpecifier: Octant {
-        RIGHT=0x1,
-        TOP=0x2,
-        FRONT=0x4,
-    };
 
     static std::shared_ptr<OctreeNode> CreateRootNode(
         uint8_t subdivisionThreshold, AxisAlignedBounds boundRegion

@@ -449,7 +449,7 @@ void ViewportNode::onActivated() {
 
     if(!mOwnWorld) return;
     mOwnWorld->activateSimulation();
-    mOwnWorld->preSimulationStep(0);
+    mOwnWorld->simulationPreStep(0);
 }
 
 void ViewportNode::onDeactivated() {
@@ -724,7 +724,7 @@ void SceneSystem::simulationStep(uint32_t simStepMillis, std::vector<std::pair<A
         if(!viewport->isActive()) continue;
 
         if(viewport->mOwnWorld) {
-            viewport->mOwnWorld->preSimulationStep(simStepMillis);
+            viewport->mOwnWorld->simulationPreStep(simStepMillis);
         }
 
         for(auto& childViewport: viewport->mChildViewports) {
@@ -757,6 +757,7 @@ void SceneSystem::simulationStep(uint32_t simStepMillis, std::vector<std::pair<A
 
         if(viewport->mOwnWorld) {
             viewport->mOwnWorld->postTransformUpdate(simStepMillis);
+            viewport->mOwnWorld->simulationPostStep(simStepMillis);
         }
 
         for(auto& childViewport: viewport->mChildViewports) {

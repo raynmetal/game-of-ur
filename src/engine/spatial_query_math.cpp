@@ -276,28 +276,75 @@ void ObjectBounds::applyModelMatrix(const glm::mat4& modelMatrix) {
 std::array<AreaTriangle, 12> computeBoxFaceTriangles(const std::array<glm::vec3, 8>& boxCorners) {
     return std::array<AreaTriangle, 12> {{
         // left faces
-        AreaTriangle{.mPoints{boxCorners[6], boxCorners[7], boxCorners[5]}},
-        AreaTriangle{.mPoints{boxCorners[6], boxCorners[5], boxCorners[4]}},
+        AreaTriangle{.mPoints{
+            boxCorners[0],
+            boxCorners[BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::FRONT|BoxCornerSpecifier::TOP]}},
+        AreaTriangle{.mPoints{
+            boxCorners[0],
+            boxCorners[BoxCornerSpecifier::FRONT|BoxCornerSpecifier::TOP],
+            boxCorners[BoxCornerSpecifier::TOP]
+        }},
 
         // right faces
-        AreaTriangle{.mPoints{boxCorners[3], boxCorners[2], boxCorners[0]}},
-        AreaTriangle{.mPoints{boxCorners[3], boxCorners[0], boxCorners[1]}},
+        AreaTriangle{.mPoints{
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::RIGHT],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP]
+        }},
+        AreaTriangle{.mPoints{
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
+        }},
 
         // bottom faces
-        AreaTriangle{.mPoints{boxCorners[6], boxCorners[2], boxCorners[3]}},
-        AreaTriangle{.mPoints{boxCorners[6], boxCorners[3], boxCorners[7]}},
+        AreaTriangle{.mPoints{
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::FRONT],
+            boxCorners[0]
+        }},
+        AreaTriangle{.mPoints{
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::FRONT],
+            boxCorners[0],
+            boxCorners[BoxCornerSpecifier::RIGHT]
+        }},
 
         // top faces
-        AreaTriangle{.mPoints{boxCorners[5], boxCorners[1], boxCorners[0]}},
-        AreaTriangle{.mPoints{boxCorners[5], boxCorners[0], boxCorners[4]}},
+        AreaTriangle{.mPoints{
+            boxCorners[BoxCornerSpecifier::TOP],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
+        }},
+        AreaTriangle{.mPoints{
+            boxCorners[BoxCornerSpecifier::TOP],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
+        }},
 
         // back faces
-        AreaTriangle{.mPoints{boxCorners[7], boxCorners[3], boxCorners[1]}},
-        AreaTriangle{.mPoints{boxCorners[7], boxCorners[1], boxCorners[5]}},
+        AreaTriangle{.mPoints{
+            boxCorners[0],
+            boxCorners[BoxCornerSpecifier::RIGHT],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP]
+        }},
+        AreaTriangle{.mPoints{
+            boxCorners[0],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP],
+            boxCorners[BoxCornerSpecifier::TOP]
+        }},
 
         // front faces
-        AreaTriangle{.mPoints{boxCorners[2], boxCorners[6], boxCorners[4]}},
-        AreaTriangle{.mPoints{boxCorners[2], boxCorners[4], boxCorners[0]}}
+        AreaTriangle{.mPoints{
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
+        }},
+        AreaTriangle{.mPoints{
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
+        }}
     }};
 }
 
@@ -363,12 +410,12 @@ std::array<glm::vec3, 8> AxisAlignedBounds::getAxisAlignedBoxCorners() const {
     /** least significant 3 bits represent corners of a box, where
      * * 0th bit represents x, 1 is right, 0 is left
      * * 1st bit represents y, 1 is up, 0 is down
-     * * 2nd bit representz z, 1 is front, 0 is back
+     * * 2nd bit represents z, 1 is front, 0 is back
      */
-    for(uint8_t cornerSpecifier {0}; cornerSpecifier < 8; ++cornerSpecifier) {
-        axisAlignedBoxCorners[7 - cornerSpecifier].x = cornerSpecifier&1? mExtents.first.x: mExtents.second.x;
-        axisAlignedBoxCorners[7 - cornerSpecifier].y = cornerSpecifier&2? mExtents.first.y: mExtents.second.y;
-        axisAlignedBoxCorners[7 - cornerSpecifier].z = cornerSpecifier&4? mExtents.first.z: mExtents.second.z;
+    for(uint8_t corner {0}; corner < 8; ++corner) {
+        axisAlignedBoxCorners[corner].x = corner&BoxCornerSpecifier::RIGHT? mExtents.first.x: mExtents.second.x;
+        axisAlignedBoxCorners[corner].y = corner&BoxCornerSpecifier::TOP? mExtents.first.y: mExtents.second.y;
+        axisAlignedBoxCorners[corner].z = corner&BoxCornerSpecifier::FRONT? mExtents.first.z: mExtents.second.z;
     }
     return axisAlignedBoxCorners;
 }

@@ -5,6 +5,14 @@
 #include <array>
 #include <glm/glm.hpp>
 
+using BoxCorner = uint8_t;
+enum BoxCornerSpecifier: BoxCorner {
+    RIGHT=0x1,
+    TOP=0x2,
+    FRONT=0x4
+};
+
+
 inline bool isFinite(float number) {
     return std::isfinite(number);
 }
@@ -27,20 +35,25 @@ inline bool isNonNegative(const glm::vec3& vector) {
 template <typename TDerived>
 struct Volume;
 
+
 struct VolumeBase_ {
+    inline static constexpr std::array<glm::vec3, 8> GetCornerSignsArray() {
+        std::array<glm::vec3, 8> cornerSigns {};
+        for(uint8_t corner {0}; corner < 8; ++corner) {
+            cornerSigns[corner].x = corner&BoxCornerSpecifier::RIGHT? 1.f: -1.f;
+            cornerSigns[corner].y = corner&BoxCornerSpecifier::TOP? 1.f: -1.f;
+            cornerSigns[corner].z = corner&BoxCornerSpecifier::FRONT? 1.f: -1.f;
+        }
+        return cornerSigns;
+    }
+
     inline static std::array<glm::vec3, 8> ComputeBoxCorners(const glm::vec3& boxDimensions) {
-        return std::array<glm::vec3, 8> {{
-            { .5f * glm::vec3{1.f, 1.f, 1.f} * boxDimensions }, // top right front corner
-
-            { .5f * glm::vec3{1.f, 1.f, -1.f} * boxDimensions },
-            { .5f * glm::vec3{1.f, -1.f, 1.f} * boxDimensions },
-            { .5f * glm::vec3{1.f, -1.f, -1.f} * boxDimensions },
-            { .5f * glm::vec3{-1.f, 1.f, 1.f} * boxDimensions },
-            { .5f * glm::vec3{-1.f, 1.f, -1.f} * boxDimensions },
-            { .5f * glm::vec3{-1.f, -1.f, 1.f} * boxDimensions },
-
-            { .5f * glm::vec3{-1.f, -1.f, -1.f} * boxDimensions } // bottom left back corner
-        }};
+        const std::array<glm::vec3, 8> cornerSignsArray { GetCornerSignsArray() };
+        std::array<glm::vec3, 8> cornerArray { {.5f * boxDimensions} };
+        for(uint8_t corner{0}; corner < 8; ++corner) {
+            cornerArray[corner] *= cornerSignsArray[corner];
+        }
+        return cornerArray;
     }
 
     // Poor man's vtable I guess, without breaking Volume's ability to

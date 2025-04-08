@@ -131,34 +131,14 @@ void SpatialQuerySystem::onEntityDisabled(EntityID entityID) {
 }
 
 void SpatialQuerySystem::onEntityUpdated(EntityID entityID) {
-    const Transform previousTransform { getComponent<Transform>(entityID, 0.f) };
-    const Transform newTransform { getComponent<Transform>(entityID, 1.f) };
-    const ObjectBounds previousBounds { getComponent<ObjectBounds>(entityID, 0.f) };
-    const ObjectBounds newBounds { getComponent<ObjectBounds>(entityID, 1.f) };
-
-    if(
-        newTransform.mModelMatrix != previousTransform.mModelMatrix
-        || newBounds.mOrientationOffset != previousBounds.mOrientationOffset
-        || newBounds.mPositionOffset != previousBounds.mPositionOffset
-        // TODO: This is a stopgap that works on the assumption that the parameters
-        // representing a volume will be at most 3 floats long (i.e., the no. of dimensions of
-        // a cube);  If a new type is added that requires more parameters, this will need
-        // to be revised.
-        // (To research: can we do a comparison of all the bits representing
-        // a union, regardless of how large it is? Say by reinterpreting it as
-        // an integer or an array of integers?)
-        || newBounds.mTrueVolume.mBox.mDimensions != previousBounds.mTrueVolume.mBox.mDimensions
-        || newBounds.mType != previousBounds.mType
-    ) {
-        mComputeQueue.insert(entityID);
-    }
+    mComputeQueue.insert(entityID);
 }
 
 void SpatialQuerySystem::onSimulationActivated() {
     mRequiresInitialization = true;
 }
 
-void SpatialQuerySystem::onPostTransformUpdate(uint32_t timestepMillis) {
+void SpatialQuerySystem::onSimulationStep(uint32_t timestepMillis) {
     if(mRequiresInitialization)  {
         mComputeQueue.clear();
         rebuildOctree();

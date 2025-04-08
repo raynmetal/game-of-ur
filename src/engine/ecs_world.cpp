@@ -169,6 +169,12 @@ void SystemManager::handleSimulationStep(uint32_t simStepMillis) {
         pair.second->onSimulationStep(simStepMillis);
     }
 }
+void SystemManager::handleSimulationPostStep(uint32_t simStepMillis) {
+    for(auto& pair: mNameToSystem) {
+        if(pair.second->isSingleton()) { continue; }
+        pair.second->onSimulationPostStep(simStepMillis);
+    }
+}
 void SystemManager::handlePostTransformUpdate(uint32_t timestepMillis) {
     for(auto& pair: mNameToSystem) {
         if(pair.second->isSingleton()) { continue; }
@@ -448,13 +454,25 @@ void ECSWorld::deactivateSimulation() {
 }
 
 
-void ECSWorld::preSimulationStep(uint32_t simStepMillis) {
+/*******************************
+ * TODO: Would these not be better handled by assigning some sort of per-step priority value
+ * to each system, and storing references to them in a priority queue?
+ * 
+ * Also, we might decide whether to run this step for this system based on if the system 
+ * provides an override for it.
+ *******************************/
+
+void ECSWorld::simulationPreStep(uint32_t simStepMillis) {
     mComponentManager->handlePreSimulationStep();
     mSystemManager->handleSimulationPreStep(simStepMillis);
 }
 void ECSWorld::simulationStep(uint32_t simStepMillis) {
     mSystemManager->handleSimulationStep(simStepMillis);
 }
+void ECSWorld::simulationPostStep(uint32_t simStepMillis) {
+    mSystemManager->handleSimulationPostStep(simStepMillis);
+}
+
 void ECSWorld::postTransformUpdate(uint32_t timestepMillis) {
     mSystemManager->handlePostTransformUpdate(timestepMillis);
 }
