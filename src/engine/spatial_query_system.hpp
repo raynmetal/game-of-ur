@@ -10,17 +10,17 @@
 #include "light.hpp"
 #include "scene_system.hpp"
 
-class SpatialQuerySystem: public System<SpatialQuerySystem, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds> {
+class SpatialQuerySystem: public System<SpatialQuerySystem, std::tuple<Transform, ObjectBounds>, std::tuple<SceneHierarchyData, AxisAlignedBounds>> {
 public:
     SpatialQuerySystem(std::weak_ptr<ECSWorld> world):
-    System<SpatialQuerySystem, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds>{world} 
+    System<SpatialQuerySystem, std::tuple<Transform, ObjectBounds>, std::tuple<SceneHierarchyData, AxisAlignedBounds>>{world} 
     {}
     static std::string getSystemTypeName() { return "SpatialQuerySystem"; }
 
-    class StaticModelBoundsComputeSystem: public System<StaticModelBoundsComputeSystem, ObjectBounds, std::shared_ptr<StaticModel>> {
+    class StaticModelBoundsComputeSystem: public System<StaticModelBoundsComputeSystem, std::tuple<std::shared_ptr<StaticModel>>, std::tuple<ObjectBounds>> {
     public:
         StaticModelBoundsComputeSystem(std::weak_ptr<ECSWorld> world):
-        System<SpatialQuerySystem::StaticModelBoundsComputeSystem, ObjectBounds, std::shared_ptr<StaticModel>> { world }
+        System<SpatialQuerySystem::StaticModelBoundsComputeSystem, std::tuple<std::shared_ptr<StaticModel>>, std::tuple<ObjectBounds>> { world }
         {}
         static std::string getSystemTypeName() { return "SpatialQuerySystem::StaticModelBoundsComputeSystem"; }
     private:
@@ -29,10 +29,10 @@ public:
         void recomputeObjectBounds(EntityID entityID);
     };
 
-    class LightBoundsComputeSystem: public System<LightBoundsComputeSystem, ObjectBounds, LightEmissionData> {
+    class LightBoundsComputeSystem: public System<LightBoundsComputeSystem, std::tuple<LightEmissionData>, std::tuple<ObjectBounds>> {
     public:
         LightBoundsComputeSystem(std::weak_ptr<ECSWorld> world):
-        System<SpatialQuerySystem::LightBoundsComputeSystem, ObjectBounds, LightEmissionData>{world}
+        System<SpatialQuerySystem::LightBoundsComputeSystem, std::tuple<LightEmissionData>, std::tuple<ObjectBounds>>{world}
         {}
         static std::string getSystemTypeName() { return "SpatialQuerySystem::LightBoundsComputeSystem"; }
     private:

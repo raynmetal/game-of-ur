@@ -4,6 +4,7 @@
 #include <cstdint>
 #include <typeinfo>
 #include <iostream>
+#include <tuple>
 #include <memory>
 #include <vector>
 #include <set>
@@ -220,6 +221,7 @@ public:
     virtual ~BaseSystem() = default;
     virtual bool isSingleton() const { return false; }
 protected:
+
     const std::set<EntityID>& getEnabledEntities();
 
     template <typename TComponent, typename TSystem>
@@ -231,11 +233,11 @@ protected:
     bool isEnabled(EntityID entityID) const;
     bool isRegistered(EntityID entityID) const;
 
-
     virtual std::shared_ptr<BaseSystem> instantiate(std::weak_ptr<ECSWorld> world) = 0;
 
     std::weak_ptr<ECSWorld> mWorld;
 private:
+
     void addEntity(EntityID entityID, bool enabled=true);
     void removeEntity(EntityID entityID);
 
@@ -244,7 +246,7 @@ private:
 
     virtual void onEntityEnabled(EntityID entityID) {}
     virtual void onEntityDisabled(EntityID entityID) {}
-    virtual void onEntityUpdated(EntityID entityID) {}
+    virtual void onEntityUpdated(EntityID entityID) { assert(false && "The base class version of onEntityUpdated should never be called"); }
 
     virtual void onInitialize() {}
     virtual void onSimulationActivated() {}
@@ -265,8 +267,11 @@ friend class SystemManager;
 friend class ECSWorld;
 };
 
-template<typename TSystemDerived, typename ...TRequiredComponents>
-class System: public BaseSystem {
+template <typename TSystemDerived, typename TListenedForComponentsTuple, typename TRequiredComponentsTuple>
+class System{ static_assert(false && "Non specialized system cannot be declared"); };
+
+template <typename TSystemDerived, typename ...TListenedForComponents, typename ...TRequiredComponents>
+class System<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>: public BaseSystem {
     static void registerSelf();
 protected:
     System(std::weak_ptr<ECSWorld> world): BaseSystem { world } { s_registrator.emptyFunc(); }
@@ -282,11 +287,11 @@ protected:
     }
     std::shared_ptr<BaseSystem> instantiate(std::weak_ptr<ECSWorld> world) override;
 private:
-    inline static Registrator<System<TSystemDerived, TRequiredComponents...>>& s_registrator {
-        Registrator<System<TSystemDerived, TRequiredComponents...>>::getRegistrator()
+    inline static Registrator<System<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>>& s_registrator {
+        Registrator<System<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>>::getRegistrator()
     };
 
-friend class Registrator<System<TSystemDerived, TRequiredComponents...>>;
+friend class Registrator<System<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>>;
 };
 
 class SystemManager {
@@ -296,10 +301,9 @@ private:
     SystemManager instantiate(std::weak_ptr<ECSWorld> world) const;
 
     template<typename TSystem>
-    void registerSystem(const Signature& signature);
+    void registerSystem(const Signature& signature, const Signature& listenedForComponents);
 
     void unregisterAll();
-
 
     template<typename TSystem>
     std::shared_ptr<TSystem> getSystem();
@@ -325,9 +329,9 @@ private:
 
     void handleEntitySignatureChanged(EntityID entityID, Signature signature);
     void handleEntityDestroyed(EntityID entityID);
-    void handleEntityUpdated(EntityID entityID, Signature signature);
+    void handleEntityUpdated(EntityID entityID, Signature signature, ComponentType updatedComponent);
     template<typename TSystem>
-    void handleEntityUpdatedBySystem(EntityID entityID, Signature signature);
+    void handleEntityUpdatedBySystem(EntityID entityID, Signature signature, ComponentType updatedComponent);
 
     void handleInitialize();
     void handleSimulationActivated();
@@ -341,6 +345,7 @@ private:
     void handleSimulationDeactivated();
 
     std::unordered_map<std::string, Signature> mNameToSignature {};
+    std::unordered_map<std::string, Signature> mNameToListenedForComponents {};
     std::unordered_map<std::string, SystemType> mNameToSystemType {};
     std::unordered_map<std::string, std::shared_ptr<BaseSystem>> mNameToSystem {};
     std::weak_ptr<ECSWorld> mWorld;
@@ -357,8 +362,15 @@ public:
     template<typename ...TComponent>
     static void registerComponentTypes();
 
-    template<typename TSystem, typename ...TComponents>
-    static void registerSystem();
+    template <typename TSystemDerived, typename TListenedForComponents, typename TRequiredComponents>
+    struct SystemRegistrationArgs { static_assert(false && "Cannot create unspecialized instance of SystemRegistrationArgs"); };
+
+    template <typename TSystemDerived, typename ...TListenedForComponents, typename ...TRequiredComponents>
+    struct SystemRegistrationArgs<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>> {};
+
+
+    template <typename TSystemDerived, typename ...TListenedForComponents, typename ...TRequiredComponents>
+    static void registerSystem(SystemRegistrationArgs<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>);
 
     template<typename TSystem>
     std::shared_ptr<TSystem> getSystem();
@@ -396,7 +408,6 @@ public:
     void variableStep(float simulationProgress, uint32_t variableStepMillis);
     void preRenderStep(float simulationProgress);
     void postRenderStep(float simulationProgress);
-
 
     void cleanup();
     inline WorldID getID() const { return mID; }
@@ -710,20 +721,22 @@ bool ECSWorld::hasComponent(EntityID entityID) const {
 }
 
 
-template <typename TSystemDerived, typename ...TRequiredComponents>
-void System<TSystemDerived, TRequiredComponents...>::registerSelf() {
+template <typename TSystemDerived, typename ...TListenedForComponents, typename ...TRequiredComponents>
+void System<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>::registerSelf() {
     ECSWorld::registerComponentTypes<TRequiredComponents...>();
-    ECSWorld::registerSystem<TSystemDerived, TRequiredComponents...>();
+    ECSWorld::registerComponentTypes<TListenedForComponents...>();
+    ECSWorld::registerSystem(ECSWorld::SystemRegistrationArgs<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>{});
 }
 
 
 template<typename TSystem>
-void SystemManager::registerSystem(const Signature& signature) {
-    std::string systemTypeName { TSystem::getSystemTypeName() };
+void SystemManager::registerSystem(const Signature& signature, const Signature& listenedForComponents) {
+    const std::string systemTypeName { TSystem::getSystemTypeName() };
     assert(mNameToSignature.find(systemTypeName) == mNameToSignature.end() && "System has already been registered");
     assert(mNameToSystemType.size() + 1 < kMaxSystems && "System type limit reached");
 
     mNameToSignature[systemTypeName] = signature;
+    mNameToListenedForComponents[systemTypeName] = listenedForComponents;
     mNameToSystem.insert_or_assign(systemTypeName, std::make_shared<TSystem>(mWorld));
     mNameToSystemType[systemTypeName] = mNameToSystemType.size();
 }
@@ -873,7 +886,11 @@ TComponent ECSWorld::getComponent(EntityID entityID, float progress) const {
 template<typename TComponent>
 void ECSWorld::updateComponent(EntityID entityID, const TComponent& newValue) {
     mComponentManager->updateComponent<TComponent>(entityID, newValue);
-    mSystemManager->handleEntityUpdated(entityID, mComponentManager->getSignature(entityID));
+    mSystemManager->handleEntityUpdated(
+        entityID,
+        mComponentManager->getSignature(entityID),
+        mComponentManager->getComponentType<TComponent>()
+    );
 }
 
 template<typename TComponent, typename TSystem>
@@ -886,26 +903,29 @@ void ECSWorld::updateComponent(EntityID entityID, const TComponent& newValue) {
         && "This system cannot access this kind of component"
     );
     mComponentManager->updateComponent<TComponent>(entityID, newValue);
-    mSystemManager->handleEntityUpdatedBySystem<TSystem>(entityID, mComponentManager->getSignature(entityID));
+    mSystemManager->handleEntityUpdatedBySystem<TSystem>(
+        entityID,
+        mComponentManager->getSignature(entityID),
+        mComponentManager->getComponentType<TComponent>()
+    );
 }
 
 template<typename ...TComponents>
 void ECSWorld::registerComponentTypes() {
-
     ((getInstance().lock()->mComponentManager->registerComponentArray<TComponents>()),...);
 }
 
-template<typename TSystem, typename ...TComponents>
-void ECSWorld::registerSystem() {
-    Signature signature {
-        // expands into `1<<componentType1 | 1<<componentType2 | 1<<componentType3 | ...` during static
-        // initialization to build this system's signature
-        (
-            (0x1u << getInstance().lock()->mComponentManager->getComponentType<TComponents>()) 
-            | ... | 0x0u
-        )
-    };
-    getInstance().lock()->mSystemManager->registerSystem<TSystem>(signature);
+template<typename TSystem, typename ...TListenedForComponents, typename ...TRequiredComponents>
+void ECSWorld::registerSystem(
+    ECSWorld::SystemRegistrationArgs<TSystem, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>
+) {
+    Signature listensFor {};
+    Signature required {};
+
+    (listensFor.set(getInstance().lock()->mComponentManager->getComponentType<TListenedForComponents>()), ...);
+    (required.set(getInstance().lock()->mComponentManager->getComponentType<TRequiredComponents>()), ...);
+
+    getInstance().lock()->mSystemManager->registerSystem<TSystem>(required|listensFor, listensFor);
 }
 
 template<typename ...TComponents>
@@ -940,8 +960,8 @@ TComponent BaseSystem::getComponent(EntityID entityID, float progress) const {
     assert(!isSingleton() && "Singletons cannot retrieve entity components through entity ID alone");
     return mWorld.lock()->getComponent<TComponent, TSystem>(entityID, progress);
 }
-template<typename TSystem, typename ...TRequiredComponents>
-std::shared_ptr<BaseSystem> System<TSystem, TRequiredComponents...>::instantiate(std::weak_ptr<ECSWorld> world) {
+template<typename TSystem, typename ...TListenedForComponents, typename ...TRequiredComponents>
+std::shared_ptr<BaseSystem> System<TSystem, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>::instantiate(std::weak_ptr<ECSWorld> world) {
     if(isSingleton()) return shared_from_this();
     return std::make_shared<TSystem>(world);
 }
@@ -958,16 +978,24 @@ void BaseSystem::updateComponent(EntityID entityID, const TComponent& component)
 }
 
 template<typename TSystem>
-void SystemManager::handleEntityUpdatedBySystem(EntityID entityID, Signature signature) {
+void SystemManager::handleEntityUpdatedBySystem(EntityID entityID, Signature signature, ComponentType updatedComponent) {
     std::string originatingSystemTypeName { TSystem::getSystemTypeName() };
-    for(auto& pair: mNameToSignature) {
+    for(const auto& pair: mNameToSignature) {
+        // see if the updated entity's signature matches that of the system
+        if((pair.second&signature) != pair.second) continue;
+
         // suppress update callback from the system that caused this update
         if(pair.first == originatingSystemTypeName) continue;
 
-        Signature& systemSignature { pair.second };
-        if((systemSignature & signature) == systemSignature){
-            mNameToSystem[pair.first]->onEntityUpdated(entityID);
-        }
+        // see if the system is listening for updates to this system
+        if(!mNameToListenedForComponents[pair.first].test(updatedComponent)) continue;
+
+        // ignore disabled and singleton systems
+        BaseSystem& system { *(mNameToSystem[pair.first]).get() };
+        if(system.isSingleton() || !system.isEnabled(entityID)) continue;
+
+        // apply update
+        system.onEntityUpdated(entityID);
     }
 }
 

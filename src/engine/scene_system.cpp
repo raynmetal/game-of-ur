@@ -1128,6 +1128,5 @@ void SceneSystem::onApplicationStart() {
 }
 
 void SceneSystem::SceneSubworld::onEntityUpdated(EntityID entityID) {
-    if(getComponent<Placement>(entityID, 0.f) == getComponent<Placement>(entityID, 1.f)) return;
     mWorld.lock()->getSystem<SceneSystem>()->onWorldEntityUpdate({mWorld.lock()->getID(), entityID});
 }

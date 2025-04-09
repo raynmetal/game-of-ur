@@ -26,10 +26,10 @@ NLOHMANN_JSON_SERIALIZE_ENUM(CameraProperties::ProjectionType, {
     {CameraProperties::ProjectionType::ORTHOGRAPHIC, "orthographic"},
 });
 
-class CameraSystem: public System<CameraSystem, Transform, CameraProperties> {
+class CameraSystem: public System<CameraSystem, std::tuple<Transform, CameraProperties>, std::tuple<>> {
 public:
     CameraSystem(std::weak_ptr<ECSWorld> world):
-    System<CameraSystem, Transform, CameraProperties>{world}
+    System<CameraSystem, std::tuple<Transform, CameraProperties>, std::tuple<>>{world}
     {}
     void updateActiveCameraMatrices();
     static std::string getSystemTypeName() { return "CameraSystem"; }

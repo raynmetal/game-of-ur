@@ -18,19 +18,18 @@ using RenderSetID = uint32_t;
 
 const RenderSetID kMaxRenderSetIDs { 10000 };
 
-class RenderSystem: public System<RenderSystem, CameraProperties> {
+class RenderSystem: public System<RenderSystem, std::tuple<>, std::tuple<CameraProperties>> {
 public:
-
     RenderSystem(std::weak_ptr<ECSWorld> world):
-    System<RenderSystem, CameraProperties>{world}
+    System<RenderSystem, std::tuple<>, std::tuple<CameraProperties>>{world}
     {}
 
     static std::string getSystemTypeName() { return "RenderSystem"; }
 
-    class LightQueue: public System<LightQueue, Transform, LightEmissionData>{
+    class LightQueue: public System<LightQueue, std::tuple<>, std::tuple<Transform, LightEmissionData>>{
     public:
         LightQueue(std::weak_ptr<ECSWorld> world):
-        System<RenderSystem::LightQueue, Transform, LightEmissionData>{world}
+        System<RenderSystem::LightQueue, std::tuple<>, std::tuple<Transform, LightEmissionData>>{world}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
         static std::string getSystemTypeName() { return "RenderSystem::LightQueue"; }
@@ -38,10 +37,10 @@ public:
         void onInitialize() override;
         std::shared_ptr<StaticMesh> mSphereMesh { nullptr };
     };
-    class OpaqueQueue: public System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>> {
+    class OpaqueQueue: public System<OpaqueQueue, std::tuple<>, std::tuple<Transform, std::shared_ptr<StaticModel>>> {
     public:
         OpaqueQueue(std::weak_ptr<ECSWorld> world):
-        System<OpaqueQueue, Transform, std::shared_ptr<StaticModel>>{world}
+        System<OpaqueQueue, std::tuple<>, std::tuple<Transform, std::shared_ptr<StaticModel>>>{world}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
         static std::string getSystemTypeName() { return "RenderSystem::OpaqueQueue"; }

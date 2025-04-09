@@ -8,11 +8,7 @@ void SpatialQuerySystem::StaticModelBoundsComputeSystem::onEntityEnabled(EntityI
 }
 
 void SpatialQuerySystem::StaticModelBoundsComputeSystem::onEntityUpdated(EntityID entityID) {
-    const std::shared_ptr<StaticModel> previousModel {getComponent<std::shared_ptr<StaticModel>>(entityID, 0.f)};
-    const std::shared_ptr<StaticModel> newModel { getComponent<std::shared_ptr<StaticModel>>(entityID, 1.f) };
-    if(previousModel != newModel) {
-        recomputeObjectBounds(entityID);
-    }
+    recomputeObjectBounds(entityID);
 }
 
 void SpatialQuerySystem::StaticModelBoundsComputeSystem::recomputeObjectBounds(EntityID entityID) {
@@ -53,16 +49,9 @@ void SpatialQuerySystem::StaticModelBoundsComputeSystem::recomputeObjectBounds(E
 void SpatialQuerySystem::LightBoundsComputeSystem::onEntityEnabled(EntityID entityID) {
     recomputeObjectBounds(entityID);
 }
+
 void SpatialQuerySystem::LightBoundsComputeSystem::onEntityUpdated(EntityID entityID) {
-    const LightEmissionData previousLightData { getComponent<LightEmissionData>(entityID, 0.f) };
-    const LightEmissionData newLightData { getComponent<LightEmissionData>(entityID, 1.f) };
-    if(
-        newLightData.mRadius != previousLightData.mRadius
-        || newLightData.mType != previousLightData.mType
-        || newLightData.mDiffuseColor != previousLightData.mDiffuseColor
-    ) {
-        recomputeObjectBounds(entityID);
-    }
+    recomputeObjectBounds(entityID);
 }
 
 void SpatialQuerySystem::LightBoundsComputeSystem::recomputeObjectBounds(EntityID entityID) {
@@ -93,7 +82,6 @@ void SpatialQuerySystem::updateBounds(EntityID entity) {
     updateComponent<ObjectBounds>(entity, objectBounds);
     updateComponent<AxisAlignedBounds>(entity, axisAlignedBounds);   
 }
-
 
 void SpatialQuerySystem::rebuildOctree() {
     // one pass to transform all object positions and orientations, and simultaneously compute 

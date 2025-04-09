@@ -74,7 +74,7 @@ bool SimSystem::aspectRegistered(const std::string& aspectName) const {
 }
 
 std::shared_ptr<BaseSystem> SimSystem::instantiate(std::weak_ptr<ECSWorld> world) {
-    std::shared_ptr<SimSystem> newSimSystem { std::static_pointer_cast<SimSystem>(System<SimSystem, SimCore>::instantiate(world)) };
+    std::shared_ptr<SimSystem> newSimSystem { std::static_pointer_cast<SimSystem>(System<SimSystem, std::tuple<>, std::tuple<SimCore>>::instantiate(world)) };
     newSimSystem->mAspectConstructors = mAspectConstructors;
     return newSimSystem;
 }

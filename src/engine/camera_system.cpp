@@ -11,10 +11,11 @@ const float MIN_FOV {40.f};
 void CameraSystem::updateActiveCameraMatrices() {
     std::set<EntityID> enabledEntities { getEnabledEntities() };
 
-    // Build a list of active cameras that require projection or
-    // view updates
-    std::set<EntityID> requiresProjectionUpdate {mViewUpdateQueue};
-    std::set<EntityID> requiresViewUpdate {mProjectionUpdateQueue};
+    // Get and clear list of cameras awaiting a view or projection update
+    std::set<EntityID> requiresProjectionUpdate{};
+    std::set<EntityID> requiresViewUpdate{};
+    std::swap(requiresProjectionUpdate, mProjectionUpdateQueue);
+    std::swap(requiresViewUpdate, mViewUpdateQueue);
 
     // Apply pending updates
     for(EntityID entity: requiresProjectionUpdate) {
@@ -50,29 +51,8 @@ void CameraSystem::onEntityDisabled(EntityID entity) {
 }
 
 void CameraSystem::onEntityUpdated(EntityID entity)  {
-    const Transform placementBefore { getComponent<Transform>(entity, 0.f) };
-    const Transform placementAfter { getComponent<Transform>(entity, 1.f) };
-    const CameraProperties cameraPropsBefore { getComponent<CameraProperties>(entity, 0.f) };
-    const CameraProperties cameraPropsAfter { getComponent<CameraProperties>(entity, 1.f) };
-
-    if(placementBefore.mModelMatrix != placementAfter.mModelMatrix) {
-        mViewUpdateQueue.insert(entity);
-    }
-
-    // TODO: implement an override of == and != for the CameraProperties struct 
-    // that encapsulates this comparison
-    if(
-        cameraPropsBefore.mProjectionType != cameraPropsAfter.mProjectionType
-        || (
-            cameraPropsAfter.mProjectionType == CameraProperties::ProjectionType::FRUSTUM
-            && (cameraPropsAfter.mFov != cameraPropsBefore.mFov)
-        ) || (
-            cameraPropsAfter.mProjectionType == CameraProperties::ProjectionType::ORTHOGRAPHIC
-            && (cameraPropsAfter.mOrthographicScale != cameraPropsBefore.mOrthographicScale)
-        )
-    ) {
-        mProjectionUpdateQueue.insert(entity);
-    }
+    mViewUpdateQueue.insert(entity);
+    mProjectionUpdateQueue.insert(entity);
 }
 
 void CameraSystem::onPreRenderStep(float simulationProgress) {

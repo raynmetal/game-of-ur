@@ -209,6 +209,7 @@ void SystemManager::handleSimulationDeactivated() {
 SystemManager SystemManager::instantiate(std::weak_ptr<ECSWorld> world) const {
     SystemManager newSystemManager { world };
     newSystemManager.mNameToSignature = mNameToSignature;
+    newSystemManager.mNameToListenedForComponents = mNameToListenedForComponents;
     newSystemManager.mNameToSystemType = mNameToSystemType;
     for(auto pair: mNameToSystem) {
         newSystemManager.mNameToSystem.insert({
@@ -290,14 +291,20 @@ void SystemManager::handleEntityDestroyed(EntityID entityID) {
     }
 }
 
-void SystemManager::handleEntityUpdated(EntityID entityID, Signature signature) {
+void SystemManager::handleEntityUpdated(EntityID entityID, Signature signature, ComponentType updatedComponent) {
     for(auto& pair: mNameToSignature) {
+        // see if the updated entity's signature matches that of the system
         Signature& systemSignature { pair.second };
         if((systemSignature&signature) != systemSignature) continue;
 
+        // see if the system is listening for updates to this component
+        if(!mNameToListenedForComponents[pair.first].test(updatedComponent)) continue;
+
+        // ignore disabled and singleton systems
         BaseSystem& system { *(mNameToSystem[pair.first]).get() };
         if(system.isSingleton() || !system.isEnabled(entityID)) continue;
 
+        // apply update
         system.onEntityUpdated(entityID);
     }
 }
@@ -316,9 +323,9 @@ ComponentManager ComponentManager::instantiate(std::weak_ptr<ECSWorld> world) co
 }
 
 void ComponentManager::addComponent(EntityID entityID, const nlohmann::json& jsonComponent) {
-    std::string componentTypeName { jsonComponent.at("type").get<std::string>() };
-    std::size_t componentHash { mNameToComponentHash.at(componentTypeName) };
-    ComponentType componentType { mHashToComponentType.at(componentHash) };
+    const std::string componentTypeName { jsonComponent.at("type").get<std::string>() };
+    const std::size_t componentHash { mNameToComponentHash.at(componentTypeName) };
+    const ComponentType componentType { mHashToComponentType.at(componentHash) };
     mHashToComponentArray.at(componentHash)->addComponent(entityID, jsonComponent);
     mEntityToSignature.at(entityID).set(componentType, true);
 }
@@ -360,6 +367,7 @@ void SystemManager::unregisterAll() {
     }
     mNameToSystem.clear();
     mNameToSignature.clear();
+    mNameToListenedForComponents.clear();
 }
 
 void ComponentManager::unregisterAll() {

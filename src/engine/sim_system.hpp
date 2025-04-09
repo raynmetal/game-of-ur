@@ -30,10 +30,10 @@ inline void from_json(const nlohmann::json& json, SimCore& simCore) {}
 // never used, so make empty definitions for these
 inline void to_json(nlohmann::json& json, const SimCore& simCore) {}
 
-class SimSystem: public System<SimSystem, SimCore> {
+class SimSystem: public System<SimSystem, std::tuple<>, std::tuple<SimCore>> {
 public:
     SimSystem(std::weak_ptr<ECSWorld> world):
-    System<SimSystem, SimCore>{world}
+    System<SimSystem, std::tuple<>, std::tuple<SimCore>>{world}
     {}
 
     static std::string getSystemTypeName() { return "SimSystem"; }
@@ -144,7 +144,7 @@ protected:
         //ensure registration of SimSystem before trying to register
         //this aspect
         auto& simSystemRegistrator { 
-            Registrator<System<SimSystem, SimCore>>::getRegistrator()
+            Registrator<System<SimSystem, std::tuple<>, std::tuple<SimCore>>>::getRegistrator()
         };
         simSystemRegistrator.emptyFunc();
 

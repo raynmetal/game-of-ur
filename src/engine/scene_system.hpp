@@ -332,10 +332,10 @@ friend class SceneNodeCore;
 friend class SceneSystem;
 };
 
-class SceneSystem: public System<SceneSystem, Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds> {
+class SceneSystem: public System<SceneSystem, std::tuple<>, std::tuple<Placement, SceneHierarchyData, Transform>> {
 public:
     SceneSystem(std::weak_ptr<ECSWorld> world):
-    System<SceneSystem, Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds> { world }
+    System<SceneSystem, std::tuple<>, std::tuple<Placement, SceneHierarchyData, Transform>> { world }
     {}
 
     static std::string getSystemTypeName() { return "SceneSystem"; }
@@ -363,10 +363,10 @@ public:
     void render(float simulationProgress, uint32_t variableStep);
 
 private:
-    class SceneSubworld: public System<SceneSubworld, Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds> {
+    class SceneSubworld: public System<SceneSubworld, std::tuple<Placement>, std::tuple<Transform, SceneHierarchyData>> {
     public:
         SceneSubworld(std::weak_ptr<ECSWorld> world):
-        System<SceneSubworld, Placement, SceneHierarchyData, Transform, ObjectBounds, AxisAlignedBounds> { world }
+        System<SceneSubworld, std::tuple<Placement>, std::tuple<Transform, SceneHierarchyData>> { world }
         {}
         static std::string getSystemTypeName() { return "SceneSubworld"; }
     private:
