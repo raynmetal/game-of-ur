@@ -1,4 +1,5 @@
 #include <iostream>
+#include <memory>
 
 #include "resource_database.hpp"
 #include "texture.hpp"
@@ -92,7 +93,9 @@ BaseRenderStage{ shaderFilepath }
 }
 
 void BaseOffscreenRenderStage::declareRenderTarget(const std::string& name, unsigned int index) {
-    assert(index < mFramebufferHandle->getColorBufferHandles().size());
+    assert(index < std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size() 
+        && "A render stage may not have more render targets than allocated color buffers in its framebuffer"
+    );
     mRenderTargets.insert_or_assign(name, index);
 }
 
@@ -142,8 +145,9 @@ void GeometryRenderStage::validate() {
     /*
      * Three colour buffers corresponding to position, normal, albedospec (for now)
      */
-    assert(3 == mFramebufferHandle->getColorBufferHandles().size());
-    assert(mFramebufferHandle->hasRBO());
+    assert(3 == std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size());
+    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->hasRBO());
+
     /*
      * TODO: more geometry pass related assertions
      */
@@ -253,7 +257,7 @@ void LightingRenderStage::validate() {
     assert(mTextureAttachments.find("normalMap") != mTextureAttachments.end());
     assert(mTextureAttachments.find("albedoSpecularMap") != mTextureAttachments.end());
     assert(mFramebufferHandle->hasRBO());
-    assert(mFramebufferHandle->getColorBufferHandles().size() >= 1);
+    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size() >= 1);
     /*
      * TODO: more assertions related to the lighting stage
      */
@@ -358,7 +362,7 @@ void BlurRenderStage::setup(const glm::u16vec2& textureDimensions) {
 }
 
 void BlurRenderStage::validate() {
-    assert(2 == mFramebufferHandle->getColorBufferHandles().size());
+    assert(2 == std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size());
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("unblurredImage") != mTextureAttachments.end());
     /*
@@ -442,7 +446,7 @@ void TonemappingRenderStage::validate() {
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("litScene") != mTextureAttachments.end());
     assert(mTextureAttachments.find("bloomEffect") != mTextureAttachments.end());
-    assert(mFramebufferHandle->getColorBufferHandles().size() >= 1);
+    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size() >= 1);
 }
 
 void TonemappingRenderStage::execute() {

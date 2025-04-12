@@ -32,7 +32,7 @@ inline void to_json(nlohmann::json& json, const SimCore& simCore) {}
 
 class SimSystem: public System<SimSystem, std::tuple<>, std::tuple<SimCore>> {
 public:
-    SimSystem(std::weak_ptr<ECSWorld> world):
+    explicit SimSystem(std::weak_ptr<ECSWorld> world):
     System<SimSystem, std::tuple<>, std::tuple<SimCore>>{world}
     {}
 

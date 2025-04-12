@@ -20,7 +20,7 @@ const RenderSetID kMaxRenderSetIDs { 10000 };
 
 class RenderSystem: public System<RenderSystem, std::tuple<>, std::tuple<CameraProperties>> {
 public:
-    RenderSystem(std::weak_ptr<ECSWorld> world):
+    explicit RenderSystem(std::weak_ptr<ECSWorld> world):
     System<RenderSystem, std::tuple<>, std::tuple<CameraProperties>>{world}
     {}
 
@@ -28,7 +28,7 @@ public:
 
     class LightQueue: public System<LightQueue, std::tuple<>, std::tuple<Transform, LightEmissionData>>{
     public:
-        LightQueue(std::weak_ptr<ECSWorld> world):
+        explicit LightQueue(std::weak_ptr<ECSWorld> world):
         System<RenderSystem::LightQueue, std::tuple<>, std::tuple<Transform, LightEmissionData>>{world}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);
@@ -39,7 +39,7 @@ public:
     };
     class OpaqueQueue: public System<OpaqueQueue, std::tuple<>, std::tuple<Transform, std::shared_ptr<StaticModel>>> {
     public:
-        OpaqueQueue(std::weak_ptr<ECSWorld> world):
+        explicit OpaqueQueue(std::weak_ptr<ECSWorld> world):
         System<OpaqueQueue, std::tuple<>, std::tuple<Transform, std::shared_ptr<StaticModel>>>{world}
         {}
         void enqueueTo(BaseRenderStage& renderStage, float simulationProgress);

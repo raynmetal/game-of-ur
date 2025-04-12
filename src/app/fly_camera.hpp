@@ -11,11 +11,13 @@ extern const float LOOK_SENSITIVITY;
 class FlyCamera: public SimObjectAspect<FlyCamera> {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "FlyCamera"; }
+
     void variableUpdate(uint32_t variableStepMillis) override;
 
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
 
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
+
 protected:
     void onMove(const ActionData& actionData, const ActionDefinition& actionDefinition);
     void onRotate(const ActionData& actionData, const ActionDefinition& actionDefinition);
@@ -73,6 +75,8 @@ private:
     glm::vec3 mVelocity { 0.f };
     float mLookSensitivity { LOOK_SENSITIVITY };
     float mZoomSensitivity { 1.5f };
+
+    uint32_t mTimeSinceLastTick { 0 };
 };
 
 #endif

@@ -334,7 +334,7 @@ friend class SceneSystem;
 
 class SceneSystem: public System<SceneSystem, std::tuple<>, std::tuple<Placement, SceneHierarchyData, Transform>> {
 public:
-    SceneSystem(std::weak_ptr<ECSWorld> world):
+    explicit SceneSystem(std::weak_ptr<ECSWorld> world):
     System<SceneSystem, std::tuple<>, std::tuple<Placement, SceneHierarchyData, Transform>> { world }
     {}
 
@@ -365,7 +365,7 @@ public:
 private:
     class SceneSubworld: public System<SceneSubworld, std::tuple<Placement>, std::tuple<Transform, SceneHierarchyData>> {
     public:
-        SceneSubworld(std::weak_ptr<ECSWorld> world):
+        explicit SceneSubworld(std::weak_ptr<ECSWorld> world):
         System<SceneSubworld, std::tuple<Placement>, std::tuple<Transform, SceneHierarchyData>> { world }
         {}
         static std::string getSystemTypeName() { return "SceneSubworld"; }

@@ -14,7 +14,7 @@ Framebuffer::Framebuffer(
     GLuint framebuffer,
     glm::vec2 dimensions,
     GLuint nColorAttachments,
-    std::vector<std::shared_ptr<Texture>> colorBuffers,
+    const std::vector<std::shared_ptr<Texture>>& colorBuffers,
     GLuint rbo
 ) :
 Resource<Framebuffer>{0},
@@ -50,7 +50,10 @@ Framebuffer::~Framebuffer() {
     destroyResource();
 }
 
-std::vector<std::shared_ptr<Texture>> Framebuffer::getColorBufferHandles()  {
+std::vector<std::shared_ptr<const Texture>>  Framebuffer::getColorBufferHandles() const {
+    return { mTextureHandles.cbegin(), mTextureHandles.cend() };
+}
+const std::vector<std::shared_ptr<Texture>>& Framebuffer::getColorBufferHandles() {
     return mTextureHandles;
 }
 
@@ -145,7 +148,7 @@ void Framebuffer::stealResource(Framebuffer& other) {
     other.releaseResource();
 }
 
-bool Framebuffer::hasRBO() {
+bool Framebuffer::hasRBO() const {
     return mRBO != 0;
 }
 
@@ -206,7 +209,7 @@ std::shared_ptr<IResource> FramebufferFromDescription::createResource(const nloh
             glBindRenderbuffer(GL_RENDERBUFFER, 0);
         }
 
-        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && ("Could not complete creation of framebuffer with ID" + std::to_string(framebuffer)).c_str());
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
     return std::make_shared<Framebuffer>(framebuffer, dimensions, nColorAttachments, textureHandles, rbo);

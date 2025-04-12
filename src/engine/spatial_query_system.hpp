@@ -12,14 +12,14 @@
 
 class SpatialQuerySystem: public System<SpatialQuerySystem, std::tuple<Transform, ObjectBounds>, std::tuple<SceneHierarchyData, AxisAlignedBounds>> {
 public:
-    SpatialQuerySystem(std::weak_ptr<ECSWorld> world):
+    explicit SpatialQuerySystem(std::weak_ptr<ECSWorld> world):
     System<SpatialQuerySystem, std::tuple<Transform, ObjectBounds>, std::tuple<SceneHierarchyData, AxisAlignedBounds>>{world} 
     {}
     static std::string getSystemTypeName() { return "SpatialQuerySystem"; }
 
     class StaticModelBoundsComputeSystem: public System<StaticModelBoundsComputeSystem, std::tuple<std::shared_ptr<StaticModel>>, std::tuple<ObjectBounds>> {
     public:
-        StaticModelBoundsComputeSystem(std::weak_ptr<ECSWorld> world):
+        explicit StaticModelBoundsComputeSystem(std::weak_ptr<ECSWorld> world):
         System<SpatialQuerySystem::StaticModelBoundsComputeSystem, std::tuple<std::shared_ptr<StaticModel>>, std::tuple<ObjectBounds>> { world }
         {}
         static std::string getSystemTypeName() { return "SpatialQuerySystem::StaticModelBoundsComputeSystem"; }
@@ -31,7 +31,7 @@ public:
 
     class LightBoundsComputeSystem: public System<LightBoundsComputeSystem, std::tuple<LightEmissionData>, std::tuple<ObjectBounds>> {
     public:
-        LightBoundsComputeSystem(std::weak_ptr<ECSWorld> world):
+        explicit LightBoundsComputeSystem(std::weak_ptr<ECSWorld> world):
         System<SpatialQuerySystem::LightBoundsComputeSystem, std::tuple<LightEmissionData>, std::tuple<ObjectBounds>>{world}
         {}
         static std::string getSystemTypeName() { return "SpatialQuerySystem::LightBoundsComputeSystem"; }
@@ -40,6 +40,9 @@ public:
         void onEntityUpdated(EntityID entityID) override;
         void recomputeObjectBounds(EntityID entityID);
     };
+
+    std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const AxisAlignedBounds& searchBounds) const;
+    std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const Ray& ray) const;
 
 private:
     void updateBounds(EntityID entity);

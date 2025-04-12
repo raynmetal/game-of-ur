@@ -18,12 +18,12 @@ public:
         GLuint framebuffer,
         glm::vec2 dimensions,
         GLuint nColorAttachments,
-        std::vector<std::shared_ptr<Texture>> colorBuffers,
+        const std::vector<std::shared_ptr<Texture>>& colorBuffers,
         GLuint rbo
     );
 
     /*Framebuffer destructor, calls destroyResource */
-    ~Framebuffer();
+    ~Framebuffer() override;
 
     /* copy constructor */
     Framebuffer(const Framebuffer& other);
@@ -35,7 +35,8 @@ public:
     Framebuffer& operator=(Framebuffer&& other);
 
     /* returns a vector of handles to this framebuffer's textures */
-    std::vector<std::shared_ptr<Texture>> getColorBufferHandles();
+    std::vector<std::shared_ptr<const Texture>> getColorBufferHandles() const;
+    const std::vector<std::shared_ptr<Texture>>& getColorBufferHandles();
 
     /* command to bind this framebuffer */
     void bind();
@@ -44,7 +45,7 @@ public:
     default framebuffer) */
     void unbind();
 
-    bool hasRBO();
+    bool hasRBO() const;
 
     inline static std::string getResourceTypeName() { return "Framebuffer"; }
 

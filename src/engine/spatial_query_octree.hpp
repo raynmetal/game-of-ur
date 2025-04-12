@@ -58,8 +58,21 @@ public:
         const AxisAlignedBounds& regionToCover
     );
 
+    /**
+     * Available query methods
+     */
+
+    /**
+     * retrieve all entities in this octant and its descendants
+     */
     std::vector<std::pair<EntityID, AxisAlignedBounds>> findAllMemberEntities() const;
+    /**
+     * retrieve all entities that intersect with the region described by searchBounds
+     */
     std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const AxisAlignedBounds& searchBounds) const;
+    /**
+     * retrieve all entities that intersect with the ray described by searchRay
+     */
     std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const Ray& searchRay) const;
 
     uint8_t getChildCount() const;
@@ -108,6 +121,29 @@ public:
     Octree(uint8_t subdivisionThreshold, const AxisAlignedBounds& totalWorldBounds):
     mRootNode { OctreeNode::CreateRootNode(subdivisionThreshold, totalWorldBounds) }
     {}
+
+    /**
+     * Available query methods
+     */
+
+    /**
+     * retrieve all entities in this octant and its descendants
+     */
+    inline std::vector<std::pair<EntityID, AxisAlignedBounds>> findAllMemberEntities() const {
+        return mRootNode->findAllMemberEntities();
+    }
+    /**
+     * retrieve all entities that intersect with the region described by searchBounds
+     */
+    inline std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const AxisAlignedBounds& searchBounds) const {
+        return mRootNode->findEntitiesOverlapping(searchBounds);
+    }
+    /**
+     * retrieve all entities that intersect with the ray described by searchRay
+     */
+    inline std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const Ray& searchRay) const {
+        return mRootNode->findEntitiesOverlapping(searchRay);
+    }
 
     void insertEntity(EntityID entityID, const AxisAlignedBounds& entityWorldBounds);
     void removeEntity(EntityID entityID);

@@ -3,6 +3,22 @@
 
 #include "spatial_query_system.hpp"
 
+std::vector<std::pair<EntityID, AxisAlignedBounds>> SpatialQuerySystem::findEntitiesOverlapping(const AxisAlignedBounds& searchBounds) const {
+    if(mRequiresInitialization) {
+        return std::vector<std::pair<EntityID, AxisAlignedBounds>>{};
+    }
+
+    return mOctree->findEntitiesOverlapping(searchBounds);
+}
+
+std::vector<std::pair<EntityID, AxisAlignedBounds>> SpatialQuerySystem::findEntitiesOverlapping(const Ray& searchRay) const {
+    if(mRequiresInitialization) {
+        return std::vector<std::pair<EntityID, AxisAlignedBounds>>{};
+    }
+
+    return mOctree->findEntitiesOverlapping(searchRay);
+}
+
 void SpatialQuerySystem::StaticModelBoundsComputeSystem::onEntityEnabled(EntityID entityID) {
     recomputeObjectBounds(entityID);
 }

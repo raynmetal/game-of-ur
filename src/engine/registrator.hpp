@@ -25,7 +25,6 @@
     }
     ```
  */
-
 template<typename TRegisterable>
 class Registrator {
 public:

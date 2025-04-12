@@ -87,7 +87,7 @@ class Resource: public IResource {
 public:
 
 protected:
-    Resource(int explicitlyInitializeMe) { s_registrator.emptyFunc(); }
+    explicit Resource(int explicitlyInitializeMe) { s_registrator.emptyFunc(); }
 private:
 
     static void registerSelf();
@@ -109,7 +109,7 @@ class ResourceConstructor: public IResourceConstructor {
 public:
 
 protected:
-    ResourceConstructor(int explicitlyInitializeMe) {
+    explicit ResourceConstructor(int explicitlyInitializeMe) {
         s_registrator.emptyFunc();
     }
 
@@ -200,8 +200,8 @@ template<typename TResource>
 bool ResourceDatabase::hasResource(const std::string& resourceName) {
     ResourceDatabase& resourceDatabase { getInstance() };
     bool descriptionPresent { hasResourceDescription(resourceName) };
-    bool typeMatched;
-    bool objectLoaded;
+    bool typeMatched { false };
+    bool objectLoaded { false };
     if(descriptionPresent){
         typeMatched = (
             TResource::getResourceTypeName() 

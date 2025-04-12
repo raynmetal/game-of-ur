@@ -54,7 +54,7 @@ class ECSWorld;
 
 class BaseComponentArray {
 public:
-    BaseComponentArray(std::weak_ptr<ECSWorld> world): mWorld{world} {}
+    explicit BaseComponentArray(std::weak_ptr<ECSWorld> world): mWorld{world} {}
     virtual ~BaseComponentArray()=default;
     virtual void handleEntityDestroyed(EntityID entityID)=0;
     virtual void handlePreSimulationStep() = 0;
@@ -117,7 +117,7 @@ private:
 template<typename TComponent>
 class ComponentArray : public BaseComponentArray {
 public:
-    ComponentArray(std::weak_ptr<ECSWorld> world): BaseComponentArray{ world } {}
+    explicit ComponentArray(std::weak_ptr<ECSWorld> world): BaseComponentArray{ world } {}
 private:
     std::shared_ptr<BaseComponentArray> instantiate(std::weak_ptr<ECSWorld> world) const override;
     void addComponent(EntityID entityID, const TComponent& component);
@@ -144,7 +144,7 @@ friend class ComponentManager;
 
 class ComponentManager {
 public:
-    ComponentManager(std::weak_ptr<ECSWorld> world): mWorld { world } {};
+    explicit ComponentManager(std::weak_ptr<ECSWorld> world): mWorld { world } {};
 private:
     ComponentManager instantiate(std::weak_ptr<ECSWorld> world) const;
 
@@ -225,10 +225,10 @@ protected:
     const std::set<EntityID>& getEnabledEntities();
 
     template <typename TComponent, typename TSystem>
-    TComponent getComponent(EntityID entityID, float progress=1.f) const;
+    TComponent getComponent_(EntityID entityID, float progress=1.f) const;
 
     template <typename TComponent, typename TSystem>
-    void updateComponent(EntityID entityID, const TComponent& component);
+    void updateComponent_(EntityID entityID, const TComponent& component);
 
     bool isEnabled(EntityID entityID) const;
     bool isRegistered(EntityID entityID) const;
@@ -274,16 +274,16 @@ template <typename TSystemDerived, typename ...TListenedForComponents, typename 
 class System<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>: public BaseSystem {
     static void registerSelf();
 protected:
-    System(std::weak_ptr<ECSWorld> world): BaseSystem { world } { s_registrator.emptyFunc(); }
+    explicit System(std::weak_ptr<ECSWorld> world): BaseSystem { world } { s_registrator.emptyFunc(); }
     template<typename TComponent>
     TComponent getComponent(EntityID entityID, float progress=1.f) {
         assert(!isSingleton() && "Singletons cannot retrieve components by EntityID alone");
-        return BaseSystem::getComponent<TComponent, TSystemDerived>(entityID, progress);
+        return BaseSystem::getComponent_<TComponent, TSystemDerived>(entityID, progress);
     }
     template<typename TComponent>
     void updateComponent(EntityID entityID, const TComponent& component) {
         assert(!isSingleton() && "Singletons cannot retrieve components by EntityID alone");
-        BaseSystem::updateComponent<TComponent, TSystemDerived>(entityID, component);
+        BaseSystem::updateComponent_<TComponent, TSystemDerived>(entityID, component);
     }
     std::shared_ptr<BaseSystem> instantiate(std::weak_ptr<ECSWorld> world) override;
 private:
@@ -296,7 +296,7 @@ friend class Registrator<System<TSystemDerived, std::tuple<TListenedForComponent
 
 class SystemManager {
 public:
-    SystemManager(std::weak_ptr<ECSWorld> world): mWorld{ world } {}
+    explicit SystemManager(std::weak_ptr<ECSWorld> world): mWorld{ world } {}
 private: 
     SystemManager instantiate(std::weak_ptr<ECSWorld> world) const;
 
@@ -956,7 +956,7 @@ std::shared_ptr<TSingletonSystem> ECSWorld::getSingletonSystem() {
 }
 
 template<typename TComponent, typename TSystem>
-TComponent BaseSystem::getComponent(EntityID entityID, float progress) const {
+TComponent BaseSystem::getComponent_(EntityID entityID, float progress) const {
     assert(!isSingleton() && "Singletons cannot retrieve entity components through entity ID alone");
     return mWorld.lock()->getComponent<TComponent, TSystem>(entityID, progress);
 }
@@ -972,7 +972,7 @@ std::shared_ptr<BaseComponentArray> ComponentArray<TComponent>::instantiate(std:
 }
 
 template<typename TComponent, typename TSystem>
-void BaseSystem::updateComponent(EntityID entityID, const TComponent& component) {
+void BaseSystem::updateComponent_(EntityID entityID, const TComponent& component) {
     assert(!isSingleton() && "Singletons cannot retrieve entity components through entity ID alone");
     mWorld.lock()->updateComponent<TComponent, TSystem>(entityID, component);
 }

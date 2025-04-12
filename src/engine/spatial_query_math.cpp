@@ -1,6 +1,8 @@
 #include <cmath>
 #include "spatial_query_math.hpp"
 
+inline float squareDistance(const glm::vec3& vector) { return glm::dot(vector, vector); }
+
 std::pair<bool, glm::vec3> computeIntersection(const Ray& ray, const Plane& plane) {
     assert(ray.isSensible() && "Invalid ray provided");
     assert(plane.isSensible() && "Invalid plane provided");
@@ -18,7 +20,7 @@ std::pair<bool, glm::vec3> computeIntersection(const Ray& ray, const Plane& plan
 
     // work out point of intersection parametrically
     const glm::vec3 rayDirection { glm::normalize(ray.mDirection) };
-    const glm::vec3 planeNormal { glm::normalize(plane.mNormal) };
+    const glm::vec3 planeNormal { glm::normalize(glm::dot(plane.mNormal, rayDirection)<0.f? -plane.mNormal: plane.mNormal) };
     const float rayIntersectionDistance {
         glm::dot(planeNormal,  (plane.mPointOnPlane - ray.mStart))
         / glm::dot(planeNormal, rayDirection)
@@ -53,15 +55,29 @@ std::pair<bool, glm::vec3> computeIntersection(const Ray& ray, const AreaTriangl
     // plane intersection found, see if intersection point lies within triangle
     // Sum of areas of triangles formed between each pair of triangle points and the point of intersection
     // will be the same as the area of the triangle iff the point lies within the triangle
-    const float triangleArea { 
-        .5f * glm::abs(glm::cross(triangle.mPoints[1] - triangle.mPoints[0], triangle.mPoints[2] - triangle.mPoints[0]).length())
+
+    const float triangleAreaDoubledSquared { 
+        .25f * squareDistance(glm::cross(triangle.mPoints[1] - triangle.mPoints[0], triangle.mPoints[2] - triangle.mPoints[0]))
     };
-    const float quadArea {
-        .5f * glm::abs(glm::cross(triangle.mPoints[0] - planeIntersection.second, triangle.mPoints[1] - planeIntersection.second).length())
-        + .5f * glm::abs(glm::cross(triangle.mPoints[0] - planeIntersection.second, triangle.mPoints[2] - planeIntersection.second).length())
-        + .5f * glm::abs(glm::cross(triangle.mPoints[1] - planeIntersection.second, triangle.mPoints[2] - planeIntersection.second).length())
-    };
-    if(quadArea <= triangleArea) return planeIntersection;
+    const float quadAreaDoubledSquared { .25f * (
+        squareDistance(glm::cross(triangle.mPoints[0] - planeIntersection.second, triangle.mPoints[1] - planeIntersection.second))
+        + squareDistance(glm::cross(triangle.mPoints[0] - planeIntersection.second, triangle.mPoints[2] - planeIntersection.second))
+        + squareDistance(glm::cross(triangle.mPoints[1] - planeIntersection.second, triangle.mPoints[2] - planeIntersection.second))
+    )};
+
+    if(
+        // either quad area is obviously lesser than triangle area
+        quadAreaDoubledSquared <= triangleAreaDoubledSquared
+
+        // or they're approximately equal, and we need to do a relative epsilon
+        // based equality comparison
+        || (
+            std::abs(quadAreaDoubledSquared - triangleAreaDoubledSquared) 
+            <= (std::numeric_limits<float>::epsilon() * std::max(quadAreaDoubledSquared, triangleAreaDoubledSquared))
+        )
+    ) {
+        return planeIntersection;
+    }
 
     /** If the ray and the triangle happen to lie on the same plane, we still have a shot.
      * TODO: Honestly, this is a bit more studying than I'm willing to do at this point.  Just let
@@ -143,7 +159,9 @@ std::pair<uint8_t, std::pair<glm::vec3, glm::vec3>> computeIntersections(const R
         if(possibleIntersection.first) {
             intersectionPoints[nIntersections++] = possibleIntersection.second;
             // skip the next triangle on this face
-            if(i%12) ++i;
+            if(i % 12 == 0) {
+                ++i;
+            }
         }
     }
     return { nIntersections, std::pair<glm::vec3, glm::vec3>(intersectionPoints[0], intersectionPoints[1]) };

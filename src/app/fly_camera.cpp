@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 
+#include "../engine/spatial_query_system.hpp"
 #include "../engine/scene_system.hpp"
 #include "../engine/camera_system.hpp"
 #include "fly_camera.hpp"
@@ -27,6 +28,27 @@ void FlyCamera::variableUpdate(uint32_t variableStepMillis) {
         )
     );
     updateComponent<Placement>(placement);
+
+    mTimeSinceLastTick += variableStepMillis;
+    if(mTimeSinceLastTick >= 1000u) {
+        std::cout << "entities in front of camera:\n\t";
+        for(
+            const auto& entityBoundsPair:
+            getWorld().lock()
+                ->getSystem<SpatialQuerySystem>()
+                ->findEntitiesOverlapping(
+                    Ray {
+                        .mStart {getComponent<ObjectBounds>().mPosition},
+                        .mDirection { getComponent<ObjectBounds>().mOrientation * glm::vec3{0.f, 0.f, -1.f} },
+                        .mLength { std::numeric_limits<float>::infinity() }
+                    }
+                )
+        ) {
+            std::cout << entityBoundsPair.first << ", ";
+        }
+        std::cout << "\n\n";
+        mTimeSinceLastTick = 0u;
+    }
 }
 
 void FlyCamera::onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition){
