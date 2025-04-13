@@ -22,7 +22,7 @@ CC := g++
 
 INCLUDE_PATHS := D:\MyDev\MinGW64\Include
 LIBRARY_PATHS := D:\MyDev\MinGW64\Lib
-DYNAMIC_LIBS := mingw32 SDL2main SDL2 OpenGL32 glew32 SDL2_image SDL2_image.dll assimp.dll
+DYNAMIC_LIBS := mingw32 SDL2main SDL2 OpenGL32 glew32 SDL2_image SDL2_image.dll assimp.dll SDL2_ttf SDL2_ttf.dll
 
 DEBUG_OPTS := -fdiagnostics-color=always -g
 COMPILER_FLAGS_DBG := -Wall

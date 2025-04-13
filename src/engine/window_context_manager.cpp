@@ -1,6 +1,7 @@
 #include <iostream>
 
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_ttf.h>
 #include <SDL2/SDL_image.h>
 #include <GL/glew.h>
 #include <assimp/Importer.hpp>
@@ -11,8 +12,9 @@
 #include "window_context_manager.hpp"
 
 WindowContext::WindowContext(const nlohmann::json& initialWindowConfiguration) {
-    SDL_Init(SDL_INIT_VIDEO);
-    IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG);
+    assert(SDL_Init(SDL_INIT_VIDEO) >= 0 && "Could not initialise SDL2 library");
+    assert(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) >= -1 && "Could not initialise SDL_image library");
+    assert(TTF_Init() >= 0 && "Could not initialise SDL_ttf library");
 
     const std::string& applicationTitle { initialWindowConfiguration.at("application_title") };
     const uint32_t windowWidth { initialWindowConfiguration.at("window_width") };
@@ -67,6 +69,8 @@ WindowContext::~WindowContext() {
     std::cout << "Time to say goodbye" << std::endl;
     SDL_GL_DeleteContext(mpGLContext);
     SDL_DestroyWindow(mpSDLWindow);
+    TTF_Quit();
+    IMG_Quit();
     SDL_Quit();
     delete mpAssetImporter;
 }
