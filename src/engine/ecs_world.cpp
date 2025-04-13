@@ -18,7 +18,6 @@ Entity::Entity(Entity&& other) noexcept: mID{ other.mID }, mWorld{ other.mWorld 
     other.mID = kMaxEntities;
 }
 
-
 void Entity::disableSystems() {
     mWorld.lock()->disableEntity(mID);
 }

@@ -9,6 +9,7 @@
 
 #include <nlohmann/json.hpp>
 
+#include "spatial_query_system.hpp"
 #include "resource_database.hpp"
 #include "registrator.hpp"
 #include "input_system/input_system.hpp"
@@ -180,6 +181,7 @@ protected:
     EntityID getEntityID() const;
     std::weak_ptr<ECSWorld> getWorld() const;
     virtual std::string getAspectTypeName() const = 0;
+
 private:
     void activateFixedActionBindings();
     void deactivateFixedActionBindings();

@@ -3,6 +3,33 @@
 
 #include "spatial_query_system.hpp"
 
+std::vector<std::shared_ptr<SceneNodeCore>> SpatialQuerySystem::findNodesOverlapping(const Ray& searchRay) {
+    const std::vector<std::pair<EntityID, AxisAlignedBounds>> intersectingEntityIDs { findEntitiesOverlapping(searchRay) };
+
+    const std::size_t resultListLength { intersectingEntityIDs.size() };
+    std::vector<UniversalEntityID> resultNodeQuery { resultListLength };
+
+    for(std::size_t resultIndex {0}; resultIndex < resultListLength; ++resultIndex) {
+        resultNodeQuery[resultIndex] = { mWorld.lock()->getID(), intersectingEntityIDs[resultIndex].first };
+    }
+
+    return mWorld.lock()->getSystem<SceneSystem>()->getNodesByID(resultNodeQuery);
+}
+
+std::vector<std::shared_ptr<SceneNodeCore>> SpatialQuerySystem::findNodesOverlapping(const AxisAlignedBounds& searchBounds) {
+    const std::vector<std::pair<EntityID, AxisAlignedBounds>> intersectingEntityIDs { findEntitiesOverlapping(searchBounds) };
+
+    const std::size_t resultListLength { intersectingEntityIDs.size() };
+    std::vector<UniversalEntityID> resultNodeQuery { resultListLength };
+
+    for(std::size_t resultIndex {0}; resultIndex < resultListLength; ++resultIndex) {
+        resultNodeQuery[resultIndex] = { mWorld.lock()->getID(), intersectingEntityIDs[resultIndex].first };
+    }
+
+    return mWorld.lock()->getSystem<SceneSystem>()->getNodesByID(resultNodeQuery);
+}
+
+
 std::vector<std::pair<EntityID, AxisAlignedBounds>> SpatialQuerySystem::findEntitiesOverlapping(const AxisAlignedBounds& searchBounds) const {
     if(mRequiresInitialization) {
         return std::vector<std::pair<EntityID, AxisAlignedBounds>>{};

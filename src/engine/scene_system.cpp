@@ -144,8 +144,11 @@ bool SceneNodeCore::isAncestorOf(std::shared_ptr<const SceneNodeCore> sceneNode)
     return static_cast<bool>(currentNode);
 }
 
-const std::string SceneNodeCore::getName() const {
+std::string SceneNodeCore::getName() const {
     return mName;
+}
+std::string SceneNodeCore::getViewportLocalPath() const {
+    return getPathFromAncestor(getLocalViewport());
 }
 
 std::tuple<std::string, std::string> SceneNodeCore::nextInPath(const std::string& where) {
@@ -254,6 +257,9 @@ void SceneNodeCore::setParentViewport(std::shared_ptr<SceneNodeCore> node, std::
 std::shared_ptr<ViewportNode> SceneNodeCore::getLocalViewport() {
     return mParentViewport.lock();
 }
+std::shared_ptr<const ViewportNode> SceneNodeCore::getLocalViewport() const {
+    return std::const_pointer_cast<ViewportNode>(mParentViewport.lock());
+}
 
 std::shared_ptr<SceneNodeCore> SceneNodeCore::getParentNode() {
     // TODO: Find a more efficient way to prevent access to the scene root
@@ -261,6 +267,11 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::getParentNode() {
     // its descendants.
     std::shared_ptr<SceneNodeCore> parent { mParent };
     if(parent) assert(parent->getName() != kSceneRootName && "Cannot retrieve reference to root node of the scene");
+    return parent;
+}
+
+std::shared_ptr<const SceneNodeCore> SceneNodeCore::getParentNode() const {
+    std::shared_ptr<SceneNodeCore> parent { mParent };
     return parent;
 }
 
@@ -303,6 +314,8 @@ std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::removeChildren() {
     return children;
 }
 
+
+
 std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::getDescendants() {
     std::vector<std::shared_ptr<SceneNodeCore>> descendants {};
     for(auto& pair: mChildren) {
@@ -313,10 +326,10 @@ std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::getDescendants() {
     return descendants;
 }
 
-std::string SceneNodeCore::getPathFromAncestor(std::shared_ptr<const SceneNodeCore> ancestor) {
+std::string SceneNodeCore::getPathFromAncestor(std::shared_ptr<const SceneNodeCore> ancestor) const {
     assert(ancestor->isAncestorOf(shared_from_this()) && "The node in the argument is not an ancestor of this node");
 
-    std::shared_ptr<SceneNodeCore> currentNode { shared_from_this() };
+    std::shared_ptr<const SceneNodeCore> currentNode { shared_from_this() };
     std::string path {"/"};
     while(currentNode != ancestor) {
         path = path + currentNode->mName + "/";
@@ -687,6 +700,9 @@ ActionDispatch& ViewportNode::getActionDispatch() {
 
 std::shared_ptr<ViewportNode> ViewportNode::getLocalViewport() {
     return std::static_pointer_cast<ViewportNode>(shared_from_this());
+}
+std::shared_ptr<const ViewportNode> ViewportNode::getLocalViewport() const {
+    return std::static_pointer_cast<const ViewportNode>(std::const_pointer_cast<const SceneNodeCore>(shared_from_this()));
 }
 
 std::vector<std::shared_ptr<ViewportNode>> ViewportNode::getActiveDescendantViewports() {
@@ -1129,4 +1145,23 @@ void SceneSystem::onApplicationStart() {
 
 void SceneSystem::SceneSubworld::onEntityUpdated(EntityID entityID) {
     mWorld.lock()->getSystem<SceneSystem>()->onWorldEntityUpdate({mWorld.lock()->getID(), entityID});
+}
+
+std::shared_ptr<SceneNodeCore> SceneSystem::getNodeByID(const UniversalEntityID& universalEntityID) {
+    const auto& foundNode { mEntityToNode.find(universalEntityID) };
+    assert(foundNode != mEntityToNode.end() && "Could not find a node with this ID present in the tree");
+    return foundNode->second;
+}
+
+std::vector<std::shared_ptr<SceneNodeCore>> SceneSystem::getNodesByID(const std::vector<UniversalEntityID>& universalEntityIDs) {
+    // allocate space for results
+    const std::size_t resultListLength { universalEntityIDs.size() };
+    std::vector<std::shared_ptr<SceneNodeCore>> resultNodes { resultListLength };
+
+    // obtain node corresponding to each entity in list
+    for(std::size_t nodeIndex{0}; nodeIndex < resultListLength; ++nodeIndex) {
+        resultNodes[nodeIndex] = getNodeByID(universalEntityIDs[nodeIndex]);
+    }
+
+    return resultNodes;
 }

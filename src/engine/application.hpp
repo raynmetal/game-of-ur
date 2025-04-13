@@ -6,7 +6,6 @@
 #include "signals.hpp"
 #include "ecs_world.hpp"
 #include "scene_system.hpp"
-#include "spatial_query_system.hpp"
 #include "render_system.hpp"
 #include "input_system/input_system.hpp"
 #include "window_context_manager.hpp"

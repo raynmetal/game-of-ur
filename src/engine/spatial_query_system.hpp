@@ -5,10 +5,10 @@
 #include <array>
 
 #include "spatial_query_octree.hpp"
+#include "scene_system.hpp"
 #include "ecs_world.hpp"
 #include "model.hpp"
 #include "light.hpp"
-#include "scene_system.hpp"
 
 class SpatialQuerySystem: public System<SpatialQuerySystem, std::tuple<Transform, ObjectBounds>, std::tuple<SceneHierarchyData, AxisAlignedBounds>> {
 public:
@@ -44,6 +44,9 @@ public:
     std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const AxisAlignedBounds& searchBounds) const;
     std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const Ray& ray) const;
 
+    std::vector<std::shared_ptr<SceneNodeCore>> findNodesOverlapping(const Ray& searchRay);
+    std::vector<std::shared_ptr<SceneNodeCore>> findNodesOverlapping(const AxisAlignedBounds& searchBounds);
+
 private:
     void updateBounds(EntityID entity);
     void rebuildOctree();
@@ -64,9 +67,9 @@ private:
 template <>
 inline void SceneNodeCore::setEnabled<SpatialQuerySystem>(bool) {/* pass */}
 template <>
-inline void SceneNodeCore::setEnabled<SpatialQuerySystem::LightBoundsComputeSystem>(bool) {/*pass*/}
+inline void SceneNodeCore::setEnabled<SpatialQuerySystem::LightBoundsComputeSystem>(bool) {/* pass */}
 template <>
-inline void SceneNodeCore::setEnabled<SpatialQuerySystem::StaticModelBoundsComputeSystem>(bool) {/*pass*/}
+inline void SceneNodeCore::setEnabled<SpatialQuerySystem::StaticModelBoundsComputeSystem>(bool) {/* pass */}
 
 template <>
 inline void SceneNodeCore::updateComponent<AxisAlignedBounds>(const AxisAlignedBounds& axisAlignedBoxBounds) {

@@ -89,13 +89,19 @@ public:
     std::vector<std::shared_ptr<SceneNodeCore>> getDescendants();
     template <typename TObject=std::shared_ptr<SceneNode>>
     TObject getByPath(const std::string& where);
-    std::string getPathFromAncestor(std::shared_ptr<const SceneNodeCore> ancestor);
+
+    template <typename TSceneNode=SceneNode>
+    std::shared_ptr<TSceneNode> getNodeByID(EntityID entityID);
+    std::string getPathFromAncestor(std::shared_ptr<const SceneNodeCore> ancestor) const;
     virtual std::shared_ptr<ViewportNode> getLocalViewport();
+    virtual std::shared_ptr<const ViewportNode> getLocalViewport() const;
     std::shared_ptr<SceneNodeCore> getNode(const std::string& where);
     std::shared_ptr<SceneNodeCore> getParentNode();
+    std::shared_ptr<const SceneNodeCore> getParentNode() const;
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
     std::vector<std::shared_ptr<SceneNodeCore>> removeChildren();
-    const std::string getName() const;
+    std::string getName() const;
+    std::string getViewportLocalPath() const;
 
 protected:
 
@@ -261,6 +267,7 @@ public:
     static inline std::string getResourceTypeName() { return "ViewportNode"; }
 
     std::shared_ptr<ViewportNode> getLocalViewport() override;
+    virtual std::shared_ptr<const ViewportNode> getLocalViewport() const override;
     std::shared_ptr<Texture> fetchRenderResult(float simulationProgress);
     void setActiveCamera(const std::string& cameraPath);
     void setActiveCamera(std::shared_ptr<SceneNodeCore> cameraNode);
@@ -345,9 +352,13 @@ public:
     template<typename TObject=std::shared_ptr<SceneNode>>
     TObject getByPath(const std::string& where);
 
+    template <typename TSceneNode>
+    std::shared_ptr<TSceneNode> getNodeByID(const UniversalEntityID& universalEntityID);
+    std::vector<std::shared_ptr<SceneNodeCore>> getNodesByID(const std::vector<UniversalEntityID>& universalEntityIDs);
     std::shared_ptr<SceneNodeCore> getNode(const std::string& where);
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
+
 
 
     std::weak_ptr<ECSWorld> getRootWorld() const;
@@ -372,6 +383,11 @@ private:
     private:
         void onEntityUpdated(EntityID entityID) override;
     };
+    template <typename TSceneNode, typename Enable=void>
+    struct getNodeByID_Helper {
+        static std::shared_ptr<TSceneNode> get(const UniversalEntityID& universalEntityID, SceneSystem& sceneSystem);
+    };
+
     bool isActive(std::shared_ptr<const SceneNodeCore> sceneNode) const;
     bool isActive(UniversalEntityID UniversalEntityID) const;
     bool inScene(std::shared_ptr<const SceneNodeCore> sceneNode) const;
@@ -395,6 +411,7 @@ private:
 
     void onWorldEntityUpdate(UniversalEntityID UniversalEntityID);
 
+    std::shared_ptr<SceneNodeCore> getNodeByID(const UniversalEntityID& universalEntityID);
 
     std::shared_ptr<ViewportNode> mRootNode{ nullptr };
 
@@ -451,6 +468,11 @@ TObject SceneSystem::getByPath(const std::string& where) {
     return mRootNode->getByPath<TObject>(where);
 }
 
+template <typename TSceneNode>
+inline std::shared_ptr<TSceneNode> SceneSystem::getNodeByID(const UniversalEntityID& universalEntityID) {
+    return SceneSystem::getNodeByID_Helper<TSceneNode>(universalEntityID, *this);
+}
+
 // Fail retrieval in cases where no explicitly defined object by path
 // method exists
 template <typename TObject, typename Enable>
@@ -458,6 +480,19 @@ TObject SceneNodeCore::getByPath_Helper<TObject, Enable>::get(std::shared_ptr<Sc
     static_assert(false && "No Object-by-Path method for this type exists");
     return TObject{}; // this is just to shut the compiler up about no returned value
 }
+
+template <typename TSceneNode, typename Enable>
+std::shared_ptr<TSceneNode> SceneSystem::getNodeByID_Helper<TSceneNode, Enable>::get(const UniversalEntityID& universalEntityID, SceneSystem& sceneSystem) {
+    static_assert(false && "No scene node of this type exists");
+    return std::shared_ptr<TSceneNode>{};
+}
+
+template <typename TSceneNode>
+struct SceneSystem::getNodeByID_Helper<TSceneNode, typename std::enable_if_t<std::is_base_of<SceneNodeCore, TSceneNode>::value>> {
+    std::shared_ptr<TSceneNode> get(const UniversalEntityID& universalEntityID, SceneSystem& sceneSystem) {
+        return std::static_pointer_cast<TSceneNode>(sceneSystem.getNodeByID(universalEntityID));
+    }
+};
 
 template <typename TObject>
 struct SceneNodeCore::getByPath_Helper<std::shared_ptr<TObject>, typename std::enable_if_t<std::is_base_of<SceneNodeCore, TObject>::value>> {
@@ -482,6 +517,7 @@ SceneNodeCore::SceneNodeCore(const Placement& placement, const std::string& name
         )
     );
 }
+
 template <typename ...TComponents>
 SceneNodeCore::SceneNodeCore(const Key&, const Placement& placement, const std::string& name, TComponents...components) {
     mName = name;
@@ -577,6 +613,10 @@ inline void SceneNodeCore::removeComponent<Transform>() {
     assert(false && "Cannot remove a scene node's Transform component");
 }
 
+template <typename TSceneNode>
+std::shared_ptr<TSceneNode> SceneNodeCore::getNodeByID(EntityID entityID) {
+    return getWorld().lock()->getSystem<SceneSystem>()->getNodeByID<TSceneNode>({getWorldID(), entityID});
+}
 
 NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::ResizeType, {
     {ViewportNode::RenderConfiguration::ResizeType::OFF, "off"},

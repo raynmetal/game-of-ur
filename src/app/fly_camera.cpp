@@ -33,20 +33,18 @@ void FlyCamera::variableUpdate(uint32_t variableStepMillis) {
     if(mTimeSinceLastTick >= 1000u) {
         std::cout << "entities in front of camera:\n\t";
         for(
-            const auto& entityBoundsPair:
-            getWorld().lock()
-                ->getSystem<SpatialQuerySystem>()
-                ->findEntitiesOverlapping(
-                    Ray {
-                        .mStart {getComponent<ObjectBounds>().mPosition},
-                        .mDirection { getComponent<ObjectBounds>().mOrientation * glm::vec3{0.f, 0.f, -1.f} },
-                        .mLength { std::numeric_limits<float>::infinity() }
-                    }
-                )
+            const auto& foundNode:
+            getWorld().lock()->getSystem<SpatialQuerySystem>()->findNodesOverlapping(
+                Ray {
+                    .mStart { getComponent<ObjectBounds>().mPosition },
+                    .mDirection { getComponent<ObjectBounds>().mOrientation * glm::vec3{0.f, 0.f, -1.f} },
+                    .mLength { std::numeric_limits<float>::infinity() }
+                }
+            )
         ) {
-            std::cout << entityBoundsPair.first << ", ";
+            std::cout << "- " << foundNode->getViewportLocalPath() << "\n\t";
         }
-        std::cout << "\n\n";
+        std::cout << "\n";
         mTimeSinceLastTick = 0u;
     }
 }
