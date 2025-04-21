@@ -91,8 +91,8 @@ ResourceConstructor<StaticModel, StaticModelFromFile>{0}
 {}
 
 std::shared_ptr<IResource> StaticModelFromFile::createResource(const nlohmann::json& methodParameters) {
-    std::string modelPath { methodParameters.at("path").get<std::string>() };
 
+    std::string modelPath { methodParameters.at("path").get<std::string>() };
     Assimp::Importer* pImporter { WindowContext::getInstance().getAssetImporter() };
     const aiScene* pAiScene {
         pImporter->ReadFile(
@@ -147,26 +147,26 @@ std::shared_ptr<StaticMesh> buildMesh(aiMesh* pAiMesh) {
         // guarantee that a mesh will contain vertex colours or
         // texture sampling coordinates
         vertices.push_back({
-            { // position
+            .mPosition { // position
                 pAiMesh->mVertices[i].x,
                 pAiMesh->mVertices[i].y,
                 pAiMesh->mVertices[i].z,
                 1.f
             },
-            { // normal
+            .mNormal { // normal
                 pAiMesh->mNormals[i].x,
                 pAiMesh->mNormals[i].y,
                 pAiMesh->mNormals[i].z,
                 0.f
             },
-            { // tangent
+            .mTangent { // tangent
                 pAiMesh->mTangents[i].x,
                 pAiMesh->mTangents[i].y,
                 pAiMesh->mTangents[i].z,
                 0.f
             },
-            { 1.f, 1.f, 1.f, 1.f },
-            {
+            .mColor { 1.f, 1.f, 1.f, 1.f },
+            .mUV1 {
                 pAiMesh->mTextureCoords[0][i].x,
                 pAiMesh->mTextureCoords[0][i].y
             }
@@ -251,7 +251,7 @@ std::vector<std::shared_ptr<Texture>> loadAssimpTextures(aiMaterial* pAiMaterial
         pAiMaterial->GetTexture(textureType, i, &aiTextureName);
         std::string textureName { aiTextureName.C_Str() };
 
-        if(!ResourceDatabase::hasResourceDescription(textureName)){
+        if(!ResourceDatabase::HasResourceDescription(textureName)){
             nlohmann::json textureDescription {
                 {"name", textureName},
                 {"type", Texture::getResourceTypeName()},
@@ -260,11 +260,11 @@ std::vector<std::shared_ptr<Texture>> loadAssimpTextures(aiMaterial* pAiMaterial
                     {"path", textureName}
                 }}
             };
-            ResourceDatabase::addResourceDescription(textureDescription);
+            ResourceDatabase::AddResourceDescription(textureDescription);
         }
         
         textureHandles.push_back(
-            ResourceDatabase::getRegisteredResource<Texture>(textureName)
+            ResourceDatabase::GetRegisteredResource<Texture>(textureName)
         );
     }
 

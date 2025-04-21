@@ -6,7 +6,7 @@
 
 #include "spatial_query_math.hpp"
 #include "spatial_query_basic_types.hpp"
-#include "ecs_world.hpp"
+#include "core/ecs_world.hpp"
 
 class Octree;
 class OctreeNode: public std::enable_shared_from_this<OctreeNode> {

@@ -1,7 +1,7 @@
 #ifndef ZOSCENELOADING_H
 #define ZOSCENELOADING_H
 
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 
 #include "sim_system.hpp"
 #include "scene_system.hpp"

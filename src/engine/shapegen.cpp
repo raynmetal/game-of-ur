@@ -3,40 +3,42 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 #include "vertex.hpp"
 #include "model.hpp"
 #include "material.hpp"
 #include "mesh.hpp"
 #include "shapegen.hpp"
 
-std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian);
-std::shared_ptr<StaticMesh> generateRectangleMesh(float width=2.f, float height=2.f);
+std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian, bool flipTextureY=false);
+std::shared_ptr<StaticMesh> generateRectangleMesh(float width=2.f, float height=2.f, bool flipTextureY=false);
 
 std::shared_ptr<IResource> StaticMeshSphereLatLong::createResource(const nlohmann::json& methodParameters) {
     return generateSphereMesh(
         methodParameters.at("nLatitudes").get<uint32_t>(),
-        methodParameters.at("nMeridians").get<uint32_t>()
+        methodParameters.at("nMeridians").get<uint32_t>(),
+        methodParameters.find("flip_texture_y") != methodParameters.end()? methodParameters.at("flip_texture_y").get<bool>(): false
     );
 }
 
 std::shared_ptr<IResource> StaticMeshRectangleDimensions::createResource(const nlohmann::json& methodParameters) {
     return generateRectangleMesh(
         methodParameters.at("width").get<float>(),
-        methodParameters.at("height").get<float>()
+        methodParameters.at("height").get<float>(),
+        methodParameters.find("flip_texture_y") != methodParameters.end()? methodParameters.at("flip_texture_y").get<bool>(): false
     );
 }
 
 std::shared_ptr<IResource> StaticModelSphereLatLong::createResource(const nlohmann::json& methodParameters) {
     std::shared_ptr<StaticMesh> sphereMesh {
-        ResourceDatabase::constructAnonymousResource<StaticMesh>({
+        ResourceDatabase::ConstructAnonymousResource<StaticMesh>({
             {"type", StaticMesh::getResourceTypeName()},
             {"method", StaticMeshSphereLatLong::getResourceConstructorName()},
             {"parameters", methodParameters}
         })
     };
     std::shared_ptr<Material> sphereMaterial { 
-        ResourceDatabase::constructAnonymousResource<Material>({
+        ResourceDatabase::ConstructAnonymousResource<Material>({
             {"type", Material::getResourceTypeName()},
             {"method", MaterialFromDescription::getResourceConstructorName()},
             {"parameters", {
@@ -57,19 +59,19 @@ std::shared_ptr<IResource> StaticModelSphereLatLong::createResource(const nlohma
 
 std::shared_ptr<IResource> StaticModelRectangleDimensions::createResource(const nlohmann::json& methodParameters) {
     std::shared_ptr<StaticMesh> rectangleMesh {
-        ResourceDatabase::constructAnonymousResource<StaticMesh>({
+        ResourceDatabase::ConstructAnonymousResource<StaticMesh>({
             {"type", StaticMesh::getResourceTypeName()},
             {"method", StaticMeshRectangleDimensions::getResourceConstructorName()},
             {"parameters", methodParameters}
         })
     };
     std::shared_ptr<Material> rectangleMaterial { 
-        ResourceDatabase::constructAnonymousResource<Material>({
+        ResourceDatabase::ConstructAnonymousResource<Material>({
             {"type", Material::getResourceTypeName()},
             {"method", MaterialFromDescription::getResourceConstructorName()},
-            {"parameters", 
+            {"parameters", {
                 {"properties", nlohmann::json::array()},
-            }
+            }}
         })
     };
 
@@ -83,9 +85,18 @@ std::shared_ptr<IResource> StaticModelRectangleDimensions::createResource(const 
     return rectangleModel;
 }
 
-std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian)  {
+std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian, bool flipTextureY)  {
     assert(nLatitude >= 1);
     assert(nMeridian >= 2);
+
+    const glm::mat3 textureCoordinateTransform { flipTextureY ?
+        glm::mat3 { // column major order
+            {1.f, 0.f, 0.f},
+            {0.f, -1.f, 0.f},
+            {0.f, 1.f, 1.f},
+        }:
+        glm::mat3 { 1.f }
+    };
 
     const int nVerticesPerLatitude { 2 * nMeridian };
     const int nVerticesTotal { 2 + nLatitude * nVerticesPerLatitude };
@@ -116,9 +127,14 @@ std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian)  {
                 0.f
             );
             vertices[currentIndex].mUV3
-                = vertices[currentIndex].mUV2 
-                = vertices[currentIndex].mUV1 
-                = glm::vec2(static_cast<float>(j)/nPointsCurrentLatitude, angleVertical / 180.f);
+                = vertices[currentIndex].mUV2
+                = vertices[currentIndex].mUV1
+                = static_cast<glm::vec2>(
+                    textureCoordinateTransform 
+                    * glm::vec3(
+                        static_cast<float>(j)/nPointsCurrentLatitude, angleVertical / 180.f, 1.f
+                    )
+                );
             vertices[currentIndex].mColor = glm::vec4(1.f);
             ++currentIndex;
         }
@@ -166,9 +182,17 @@ std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian)  {
     return std::make_shared<StaticMesh>(vertices, elements);
 }
 
-std::shared_ptr<StaticMesh> generateRectangleMesh(float width, float height) {
+std::shared_ptr<StaticMesh> generateRectangleMesh(float width, float height, bool flipTextureY) {
     assert(width > 0.f);
     assert(height > 0.f);
+    const glm::mat3 textureCoordinateTransform { flipTextureY ?
+        glm::mat3 { // column major order
+            {1.f, 0.f, 0.f},
+            {0.f, -1.f, 0.f},
+            {0.f, 1.f, 1.f},
+        }:
+        glm::mat3 { 1.f }
+    };
 
     std::vector<BuiltinVertexData> vertices {
         {
@@ -176,30 +200,39 @@ std::shared_ptr<StaticMesh> generateRectangleMesh(float width, float height) {
             .mNormal{0.f, 0.f, 1.f, 0.f},
             .mTangent{1.f, 0.f, 0.f, 0.f},
             .mColor{1.f, 1.f, 1.f, 1.f},
-            .mUV1{0.f, 1.f}
+            .mUV1{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {0.f, 1.f, 1.f}) },
+            .mUV2{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {0.f, 1.f, 1.f}) },
+            .mUV3{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {0.f, 1.f, 1.f}) },
         },
         {
             .mPosition {width/2.f, height/2.f, 0.f, 1.f},
             .mNormal{0.f, 0.f, 1.f, 0.f},
             .mTangent{1.f, 0.f, 0.f, 0.f},
             .mColor{1.f, 1.f, 1.f, 1.f},
-            .mUV1{1.f, 1.f}
+            .mUV1{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {1.f, 1.f, 1.f}) },
+            .mUV2{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {1.f, 1.f, 1.f}) },
+            .mUV3{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {1.f, 1.f, 1.f}) },
         },
         {
             .mPosition {width/2.f, -height/2.f, 0.f, 1.f},
             .mNormal {0.f, 0.f, 1.f, 0.f},
             .mTangent {1.f, 0.f, 0.f, 0.f},
             .mColor {1.f, 1.f, 1.f, 1.f},
-            .mUV1 {1.f, 0.f}
+            .mUV1{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {1.f, 0.f, 1.f}) },
+            .mUV2{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {1.f, 0.f, 1.f}) },
+            .mUV3{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {1.f, 0.f, 1.f}) },
         },
         {
             .mPosition {-width/2.f, -height/2.f, 0.f, 1.f},
             .mNormal {0.f, 0.f, 1.f, 0.f},
             .mTangent {1.f, 0.f, 0.f, 0.f},
             .mColor {1.f, 1.f, 1.f, 1.f},
-            .mUV1 {0.f, 0.f}
+            .mUV1{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {0.f, 0.f, 1.f}) },
+            .mUV2{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {0.f, 0.f, 1.f}) },
+            .mUV3{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {0.f, 0.f, 1.f}) },
         },
     };
+
     std::vector<GLuint> elements {
         {0}, {2}, {1},
         {0}, {3}, {2}

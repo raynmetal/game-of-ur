@@ -5,7 +5,7 @@
 #include <glm/gtc/quaternion.hpp>
 #include <nlohmann/json.hpp>
 
-#include "ecs_world.hpp"
+#include "core/ecs_world.hpp"
 
 struct Placement {
     glm::vec4 mPosition {glm::vec3{ 0.f }, 1.f};

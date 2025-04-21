@@ -11,7 +11,7 @@ std::shared_ptr<IResource> SceneFromFile::createResource(const nlohmann::json& s
     nlohmann::json sceneDescription { nlohmann::json::parse(jsonFileStream) };
     jsonFileStream.close();
 
-    return ResourceDatabase::constructAnonymousResource<SceneNode>({
+    return ResourceDatabase::ConstructAnonymousResource<SceneNode>({
         { "type", SimObject::getResourceTypeName() },
         { "method", SceneFromDescription::getResourceConstructorName() },
         { "parameters", sceneDescription[0].get<nlohmann::json>() },
@@ -40,7 +40,7 @@ void SceneFromDescription::loadResources(const nlohmann::json& resourceList) {
                 && "Only scenes loaded from files may be defined in the resources section of a scene"
             );
         }
-        ResourceDatabase::addResourceDescription(resourceDescription);
+        ResourceDatabase::AddResourceDescription(resourceDescription);
     }
 }
 
@@ -55,7 +55,7 @@ std::shared_ptr<SimObject> SceneFromDescription::loadSceneNodes(const nlohmann::
         && "Root node must not have a parent"
     );
     assert(localRootDescription.at("type") == SimObject::getResourceTypeName() && "Scene's root must be a sim object");
-    localRoot = ResourceDatabase::constructAnonymousResource<SimObject>({
+    localRoot = ResourceDatabase::ConstructAnonymousResource<SimObject>({
         {"type", SimObject::getResourceTypeName()},
         {"method", SimObjectFromDescription::getResourceConstructorName()},
         {"parameters", localRootDescription},
@@ -72,21 +72,21 @@ std::shared_ptr<SimObject> SceneFromDescription::loadSceneNodes(const nlohmann::
 
         // construct scene node resource according to its type
         if(nodeDescription.at("type") == SimObject::getResourceTypeName()) {
-            node = ResourceDatabase::constructAnonymousResource<SimObject>({
+            node = ResourceDatabase::ConstructAnonymousResource<SimObject>({
                 {"type", SimObject::getResourceTypeName()},
                 {"method", SimObjectFromDescription::getResourceConstructorName()},
                 {"parameters", nodeDescription},
             });
 
         } else if(nodeDescription.at("type") == SceneNode::getResourceTypeName()) {
-            node = ResourceDatabase::constructAnonymousResource<SceneNode>({
+            node = ResourceDatabase::ConstructAnonymousResource<SceneNode>({
                 {"type", SceneNode::getResourceTypeName()},
                 {"method", SceneNodeFromDescription::getResourceConstructorName()},
                 {"parameters", nodeDescription},
             });
 
         } else if(nodeDescription.at("type") == ViewportNode::getResourceTypeName()) {
-            node = ResourceDatabase::constructAnonymousResource<ViewportNode>({
+            node = ResourceDatabase::ConstructAnonymousResource<ViewportNode>({
                 {"type", ViewportNode::getResourceTypeName()},
                 {"method", ViewportNodeFromDescription::getResourceConstructorName()},
                 {"parameters", nodeDescription},
@@ -95,7 +95,7 @@ std::shared_ptr<SimObject> SceneFromDescription::loadSceneNodes(const nlohmann::
         // TODO: make it so that certain resource constructors can define resource aliases
         // that refer to the same type (and by extension any tables associated with it)
         } else if(nodeDescription.at("type") == "Scene") {
-            node = ResourceDatabase::getRegisteredResource<SimObject>(
+            node = ResourceDatabase::GetRegisteredResource<SimObject>(
                 nodeDescription.at("name").get<std::string>()
             );
             if(nodeDescription.at("copy").get<bool>()) {

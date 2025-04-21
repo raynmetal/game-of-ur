@@ -4,9 +4,9 @@
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
+#include "core/ecs_world.hpp"
 #include "window_context_manager.hpp"
-#include "ecs_world.hpp"
 
 #include "light.hpp"
 #include "camera_system.hpp"
@@ -21,7 +21,7 @@ constexpr float MAX_EXPOSURE { 15.f };
 constexpr float MIN_EXPOSURE { 0.f };
 
 void RenderSystem::LightQueue::onInitialize() {
-    if(!ResourceDatabase::hasResourceDescription("sphereLight-10lat-5long")) {
+    if(!ResourceDatabase::HasResourceDescription("sphereLight-10lat-5long")) {
         nlohmann::json sphereLightDescription {
             {"name", "sphereLight-10lat-5long"},
             {"type", StaticMesh::getResourceTypeName()},
@@ -31,9 +31,9 @@ void RenderSystem::LightQueue::onInitialize() {
                 {"nMeridians", 5}
             }}
         };
-        ResourceDatabase::addResourceDescription(sphereLightDescription);
+        ResourceDatabase::AddResourceDescription(sphereLightDescription);
     }
-    mSphereMesh = ResourceDatabase::getRegisteredResource<StaticMesh>("sphereLight-10lat-5long");
+    mSphereMesh = ResourceDatabase::GetRegisteredResource<StaticMesh>("sphereLight-10lat-5long");
 }
 
 void RenderSystem::onInitialize() {
@@ -56,7 +56,7 @@ void RenderSystem::onInitialize() {
         0,
         2*sizeof(glm::mat4)
     );
-    if(!ResourceDatabase::hasResourceDescription("screenRectangleMesh")) {
+    if(!ResourceDatabase::HasResourceDescription("screenRectangleMesh")) {
         nlohmann::json rectangleMeshDefinition {
             {"name", "screenRectangleMesh"},
             {"type", StaticMesh::getResourceTypeName()},
@@ -66,7 +66,7 @@ void RenderSystem::onInitialize() {
                 {"height", 2.f},
             }}
         };
-        ResourceDatabase::addResourceDescription(rectangleMeshDefinition);
+        ResourceDatabase::AddResourceDescription(rectangleMeshDefinition);
     }
 }
 
@@ -130,7 +130,7 @@ RenderSetID RenderSystem::createRenderSet(glm::u16vec2 renderDimensions, glm::u1
     newRenderSet.mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>( "src/shader/tonemappingShader.json" );
     newRenderSet.mResizeRenderStage = std::make_shared<ResizeRenderStage>("src/shader/screenShader.json");
     newRenderSet.mScreenRenderStage = std::make_shared<ScreenRenderStage>("src/shader/screenShader.json");
-    newRenderSet.mLightMaterialHandle = ResourceDatabase::constructAnonymousResource<Material>({
+    newRenderSet.mLightMaterialHandle = ResourceDatabase::ConstructAnonymousResource<Material>({
         {"type", Material::getResourceTypeName()},
         {"method", MaterialFromDescription::getResourceConstructorName()},
         {"parameters", {

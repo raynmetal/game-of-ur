@@ -5,7 +5,7 @@
 #include <glm/gtc/quaternion.hpp>
 
 #include "spatial_query_basic_types.hpp"
-#include "ecs_world.hpp"
+#include "core/ecs_world.hpp"
 
 struct ObjectBounds;
 class AxisAlignedBounds;

@@ -9,11 +9,12 @@
 
 #include <nlohmann/json.hpp>
 
+#include "core/resource_database.hpp"
+#include "core/ecs_world.hpp"
+
 #include "spatial_query_system.hpp"
-#include "resource_database.hpp"
 #include "registrator.hpp"
 #include "input_system/input_system.hpp"
-#include "ecs_world.hpp"
 #include "scene_system.hpp"
 #include "signals.hpp"
 
@@ -28,6 +29,7 @@ struct SimCore {
 
 // never used, so make empty definitions for these
 inline void from_json(const nlohmann::json& json, SimCore& simCore) {}
+
 // never used, so make empty definitions for these
 inline void to_json(nlohmann::json& json, const SimCore& simCore) {}
 

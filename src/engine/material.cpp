@@ -170,7 +170,7 @@ std::shared_ptr<IResource> MaterialFromDescription::createResource(const nlohman
             material->updateVec4Property(propertyName, value);
 
         } else if (propertyType == "texture") {
-            std::shared_ptr<Texture> value { ResourceDatabase::getRegisteredResource<Texture>(
+            std::shared_ptr<Texture> value { ResourceDatabase::GetRegisteredResource<Texture>(
                 property.at("value").get<std::string>()
             )};
             material->updateTextureProperty(propertyName, value);

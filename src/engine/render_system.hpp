@@ -7,7 +7,7 @@
 #include <array>
 
 #include "input_system/input_system.hpp"
-#include "ecs_world.hpp"
+#include "core/ecs_world.hpp"
 #include "shapegen.hpp"
 #include "material.hpp"
 #include "render_stage.hpp"

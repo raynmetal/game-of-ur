@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 #include "texture.hpp"
 
 #include "framebuffer.hpp"
@@ -96,7 +96,7 @@ void Framebuffer::copyResource(const Framebuffer& other) {
             std::string colorBufferName { 
                 "framebuffer_" + std::to_string(mID) + "::color_buffer_" + std::to_string(count)
             };
-            ResourceDatabase::addResourceDescription(
+            ResourceDatabase::AddResourceDescription(
                 nlohmann::json {
                     {"name", colorBufferName},
                     {"type", Texture::getResourceTypeName()},
@@ -105,7 +105,7 @@ void Framebuffer::copyResource(const Framebuffer& other) {
                 }
             );
             mTextureHandles.push_back(
-                ResourceDatabase::getRegisteredResource<Texture>(colorBufferName)
+                ResourceDatabase::GetRegisteredResource<Texture>(colorBufferName)
             );
             if(count < mNColorAttachments){
                 mTextureHandles.back()->attachToFramebuffer(count);
@@ -183,7 +183,7 @@ std::shared_ptr<IResource> FramebufferFromDescription::createResource(const nloh
                 {"parameters", colorBufferParams[i]},
             };
             textureHandles.push_back(
-                ResourceDatabase::constructAnonymousResource<Texture>(colorBufferDescription)
+                ResourceDatabase::ConstructAnonymousResource<Texture>(colorBufferDescription)
             );
             //Assume the first n color buffers become the first n
             //framebuffer attachments

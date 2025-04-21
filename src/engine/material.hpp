@@ -9,7 +9,7 @@
 #include <GL/glew.h>
 
 #include "texture.hpp"
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 
 class Material : public Resource<Material> {
 public:

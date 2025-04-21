@@ -6,7 +6,7 @@
 
 #include "spatial_query_octree.hpp"
 #include "scene_system.hpp"
-#include "ecs_world.hpp"
+#include "core/ecs_world.hpp"
 #include "model.hpp"
 #include "light.hpp"
 

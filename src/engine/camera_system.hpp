@@ -4,7 +4,7 @@
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 
-#include "ecs_world.hpp"
+#include "core/ecs_world.hpp"
 #include "scene_components.hpp"
 
 struct CameraProperties {

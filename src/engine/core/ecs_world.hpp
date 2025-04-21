@@ -15,8 +15,8 @@
 
 #include <nlohmann/json.hpp>
 
-#include "util.hpp"
-#include "registrator.hpp"
+#include "../util.hpp"
+#include "../registrator.hpp"
 
 /* 
   See Austin Morlan's implementation of a simple ECS, where entities are

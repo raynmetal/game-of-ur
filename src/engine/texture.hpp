@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 
 struct ColorBufferDefinition {
     glm::vec2 mDimensions {800, 600};
@@ -19,6 +19,49 @@ struct ColorBufferDefinition {
     GLbyte mComponentCount { 4 };
     bool mUsesWebColors { false };
 };
+
+inline GLenum deduceInternalFormat(const ColorBufferDefinition& colorBufferDefinition) {
+    GLenum internalFormat;
+
+    if(colorBufferDefinition.mDataType == GL_FLOAT && colorBufferDefinition.mComponentCount == 1){ 
+        internalFormat = GL_R16F;
+    } else if (colorBufferDefinition.mDataType == GL_FLOAT && colorBufferDefinition.mComponentCount == 4) {
+        internalFormat = GL_RGBA16F;
+    } else if (colorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && colorBufferDefinition.mComponentCount == 1) {
+        internalFormat = GL_RED;
+    } else if (colorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && colorBufferDefinition.mComponentCount == 4) {
+
+        if(colorBufferDefinition.mUsesWebColors) {
+            internalFormat = GL_SRGB_ALPHA;
+        } else {
+            internalFormat = GL_RGBA;
+        }
+
+    } else {
+        throw std::invalid_argument("Invalid data type and component count combination provided in texture constructor");
+    }
+
+    return internalFormat;
+}
+
+inline GLenum deduceExternalFormat(const ColorBufferDefinition& colorBufferDefinition) {
+    GLenum externalFormat;
+
+    if(colorBufferDefinition.mDataType == GL_FLOAT && colorBufferDefinition.mComponentCount == 1){ 
+        externalFormat = GL_RED;
+    } else if (colorBufferDefinition.mDataType == GL_FLOAT && colorBufferDefinition.mComponentCount == 4) {
+        externalFormat = GL_RGBA;
+    } else if (colorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && colorBufferDefinition.mComponentCount == 1) {
+        externalFormat = GL_RED;
+    } else if (colorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && colorBufferDefinition.mComponentCount == 4) {
+        externalFormat = GL_RGBA;
+    } else {
+        throw std::invalid_argument("Invalid data type and component count combination provided in texture constructor");
+    }
+
+    return externalFormat;
+}
+
 
 void to_json(nlohmann::json& json, const ColorBufferDefinition& colorBufferDefinition);
 void from_json(const nlohmann::json& json, ColorBufferDefinition& colorBufferDefinition);
@@ -57,6 +100,7 @@ public:
 
     /* get texture width */
     GLint getWidth() const;
+
     /* get texture height */
     GLint getHeight() const;
 

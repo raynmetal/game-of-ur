@@ -6,8 +6,14 @@
 #include <SDL2/SDL.h>
 #include <nlohmann/json.hpp>
 
-#include "ecs_world.hpp"
-#include "resource_database.hpp"
+#include "core/ecs_world.hpp"
+#include "core/resource_database.hpp"
+
+/**
+ * NOTE: Since I'm packaging this as a static library, any premade resource type, resource constructor,
+ * sim aspect type, or anything derived from a template ought to be included here.
+ */
+
 #include "window_context_manager.hpp"
 #include "input_system/input_system.hpp"
 #include "scene_system.hpp"
@@ -15,6 +21,7 @@
 #include "scene_loading.hpp"
 #include "material.hpp"
 #include "render_system.hpp"
+#include "text_render.hpp"
 
 #include "../app/fly_camera.hpp"
 
@@ -83,7 +90,7 @@ Application::Application(const std::string& projectPath) {
     const std::string& rootSceneFile { projectJSON[0].at("root_scene_path").get<std::string>() };
     currentResourcePath = projectRootDirectory / rootSceneFile;
     mInputManager.loadInputConfiguration(inputJSON[0]);
-    ResourceDatabase::addResourceDescription(
+    ResourceDatabase::AddResourceDescription(
         nlohmann::json {
             {"name", "root_scene"},
             {"type", "SimObject"},
@@ -96,7 +103,7 @@ Application::Application(const std::string& projectPath) {
 
     mSceneSystem.lock()->onApplicationInitialize(projectJSON[0].at("root_viewport_render_configuration"));
     mSceneSystem.lock()->addNode(
-        ResourceDatabase::getRegisteredResource<SimObject>("root_scene"),
+        ResourceDatabase::GetRegisteredResource<SimObject>("root_scene"),
         "/"
     );
 }
@@ -121,6 +128,9 @@ void Application::execute() {
     sceneSystem->onApplicationStart();
     sceneSystem->getRootViewport().requestDimensions(WindowContext::getInstance().getDimensions());
     printSceneHierarchyData(sceneSystem->getNode("/partial_scene_root/"));
+    {
+        std::shared_ptr<TextFont> mFont { ResourceDatabase::GetRegisteredResource<TextFont>("Roboto_Mono_Regular_24") };
+    }
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
@@ -185,7 +195,7 @@ void Application::initialize(const nlohmann::json& windowProperties) {
 
     // IMPORTANT: call get instance, just to initialize the window
     // TODO: stupid name bound to trip me up sooner or later. Replace it.
-    ResourceDatabase::getInstance();
+    ResourceDatabase::GetInstance();
 
     Material::Init();
 }

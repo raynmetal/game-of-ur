@@ -13,7 +13,7 @@
 #include <assimp/scene.h>
 #include <assimp/material.h>
 
-#include "ecs_world_resource_ext.hpp" // this instead of the regular ECS and resource includes
+#include "core/ecs_world_resource_ext.hpp" // this instead of the regular ECS and resource includes
 #include "vertex.hpp"
 #include "mesh.hpp"
 #include "texture.hpp"

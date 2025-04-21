@@ -5,7 +5,7 @@
 
 #include "util.hpp"
 #include "render_system.hpp"
-#include "ecs_world.hpp"
+#include "core/ecs_world.hpp"
 #include "scene_system.hpp"
 
 const std::string kSceneRootName { "" };
@@ -332,7 +332,7 @@ std::string SceneNodeCore::getPathFromAncestor(std::shared_ptr<const SceneNodeCo
     std::shared_ptr<const SceneNodeCore> currentNode { shared_from_this() };
     std::string path {"/"};
     while(currentNode != ancestor) {
-        path = path + currentNode->mName + "/";
+        path = "/" + currentNode->mName + path;
         currentNode = currentNode->getParentNode();
     }
 

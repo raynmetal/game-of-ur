@@ -8,7 +8,7 @@
 #include <glm/glm.hpp>
 
 #include "texture.hpp"
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 
 class Framebuffer : public Resource<Framebuffer> {
 public:

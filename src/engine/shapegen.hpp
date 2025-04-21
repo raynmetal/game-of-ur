@@ -4,7 +4,7 @@
 #include <memory>
 #include <nlohmann/json.hpp>
 
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 #include "mesh.hpp"
 #include "model.hpp"
 

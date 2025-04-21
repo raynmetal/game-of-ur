@@ -7,7 +7,7 @@
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 
 class ShaderProgram: public Resource<ShaderProgram> {
 public:

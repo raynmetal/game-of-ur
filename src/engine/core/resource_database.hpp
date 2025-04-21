@@ -7,10 +7,11 @@
 #include <tuple>
 #include <map>
 #include <iostream>
+#include <type_traits>
 
 #include <nlohmann/json.hpp>
 
-#include "registrator.hpp"
+#include "../registrator.hpp"
 
 // ##########################################################################################
 // DECLARATIONS
@@ -31,6 +32,12 @@ template <typename TResource, typename TMethod> class ResourceConstructor;
 class IResource {
 public:
     virtual ~IResource()=default;
+    virtual std::string getResourceTypeName_() const=0;
+protected:
+    IResource()=default;
+    template <typename TResource>
+    static void RegisterResource();
+private:
 };
 
 class IResourceFactory {
@@ -41,39 +48,46 @@ protected:
 
     std::map<std::string, std::unique_ptr<IResourceConstructor>> mFactoryMethods {};
 private:
-
 friend class ResourceDatabase;
 };
 
 class IResourceConstructor {
 public:
-    virtual ~IResourceConstructor()=default;
+    virtual std::string getResourceConstructorName_() const=0;
     virtual std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters)=0;
+    virtual ~IResourceConstructor()=default;
+protected:
+    IResourceConstructor()=default;
+    template <typename TResource, typename TResourceConstructor>
+    static void RegisterResourceConstructor();
 private:
-
 friend class ResourceDatabase;
 };
 
 class ResourceDatabase {
 public:
-    static ResourceDatabase& getInstance();
+    static ResourceDatabase& GetInstance();
 
     template <typename TResource>
-    static std::shared_ptr<TResource> getRegisteredResource(const std::string& resourceName);
+    static std::shared_ptr<TResource> GetRegisteredResource(const std::string& resourceName);
     template <typename TResource>
-    static std::shared_ptr<TResource> constructAnonymousResource(const nlohmann::json& resourceDescription);
+    static std::shared_ptr<TResource> ConstructAnonymousResource(const nlohmann::json& resourceDescription);
 
-    static bool hasResourceDescription(const std::string& resourceName);
+    static bool HasResourceDescription(const std::string& resourceName);
     template <typename TResource>
-    static bool hasResource(const std::string& resourceName);
+    static bool HasResource(const std::string& resourceName);
 
-    static void registerFactory (const std::string& factoryName, std::unique_ptr<IResourceFactory> pFactory);
-    static void registerFactoryMethod (const std::string& resourceType, const std::string& methodName, std::unique_ptr<IResourceConstructor> pFactoryMethod);
-    static void addResourceDescription (const nlohmann::json& resourceDescription);
+    template <typename TResource>
+    void registerFactory (const std::string& factoryName, std::unique_ptr<IResourceFactory> pFactory);
+
+    template <typename TResource, typename TResourceConstructor>
+    void registerResourceConstructor (const std::string& resourceType, const std::string& methodName, std::unique_ptr<IResourceConstructor> pFactoryMethod);
+
+    static void AddResourceDescription (const nlohmann::json& resourceDescription);
 
 
 private:
-    static void assertResourceDescriptionValidity(const nlohmann::json& resourceDescription);
+    static void AssertResourceDescriptionValidity(const nlohmann::json& resourceDescription);
 
     std::map<std::string, std::unique_ptr<IResourceFactory>> mFactories {};    
     std::map<std::string, std::weak_ptr<IResource>> mResources {};
@@ -85,7 +99,7 @@ private:
 template <typename TDerived>
 class Resource: public IResource {
 public:
-
+    inline std::string getResourceTypeName_() const override { return TDerived::getResourceTypeName(); }
 protected:
     explicit Resource(int explicitlyInitializeMe) { s_registrator.emptyFunc(); }
 private:
@@ -107,7 +121,7 @@ private:
 template<typename TResource, typename TResourceFactoryMethod>
 class ResourceConstructor: public IResourceConstructor {
 public:
-
+    inline std::string getResourceConstructorName_() const override { return TResourceFactoryMethod::getResourceConstructorName(); }
 protected:
     explicit ResourceConstructor(int explicitlyInitializeMe) {
         s_registrator.emptyFunc();
@@ -115,7 +129,6 @@ protected:
 
 private:
     static void registerSelf();
-
     inline static Registrator<ResourceConstructor<TResource, TResourceFactoryMethod>> s_registrator {
         Registrator<ResourceConstructor<TResource, TResourceFactoryMethod>>::getRegistrator()
     };
@@ -128,8 +141,8 @@ friend class ResourceFactory<TResource>;
 // FUNCTION DEFINITIONS
 // ##########################################################################################
 template <typename TResource>
-std::shared_ptr<TResource> ResourceDatabase::getRegisteredResource(const std::string& resourceName) {
-    ResourceDatabase& resourceDatabase { ResourceDatabase::getInstance() };
+std::shared_ptr<TResource> ResourceDatabase::GetRegisteredResource(const std::string& resourceName) {
+    ResourceDatabase& resourceDatabase { ResourceDatabase::GetInstance() };
     std::shared_ptr<IResource> pResource { nullptr };
 
     // Search known resources first and validate it against the requested type
@@ -164,7 +177,7 @@ std::shared_ptr<TResource> ResourceDatabase::getRegisteredResource(const std::st
     // as registered in our resource description table 
     if(!pResource) {
         pResource = std::static_pointer_cast<typename Resource<TResource>::IResource, TResource>(
-            ResourceDatabase::constructAnonymousResource<TResource>(resourceDescPair->second)
+            ResourceDatabase::ConstructAnonymousResource<TResource>(resourceDescPair->second)
         );
         resourceDatabase.mResources[resourceName] = std::weak_ptr<IResource>{ pResource };
     }
@@ -177,11 +190,11 @@ std::shared_ptr<TResource> ResourceDatabase::getRegisteredResource(const std::st
 }
 
 template<typename TResource>
-std::shared_ptr<TResource> ResourceDatabase::constructAnonymousResource(const nlohmann::json& resourceDescription) {
-    ResourceDatabase& resourceDatabase { ResourceDatabase::getInstance() };
+std::shared_ptr<TResource> ResourceDatabase::ConstructAnonymousResource(const nlohmann::json& resourceDescription) {
+    ResourceDatabase& resourceDatabase { ResourceDatabase::GetInstance() };
     std::shared_ptr<IResource> pResource { nullptr };
 
-    assertResourceDescriptionValidity(resourceDescription);
+    AssertResourceDescriptionValidity(resourceDescription);
 
     // Construct this resource using its description
     pResource = resourceDatabase
@@ -197,9 +210,9 @@ std::shared_ptr<TResource> ResourceDatabase::constructAnonymousResource(const nl
 }
 
 template<typename TResource>
-bool ResourceDatabase::hasResource(const std::string& resourceName) {
-    ResourceDatabase& resourceDatabase { getInstance() };
-    bool descriptionPresent { hasResourceDescription(resourceName) };
+bool ResourceDatabase::HasResource(const std::string& resourceName) {
+    ResourceDatabase& resourceDatabase { GetInstance() };
+    bool descriptionPresent { HasResourceDescription(resourceName) };
     bool typeMatched { false };
     bool objectLoaded { false };
     if(descriptionPresent){
@@ -226,7 +239,7 @@ std::shared_ptr<IResource> ResourceFactory<TResource>::createResource(const nloh
 
 template <typename TDerived>
 void Resource<TDerived>::registerSelf() {
-    ResourceDatabase::registerFactory(TDerived::getResourceTypeName(), std::make_unique<ResourceFactory<TDerived>>());
+    IResource::RegisterResource<TDerived>();
 }
 
 template <typename TResource, typename TResourceFactoryMethod>
@@ -235,7 +248,30 @@ void ResourceConstructor<TResource, TResourceFactoryMethod>::registerSelf() {
     Registrator<Resource<TResource>>& resourceRegistrator { Registrator<Resource<TResource>>::getRegistrator() };
     resourceRegistrator.emptyFunc();
     // actually register this method now
-    ResourceDatabase::registerFactoryMethod(TResource::getResourceTypeName(), TResourceFactoryMethod::getResourceConstructorName(), std::make_unique<TResourceFactoryMethod>());
+    IResourceConstructor::RegisterResourceConstructor<TResource, TResourceFactoryMethod>();
+}
+
+template <typename TResource>
+void IResource::RegisterResource() {
+    ResourceDatabase::GetInstance().registerFactory<TResource>(TResource::getResourceTypeName(), std::make_unique<ResourceFactory<TResource>>());
+}
+
+template <typename TResource, typename TResourceConstructor>
+void IResourceConstructor::RegisterResourceConstructor() {
+    ResourceDatabase::GetInstance().registerResourceConstructor<TResource, TResourceConstructor>(TResource::getResourceTypeName(), TResourceConstructor::getResourceConstructorName(), std::make_unique<TResourceConstructor>());
+}
+
+template <typename TResource>
+void ResourceDatabase::registerFactory(const std::string& factoryName, std::unique_ptr<IResourceFactory> pFactory) {
+    assert((std::is_base_of<IResource, TResource>::value) && "Resource must be subclass of IResource");
+    mFactories[factoryName] = std::move(pFactory);
+}
+
+template <typename TResource, typename TResourceConstructor>
+void ResourceDatabase::registerResourceConstructor(const std::string& resourceType, const std::string& methodName, std::unique_ptr<IResourceConstructor> pFactoryMethod) {
+    assert((std::is_base_of<IResource, TResource>::value) && "Resource must be subclass of IResource");
+    assert((std::is_base_of<IResourceConstructor, TResourceConstructor>::value) && "Resource must be subclass of IResourceConstructor");
+    mFactories.at(resourceType)->mFactoryMethods[methodName] = std::move(pFactoryMethod);
 }
 
 #endif

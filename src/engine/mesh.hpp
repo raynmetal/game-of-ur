@@ -10,7 +10,7 @@
 
 #include <assimp/scene.h>
 
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 #include "vertex.hpp"
 
 /**

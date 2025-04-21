@@ -2,8 +2,8 @@
 
 #include "resource_database.hpp"
 
-void ResourceDatabase::assertResourceDescriptionValidity(const nlohmann::json& resourceDescription)  {
-    ResourceDatabase& resourceDatabase { ResourceDatabase::getInstance() };
+void ResourceDatabase::AssertResourceDescriptionValidity(const nlohmann::json& resourceDescription)  {
+    ResourceDatabase& resourceDatabase { ResourceDatabase::GetInstance() };
 
     assert(
         (
@@ -38,11 +38,11 @@ void ResourceDatabase::assertResourceDescriptionValidity(const nlohmann::json& r
     //TODO: how do we generate documentation that tells a developer what values are expected?
 }
 
-void ResourceDatabase::addResourceDescription(const nlohmann::json& resourceDescription) {
-    ResourceDatabase& resourceDatabase { ResourceDatabase::getInstance() };
+void ResourceDatabase::AddResourceDescription(const nlohmann::json& resourceDescription) {
+    ResourceDatabase& resourceDatabase { ResourceDatabase::GetInstance() };
 
     // validate
-    assertResourceDescriptionValidity(resourceDescription);
+    AssertResourceDescriptionValidity(resourceDescription);
 
     assert(
         (
@@ -61,21 +61,13 @@ void ResourceDatabase::addResourceDescription(const nlohmann::json& resourceDesc
     resourceDatabase.mResourceDescriptions[resourceName] = resourceDescription;
 }
 
-bool ResourceDatabase::hasResourceDescription(const std::string& resourceName) {
-    ResourceDatabase& resourceDatabase { getInstance() };
+bool ResourceDatabase::HasResourceDescription(const std::string& resourceName) {
+    ResourceDatabase& resourceDatabase { GetInstance() };
     bool descriptionPresent { resourceDatabase.mResourceDescriptions.find(resourceName) != resourceDatabase.mResourceDescriptions.end() };
     return descriptionPresent;
 }
 
-ResourceDatabase& ResourceDatabase::getInstance() {
+ResourceDatabase& ResourceDatabase::GetInstance() {
     static ResourceDatabase resourceDatabase {};
     return resourceDatabase;
-}
-
-void ResourceDatabase::registerFactory (const std::string& factoryName, std::unique_ptr<IResourceFactory> pFactory) {
-    getInstance().mFactories[factoryName] = std::move(pFactory);
-}
-
-void ResourceDatabase::registerFactoryMethod (const std::string& resourceType, const std::string& methodName, std::unique_ptr<IResourceConstructor> pFactoryMethod) {
-    getInstance().mFactories.at(resourceType)->mFactoryMethods[methodName] = std::move(pFactoryMethod);
 }

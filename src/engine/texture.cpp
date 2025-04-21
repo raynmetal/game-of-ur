@@ -33,48 +33,6 @@ const std::map<GLenum, std::string> kWrapToString {
     {GL_MIRRORED_REPEAT, "repeat-mirrored"},
 };
 
-GLenum deduceInternalFormat(const ColorBufferDefinition& colorBufferDefinition) {
-    GLenum internalFormat;
-
-    if(colorBufferDefinition.mDataType == GL_FLOAT && colorBufferDefinition.mComponentCount == 1){ 
-        internalFormat = GL_R16F;
-    } else if (colorBufferDefinition.mDataType == GL_FLOAT && colorBufferDefinition.mComponentCount == 4) {
-        internalFormat = GL_RGBA16F;
-    } else if (colorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && colorBufferDefinition.mComponentCount == 1) {
-        internalFormat = GL_RED;
-    } else if (colorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && colorBufferDefinition.mComponentCount == 4) {
-
-        if(colorBufferDefinition.mUsesWebColors) {
-            internalFormat = GL_SRGB_ALPHA;
-        } else {
-            internalFormat = GL_RGBA;
-        }
-
-    } else {
-        throw std::invalid_argument("Invalid data type and component count combination provided in texture constructor");
-    }
-
-    return internalFormat;
-}
-
-GLenum deduceExternalFormat(const ColorBufferDefinition& colorBufferDefinition) {
-    GLenum externalFormat;
-
-    if(colorBufferDefinition.mDataType == GL_FLOAT && colorBufferDefinition.mComponentCount == 1){ 
-        externalFormat = GL_RED;
-    } else if (colorBufferDefinition.mDataType == GL_FLOAT && colorBufferDefinition.mComponentCount == 4) {
-        externalFormat = GL_RGBA;
-    } else if (colorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && colorBufferDefinition.mComponentCount == 1) {
-        externalFormat = GL_RED;
-    } else if (colorBufferDefinition.mDataType == GL_UNSIGNED_BYTE && colorBufferDefinition.mComponentCount == 4) {
-        externalFormat = GL_RGBA;
-    } else {
-        throw std::invalid_argument("Invalid data type and component count combination provided in texture constructor");
-    }
-
-    return externalFormat;
-}
-
 Texture::Texture(
     GLuint textureID,
     const ColorBufferDefinition& colorBufferDefinition,

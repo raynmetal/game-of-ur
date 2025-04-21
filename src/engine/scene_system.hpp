@@ -11,12 +11,12 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include "core/ecs_world.hpp"
+#include "core/resource_database.hpp"
 #include "scene_components.hpp"
 #include "spatial_query_math.hpp"
 #include "render_system.hpp"
-#include "ecs_world.hpp"
 #include "texture.hpp"
-#include "resource_database.hpp"
 #include "input_system/input_system.hpp"
 
 class SceneNodeCore;

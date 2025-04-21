@@ -3,8 +3,10 @@
 
 #include <string>
 
+#include "core/resource_database.hpp"
+#include "core/ecs_world.hpp"
+
 #include "signals.hpp"
-#include "ecs_world.hpp"
 #include "scene_system.hpp"
 #include "render_system.hpp"
 #include "input_system/input_system.hpp"

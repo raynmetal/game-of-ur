@@ -1,7 +1,7 @@
 #include <iostream>
 #include <memory>
 
-#include "resource_database.hpp"
+#include "core/resource_database.hpp"
 #include "texture.hpp"
 #include "shader_program.hpp"
 #include "framebuffer.hpp"
@@ -14,7 +14,7 @@ BaseRenderStage::BaseRenderStage(
 ) : 
 mShaderHandle {nullptr}
 {
-    if(!ResourceDatabase::hasResourceDescription(shaderFilepath)){
+    if(!ResourceDatabase::HasResourceDescription(shaderFilepath)){
         nlohmann::json shaderDescription {
             {"name", shaderFilepath},
             {"type", ShaderProgram::getResourceTypeName()},
@@ -23,9 +23,9 @@ mShaderHandle {nullptr}
                 {"path", shaderFilepath}
             }}
         };
-        ResourceDatabase::addResourceDescription(shaderDescription);
+        ResourceDatabase::AddResourceDescription(shaderDescription);
     }
-    mShaderHandle = ResourceDatabase::getRegisteredResource<ShaderProgram>(shaderFilepath);
+    mShaderHandle = ResourceDatabase::GetRegisteredResource<ShaderProgram>(shaderFilepath);
     glGenVertexArrays(1, &mVertexArrayObject);
 }
 
@@ -112,7 +112,7 @@ void GeometryRenderStage::setup(const glm::u16vec2& textureDimensions) {
         colorBufferDefinition["dimensions"][0] = textureDimensions.x;
         colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
-    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
+    mFramebufferHandle = ResourceDatabase::ConstructAnonymousResource<Framebuffer>(framebufferDescription);
 
     mRenderTargets.clear();
     declareRenderTarget("geometryPosition", 0);
@@ -121,8 +121,8 @@ void GeometryRenderStage::setup(const glm::u16vec2& textureDimensions) {
 
     mShaderHandle->use();
     mShaderHandle->setUniformBlock("Matrices", 0);
-    if(!ResourceDatabase::hasResourceDescription("PlainWhite")) {
-        ResourceDatabase::addResourceDescription({
+    if(!ResourceDatabase::HasResourceDescription("PlainWhite")) {
+        ResourceDatabase::AddResourceDescription({
             {"name", "PlainWhite"},
             {"type", Texture::getResourceTypeName()},
             {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
@@ -131,7 +131,7 @@ void GeometryRenderStage::setup(const glm::u16vec2& textureDimensions) {
             }
         });
     }
-    std::shared_ptr<Texture> plainWhite = ResourceDatabase::getRegisteredResource<Texture>("PlainWhite");
+    std::shared_ptr<Texture> plainWhite = ResourceDatabase::GetRegisteredResource<Texture>("PlainWhite");
     Material::RegisterTextureHandleProperty("textureAlbedo", plainWhite);
     Material::RegisterTextureHandleProperty("textureSpecular", plainWhite);
     Material::RegisterTextureHandleProperty("textureNormal", plainWhite);
@@ -239,7 +239,7 @@ void LightingRenderStage::setup(const glm::u16vec2& textureDimensions) {
         colorBufferDefinition["dimensions"][0] = textureDimensions.x;
         colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
-    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
+    mFramebufferHandle = ResourceDatabase::ConstructAnonymousResource<Framebuffer>(framebufferDescription);
 
     mRenderTargets.clear();
     declareRenderTarget("litScene", 0);
@@ -351,10 +351,10 @@ void BlurRenderStage::setup(const glm::u16vec2& textureDimensions) {
         colorBufferDefinition["dimensions"][0] = textureDimensions.x;
         colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
-    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
+    mFramebufferHandle = ResourceDatabase::ConstructAnonymousResource<Framebuffer>(framebufferDescription);
     Material::RegisterIntProperty("nBlurPasses", 12);
 
-    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
+    attachMesh("screenMesh", ResourceDatabase::GetRegisteredResource<StaticMesh>("screenRectangleMesh"));
     mRenderTargets.clear();
     declareRenderTarget("pingBuffer", 0);
     declareRenderTarget("pongBuffer", 1);
@@ -430,7 +430,7 @@ void TonemappingRenderStage::setup(const glm::u16vec2& textureDimensions) {
         colorBufferDefinition["dimensions"][0] = textureDimensions.x;
         colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
-    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
+    mFramebufferHandle = ResourceDatabase::ConstructAnonymousResource<Framebuffer>(framebufferDescription);
 
     Material::RegisterFloatProperty("exposure", 1.f);
     Material::RegisterFloatProperty("gamma", 2.2f);
@@ -438,7 +438,7 @@ void TonemappingRenderStage::setup(const glm::u16vec2& textureDimensions) {
 
     mRenderTargets.clear();
     declareRenderTarget("tonemappedScene", 0);
-    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
+    attachMesh("screenMesh", ResourceDatabase::GetRegisteredResource<StaticMesh>("screenRectangleMesh"));
     attachMaterial("screenMaterial", std::make_shared<Material>());
 }
 
@@ -488,7 +488,7 @@ void TonemappingRenderStage::execute() {
 
 void ScreenRenderStage::setup(const glm::u16vec2& targetDimensions) {
     setTargetViewport({0,0, targetDimensions.x, targetDimensions.y});
-    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
+    attachMesh("screenMesh", ResourceDatabase::GetRegisteredResource<StaticMesh>("screenRectangleMesh"));
 }
 
 void ScreenRenderStage::validate() {
@@ -531,8 +531,8 @@ void ResizeRenderStage::setup(const glm::u16vec2& textureDimensions) {
         colorBufferDefinition["dimensions"][0] = textureDimensions.x;
         colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
-    mFramebufferHandle = ResourceDatabase::constructAnonymousResource<Framebuffer>(framebufferDescription);
-    attachMesh("screenMesh", ResourceDatabase::getRegisteredResource<StaticMesh>("screenRectangleMesh"));
+    mFramebufferHandle = ResourceDatabase::ConstructAnonymousResource<Framebuffer>(framebufferDescription);
+    attachMesh("screenMesh", ResourceDatabase::GetRegisteredResource<StaticMesh>("screenRectangleMesh"));
     mRenderTargets.clear();
     declareRenderTarget("resizedTexture", 0);
 }
