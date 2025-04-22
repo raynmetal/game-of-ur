@@ -79,7 +79,30 @@ void SpatialQuerySystem::StaticModelBoundsComputeSystem::recomputeObjectBounds(E
         }
     }
 
-    const VolumeBox box { .mDimensions{ maxCorner - minCorner } };
+    VolumeBox box { .mDimensions{ maxCorner - minCorner } };
+
+    // Make sure that objects with 1 or 2 dimensions still get bounding boxes with 
+    // 3 dimensions
+    if(box.mDimensions.length() > 0.f && (
+        box.mDimensions.x == 0.f
+        || box.mDimensions.y == 0.f
+        || box.mDimensions.z == 0.f
+    )) {
+        const glm::vec3 epsilonOffsets {
+            maxCorner.x > minCorner.x? 0.f: std::numeric_limits<float>::epsilon() * (maxCorner.x? glm::abs(maxCorner.x): 1.f),
+            maxCorner.y > minCorner.y? 0.f: std::numeric_limits<float>::epsilon() * (maxCorner.y? glm::abs(maxCorner.y): 1.f),
+            maxCorner.z > minCorner.z? 0.f: std::numeric_limits<float>::epsilon() * (maxCorner.z? glm::abs(maxCorner.z): 1.f),
+        };
+        maxCorner += epsilonOffsets;
+        minCorner -= epsilonOffsets;
+        assert(
+            maxCorner.x > minCorner.x && maxCorner.y > minCorner.y && maxCorner.z > minCorner.z 
+            && "We should expect max corner to be greater than min corner in \
+            every direction with this adjustment"
+        );
+        box.mDimensions = maxCorner - minCorner;
+    }
+
     objectBounds = ObjectBounds::create(
         box,
         minCorner + .5f * box.mDimensions,
