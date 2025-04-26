@@ -113,6 +113,8 @@ class BaseOffscreenRenderStage: public BaseRenderStage {
 public:
     BaseOffscreenRenderStage(const std::string& shaderFilepath, const nlohmann::json& templateFramebufferDescription);
 
+    std::size_t attachTextureAsTarget(std::shared_ptr<Texture> textureHandle);
+    std::size_t attachTextureAsTarget(const std::string& targetName, std::shared_ptr<Texture> textureHandle);
     void declareRenderTarget(const std::string& name, unsigned int index);
     std::shared_ptr<Texture> getRenderTarget(const std::string& name);
 
@@ -244,10 +246,38 @@ public:
     virtual void execute() override;
 };
 
+class AdditionRenderStage: public BaseOffscreenRenderStage {
+public:
+    AdditionRenderStage(const std::string& shaderFilepath):
+    BaseOffscreenRenderStage(shaderFilepath, nlohmann::json::object({
+        {"type", Framebuffer::getResourceTypeName()},
+        {"method", FramebufferFromDescription::getResourceConstructorName()},
+        {"parameters", {
+            {"nColorAttachments", 1},
+            {"dimensions", nlohmann::json::array({
+                800, 600
+            })},
+            {"useRBO", false},
+            {"colorBufferDefinitions", {
+                ColorBufferDefinition {
+                    .mDataType=GL_UNSIGNED_BYTE,
+                    .mComponentCount=4
+                },
+            }},
+        }},
+    }))
+    {}
+
+    virtual void setup(const glm::u16vec2& textureDimensions) override;
+    virtual void validate() override;
+    virtual void execute() override;
+private:
+};
+
 class ScreenRenderStage: public BaseRenderStage {
 public:
-    ScreenRenderStage(const std::string& shaderFilepath)
-        : BaseRenderStage(shaderFilepath)
+    ScreenRenderStage(const std::string& shaderFilepath):
+    BaseRenderStage(shaderFilepath)
     {}
 
     virtual void setup(const glm::u16vec2& targetDimensions) override;

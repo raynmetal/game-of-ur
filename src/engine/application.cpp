@@ -127,10 +127,7 @@ void Application::execute() {
     bool quit {false};
     sceneSystem->onApplicationStart();
     sceneSystem->getRootViewport().requestDimensions(WindowContext::getInstance().getDimensions());
-    printSceneHierarchyData(sceneSystem->getNode("/partial_scene_root/"));
-    {
-        std::shared_ptr<TextFont> mFont { ResourceDatabase::GetRegisteredResource<TextFont>("Roboto_Mono_Regular_24") };
-    }
+    printSceneHierarchyData(sceneSystem->getNode("/scene_root/"));
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {

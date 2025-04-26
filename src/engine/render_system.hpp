@@ -18,6 +18,46 @@ using RenderSetID = uint32_t;
 
 const RenderSetID kMaxRenderSetIDs { 10000 };
 
+struct RenderSet {
+    enum class RenderType: uint8_t {
+        BASIC_3D,
+        ADDITION,
+    };
+
+    void renderNextTexture ();
+    void setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions, RenderType renderType=RenderType::BASIC_3D);
+    std::shared_ptr<Texture> getCurrentScreenTexture ();
+    void copyAndResize();
+    void addOrAssignRenderSource(const std::string& name, std::shared_ptr<Texture> renderSource);
+    void removeRenderSource(const std::string& name);
+
+    void setCamera(EntityID cameraEntity);
+    void setGamma(float gamma);
+    float getGamma();
+    void setExposure(float exposure);
+    float getExposure();
+
+    std::size_t mCurrentScreenTexture {7};
+    std::vector<std::shared_ptr<Texture>> mScreenTextures {};
+    EntityID mActiveCamera {};
+    std::shared_ptr<Material> mLightMaterialHandle {nullptr};
+
+    std::shared_ptr<GeometryRenderStage> mGeometryRenderStage { nullptr };
+    std::shared_ptr<LightingRenderStage> mLightingRenderStage { nullptr };
+    std::shared_ptr<BlurRenderStage> mBlurRenderStage { nullptr };
+    std::shared_ptr<TonemappingRenderStage> mTonemappingRenderStage { nullptr };
+    std::shared_ptr<ResizeRenderStage> mResizeRenderStage { nullptr };
+    std::shared_ptr<ScreenRenderStage> mScreenRenderStage { nullptr };
+    std::shared_ptr<AdditionRenderStage> mAdditionRenderStage { nullptr };
+    std::map<std::string, std::shared_ptr<Texture>> mRenderSources {};
+
+    RenderType mRenderType { RenderType::BASIC_3D };
+    float mGamma { 2.f };
+    float mExposure { 1.f };
+    bool mRerendered { true };
+};
+
+
 class RenderSystem: public System<RenderSystem, std::tuple<>, std::tuple<CameraProperties>> {
 public:
     explicit RenderSystem(std::weak_ptr<ECSWorld> world):
@@ -51,9 +91,18 @@ public:
     void renderToScreen();
 
     /* Set the texture to be rendered to the screen by its relative index */
-    RenderSetID createRenderSet(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions);
+    RenderSetID createRenderSet(
+        glm::u16vec2 renderDimensions,
+        glm::u16vec2 targetDimensions,
+        const SDL_Rect& viewportDimensions,
+        RenderSet::RenderType renderType=RenderSet::RenderType::BASIC_3D
+    );
+
+    void addOrAssignRenderSource(const std::string& name, std::shared_ptr<Texture> renderSource);
+    void removeRenderSource(const std::string& name);
+
     void useRenderSet(RenderSetID renderSet);
-    void setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions);
+    void setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions, RenderSet::RenderType renderType=RenderSet::RenderType::BASIC_3D);
     void deleteRenderSet(RenderSetID renderSet);
 
     // Render set functions
@@ -76,37 +125,6 @@ private:
 
     GLuint mMatrixUniformBufferIndex { 0 };
     GLuint mMatrixUniformBufferBinding { 0 };
-};
-
-struct RenderSet {
-    void renderNextTexture ();
-    void setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions);
-    std::shared_ptr<Texture> getCurrentScreenTexture ();
-    void copyAndResize();
-
-    void setCamera(EntityID cameraEntity);
-    void setGamma(float gamma);
-    float getGamma();
-    void setExposure(float exposure);
-    float getExposure();
-
-
-    std::size_t mCurrentScreenTexture {6};
-    std::vector<std::shared_ptr<Texture>> mScreenTextures {};
-    EntityID mActiveCamera {};
-    std::shared_ptr<Material> mLightMaterialHandle {nullptr};
-
-    std::shared_ptr<GeometryRenderStage> mGeometryRenderStage { nullptr };
-    std::shared_ptr<LightingRenderStage> mLightingRenderStage { nullptr };
-    std::shared_ptr<BlurRenderStage> mBlurRenderStage { nullptr };
-    std::shared_ptr<TonemappingRenderStage> mTonemappingRenderStage { nullptr };
-
-    std::shared_ptr<ResizeRenderStage> mResizeRenderStage { nullptr };
-    std::shared_ptr<ScreenRenderStage> mScreenRenderStage { nullptr };
-
-    float mGamma { 2.f };
-    float mExposure { 1.f };
-    bool mRerendered { true };
 };
 
 #endif

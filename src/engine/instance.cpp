@@ -99,7 +99,7 @@ void BaseInstanceAllocator::bind(const InstanceLayout& shaderInstanceLayout) {
         GLenum error = glGetError();
         if(error!= GL_FALSE) {
             glewGetErrorString(error);
-            std::cout << "Error occurred during mesh attribute setting: "  << error
+            std::cout << "Error occurred during instance attribute setting: "  << error
                 << ":" << glewGetErrorString(error) << std::endl;
             throw error;
         }

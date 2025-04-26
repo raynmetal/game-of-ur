@@ -1,5 +1,5 @@
 {
-    "name": "screenVS",
+    "name": "basicVS",
     "type": "shader/vertex",
     "sources": [
         "common/versionHeader.glsl",

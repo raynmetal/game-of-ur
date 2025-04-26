@@ -1,5 +1,5 @@
 {
-    "name": "screenFS",
+    "name": "basicFS",
     "type": "shader/fragment",
     "sources": [
         "common/versionHeader.glsl",

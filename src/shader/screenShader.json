@@ -1,6 +1,0 @@
-{
-    "name": "screenShader",
-    "type": "shader/program",
-    "vertexShader": "screenVS.json",
-    "fragmentShader": "screenFS.json"
-}

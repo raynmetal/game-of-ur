@@ -92,15 +92,25 @@ BaseRenderStage{ shaderFilepath }
     mTemplateFramebufferDescription = templateFramebufferDescription;
 }
 
+std::size_t BaseOffscreenRenderStage::attachTextureAsTarget(std::shared_ptr<Texture> texture) {
+    return mFramebufferHandle->addTargetColorBufferHandle(texture);
+}
+
+std::size_t BaseOffscreenRenderStage::attachTextureAsTarget(const std::string& targetName, std::shared_ptr<Texture> texture) {
+    const std::size_t attachmentID { attachTextureAsTarget(texture) };
+    declareRenderTarget(targetName, attachmentID);
+    return attachmentID;
+}
+
 void BaseOffscreenRenderStage::declareRenderTarget(const std::string& name, unsigned int index) {
-    assert(index < std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size() 
+    assert(index < std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size() 
         && "A render stage may not have more render targets than allocated color buffers in its framebuffer"
     );
     mRenderTargets.insert_or_assign(name, index);
 }
 
 std::shared_ptr<Texture> BaseOffscreenRenderStage::getRenderTarget(const std::string& name) {
-    return mFramebufferHandle->getColorBufferHandles()[mRenderTargets.at(name)];
+    return mFramebufferHandle->getTargetColorBufferHandles()[mRenderTargets.at(name)];
 }
 
 void GeometryRenderStage::setup(const glm::u16vec2& textureDimensions) {
@@ -145,7 +155,7 @@ void GeometryRenderStage::validate() {
     /*
      * Three colour buffers corresponding to position, normal, albedospec (for now)
      */
-    assert(3 == std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size());
+    assert(3 == std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size());
     assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->hasRBO());
 
     /*
@@ -157,11 +167,13 @@ void GeometryRenderStage::validate() {
 void GeometryRenderStage::execute() {
     mShaderHandle->use();
     useViewport();
+
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_BLEND);
+    glDisable(GL_FRAMEBUFFER_SRGB);
+
     mFramebufferHandle->bind();
-        glEnable(GL_DEPTH_TEST);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glDisable(GL_BLEND);
-        glDisable(GL_FRAMEBUFFER_SRGB);
 
         const VertexLayout vertexLayout {{
             { "position", LOCATION_POSITION, 4, GL_FLOAT },
@@ -257,7 +269,7 @@ void LightingRenderStage::validate() {
     assert(mTextureAttachments.find("normalMap") != mTextureAttachments.end());
     assert(mTextureAttachments.find("albedoSpecularMap") != mTextureAttachments.end());
     assert(mFramebufferHandle->hasRBO());
-    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size() >= 1);
+    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size() >= 1);
     /*
      * TODO: more assertions related to the lighting stage
      */
@@ -275,11 +287,13 @@ void LightingRenderStage::execute() {
         lightMaterial->getIntProperty("screenHeight")
     );
     useViewport();
+
+    glDisable(GL_FRAMEBUFFER_SRGB);
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE);
+
     mFramebufferHandle->bind();
-        glDisable(GL_FRAMEBUFFER_SRGB);
-        glDisable(GL_DEPTH_TEST);
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE);
         glClear(GL_COLOR_BUFFER_BIT);
 
         while(!mLightQueue.empty()) {
@@ -362,7 +376,7 @@ void BlurRenderStage::setup(const glm::u16vec2& textureDimensions) {
 }
 
 void BlurRenderStage::validate() {
-    assert(2 == std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size());
+    assert(2 == std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size());
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("unblurredImage") != mTextureAttachments.end());
     /*
@@ -373,17 +387,18 @@ void BlurRenderStage::validate() {
 void BlurRenderStage::execute() {
     mShaderHandle->use();
     useViewport();
+
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_FRAMEBUFFER_SRGB);
+    glDisable(GL_BLEND);
+
     mFramebufferHandle->bind();
+        glClear(GL_COLOR_BUFFER_BIT);
         const std::vector<GLenum> drawbufferEnums {
             {GL_COLOR_ATTACHMENT0},
             {GL_COLOR_ATTACHMENT1}
         };
-        glDisable(GL_DEPTH_TEST);
-        glDisable(GL_FRAMEBUFFER_SRGB);
-        glDisable(GL_BLEND);
         glDrawBuffers(2, drawbufferEnums.data()); // clear both buffers
-        glClear(GL_COLOR_BUFFER_BIT);
-
         const int nPasses {  mMaterialAttachments
             .at("screenMaterial")->getIntProperty("nBlurPasses")
         };
@@ -395,7 +410,7 @@ void BlurRenderStage::execute() {
         // In the first pass, draw to the pong buffer, then 
         // alternate between ping and pong
         std::vector<std::shared_ptr<Texture>> pingpongBuffers {
-            mFramebufferHandle->getColorBufferHandles()
+            mFramebufferHandle->getTargetColorBufferHandles()
         };
 
         glDrawBuffer(GL_COLOR_ATTACHMENT1);
@@ -441,22 +456,23 @@ void TonemappingRenderStage::setup(const glm::u16vec2& textureDimensions) {
     attachMesh("screenMesh", ResourceDatabase::GetRegisteredResource<StaticMesh>("screenRectangleMesh"));
     attachMaterial("screenMaterial", std::make_shared<Material>());
 }
-
 void TonemappingRenderStage::validate() {
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("litScene") != mTextureAttachments.end());
     assert(mTextureAttachments.find("bloomEffect") != mTextureAttachments.end());
-    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getColorBufferHandles().size() >= 1);
+    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size() >= 1);
 }
 
 void TonemappingRenderStage::execute() {
     mShaderHandle->use();
     useViewport();
     std::shared_ptr<Material> screenMaterial {getMaterial("screenMaterial")};
+
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glDisable(GL_BLEND);
     mFramebufferHandle->bind();
+        glClear(GL_COLOR_BUFFER_BIT);
         mTextureAttachments.at("litScene")->bind(0);
         mTextureAttachments.at("bloomEffect")->bind(1);
         mShaderHandle->setUInt("uGenericTexture", 0);
@@ -483,6 +499,70 @@ void TonemappingRenderStage::execute() {
                 1
             );
         glBindVertexArray(0);
+    mFramebufferHandle->unbind();
+}
+
+void AdditionRenderStage::setup(const glm::u16vec2& textureDimensions) {
+    setTargetViewport({0, 0, textureDimensions.x, textureDimensions.y});
+    nlohmann::json framebufferDescription = mTemplateFramebufferDescription;
+    framebufferDescription["parameters"]["dimensions"][0] = textureDimensions.x;
+    framebufferDescription["parameters"]["dimensions"][1] = textureDimensions.y;
+    for(nlohmann::json& colorBufferDefinition: framebufferDescription["parameters"]["colorBufferDefinition"]) {
+        colorBufferDefinition["dimensions"][0] = textureDimensions.x;
+        colorBufferDefinition["dimensions"][1] = textureDimensions.y;
+    }
+    mFramebufferHandle = ResourceDatabase::ConstructAnonymousResource<Framebuffer>(framebufferDescription);
+
+    mRenderTargets.clear();
+    declareRenderTarget("textureSum", 0);
+    attachMesh("screenMesh", ResourceDatabase::GetRegisteredResource<StaticMesh>("screenRectangleMesh"));
+    attachMaterial("screenMaterial", std::make_shared<Material>());
+}
+
+void AdditionRenderStage::validate() {
+    assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
+    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size() >= 1);
+}
+
+void AdditionRenderStage::execute() {
+    mShaderHandle->use();
+    useViewport();
+    std::shared_ptr<Material> screenMaterial {getMaterial("screenMaterial")};
+
+    glDisable(GL_DEPTH_TEST);
+    glEnable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_BLEND);
+    glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
+
+    std::size_t textureAddendIndex { 0 };
+    std::string textureAddendName { std::string{"textureAddend_"} + std::to_string(textureAddendIndex) };
+
+    mFramebufferHandle->bind();
+        glClear(GL_COLOR_BUFFER_BIT);
+        while(mTextureAttachments.find(textureAddendName) != mTextureAttachments.end()) {
+            std::shared_ptr<Texture> currentTextureAttachment { mTextureAttachments.at(textureAddendName) };
+
+            currentTextureAttachment->bind(0);
+            mShaderHandle->setUInt("uGenericTexture", 0);
+            glBindVertexArray(mVertexArrayObject);
+                mMeshAttachments.at("screenMesh")->bind({{
+                    {"position", LOCATION_POSITION, 4, GL_FLOAT},
+                    {"color", LOCATION_COLOR, 4, GL_FLOAT},
+                    {"UV1", LOCATION_UV1, 2, GL_FLOAT},
+                }});
+                glDrawElementsInstanced(
+                    GL_TRIANGLES,
+                    mMeshAttachments.at("screenMesh")->getElementCount(),
+                    GL_UNSIGNED_INT,
+                    nullptr,
+                    1
+                );
+            glBindVertexArray(0);
+
+            ++textureAddendIndex;
+            textureAddendName = std::string{"textureAddend_"} + std::to_string(textureAddendIndex);
+        }
     mFramebufferHandle->unbind();
 }
 
@@ -548,8 +628,8 @@ void ResizeRenderStage::execute() {
     glDisable(GL_BLEND);
     glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DEPTH_TEST);
-    glClear(GL_COLOR_BUFFER_BIT);
     mFramebufferHandle->bind();
+        glClear(GL_COLOR_BUFFER_BIT);
         glBindVertexArray(mVertexArrayObject);
             mTextureAttachments.at("renderSource")->bind(0);
             mShaderHandle->setUInt("uGenericTexture", 0);

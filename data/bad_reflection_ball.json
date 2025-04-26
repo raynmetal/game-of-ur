@@ -64,6 +64,7 @@
                 "update_mode": "on-render-cap-fps",
                 "resize_type": "texture-dimensions",
                 "resize_mode": "fixed-dimensions",
+                "render_type": "basic-3d",
                 "fps_cap": 15,
                 "render_scale": 1.0
             }
@@ -94,6 +95,7 @@
                 }
             ]
         }
+
     ],
 
     "connections": []

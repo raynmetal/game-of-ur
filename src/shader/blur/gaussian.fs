@@ -29,5 +29,4 @@ void main() {
             -i * offset + fragAttr.UV1
         );
     }
-    outColor.a = 1.f;
 }

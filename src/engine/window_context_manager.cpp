@@ -54,7 +54,7 @@ WindowContext::WindowContext(const nlohmann::json& initialWindowConfiguration) {
     // Apply color correction, converting SRGB values to linear space values
     // when in the shader context
     glEnable(GL_FRAMEBUFFER_SRGB);
-    glClearColor(0.f, 0.f, 0.f, 1.f);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
 
     // Disable VSync
     SDL_GL_SetSwapInterval(0);

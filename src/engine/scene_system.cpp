@@ -44,8 +44,7 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::clone() const {
 }
 
 
-SceneNodeCore::SceneNodeCore(const nlohmann::json& sceneNodeDescription)
-{
+SceneNodeCore::SceneNodeCore(const nlohmann::json& sceneNodeDescription) {
     validateName(sceneNodeDescription.at("name").get<std::string>());
     mName = sceneNodeDescription.at("name").get<std::string>();
     mEntity = std::make_shared<Entity>(
@@ -400,7 +399,7 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::st
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
-    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(renderConfiguration.mBaseDimensions, renderConfiguration.mBaseDimensions, {0, 0, renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y});
+    newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(renderConfiguration.mBaseDimensions, renderConfiguration.mBaseDimensions, {0, 0, renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y}, renderConfiguration.mRenderType);
     newViewport->setRenderConfiguration(renderConfiguration);
     return newViewport;
 }
@@ -454,11 +453,17 @@ void ViewportNode::createAndJoinWorld() {
 }
 
 void ViewportNode::onActivated() {
-    if(!mActiveCamera) {
+    if(
+        !mActiveCamera 
+        && !(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION)
+    ) {
         setActiveCamera(findFallbackCamera());
     }
-    assert(mActiveCamera && "No cameras exist in this viewports domain, or none are enabled");
-    assert(mActiveCamera->mEntity->isEnabled<CameraSystem>() && "The camera marked active for this viewport is not visible to the camera system");
+
+    if(!(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION)) {
+        assert(mActiveCamera && "No cameras exist in this viewports domain, or none are enabled");
+        assert(mActiveCamera->mEntity->isEnabled<CameraSystem>() && "The camera marked active for this viewport is not visible to the camera system");
+    }
 
     if(!mOwnWorld) return;
     mOwnWorld->activateSimulation();
@@ -476,7 +481,7 @@ void ViewportNode::setActiveCamera(const std::string& cameraPath) {
 }
 
 void ViewportNode::setActiveCamera(std::shared_ptr<SceneNodeCore> cameraNode) {
-    assert((cameraNode || !isActive()) && "Active camera may only be unset if this viewport is inactive");
+    assert((cameraNode || !isActive() || mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) && "Active camera may only be unset if this viewport is inactive");
     if(!cameraNode) { 
         mActiveCamera = nullptr;
         return;
@@ -495,12 +500,14 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
     assert(requestDimensions.x * requestDimensions.y > 0 && "Request dimensions cannot contain 0");
     std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
     renderSystem->useRenderSet(mRenderSet);
+
     const float requestAspect { static_cast<float>(requestDimensions.x)/static_cast<float>(requestDimensions.y) };
     const float baseAspect { static_cast<float>(mRenderConfiguration.mBaseDimensions.x)/static_cast<float>(mRenderConfiguration.mBaseDimensions.y) };
     glm::vec2 requestToBaseRatio { 
         static_cast<float>(requestDimensions.x) / static_cast<float>(mRenderConfiguration.mBaseDimensions.x),
         static_cast<float>(requestDimensions.y) / static_cast<float>(mRenderConfiguration.mBaseDimensions.y)
     };
+
     mRenderConfiguration.mRequestedDimensions = requestDimensions;
 
     if(mRenderConfiguration.mResizeType != RenderConfiguration::ResizeType::OFF) {
@@ -562,7 +569,8 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
                 {
                     requestDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, requestDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
                     mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
-                }
+                },
+                mRenderConfiguration.mRenderType
             );
         break;
         case RenderConfiguration::ResizeType::TEXTURE_DIMENSIONS:
@@ -572,7 +580,8 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
                 {
                     requestDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, requestDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
                     mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
-                }
+                },
+                mRenderConfiguration.mRenderType
             );
         break;
         case RenderConfiguration::ResizeType::VIEWPORT_DIMENSIONS:
@@ -582,7 +591,8 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
                 {
                     requestDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, requestDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
                     mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
-                }
+                },
+                mRenderConfiguration.mRenderType
             );
         break;
     }
@@ -596,6 +606,11 @@ void ViewportNode::setResizeType(RenderConfiguration::ResizeType resizeType) {
 void ViewportNode::setResizeMode(RenderConfiguration::ResizeMode resizeMode) {
     if(mRenderConfiguration.mResizeMode == resizeMode) return;
     mRenderConfiguration.mResizeMode = resizeMode;
+    requestDimensions(mRenderConfiguration.mRequestedDimensions);
+}
+void ViewportNode::setRenderType(RenderConfiguration::RenderType renderType) {
+    if(mRenderConfiguration.mRenderType == renderType) return;
+    mRenderConfiguration.mRenderType = renderType;
     requestDimensions(mRenderConfiguration.mRequestedDimensions);
 }
 void ViewportNode::setUpdateMode(RenderConfiguration::UpdateMode updateMode) {
@@ -682,7 +697,29 @@ std::shared_ptr<Texture> ViewportNode::render(float simulationProgress, uint32_t
         case RenderConfiguration::UpdateMode::ON_RENDER:
             mTimeSinceLastRender = 0;
             world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
+
+            if(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
+                std::size_t childViewportIndex { 0 };
+                for(auto& childViewport: mChildViewports){
+                    if(std::shared_ptr<Texture> renderResult = childViewport->fetchRenderResult(simulationProgress)) {
+                        world->getSystem<RenderSystem>()->addOrAssignRenderSource(
+                            std::string("textureAddend_") + std::to_string(childViewportIndex++),
+                            renderResult
+                        );
+                    }
+                }
+            }
+
             world->getSystem<RenderSystem>()->execute(simulationProgress);
+
+            if(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
+                for(std::size_t childViewportIndex { 0 }; childViewportIndex < mChildViewports.size(); ++childViewportIndex) {
+                    world->getSystem<RenderSystem>()->removeRenderSource(
+                        std::string("textureAddend_") + std::to_string(childViewportIndex)
+                    );
+                }
+            }
+
             mTextureResult = world->getSystem<RenderSystem>()->getCurrentScreenTexture();
 
         case RenderConfiguration::UpdateMode::ON_FETCH:
@@ -833,9 +870,9 @@ void SceneSystem::render(float simulationProgress, uint32_t variableStep) {
         world.lock()->postRenderStep(variableStep);
     }
 
-    getRootWorld().lock()->getSystem<RenderSystem>()->useRenderSet(getRootViewport().mRenderSet);
-
-    getRootWorld().lock()->getSystem<RenderSystem>()->renderToScreen();
+    std::shared_ptr<ViewportNode> screenViewport { mRootNode };
+    screenViewport->getWorld().lock()->getSystem<RenderSystem>()->useRenderSet(screenViewport->mRenderSet);
+    screenViewport->getWorld().lock()->getSystem<RenderSystem>()->renderToScreen();
 }
 
 void SceneSystem::onApplicationEnd() {

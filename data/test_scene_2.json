@@ -1,27 +1,22 @@
 {
+
     "resources": [
-        {
-            "method": "fromFile",
-            "name": "boardPieceModel",
-            "parameters": {
-                "path": "data/models/Generic Board Piece.obj"
-            },
-            "type": "StaticModel"
-        },
+
         {
             "type": "SimObject",
             "method": "fromSceneFile",
-            "name": "boardPieceRing",
+            "name": "testSubscene3D",
             "parameters": {
-                "path": "data/board_piece_ring.json"
+                "path": "data/test_subscene_2_3d.json"
             }
         },
+
         {
-            "name": "reflectiveBall",
             "type": "SimObject",
             "method": "fromSceneFile",
+            "name": "dumbUIText",
             "parameters": {
-                "path": "data/bad_reflection_ball.json"
+                "path": "data/dumb_ui_text.json"
             }
         },
         {
@@ -33,7 +28,9 @@
                 "point_size": 24
             }
         }
+
     ],
+
     "nodes": [
         {
             "components": [
@@ -58,17 +55,76 @@
                     "type": "Placement"
                 }
             ],
-            "aspects": [
-                {
-                    "type": "TickSecond"
-                },
-                {
-                    "type": "RenderDebugViewer"
-                }
-            ],
-            "name": "partial_scene_root",
+            "aspects": [],
+            "name": "scene_root",
             "parent": "",
             "type": "SimObject"
+        },
+
+        {
+            "name": "viewport_3D",
+            "parent": "/",
+            "type": "ViewportNode",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ]
+                }
+            ],
+            "inherits_world": false,
+            "render_configuration": {
+                "base_dimensions": [800, 600],
+                "update_mode": "on-render-cap-fps",
+                "resize_type": "texture-dimensions",
+                "resize_mode": "fixed-dimensions",
+                "render_type": "basic-3d",
+                "fps_cap": 60,
+                "render_scale": 1.0
+            }
+        },
+        {
+            "type": "Scene",
+            "name": "testSubscene3D",
+            "parent": "/viewport_3D/",
+            "copy": false
+        },
+
+        {
+            "name": "viewport_UI",
+            "parent": "/",
+            "type": "ViewportNode",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ]
+                }
+            ],
+            "inherits_world": false,
+            "render_configuration": {
+                "base_dimensions": [800, 600],
+                "update_mode": "on-render-cap-fps",
+                "resize_type": "texture-dimensions",
+                "resize_mode": "fixed-dimensions",
+                "render_type": "basic-3d",
+                "fps_cap": 60,
+                "render_scale": 1.0
+            }
         },
         {
             "aspects": [
@@ -105,157 +161,16 @@
                 }
             ],
             "name": "camera",
-            "parent": "/",
-            "type": "SimObject"
-        },
-        {
-            "components": [
-                {
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
-                    "type": "Placement"
-                },
-                {
-                    "ambient": [
-                        0.20000000298023224,
-                        0.20000000298023224,
-                        0.20000000298023224
-                    ],
-                    "diffuse": [
-                        2.0,
-                        2.0,
-                        2.0
-                    ],
-                    "innerAngle": 4.0,
-                    "lightType": "spot",
-                    "linearConst": 0.07000000029802322,
-                    "outerAngle": 13.0,
-                    "quadraticConst": 0.029999999329447746,
-                    "specular": [
-                        4.0,
-                        4.0,
-                        4.0
-                    ],
-                    "type": "LightEmissionData"
-                }
-            ],
-            "name": "flashlight",
-            "parent": "/camera/",
-            "type": "SceneNode"
-        },
-        {
-            "name": "test_text",
-            "parent": "/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        -1.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
-                    "type": "Placement"
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "TestText",
-                    "text": "This should work I guess.",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 0.005
-                }
-            ]
-        },
-        {
-            "aspects": [
-                {
-                    "type": "Revolve"
-                }
-            ],
-            "components": [
-                {
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.4142135381698608,
-                        1.4142135381698608,
-                        1.0
-                    ],
-                    "type": "Placement"
-                },
-                {
-                    "ambient": [
-                        0.4000000059604645,
-                        0.4000000059604645,
-                        0.4000000059604645
-                    ],
-                    "diffuse": [
-                        20.0,
-                        20.0,
-                        20.0
-                    ],
-                    "lightType": "directional",
-                    "specular": [
-                        20.0,
-                        20.0,
-                        20.0
-                    ],
-                    "type": "LightEmissionData"
-                }
-            ],
-            "name": "sunlight",
-            "parent": "/",
+            "parent": "/viewport_UI/",
             "type": "SimObject"
         },
         {
             "type": "Scene",
-            "name": "boardPieceRing",
-            "parent": "/",
-            "copy": false
-        },
-        {
-            "type": "Scene",
-            "name": "reflectiveBall",
-            "parent": "/",
-            "copy": true
+            "name": "dumbUIText",
+            "parent": "/viewport_UI/",
+            "copy": true 
         }
     ],
+
     "connections": []
 }

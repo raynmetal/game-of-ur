@@ -34,12 +34,16 @@ public:
     /* move assignment operator */
     Framebuffer& operator=(Framebuffer&& other);
 
+    std::size_t addTargetColorBufferHandle(std::shared_ptr<Texture> colorBufferHandle);
+
     /* returns a vector of handles to this framebuffer's textures */
-    std::vector<std::shared_ptr<const Texture>> getColorBufferHandles() const;
-    const std::vector<std::shared_ptr<Texture>>& getColorBufferHandles();
+    std::vector<std::shared_ptr<const Texture>> getTargetColorBufferHandles() const;
+    const std::vector<std::shared_ptr<Texture>>& getTargetColorBufferHandles();
 
     /* command to bind this framebuffer */
     void bind();
+
+    glm::u16vec2 getDimensions() const { return mDimensions; } 
 
     /* command to unbind this framebuffer (or in other words, to bind the 
     default framebuffer) */

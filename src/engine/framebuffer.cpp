@@ -50,10 +50,19 @@ Framebuffer::~Framebuffer() {
     destroyResource();
 }
 
-std::vector<std::shared_ptr<const Texture>>  Framebuffer::getColorBufferHandles() const {
+std::size_t Framebuffer::addTargetColorBufferHandle(std::shared_ptr<Texture> targetColorBuffer) {
+    const std::size_t newIndex { mTextureHandles.size() };
+    assert(glm::u16vec2(targetColorBuffer->getWidth(), targetColorBuffer->getHeight()) == glm::u16vec2(mDimensions)
+        && "Dimensions of a target texture must be the same as those of the color buffer");
+    mTextureHandles.push_back(targetColorBuffer);
+    return newIndex;
+}
+
+std::vector<std::shared_ptr<const Texture>>  Framebuffer::getTargetColorBufferHandles() const {
     return { mTextureHandles.cbegin(), mTextureHandles.cend() };
 }
-const std::vector<std::shared_ptr<Texture>>& Framebuffer::getColorBufferHandles() {
+
+const std::vector<std::shared_ptr<Texture>>& Framebuffer::getTargetColorBufferHandles() {
     return mTextureHandles;
 }
 
@@ -163,8 +172,6 @@ std::shared_ptr<IResource> FramebufferFromDescription::createResource(const nloh
         methodParams.at("colorBufferDefinitions").begin(), methodParams.at("colorBufferDefinitions").end()
     };
     assert((nColorAttachments || useRBO) && "Framebuffer must have at least one color buffer attachment or one depth stencil attachment");
-    assert(nColorAttachments <= colorBufferParams.size() && "Not enough color buffer definitions to support number of attachments specified for this framebuffer");
-
 
     GLuint framebuffer;
     GLuint rbo { 0 };

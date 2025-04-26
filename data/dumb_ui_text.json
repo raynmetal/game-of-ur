@@ -1,0 +1,90 @@
+{
+
+    "resources": [],
+
+    "nodes": [
+        {
+            "name": "test_text",
+            "parent": "",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.7,
+                        -3.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "This should work I guess.",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 0.005
+                }
+            ]
+        },
+        {
+            "components": [
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.4142135381698608,
+                        1.4142135381698608,
+                        1.0
+                    ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "diffuse": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "specular": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "lightType": "directional",
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "ui_light",
+            "parent": "/",
+            "type": "SceneNode"
+        }
+    ],
+
+    "connections": []
+}

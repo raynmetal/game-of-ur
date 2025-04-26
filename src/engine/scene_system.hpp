@@ -1,4 +1,5 @@
 #ifndef ZOSCENESYSTEM_H
+
 #define ZOSCENESYSTEM_H
 
 #include <vector>
@@ -250,8 +251,11 @@ public:
             ON_RENDER_CAP_FPS, // update on render call when fps cap isn't exceeded
         };
 
+        using RenderType = RenderSet::RenderType;
+
         ResizeType mResizeType { ResizeType::VIEWPORT_DIMENSIONS };
         ResizeMode mResizeMode { ResizeMode::EXPAND_HORIZONTALLY };
+        RenderType mRenderType { RenderType::BASIC_3D };
         glm::u16vec2 mBaseDimensions { 800, 600 };
         glm::u16vec2 mComputedDimensions { 800, 600 };
         glm::u16vec2 mRequestedDimensions { 800, 600 };
@@ -277,6 +281,7 @@ public:
     void setResizeType(RenderConfiguration::ResizeType type);
     void setResizeMode(RenderConfiguration::ResizeMode mode);
     void setRenderScale(float renderScale);
+    void setRenderType(RenderConfiguration::RenderType renderType);
     void setUpdateMode(RenderConfiguration::UpdateMode updateMode);
     void setFPSCap(float fpsCap);
 
@@ -639,6 +644,11 @@ NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::UpdateMode, {
     {ViewportNode::RenderConfiguration::UpdateMode::ON_RENDER_CAP_FPS, "on-render-cap-fps"},
 });
 
+NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::RenderType, {
+    {ViewportNode::RenderConfiguration::RenderType::BASIC_3D, "basic-3d"},
+    {ViewportNode::RenderConfiguration::RenderType::ADDITION, "addition"},
+});
+
 inline void to_json(nlohmann::json& json, const ViewportNode::RenderConfiguration& renderConfiguration) {
     json = {
         {"base_dimensions", nlohmann::json::array({renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y})},
@@ -646,6 +656,7 @@ inline void to_json(nlohmann::json& json, const ViewportNode::RenderConfiguratio
         {"resize_type", renderConfiguration.mResizeType},
         {"resize_mode", renderConfiguration.mResizeMode},
         {"render_scale", renderConfiguration.mRenderScale},
+        {"render_type", renderConfiguration.mRenderType},
         {"fps_cap", renderConfiguration.mFPSCap},
     };
 }
@@ -654,6 +665,7 @@ inline void from_json(const nlohmann::json& json, ViewportNode::RenderConfigurat
     assert(json.find("base_dimensions") != json.end() && "Viewport descriptions must contain the \"base_dimensions\" size 2 array of Numbers attribute");
     json.at("base_dimensions")[0].get_to(renderConfiguration.mBaseDimensions.x);
     json.at("base_dimensions")[1].get_to(renderConfiguration.mBaseDimensions.y);
+    json.at("render_type").get_to(renderConfiguration.mRenderType);
     renderConfiguration.mRequestedDimensions = renderConfiguration.mBaseDimensions;
     renderConfiguration.mComputedDimensions = renderConfiguration.mBaseDimensions;
     assert(renderConfiguration.mBaseDimensions.x > 0 && renderConfiguration.mBaseDimensions.y > 0 && "Base dimensions cannot include a 0 in either dimension");

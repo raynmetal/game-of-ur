@@ -68,9 +68,12 @@ void main() {
     vec4 componentAmbient = fragAttrLightEmission.mAmbientColor * gAlbedo;
 
     outColor = ((componentDiffuse) + (componentSpecular) + (componentAmbient)) * factorAttenuation * factorSpotIntensity;
-    outColor.a = 1.f;
-
+    if(gPosition.w > 0.f) {
+        outColor.a = 1.f;
+    } else {
+        outColor.a = 0.f;
+    }
     if(dot(outColor.xyz, vec3(.2f, .7f, .1f)) >= uBrightCutoff) {
-        brightColor =  outColor;
+        brightColor = outColor;
     }
 }
