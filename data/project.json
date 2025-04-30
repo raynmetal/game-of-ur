@@ -11,7 +11,7 @@
         "resize_type": "viewport-dimensions",
         "resize_mode": "expand-horizontally",
         "render_type": "addition",
-        "fps_cap": 60,
+        "fps_cap": 30,
         "render_scale": 1.0
     },
 

@@ -261,7 +261,7 @@ public:
             {"colorBufferDefinitions", {
                 ColorBufferDefinition {
                     .mDataType=GL_UNSIGNED_BYTE,
-                    .mComponentCount=4
+                    .mComponentCount=4,
                 },
             }},
         }},
@@ -301,7 +301,6 @@ public:
                 ColorBufferDefinition{
                     .mDataType=GL_UNSIGNED_BYTE,
                     .mComponentCount=4,
-                    .mUsesWebColors=true
                 },
             }},
         }}

@@ -51,6 +51,7 @@ std::shared_ptr<Texture> TextFont::renderText(
     )};
     ColorBufferDefinition colorBufferDefinition {
         .mDataType { GL_UNSIGNED_BYTE },
+        .mComponentCount { 4 },
         .mUsesWebColors { true }
     };
     SDL_Surface* pretexture { SDL_ConvertSurfaceFormat(renderedText, SDL_PIXELFORMAT_RGBA32, 0) };
@@ -66,7 +67,7 @@ std::shared_ptr<Texture> TextFont::renderText(
     glTexImage2D(GL_TEXTURE_2D, 0,
         deduceInternalFormat(colorBufferDefinition),
         colorBufferDefinition.mDimensions.x, colorBufferDefinition.mDimensions.y,
-        0, deduceExternalFormat(colorBufferDefinition), colorBufferDefinition.mDataType,
+        0, GL_RGBA, GL_UNSIGNED_BYTE,
         reinterpret_cast<void*>(pretexture->pixels)
     );
     SDL_FreeSurface(pretexture);

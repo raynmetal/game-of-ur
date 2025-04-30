@@ -101,6 +101,7 @@ void RenderSystem::execute(float simulationProgress) {
             }
 
             mRenderSets.at(mActiveRenderSetID).mAdditionRenderStage->execute();
+
         break;
     }
 
@@ -153,7 +154,7 @@ RenderSetID RenderSystem::createRenderSet(glm::u16vec2 renderDimensions, glm::u1
     newRenderSet.mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>( "src/shader/tonemappingShader.json" );
     newRenderSet.mResizeRenderStage = std::make_shared<ResizeRenderStage>("src/shader/basicShader.json");
     newRenderSet.mScreenRenderStage = std::make_shared<ScreenRenderStage>("src/shader/basicShader.json");
-    newRenderSet.mAdditionRenderStage = std::make_shared<AdditionRenderStage>("src/shader/basicShader.json");
+    newRenderSet.mAdditionRenderStage = std::make_shared<AdditionRenderStage>("src/shader/combineShader.json");
 
     newRenderSet.mLightMaterialHandle = ResourceDatabase::ConstructAnonymousResource<Material>({
         {"type", Material::getResourceTypeName()},
@@ -266,6 +267,7 @@ std::shared_ptr<Texture> RenderSystem::getCurrentScreenTexture() {
 
 std::shared_ptr<Texture> RenderSet::getCurrentScreenTexture() {
     if(mRerendered) {
+        std::cout << "\tExecuting copy and resize on screen texture: " << mCurrentScreenTexture << std::endl;
         copyAndResize();
         mRerendered = false;
     }

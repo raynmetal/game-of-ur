@@ -29,4 +29,7 @@ void main() {
             -i * offset + fragAttr.UV1
         );
     }
+    if(dot(outColor, outColor) > 0.f) {
+        outColor.a=1.f;
+    }
 }

@@ -268,6 +268,7 @@ public:
     static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration);
     static std::shared_ptr<ViewportNode> create(const nlohmann::json& sceneNodeDescription);
     static std::shared_ptr<ViewportNode> copy(const std::shared_ptr<const ViewportNode> other);
+
     static inline std::string getResourceTypeName() { return "ViewportNode"; }
 
     std::shared_ptr<ViewportNode> getLocalViewport() override;
@@ -327,6 +328,7 @@ private:
     std::vector<std::weak_ptr<ECSWorld>> getActiveDescendantWorlds();
 
     std::shared_ptr<Texture> render(float simulationProgress, uint32_t variableStep);
+    std::shared_ptr<Texture> render_(float simulationProgress);
 
     ActionDispatch mActionDispatch {};
     std::set<std::shared_ptr<ViewportNode>, std::owner_less<std::shared_ptr<ViewportNode>>> mChildViewports {};
