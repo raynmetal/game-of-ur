@@ -38,6 +38,8 @@ void RenderSystem::LightQueue::onInitialize() {
 
 void RenderSystem::onInitialize() {
     // Set up a uniform buffer for shared matrices
+    // TODO: Is there a generalization or abstraction for the problem of uniform buffers that
+    // could be useful going forward?
     glGenBuffers(1, &mMatrixUniformBufferIndex);
     glBindBuffer(GL_UNIFORM_BUFFER, mMatrixUniformBufferIndex);
         glBufferData(
@@ -48,14 +50,6 @@ void RenderSystem::onInitialize() {
         );
     glBindBuffer(GL_UNIFORM_BUFFER, 0);
 
-    // Bind the shared matrix uniform buffer to the same binding point
-    glBindBufferRange(
-        GL_UNIFORM_BUFFER,
-        mMatrixUniformBufferBinding,
-        mMatrixUniformBufferIndex,
-        0,
-        2*sizeof(glm::mat4)
-    );
     if(!ResourceDatabase::HasResourceDescription("screenRectangleMesh")) {
         nlohmann::json rectangleMeshDefinition {
             {"name", "screenRectangleMesh"},
@@ -83,8 +77,18 @@ void RenderSystem::execute(float simulationProgress) {
 
     // Execute each rendering stage in its proper order
     switch(mRenderSets.at(mActiveRenderSetID).mRenderType) {
-
         case RenderSet::RenderType::BASIC_3D:
+            // Bind the shared matrix uniform buffer to the camera matrix binding point
+            // TODO: Is there a generalization or abstraction for the problem of uniform buffers that
+            // could be useful going forward?
+            glBindBufferRange(
+                GL_UNIFORM_BUFFER,
+                mMatrixUniformBufferBinding,
+                mMatrixUniformBufferIndex,
+                0,
+                2*sizeof(glm::mat4)
+            );
+
             mWorld.lock()->getSystem<OpaqueQueue>()->enqueueTo(*mRenderSets.at(mActiveRenderSetID).mGeometryRenderStage, simulationProgress);
             mRenderSets.at(mActiveRenderSetID).mGeometryRenderStage->execute();
             mWorld.lock()->getSystem<LightQueue>()->enqueueTo(*mRenderSets.at(mActiveRenderSetID).mLightingRenderStage, simulationProgress);
@@ -101,7 +105,6 @@ void RenderSystem::execute(float simulationProgress) {
             }
 
             mRenderSets.at(mActiveRenderSetID).mAdditionRenderStage->execute();
-
         break;
     }
 
@@ -116,6 +119,8 @@ void RenderSystem::execute(float simulationProgress) {
 void RenderSystem::updateCameraMatrices(float simulationProgress) {
     CameraProperties cameraProps { getComponent<CameraProperties>(mRenderSets[mActiveRenderSetID].mActiveCamera, simulationProgress) };
     // Send shared matrices to the uniform buffer
+    // TODO: Is there a generalization or abstraction for the problem of uniform buffers that
+    // could be useful going forward?
     glBindBuffer(GL_UNIFORM_BUFFER, mMatrixUniformBufferIndex);
 
         glBufferSubData(
@@ -256,8 +261,6 @@ void RenderSystem::renderNextTexture() {
 }
 void RenderSet::renderNextTexture() {
     mCurrentScreenTexture = (mCurrentScreenTexture + 1) % mScreenTextures.size();
-    mResizeRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
-    mResizeRenderStage->validate();
     mRerendered=true;
 }
 
@@ -267,7 +270,6 @@ std::shared_ptr<Texture> RenderSystem::getCurrentScreenTexture() {
 
 std::shared_ptr<Texture> RenderSet::getCurrentScreenTexture() {
     if(mRerendered) {
-        std::cout << "\tExecuting copy and resize on screen texture: " << mCurrentScreenTexture << std::endl;
         copyAndResize();
         mRerendered = false;
     }
@@ -285,6 +287,8 @@ void RenderSystem::copyAndResize() {
 }
 
 void RenderSet::copyAndResize() {
+    mResizeRenderStage->attachTexture("renderSource", mScreenTextures[mCurrentScreenTexture]);
+    mResizeRenderStage->validate();
     mResizeRenderStage->execute();
 }
 

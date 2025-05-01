@@ -199,13 +199,6 @@ std::shared_ptr<OctreeNode> OctreeNode::removeEntity(EntityID entityID, Address 
     // Address hint indicates that the node is further down, so keep going
     if(GetDepth(entityAddressHint) > GetDepth(mAddress)) {
         const Octant next { nextOctant(entityAddressHint) };
-        if(!mChildren[next]) {
-            
-            // std::cout << "\n\nNext address specified does not exist. Current node address:\n";
-            // printOctreeNodeAddress(mAddress);
-            // std::cout << "inserted entity address (ID " << entityID << "):\n";
-            // printOctreeNodeAddress(entityAddressHint);
-        }
         assert(mChildren[next] && "The next octant specified in the address does not exist");
         mChildren[next] = mChildren[next]->removeEntity(entityID, entityAddressHint);
         return shared_from_this();
@@ -560,10 +553,6 @@ void Octree::insertEntity(EntityID entityID, const AxisAlignedBounds& entityWorl
     assert(mEntityAddresses.find(entityID) == mEntityAddresses.end() && "This entity already exists in the octree. \
         Please remove it before attempting to reinsert it into the octree.");
 
-    // std::cout << "Current world bounds:\n";
-    // printAABBExtents(mRootNode->getWorldBounds());
-    // std::cout << "Inserted entity world bounds:\n";
-    // printAABBExtents(entityWorldBounds);
     // if this entity is covered by the span already present in our
     // world, we merely pass it along to the root node
     if(contains(entityWorldBounds, mRootNode->getWorldBounds())) {
@@ -574,8 +563,6 @@ void Octree::insertEntity(EntityID entityID, const AxisAlignedBounds& entityWorl
 
 
     // otherwise, our octree must grow
-    // std::cout << "Combined world bounds:\n";
-    // printAABBExtents(mRootNode->getWorldBounds() + entityWorldBounds);
     std::shared_ptr<OctreeNode> newRootNode {
         OctreeNode::GrowTreeAndCreateRoot(mRootNode, entityWorldBounds + mRootNode->getWorldBounds())
     };
@@ -599,20 +586,13 @@ void Octree::insertEntity(EntityID entityID, const AxisAlignedBounds& entityWorl
     // some or all portions of the old octree have made it into the new one
     } else {
         // update all cached entity addresses
-        // std::cout << "Updating cached entity addresses...";
         const OctreeNode::Address oldRootNewAddress { mRootNode->getAddress() };
-        // std::cout << "Old root's new address: ";
-        // printOctreeNodeAddress(oldRootNewAddress);
         for(
             auto addressIter { mEntityAddresses.begin() }, endIter { mEntityAddresses.end() };
             addressIter != endIter;
             ++addressIter
         ) {
-            // std::cout << "Old address: ";
-            // printOctreeNodeAddress(addressIter->second);
             addressIter->second = OctreeNode::GrowAddress(addressIter->second, oldRootNewAddress);
-            // std::cout << "New address: ";
-            // printOctreeNodeAddress(addressIter->second);
         }
     }
 
@@ -640,17 +620,12 @@ void Octree::removeEntity(EntityID entityID) {
     // otherwise, apply shrinkage and make the candidate our new root
     const OctreeNode::Depth depthRemoved { candidateRoot->getDepth() };
     candidateRoot->shrinkTreeAndBecomeRoot();
-    // std::cout << "\nShrinking cached addresses, depth removed: " << static_cast<int>(depthRemoved) << "\n";
     for(
         auto addressIter { mEntityAddresses.begin() }, endIter { mEntityAddresses.end() };
         addressIter != endIter;
         ++addressIter
     ) {
-        // std::cout << "Old address: ";
-        // printOctreeNodeAddress(addressIter->second);
         addressIter->second = OctreeNode::ShrinkAddress(addressIter->second, depthRemoved);
-        // std::cout << "New address: ";
-        // printOctreeNodeAddress(addressIter->second);
     }
 
     mRootNode = candidateRoot;

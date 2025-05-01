@@ -327,8 +327,8 @@ private:
     std::vector<std::shared_ptr<ViewportNode>> getActiveDescendantViewports();
     std::vector<std::weak_ptr<ECSWorld>> getActiveDescendantWorlds();
 
-    std::shared_ptr<Texture> render(float simulationProgress, uint32_t variableStep);
-    std::shared_ptr<Texture> render_(float simulationProgress);
+    void render(float simulationProgress, uint32_t variableStep);
+    void render_(float simulationProgress);
 
     ActionDispatch mActionDispatch {};
     std::set<std::shared_ptr<ViewportNode>, std::owner_less<std::shared_ptr<ViewportNode>>> mChildViewports {};

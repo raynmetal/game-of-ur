@@ -319,8 +319,8 @@ void LightingRenderStage::execute() {
             }
 
             mShaderHandle->use();
-            std::vector<std::string> gBufferAliases {
-                {"positionMap"}, {"normalMap"}, {"albedoSpecularMap"}
+            const std::array<const std::string, 3> gBufferAliases {
+                "positionMap", "normalMap", "albedoSpecularMap"
             };
             for(int i{0}; i < 3; ++i) {
                 mTextureAttachments.at(gBufferAliases[i])->bind(i);
@@ -640,11 +640,6 @@ void ResizeRenderStage::execute() {
     mFramebufferHandle->bind();
         glClear(GL_COLOR_BUFFER_BIT);
         glBindVertexArray(mVertexArrayObject);
-            std::cout 
-                << "\trendering texture " << mTextureAttachments.at("renderSource")->getTextureID() 
-                << " to " << mFramebufferHandle->getTargetColorBufferHandles().at(0)->getTextureID()
-                << std::endl;
-
             mTextureAttachments.at("renderSource")->bind(0);
             mShaderHandle->setUInt("uGenericTexture", 0);
             mMeshAttachments.at("screenMesh")->bind({{
