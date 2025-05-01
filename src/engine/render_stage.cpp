@@ -290,6 +290,7 @@ void LightingRenderStage::execute() {
 
     glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DEPTH_TEST);
+    // glDisable(GL_BLEND);
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE);
 
@@ -318,8 +319,8 @@ void LightingRenderStage::execute() {
             }
 
             mShaderHandle->use();
-            std::vector<std::string> gBufferAliases {
-                {"positionMap"}, {"normalMap"}, {"albedoSpecularMap"}
+            const std::array<const std::string, 3> gBufferAliases {
+                "positionMap", "normalMap", "albedoSpecularMap"
             };
             for(int i{0}; i < 3; ++i) {
                 mTextureAttachments.at(gBufferAliases[i])->bind(i);
@@ -421,9 +422,9 @@ void BlurRenderStage::execute() {
                 {"UV1", LOCATION_UV1, 2, GL_FLOAT}
             }});
             for(int i{0}; i < nPasses; ++i) {
-                glDrawElements(
+                glDrawElementsInstanced(
                     GL_TRIANGLES, screenMeshHandle->getElementCount(), 
-                    GL_UNSIGNED_INT, nullptr
+                    GL_UNSIGNED_INT, nullptr, 1
                 );
 
                 // Prepare for the next pass, flipping color buffers
@@ -530,40 +531,49 @@ void AdditionRenderStage::execute() {
     std::shared_ptr<Material> screenMaterial {getMaterial("screenMaterial")};
 
     glDisable(GL_DEPTH_TEST);
-    glEnable(GL_FRAMEBUFFER_SRGB);
-    glEnable(GL_BLEND);
-    glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
-    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
-
-    std::size_t textureAddendIndex { 0 };
-    std::string textureAddendName { std::string{"textureAddend_"} + std::to_string(textureAddendIndex) };
+    glDisable(GL_FRAMEBUFFER_SRGB);
+    glDisable(GL_BLEND);
 
     mFramebufferHandle->bind();
         glClear(GL_COLOR_BUFFER_BIT);
-        while(mTextureAttachments.find(textureAddendName) != mTextureAttachments.end()) {
+
+        std::size_t nCombineTextures { 0 };
+        std::string textureAddendName {
+            std::string{"textureAddend_"}
+            + std::to_string(nCombineTextures)
+        };
+        while(nCombineTextures < 4 && mTextureAttachments.find(textureAddendName) != mTextureAttachments.end()) {
             std::shared_ptr<Texture> currentTextureAttachment { mTextureAttachments.at(textureAddendName) };
 
-            currentTextureAttachment->bind(0);
-            mShaderHandle->setUInt("uGenericTexture", 0);
-            glBindVertexArray(mVertexArrayObject);
-                mMeshAttachments.at("screenMesh")->bind({{
-                    {"position", LOCATION_POSITION, 4, GL_FLOAT},
-                    {"color", LOCATION_COLOR, 4, GL_FLOAT},
-                    {"UV1", LOCATION_UV1, 2, GL_FLOAT},
-                }});
-                glDrawElementsInstanced(
-                    GL_TRIANGLES,
-                    mMeshAttachments.at("screenMesh")->getElementCount(),
-                    GL_UNSIGNED_INT,
-                    nullptr,
-                    1
-                );
-            glBindVertexArray(0);
+            const std::string samplerUniformName {
+                std::string{"uCombineTextures["}
+                + std::to_string(nCombineTextures)
+                + std::string{"]"}
+            };
+            currentTextureAttachment->bind(nCombineTextures);
+            mShaderHandle->setUInt(samplerUniformName, nCombineTextures);
 
-            ++textureAddendIndex;
-            textureAddendName = std::string{"textureAddend_"} + std::to_string(textureAddendIndex);
+            textureAddendName = std::string{"textureAddend_"} + std::to_string(++nCombineTextures);
         }
+        mShaderHandle->setUInt("nCombine", nCombineTextures);
+
+        glBindVertexArray(mVertexArrayObject);
+            mMeshAttachments.at("screenMesh")->bind({{
+                {"position", LOCATION_POSITION, 4, GL_FLOAT},
+                {"UV1", LOCATION_UV1, 2, GL_FLOAT},
+            }});
+            glDrawElementsInstanced(
+                GL_TRIANGLES,
+                mMeshAttachments.at("screenMesh")->getElementCount(),
+                GL_UNSIGNED_INT,
+                nullptr,
+                1
+            );
+        glBindVertexArray(0);
+
+
     mFramebufferHandle->unbind();
+    mTextureAttachments.clear();
 }
 
 void ScreenRenderStage::setup(const glm::u16vec2& targetDimensions) {
@@ -589,7 +599,6 @@ void ScreenRenderStage::execute() {
         mShaderHandle->setUInt("uGenericTexture", 0);
         mMeshAttachments.at("screenMesh")->bind({{
             {"position", LOCATION_POSITION, 4, GL_FLOAT},
-            {"color", LOCATION_COLOR, 4, GL_FLOAT},
             {"UV1", LOCATION_UV1, 2, GL_FLOAT}
         }});
         glDrawElementsInstanced(
@@ -635,7 +644,6 @@ void ResizeRenderStage::execute() {
             mShaderHandle->setUInt("uGenericTexture", 0);
             mMeshAttachments.at("screenMesh")->bind({{
                 {"position", LOCATION_POSITION, 4, GL_FLOAT},
-                {"color", LOCATION_COLOR, 4, GL_FLOAT},
                 {"UV1", LOCATION_UV1, 2, GL_FLOAT}
             }});
             glDrawElementsInstanced(

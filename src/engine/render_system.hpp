@@ -25,7 +25,7 @@ struct RenderSet {
     };
 
     void renderNextTexture ();
-    void setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions, RenderType renderType=RenderType::BASIC_3D);
+    void setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions, RenderType renderType);
     std::shared_ptr<Texture> getCurrentScreenTexture ();
     void copyAndResize();
     void addOrAssignRenderSource(const std::string& name, std::shared_ptr<Texture> renderSource);
@@ -102,7 +102,7 @@ public:
     void removeRenderSource(const std::string& name);
 
     void useRenderSet(RenderSetID renderSet);
-    void setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions, RenderSet::RenderType renderType=RenderSet::RenderType::BASIC_3D);
+    void setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions, RenderSet::RenderType renderType);
     void deleteRenderSet(RenderSetID renderSet);
 
     // Render set functions

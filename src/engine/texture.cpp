@@ -235,7 +235,7 @@ std::shared_ptr<IResource> TextureFromFile::createResource(const nlohmann::json&
         //assume linear space if not an albedo texture
         deduceInternalFormat(colorBufferDefinition),
         colorBufferDefinition.mDimensions.x, colorBufferDefinition.mDimensions.y,
-        0, deduceExternalFormat(colorBufferDefinition), colorBufferDefinition.mDataType,
+        0, GL_RGBA, GL_UNSIGNED_BYTE,
         reinterpret_cast<void*>(pretexture->pixels)
     );
     SDL_FreeSurface(pretexture);
@@ -269,8 +269,8 @@ std::shared_ptr<IResource> TextureFromColorBufferDefinition::createResource(cons
             colorBufferDefinition.mDimensions.x,
             colorBufferDefinition.mDimensions.y,
             0, 
-            deduceExternalFormat(colorBufferDefinition),
-            colorBufferDefinition.mDataType,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
             NULL
         );
 

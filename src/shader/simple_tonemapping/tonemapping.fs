@@ -17,4 +17,5 @@ void main() {
     outColor = 1.f - exp(uExposure * (-inColor));
     outColor = pow(outColor, vec4(1.f/uGamma));
     outColor.a = inColor.a;
+    // outColor = vec4(inColor.a);
 }

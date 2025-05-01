@@ -71,7 +71,6 @@ void TestText::recomputeTexture() {
             {"flip_texture_y", true}
         }}
     };
-    std::cout << "Rectangle parameters: \n" << nlohmann::to_string(rectangleParameters) << "\n";
 
     if(!hasComponent<std::shared_ptr<StaticModel>>()) {
         addComponent<std::shared_ptr<StaticModel>>(

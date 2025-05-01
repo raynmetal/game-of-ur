@@ -8,6 +8,6 @@ Include:
 out vec4 outColor;
 
 void main() {
-    outColor = fragAttr.color * texture(uGenericTexture, fragAttr.UV1);
+    outColor = texture(uGenericTexture, fragAttr.UV1);
     // outColor = vec4(1.f);
 }

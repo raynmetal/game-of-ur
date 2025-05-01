@@ -574,7 +574,7 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
             );
         break;
         case RenderConfiguration::ResizeType::TEXTURE_DIMENSIONS:
-           renderSystem->setRenderProperties(
+            renderSystem->setRenderProperties(
                 glm::mat2{mRenderConfiguration.mRenderScale} * mRenderConfiguration.mBaseDimensions,
                 requestDimensions,
                 {
@@ -653,36 +653,41 @@ std::shared_ptr<SceneNodeCore> ViewportNode::findFallbackCamera() {
 std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgress) {
     assert(mRenderConfiguration.mFPSCap > 0.f && "FPS cannot be negative or zero");
     const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mRenderConfiguration.mFPSCap)};
-    std::shared_ptr<ECSWorld> world = getWorld().lock();
+    bool renderOnce { false };
 
     switch (mRenderConfiguration.mUpdateMode) {
+        case RenderConfiguration::UpdateMode::ONCE:
+            mRenderConfiguration.mUpdateMode = RenderConfiguration::UpdateMode::NEVER;
+            renderOnce = true;
+
         case RenderConfiguration::UpdateMode::ON_FETCH_CAP_FPS:
-            if(mTimeSinceLastRender < thresholdTime) {
+            if(!renderOnce && mTimeSinceLastRender < thresholdTime) {
                 break;
             }
 
         case RenderConfiguration::UpdateMode::ON_FETCH:
-            mTimeSinceLastRender = 0;
-            world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
-            world->getSystem<RenderSystem>()->execute(simulationProgress);
-            mTextureResult = world->getSystem<RenderSystem>()->getCurrentScreenTexture();
-        case RenderConfiguration::UpdateMode::ONCE:
+            render_(simulationProgress);
+
         case RenderConfiguration::UpdateMode::ON_RENDER_CAP_FPS:
         case RenderConfiguration::UpdateMode::ON_RENDER:
         case RenderConfiguration::UpdateMode::NEVER:
         break;
     }
 
+    getWorld().lock()->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
+    mTextureResult = getWorld().lock()->getSystem<RenderSystem>()->getCurrentScreenTexture();
+
     return mTextureResult;
 }
 
-std::shared_ptr<Texture> ViewportNode::render(float simulationProgress, uint32_t variableStep) {
+void ViewportNode::render(float simulationProgress, uint32_t variableStep) {
     assert(mRenderConfiguration.mFPSCap > 0.f && "FPS cannot be negative or zero");
     const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mRenderConfiguration.mFPSCap)};
-    std::shared_ptr<ECSWorld> world = getWorld().lock();
 
     mTimeSinceLastRender += variableStep;
-    if(mTimeSinceLastRender > thresholdTime) mTimeSinceLastRender = thresholdTime;
+    if(mTimeSinceLastRender > thresholdTime) {
+        mTimeSinceLastRender = thresholdTime;
+    }
     bool renderOnce { false };
 
     switch (mRenderConfiguration.mUpdateMode) {
@@ -695,40 +700,47 @@ std::shared_ptr<Texture> ViewportNode::render(float simulationProgress, uint32_t
                 break;
 
         case RenderConfiguration::UpdateMode::ON_RENDER:
-            mTimeSinceLastRender = 0;
-            world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
-
-            if(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
-                std::size_t childViewportIndex { 0 };
-                for(auto& childViewport: mChildViewports){
-                    if(std::shared_ptr<Texture> renderResult = childViewport->fetchRenderResult(simulationProgress)) {
-                        world->getSystem<RenderSystem>()->addOrAssignRenderSource(
-                            std::string("textureAddend_") + std::to_string(childViewportIndex++),
-                            renderResult
-                        );
-                    }
-                }
-            }
-
-            world->getSystem<RenderSystem>()->execute(simulationProgress);
-
-            if(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
-                for(std::size_t childViewportIndex { 0 }; childViewportIndex < mChildViewports.size(); ++childViewportIndex) {
-                    world->getSystem<RenderSystem>()->removeRenderSource(
-                        std::string("textureAddend_") + std::to_string(childViewportIndex)
-                    );
-                }
-            }
-
-            mTextureResult = world->getSystem<RenderSystem>()->getCurrentScreenTexture();
-
+            render_(simulationProgress);
         case RenderConfiguration::UpdateMode::ON_FETCH:
         case RenderConfiguration::UpdateMode::ON_FETCH_CAP_FPS:
         case RenderConfiguration::UpdateMode::NEVER:
         break;
     }
+}
 
-    return mTextureResult;
+void ViewportNode::render_(float simulationProgress) {
+
+    mTimeSinceLastRender = 0;
+    std::shared_ptr<ECSWorld> world = getWorld().lock();
+
+    if(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
+        std::size_t childViewportIndex { 0 };
+        for(auto& childViewport: mChildViewports){
+            if(std::shared_ptr<Texture> renderResult = childViewport->fetchRenderResult(simulationProgress)) {
+                /**
+                    * NOTE: context change might have occurred because of fetchRenderResult. Make our own render set
+                    * active once again
+                    */
+                world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
+                world->getSystem<RenderSystem>()->addOrAssignRenderSource(
+                    std::string("textureAddend_") + std::to_string(childViewportIndex++),
+                    renderResult
+                );
+            }
+        }
+    }
+
+    world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
+    world->getSystem<RenderSystem>()->execute(simulationProgress);
+
+    if(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
+        for(std::size_t childViewportIndex { 0 }; childViewportIndex < mChildViewports.size(); ++childViewportIndex) {
+            world->getSystem<RenderSystem>()->removeRenderSource(
+                std::string("textureAddend_") + std::to_string(childViewportIndex)
+            );
+        }
+    }
+
 }
 
 ActionDispatch& ViewportNode::getActionDispatch() {
@@ -745,16 +757,17 @@ std::shared_ptr<const ViewportNode> ViewportNode::getLocalViewport() const {
 std::vector<std::shared_ptr<ViewportNode>> ViewportNode::getActiveDescendantViewports() {
     assert(isActive() && "Can only find active descendant viewports of an active viewport node");
 
-    std::vector<std::shared_ptr<ViewportNode>> activeViewports { {std::static_pointer_cast<ViewportNode>(shared_from_this())} };
+    std::vector<std::shared_ptr<ViewportNode>> activeViewports {};
     for(auto child: mChildViewports) {
         if(!child->isActive()) continue;
-
         std::vector<std::shared_ptr<ViewportNode>> activeDescendantViewports { child->getActiveDescendantViewports() };
         activeViewports.insert(activeViewports.end(), activeDescendantViewports.begin(), activeDescendantViewports.end());
     }
+    activeViewports.push_back(std::static_pointer_cast<ViewportNode>(shared_from_this()));
 
     return activeViewports;
 }
+
 std::vector<std::weak_ptr<ECSWorld>> ViewportNode::getActiveDescendantWorlds() {
     assert(isActive() && "Can only find active descendant worlds of an active viewportNode");
 
@@ -862,17 +875,16 @@ void SceneSystem::render(float simulationProgress, uint32_t variableStep) {
         world.lock()->preRenderStep(variableStep);
     }
 
-    for(std::shared_ptr<ViewportNode> viewport: activeViewports) {
-        viewport->render(simulationProgress, variableStep);
+    for(std::size_t i {0}; i < activeViewports.size(); ++i) {
+        activeViewports[i]->render(simulationProgress, variableStep);
     }
 
     for(std::weak_ptr<ECSWorld> world: activeWorlds) {
         world.lock()->postRenderStep(variableStep);
     }
 
-    std::shared_ptr<ViewportNode> screenViewport { mRootNode };
-    screenViewport->getWorld().lock()->getSystem<RenderSystem>()->useRenderSet(screenViewport->mRenderSet);
-    screenViewport->getWorld().lock()->getSystem<RenderSystem>()->renderToScreen();
+    mRootNode->getWorld().lock()->getSystem<RenderSystem>()->useRenderSet(mRootNode->mRenderSet);
+    mRootNode->getWorld().lock()->getSystem<RenderSystem>()->renderToScreen();
 }
 
 void SceneSystem::onApplicationEnd() {
