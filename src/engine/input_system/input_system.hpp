@@ -136,7 +136,7 @@ public:
      */
 
 private:
-    virtual void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {};
+    virtual bool handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {return false;};
 
 friend class ActionDispatch;
 };
@@ -247,22 +247,13 @@ public:
     void unregisterActionHandler(const QualifiedActionName& contextActionPair, std::weak_ptr<IActionHandler> actionHandler);
     void unregisterActionHandler(std::weak_ptr<IActionHandler> actionHandler);
 
-    void dispatchActions();
-    void dispatchActions(std::vector<std::pair<ActionDefinition, ActionData>> actions);
-    void queueAction(std::pair<ActionDefinition, ActionData> action);
-    void queueActions(std::vector<std::pair<ActionDefinition, ActionData>> actions);
+    bool dispatchAction(const std::pair<ActionDefinition, ActionData>& pendingAction);
 private:
 
     /**
      * Pointers to all action handler instances waiting for a particular action
      */
     std::map<QualifiedActionName, std::set<std::weak_ptr<IActionHandler>, std::owner_less<std::weak_ptr<IActionHandler>>>, std::less<QualifiedActionName>> mActionHandlers {};
-
-    /**
-     * Action state changes that have recently been triggered, in the order that they
-     * were triggered
-     */
-    std::vector<std::pair<ActionDefinition, ActionData>> mPendingTriggeredActions {};
 };
 
 #endif

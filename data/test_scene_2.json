@@ -80,22 +80,18 @@
                 }
             ],
             "inherits_world": false,
+            "prevent_handled_action_propagation": true,
             "render_configuration": {
-                "base_dimensions": [800, 600],
+                "base_dimensions": [1366, 768],
                 "update_mode": "on-render-cap-fps",
                 "resize_type": "texture-dimensions",
                 "resize_mode": "fixed-dimensions",
                 "render_type": "basic-3d",
-                "fps_cap": 30,
+                "fps_cap": 60,
                 "render_scale": 1.0
             }
         },
         {
-            "aspects": [
-                {
-                    "type": "FlyCamera"
-                }
-            ],
             "components": [
                 {
                     "fov": 45.0,
@@ -126,7 +122,7 @@
             ],
             "name": "camera",
             "parent": "/viewport_UI/",
-            "type": "SimObject"
+            "type": "SceneNode"
         },
         {
             "type": "Scene",
@@ -154,14 +150,15 @@
                 }
             ],
             "inherits_world": false,
+            "prevent_handled_action_propagation": false,
             "render_configuration": {
-                "base_dimensions": [800, 600],
+                "base_dimensions": [1366, 768],
                 "update_mode": "on-render-cap-fps",
                 "resize_type": "texture-dimensions",
                 "resize_mode": "fixed-dimensions",
                 "render_type": "basic-3d",
-                "fps_cap": 30,
-                "render_scale": 1.0
+                "fps_cap": 60,
+                "render_scale": 0.85
             }
         },
         {

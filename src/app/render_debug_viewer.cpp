@@ -6,7 +6,7 @@
 #include "render_debug_viewer.hpp"
 
 
-void RenderDebugViewer::onUpdateGamma(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+bool RenderDebugViewer::onUpdateGamma(const ActionData& actionData, const ActionDefinition& actionDefinition) {
     std::shared_ptr<RenderSystem> renderSystem {
         getWorld().lock()->getSystem<RenderSystem>()
     };
@@ -14,8 +14,9 @@ void RenderDebugViewer::onUpdateGamma(const ActionData& actionData, const Action
         renderSystem->getGamma() 
         + actionData.mOneAxisActionData.mValue*mGammaStep
     );
+    return true;
 }
-void RenderDebugViewer::onUpdateExposure(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+bool RenderDebugViewer::onUpdateExposure(const ActionData& actionData, const ActionDefinition& actionDefinition) {
     std::shared_ptr<RenderSystem> renderSystem {
         getWorld().lock()->getSystem<RenderSystem>()
     };
@@ -23,10 +24,12 @@ void RenderDebugViewer::onUpdateExposure(const ActionData& actionData, const Act
         renderSystem->getExposure()
         + actionData.mOneAxisActionData.mValue*mExposureStep
     );
+    return true;
 }
-void RenderDebugViewer::onRenderNextTexture(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+bool RenderDebugViewer::onRenderNextTexture(const ActionData& actionData, const ActionDefinition& actionDefinition) {
     std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
     renderSystem->renderNextTexture();
+    return true;
 }
 
 std::shared_ptr<BaseSimObjectAspect> RenderDebugViewer::clone() const {

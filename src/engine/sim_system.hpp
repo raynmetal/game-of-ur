@@ -113,17 +113,17 @@ friend class BaseSceneNode<SimObject>;
 
 class FixedActionBinding {
 private:
-    inline void call(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-        mHandler(actionData, actionDefinition);
+    inline bool call(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+        return mHandler(actionData, actionDefinition);
     }
-    FixedActionBinding(const std::string& context, const std::string& name, std::function<void(const ActionData&, const ActionDefinition&)> handler):
+    FixedActionBinding(const std::string& context, const std::string& name, std::function<bool(const ActionData&, const ActionDefinition&)> handler):
     mContext { context },
     mName { name },
     mHandler { handler }
     {}
     std::string mContext;
     std::string mName;
-    std::function<void(const ActionData&, const ActionDefinition&)> mHandler;
+    std::function<bool(const ActionData&, const ActionDefinition&)> mHandler;
 friend class BaseSimObjectAspect;
 };
 
@@ -133,7 +133,7 @@ public:
     virtual void simulationUpdate(uint32_t simStepMillis) {}
     virtual void variableUpdate(uint32_t variableStepMillis) {}
 
-    void handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override final;
+    bool handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override final;
     ViewportNode& getLocalViewport();
 
 protected:
@@ -179,7 +179,7 @@ protected:
     template <typename TSimObjectAspect>
     void removeAspect();
 
-    std::weak_ptr<FixedActionBinding> declareFixedActionBinding(const std::string& context, const std::string& action, std::function<void(const ActionData&, const ActionDefinition&)>);
+    std::weak_ptr<FixedActionBinding> declareFixedActionBinding(const std::string& context, const std::string& action, std::function<bool(const ActionData&, const ActionDefinition&)>);
     EntityID getEntityID() const;
     std::weak_ptr<ECSWorld> getWorld() const;
     virtual std::string getAspectTypeName() const = 0;
@@ -206,7 +206,7 @@ private:
     virtual std::shared_ptr<BaseSimObjectAspect> clone() const = 0;
 
     std::map<
-        std::pair<std::string, std::string>, 
+        std::pair<std::string, std::string>,
         std::shared_ptr<FixedActionBinding>,
         std::less<std::pair<std::string, std::string>>
     > mFixedActionBindings {};

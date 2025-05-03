@@ -2,16 +2,16 @@
     "window_configuration": {
         "application_title": "My Game of Ur",
         "window_width": 800,
-        "window_height": 600
+        "window_height": 600 
     },
 
     "root_viewport_render_configuration": {
-        "base_dimensions": [800, 600],
+        "base_dimensions": [1366, 768],
         "update_mode": "on-render-cap-fps",
-        "resize_type": "viewport-dimensions",
+        "resize_type": "texture-dimensions",
         "resize_mode": "expand-horizontally",
         "render_type": "addition",
-        "fps_cap": 30,
+        "fps_cap": 60,
         "render_scale": 1.0
     },
 

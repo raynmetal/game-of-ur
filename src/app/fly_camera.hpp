@@ -19,17 +19,17 @@ public:
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
 
 protected:
-    void onMove(const ActionData& actionData, const ActionDefinition& actionDefinition);
-    void onRotate(const ActionData& actionData, const ActionDefinition& actionDefinition);
-    void onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition);
-    void onUpdateFOV(const ActionData& actionData, const ActionDefinition& actionDefinition);
+    bool onMove(const ActionData& actionData, const ActionDefinition& actionDefinition);
+    bool onRotate(const ActionData& actionData, const ActionDefinition& actionDefinition);
+    bool onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition);
+    bool onUpdateFOV(const ActionData& actionData, const ActionDefinition& actionDefinition);
 
     std::weak_ptr<FixedActionBinding> handlerMove { 
         declareFixedActionBinding(
             "Camera",
             "Move",
             [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
-                this->onMove(actionData, actionDefinition);
+                return this->onMove(actionData, actionDefinition);
             }
         )
     };
@@ -39,7 +39,7 @@ protected:
             "Camera",
             "Rotate",
             [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
-                this->onRotate(actionData, actionDefinition);
+                return this->onRotate(actionData, actionDefinition);
             }
         )
     };
@@ -49,7 +49,7 @@ protected:
             "Camera",
             "UpdateFOV",
             [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
-                this->onUpdateFOV(actionData, actionDefinition);
+                return this->onUpdateFOV(actionData, actionDefinition);
             }
         )
     };
@@ -58,7 +58,7 @@ protected:
             "Camera",
             "ToggleControl",
             [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
-                this->onToggleControl(actionData, actionDefinition);
+                return this->onToggleControl(actionData, actionDefinition);
             }
         )
     };

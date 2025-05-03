@@ -192,7 +192,7 @@ SimObject& BaseSimObjectAspect::getSimObject() {
 std::weak_ptr<FixedActionBinding> BaseSimObjectAspect::declareFixedActionBinding(
     const std::string& context,
     const std::string& action,
-    std::function<void(const ActionData&, const ActionDefinition&)> handler
+    std::function<bool(const ActionData&, const ActionDefinition&)> handler
 ) {
     assert(!(mState & AspectState::ACTIVE) && "Cannot add or remove fixed action bindings while aspect is active.");
     assert(mFixedActionBindings.emplace(
@@ -214,8 +214,8 @@ void BaseSimObjectAspect::activateFixedActionBindings(){
     }
 }
 
-void BaseSimObjectAspect::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-    mFixedActionBindings
+bool BaseSimObjectAspect::handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    return mFixedActionBindings
         .at({actionDefinition.mContext, actionDefinition.mName})
         ->call(actionData, actionDefinition);
 }

@@ -240,6 +240,7 @@ void SceneNodeCore::setParentViewport(std::shared_ptr<SceneNodeCore> node, std::
         }
         // add it to the new viewport domain camera list
         if(newViewport) {
+            // NOTE: ADDITION viewports may only take on other viewports as children
             newViewport->registerDomainCamera(node);
         }
     }
@@ -385,13 +386,14 @@ void ViewportNode::onDestroyed() {
     }
 }
 
-std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, const ViewportNode::RenderConfiguration& renderConfiguration) {
+std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, bool allowActionFlowthrough, const ViewportNode::RenderConfiguration& renderConfiguration) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(Placement{}, name) };
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
     newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(renderConfiguration.mBaseDimensions, renderConfiguration.mBaseDimensions, {0, 0, renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y});
     newViewport->setRenderConfiguration(renderConfiguration);
+    newViewport->mActionFlowthrough = allowActionFlowthrough;
     return newViewport;
 }
 std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration) {
@@ -401,6 +403,7 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::st
     }
     newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(renderConfiguration.mBaseDimensions, renderConfiguration.mBaseDimensions, {0, 0, renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y}, renderConfiguration.mRenderType);
     newViewport->setRenderConfiguration(renderConfiguration);
+    newViewport->mActionFlowthrough = true;
     return newViewport;
 }
 
@@ -417,6 +420,14 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewpor
     viewportNodeDescription.at("render_configuration").get_to(newViewport->mRenderConfiguration);
     newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mRenderConfiguration.mBaseDimensions, newViewport->mRenderConfiguration.mBaseDimensions, {0, 0, newViewport->mRenderConfiguration.mBaseDimensions.x, newViewport->mRenderConfiguration.mBaseDimensions.y});
     newViewport->setRenderConfiguration(newViewport->mRenderConfiguration);
+
+    if(newViewport->mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
+        assert(viewportNodeDescription.find("allow_action_flowthrough") != viewportNodeDescription.end() && "Addition viewports must set the allow action flowthrough property");
+        viewportNodeDescription.at("allow_action_flowthrough").get_to(newViewport->mActionFlowthrough);
+    }
+
+    assert(viewportNodeDescription.find("prevent_handled_action_propagation") != viewportNodeDescription.end() && "Viewport must specify whether or not it allows handled actions to be passed to further viewports");
+    viewportNodeDescription.at("prevent_handled_action_propagation").get_to(newViewport->mPreventHandledActionPropagation);
 
     return newViewport;
 }
@@ -596,6 +607,13 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
             );
         break;
     }
+    if(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
+        for(auto& childViewport: mChildViewports) {
+            if(childViewport->isActive()) {
+                childViewport->requestDimensions(mRenderConfiguration.mComputedDimensions);
+            }
+        }
+    }
 }
 
 void ViewportNode::setResizeType(RenderConfiguration::ResizeType resizeType) {
@@ -603,24 +621,23 @@ void ViewportNode::setResizeType(RenderConfiguration::ResizeType resizeType) {
     mRenderConfiguration.mResizeType = resizeType;
     requestDimensions(mRenderConfiguration.mRequestedDimensions);
 }
+
 void ViewportNode::setResizeMode(RenderConfiguration::ResizeMode resizeMode) {
     if(mRenderConfiguration.mResizeMode == resizeMode) return;
     mRenderConfiguration.mResizeMode = resizeMode;
     requestDimensions(mRenderConfiguration.mRequestedDimensions);
 }
-void ViewportNode::setRenderType(RenderConfiguration::RenderType renderType) {
-    if(mRenderConfiguration.mRenderType == renderType) return;
-    mRenderConfiguration.mRenderType = renderType;
-    requestDimensions(mRenderConfiguration.mRequestedDimensions);
-}
+
 void ViewportNode::setUpdateMode(RenderConfiguration::UpdateMode updateMode) {
     if(mRenderConfiguration.mUpdateMode == updateMode) return;
     mRenderConfiguration.mUpdateMode = updateMode;
 }
+
 void ViewportNode::setFPSCap(float fpsCap) {
     assert(fpsCap> 0.f && "FPS cap cannot be negative or zero");
     mRenderConfiguration.mFPSCap = fpsCap;
 }
+
 void ViewportNode::setRenderScale(float renderScale) {
     assert(renderScale > 0.f && "Render scale cannot be negative or zero");
     mRenderConfiguration.mRenderScale = renderScale;
@@ -629,6 +646,7 @@ void ViewportNode::setRenderScale(float renderScale) {
 
 void ViewportNode::registerDomainCamera(std::shared_ptr<SceneNodeCore> cameraNode) {
     assert(isAncestorOf(cameraNode) && "This node is not the camera node's ancestor");
+    assert(mRenderConfiguration.mRenderType != RenderConfiguration::RenderType::ADDITION);
     mDomainCameras.insert(cameraNode);
 }
 void ViewportNode::unregisterDomainCamera(std::shared_ptr<SceneNodeCore> cameraNode) {
@@ -638,6 +656,7 @@ void ViewportNode::unregisterDomainCamera(std::shared_ptr<SceneNodeCore> cameraN
     }
 }
 std::shared_ptr<SceneNodeCore> ViewportNode::findFallbackCamera() {
+    assert(mRenderConfiguration.mRenderType != RenderConfiguration::RenderType::ADDITION);
     if(mDomainCameras.empty()) return nullptr;
     // pick a camera at random from our domain
     std::shared_ptr<SceneNodeCore> fallbackCamera {*mDomainCameras.begin()};
@@ -714,13 +733,15 @@ void ViewportNode::render_(float simulationProgress) {
     std::shared_ptr<ECSWorld> world = getWorld().lock();
 
     if(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
+        // attach textures in reverse order of their appearance in the scene tree, so that viewports higher
+        // up have their textures rendered on top of those lower down
         std::size_t childViewportIndex { 0 };
-        for(auto& childViewport: mChildViewports){
-            if(std::shared_ptr<Texture> renderResult = childViewport->fetchRenderResult(simulationProgress)) {
+        for(auto childViewport { mChildViewports.rbegin() }; childViewport != mChildViewports.rend(); ++childViewport){
+            if(std::shared_ptr<Texture> renderResult = (*childViewport)->fetchRenderResult(simulationProgress)) {
                 /**
-                    * NOTE: context change might have occurred because of fetchRenderResult. Make our own render set
-                    * active once again
-                    */
+                  * NOTE: context change might have occurred because of fetchRenderResult. Make our own render set
+                  * active once again
+                  */
                 world->getSystem<RenderSystem>()->useRenderSet(mRenderSet);
                 world->getSystem<RenderSystem>()->addOrAssignRenderSource(
                     std::string("textureAddend_") + std::to_string(childViewportIndex++),
@@ -743,6 +764,28 @@ void ViewportNode::render_(float simulationProgress) {
 
 }
 
+bool ViewportNode::handleAction(const std::pair<ActionDefinition, ActionData>& pendingAction) {
+    if(mRenderConfiguration.mRenderType != RenderConfiguration::RenderType::ADDITION) {
+        return mActionDispatch.dispatchAction(pendingAction);
+    }
+
+    if(!mActionFlowthrough) return false;
+
+    bool actionHandled { false };
+    for(std::shared_ptr<ViewportNode> child: mChildViewports) {
+        if(child->isActive()) {
+            bool childHandledAction { child->handleAction(pendingAction) };
+            actionHandled = childHandledAction || actionHandled;
+
+            if(childHandledAction && child->mPreventHandledActionPropagation) {
+                break;
+            }
+        }
+    }
+
+    return actionHandled;
+}
+
 ActionDispatch& ViewportNode::getActionDispatch() {
     return mActionDispatch;
 }
@@ -750,6 +793,7 @@ ActionDispatch& ViewportNode::getActionDispatch() {
 std::shared_ptr<ViewportNode> ViewportNode::getLocalViewport() {
     return std::static_pointer_cast<ViewportNode>(shared_from_this());
 }
+
 std::shared_ptr<const ViewportNode> ViewportNode::getLocalViewport() const {
     return std::static_pointer_cast<const ViewportNode>(std::const_pointer_cast<const SceneNodeCore>(shared_from_this()));
 }
@@ -798,7 +842,9 @@ void SceneSystem::simulationStep(uint32_t simStepMillis, std::vector<std::pair<A
         }
     }
 
-    mRootNode->mActionDispatch.dispatchActions(triggeredActions);
+    for(const auto& pendingAction: triggeredActions) {
+        mRootNode->handleAction(pendingAction);
+    }
 
     viewportsToVisit.push(mRootNode);
     while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
@@ -834,7 +880,10 @@ void SceneSystem::simulationStep(uint32_t simStepMillis, std::vector<std::pair<A
 }
 
 void SceneSystem::variableStep(float simulationProgress, uint32_t simulationLagMillis, uint32_t variableStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions) {
-    mRootNode->mActionDispatch.dispatchActions(triggeredActions);
+    for(const auto& pendingAction: triggeredActions) {
+        mRootNode->handleAction(pendingAction);
+    }
+
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
     while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
         viewportsToVisit.pop();
@@ -850,6 +899,7 @@ void SceneSystem::variableStep(float simulationProgress, uint32_t simulationLagM
     }
 
     updateTransforms();
+
     viewportsToVisit.push({mRootNode});
     while(std::shared_ptr<ViewportNode> viewport=viewportsToVisit.front()) {
         viewportsToVisit.pop();
@@ -875,8 +925,10 @@ void SceneSystem::render(float simulationProgress, uint32_t variableStep) {
         world.lock()->preRenderStep(variableStep);
     }
 
-    for(std::size_t i {0}; i < activeViewports.size(); ++i) {
-        activeViewports[i]->render(simulationProgress, variableStep);
+    // render viewports in reverse order
+    const std::size_t nActiveViewports { activeViewports.size() };
+    for(std::size_t i {0}; i < nActiveViewports; ++i) {
+        activeViewports[nActiveViewports - 1 - i]->render(simulationProgress, variableStep);
     }
 
     for(std::weak_ptr<ECSWorld> world: activeWorlds) {

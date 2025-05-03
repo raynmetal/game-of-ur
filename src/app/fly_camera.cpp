@@ -49,31 +49,36 @@ void FlyCamera::variableUpdate(uint32_t variableStepMillis) {
     }
 }
 
-void FlyCamera::onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition){
+bool FlyCamera::onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition){
     setActive(!mActive);
+    return true;
 }
 
-void FlyCamera::onRotate(const ActionData& actionData, const ActionDefinition & actionDefinition) {
-    if(!mActive) return;
+bool FlyCamera::onRotate(const ActionData& actionData, const ActionDefinition & actionDefinition) {
+    if(!mActive) return false;
+
     // Handle camera rotation commands
     Placement placement { getComponent<Placement>() };
     updatePitch(placement.mOrientation, actionData.mTwoAxisActionData.mValue.y);
     updateYaw(placement.mOrientation, actionData.mTwoAxisActionData.mValue.x);
     updateComponent<Placement>(placement);
+    return true;
 }
 
-void FlyCamera::onMove(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-    if(!mActive) return;
+bool FlyCamera::onMove(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    if(!mActive) return false;
     // movement commands
     mVelocity.x = mMaxSpeed * actionData.mTwoAxisActionData.mValue.x;
     mVelocity.z = mMaxSpeed * actionData.mTwoAxisActionData.mValue.y;
+    return true;
 }
 
-void FlyCamera::onUpdateFOV(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-    if(!mActive) return;
+bool FlyCamera::onUpdateFOV(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+    if(!mActive) return false;
     // "Zoom" commands
     const float dFOV { static_cast<float>(-actionData.mOneAxisActionData.mValue) };
     updateFOV(dFOV);
+    return true;
 }
 
 void FlyCamera::updatePitch(glm::quat& current, float dPitch) {

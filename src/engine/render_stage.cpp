@@ -508,7 +508,7 @@ void AdditionRenderStage::setup(const glm::u16vec2& textureDimensions) {
     nlohmann::json framebufferDescription = mTemplateFramebufferDescription;
     framebufferDescription["parameters"]["dimensions"][0] = textureDimensions.x;
     framebufferDescription["parameters"]["dimensions"][1] = textureDimensions.y;
-    for(nlohmann::json& colorBufferDefinition: framebufferDescription["parameters"]["colorBufferDefinition"]) {
+    for(nlohmann::json& colorBufferDefinition: framebufferDescription["parameters"]["colorBufferDefinitions"]) {
         colorBufferDefinition["dimensions"][0] = textureDimensions.x;
         colorBufferDefinition["dimensions"][1] = textureDimensions.y;
     }
@@ -532,45 +532,44 @@ void AdditionRenderStage::execute() {
 
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_FRAMEBUFFER_SRGB);
-    glDisable(GL_BLEND);
+    glEnable(GL_BLEND);
+    glBlendEquationSeparate(GL_FUNC_ADD, GL_MAX);
+    glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE);
 
     mFramebufferHandle->bind();
         glClear(GL_COLOR_BUFFER_BIT);
 
-        std::size_t nCombineTextures { 0 };
-        std::string textureAddendName {
-            std::string{"textureAddend_"}
-            + std::to_string(nCombineTextures)
-        };
-        while(nCombineTextures < 4 && mTextureAttachments.find(textureAddendName) != mTextureAttachments.end()) {
-            std::shared_ptr<Texture> currentTextureAttachment { mTextureAttachments.at(textureAddendName) };
+        std::string textureAddendName{ "textureAddend_0" };
+        while(mTextureAttachments.find(textureAddendName) != mTextureAttachments.end()) {
+            std::size_t nCombineTextures { 0 };
+            // batch textures in groups of 4
+            while(nCombineTextures < 4 * (nCombineTextures/4 + 1) && mTextureAttachments.find(textureAddendName) != mTextureAttachments.end()) {
+                std::shared_ptr<Texture> currentTextureAttachment { mTextureAttachments.at(textureAddendName) };
+                const std::string samplerUniformName {
+                    std::string{"uCombineTextures["}
+                    + std::to_string(nCombineTextures)
+                    + std::string{"]"}
+                };
+                currentTextureAttachment->bind(nCombineTextures);
+                mShaderHandle->setUInt(samplerUniformName, nCombineTextures);
 
-            const std::string samplerUniformName {
-                std::string{"uCombineTextures["}
-                + std::to_string(nCombineTextures)
-                + std::string{"]"}
-            };
-            currentTextureAttachment->bind(nCombineTextures);
-            mShaderHandle->setUInt(samplerUniformName, nCombineTextures);
-
-            textureAddendName = std::string{"textureAddend_"} + std::to_string(++nCombineTextures);
+                textureAddendName = std::string{"textureAddend_"} + std::to_string(++nCombineTextures);
+            }
+            mShaderHandle->setUInt("nCombine", nCombineTextures);
+            glBindVertexArray(mVertexArrayObject);
+                mMeshAttachments.at("screenMesh")->bind({{
+                    {"position", LOCATION_POSITION, 4, GL_FLOAT},
+                    {"UV1", LOCATION_UV1, 2, GL_FLOAT},
+                }});
+                glDrawElementsInstanced(
+                    GL_TRIANGLES,
+                    mMeshAttachments.at("screenMesh")->getElementCount(),
+                    GL_UNSIGNED_INT,
+                    nullptr,
+                    1
+                );
+            glBindVertexArray(0);
         }
-        mShaderHandle->setUInt("nCombine", nCombineTextures);
-
-        glBindVertexArray(mVertexArrayObject);
-            mMeshAttachments.at("screenMesh")->bind({{
-                {"position", LOCATION_POSITION, 4, GL_FLOAT},
-                {"UV1", LOCATION_UV1, 2, GL_FLOAT},
-            }});
-            glDrawElementsInstanced(
-                GL_TRIANGLES,
-                mMeshAttachments.at("screenMesh")->getElementCount(),
-                GL_UNSIGNED_INT,
-                nullptr,
-                1
-            );
-        glBindVertexArray(0);
-
 
     mFramebufferHandle->unbind();
     mTextureAttachments.clear();

@@ -264,29 +264,20 @@ void ActionDispatch::unregisterActionHandler(std::weak_ptr<IActionHandler> actio
     }
 }
 
-void ActionDispatch::dispatchActions() {
-    for(const auto& pendingAction: mPendingTriggeredActions) {
-        std::vector<std::weak_ptr<IActionHandler>> handlersToUnregister {};
-        for(auto handler: mActionHandlers[pendingAction.first]) {
-            if(!handler.expired()) {
-                handler.lock()->handleAction(pendingAction.second, pendingAction.first);
-            } else {
-                handlersToUnregister.push_back(handler);
-            }
-        }
-        for(auto handler: handlersToUnregister) {
-            unregisterActionHandler(handler);
+bool ActionDispatch::dispatchAction(const std::pair<ActionDefinition, ActionData>& pendingAction) {
+    std::vector<std::weak_ptr<IActionHandler>> handlersToUnregister {};
+    bool handled { false };
+    for(auto handler: mActionHandlers[pendingAction.first]) {
+        if(!handler.expired()) {
+            handled = handler.lock()->handleAction(pendingAction.second, pendingAction.first) || handled;
+        } else {
+            handlersToUnregister.push_back(handler);
         }
     }
-    mPendingTriggeredActions.clear();
-}
-void ActionDispatch::dispatchActions(std::vector<std::pair<ActionDefinition, ActionData>> actions) {
-    queueActions(actions);
-    dispatchActions();
-}
-void ActionDispatch::queueAction(std::pair<ActionDefinition, ActionData> action) {
-    mPendingTriggeredActions.push_back(action);
-}
-void ActionDispatch::queueActions(std::vector<std::pair<ActionDefinition, ActionData>> actions) {
-    mPendingTriggeredActions.insert(mPendingTriggeredActions.end(), actions.begin(), actions.end());
+
+    for(auto handler: handlersToUnregister) {
+        unregisterActionHandler(handler);
+    }
+
+    return handled;
 }

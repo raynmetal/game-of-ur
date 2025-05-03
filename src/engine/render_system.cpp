@@ -196,8 +196,9 @@ void RenderSet::setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 
     mLightingRenderStage->setup(renderDimensions);
     mBlurRenderStage->setup(renderDimensions);
     mTonemappingRenderStage->setup(renderDimensions);
+    mAdditionRenderStage->setup(renderDimensions);
+
     mResizeRenderStage->setup(targetDimensions);
-    mAdditionRenderStage->setup(targetDimensions);
     mScreenRenderStage->setup(targetDimensions);
 
     mResizeRenderStage->setTargetViewport(viewportDimensions);

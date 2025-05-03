@@ -265,7 +265,7 @@ public:
         float mFPSCap { 60.f };
     };
 
-    static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration);
+    static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld, bool allowActionFlowThrough, const RenderConfiguration& renderConfiguration);
     static std::shared_ptr<ViewportNode> create(const nlohmann::json& sceneNodeDescription);
     static std::shared_ptr<ViewportNode> copy(const std::shared_ptr<const ViewportNode> other);
 
@@ -282,13 +282,14 @@ public:
     void setResizeType(RenderConfiguration::ResizeType type);
     void setResizeMode(RenderConfiguration::ResizeMode mode);
     void setRenderScale(float renderScale);
-    void setRenderType(RenderConfiguration::RenderType renderType);
     void setUpdateMode(RenderConfiguration::UpdateMode updateMode);
     void setFPSCap(float fpsCap);
 
     void requestDimensions(glm::u16vec2 requestedDimensions);
 
     ActionDispatch& getActionDispatch();
+    bool handleAction(const std::pair<ActionDefinition, ActionData>& pendingAction);
+    bool disallowsHandledActionPropagation() const { return mPreventHandledActionPropagation; }
 
 protected:
     ViewportNode(const Placement& placement, const std::string& name):
@@ -331,6 +332,8 @@ private:
     void render_(float simulationProgress);
 
     ActionDispatch mActionDispatch {};
+    bool mActionFlowthrough { false };
+    bool mPreventHandledActionPropagation { true };
     std::set<std::shared_ptr<ViewportNode>, std::owner_less<std::shared_ptr<ViewportNode>>> mChildViewports {};
     std::shared_ptr<SceneNodeCore> mActiveCamera { nullptr };
     std::set<std::shared_ptr<SceneNodeCore>, std::owner_less<std::shared_ptr<SceneNodeCore>>> mDomainCameras {};
