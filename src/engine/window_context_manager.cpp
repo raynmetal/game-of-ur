@@ -12,6 +12,7 @@
 #include "window_context_manager.hpp"
 
 WindowContext::WindowContext(const nlohmann::json& initialWindowConfiguration) {
+    assert(SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") && "Could not enable DPI awareness for this SDL app");
     assert(SDL_Init(SDL_INIT_VIDEO) >= 0 && "Could not initialise SDL2 library");
     assert(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) >= -1 && "Could not initialise SDL_image library");
     assert(TTF_Init() >= 0 && "Could not initialise SDL_ttf library");
@@ -24,7 +25,7 @@ WindowContext::WindowContext(const nlohmann::json& initialWindowConfiguration) {
         applicationTitle.c_str(),
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         windowWidth, windowHeight,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI
     );
     assert(mpSDLWindow && "Could not create an SDL window");
 
@@ -159,7 +160,7 @@ void WindowContext::refreshWindowProperties() {
     mCachedWindowFlags = static_cast<SDL_WindowFlags>(SDL_GetWindowFlags(mpSDLWindow));
     mCachedDisplayID = SDL_GetWindowDisplayIndex(mpSDLWindow);
     SDL_GetWindowPosition(mpSDLWindow, reinterpret_cast<int*>(&mCachedWindowPosition.x), reinterpret_cast<int*>(&mCachedWindowPosition.y));
-    SDL_GetWindowSize(mpSDLWindow, reinterpret_cast<int*>(&mCachedWindowDimensions.x), reinterpret_cast<int*>(&mCachedWindowDimensions.y));
+    SDL_GetWindowSizeInPixels(mpSDLWindow, reinterpret_cast<int*>(&mCachedWindowDimensions.x), reinterpret_cast<int*>(&mCachedWindowDimensions.y));
     SDL_GetWindowMinimumSize(mpSDLWindow, reinterpret_cast<int*>(&mCachedWindowMinimumDimensions.x), reinterpret_cast<int*>(&mCachedWindowMinimumDimensions.y));
     SDL_GetWindowMaximumSize(mpSDLWindow, reinterpret_cast<int*>(&mCachedWindowMaximumDimensions.x), reinterpret_cast<int*>(&mCachedWindowMaximumDimensions.y));
     mCachedTitle = SDL_GetWindowTitle(mpSDLWindow);

@@ -928,7 +928,7 @@ void SceneSystem::render(float simulationProgress, uint32_t variableStep) {
     // render viewports in reverse order
     const std::size_t nActiveViewports { activeViewports.size() };
     for(std::size_t i {0}; i < nActiveViewports; ++i) {
-        activeViewports[nActiveViewports - 1 - i]->render(simulationProgress, variableStep);
+        activeViewports[i]->render(simulationProgress, variableStep);
     }
 
     for(std::weak_ptr<ECSWorld> world: activeWorlds) {
