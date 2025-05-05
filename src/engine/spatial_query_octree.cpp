@@ -11,11 +11,13 @@ void printAABBExtents(const AxisAlignedBounds& bounds) {
         << ") (left bottom back " << glm::to_string(bounds.getAxisAlignedBoxExtents().second)
         << "\n";
 }
+
 void printOctreeNodeAddress(const OctreeNode::Address& address) {
     std::cout << "depth-" << static_cast<uint32_t>(OctreeNode::GetDepth(address))
         << "\nroute-" << std::bitset<OctreeNode::knRouteBits>{OctreeNode::GetBaseRoute(address, OctreeNode::GetDepth(address))}
         << "\n";
 }
+
 void printOctreeNodeMemberDetails(const AxisAlignedBounds& bounds, const OctreeNode::Address& address, const EntityID& entityID) {
     std::cout << "Inserted entity: ID-" << entityID << "\n";
     printOctreeNodeAddress(address);
@@ -377,6 +379,7 @@ std::vector<std::pair<EntityID, AxisAlignedBounds>> OctreeNode::findEntitiesOver
     return resultEntities;
 }
 
+
 void OctreeNode::shrinkTreeAndBecomeRoot() {
     mAddress = kNoAddress;
     mParent.reset();
@@ -629,4 +632,14 @@ void Octree::removeEntity(EntityID entityID) {
     }
 
     mRootNode = candidateRoot;
+}
+
+std::vector<std::pair<EntityID, AxisAlignedBounds>> Octree::findEntitiesOverlapping(const Ray& searchRay) const {
+    std::vector<std::pair<EntityID, AxisAlignedBounds>> results{ mRootNode->findEntitiesOverlapping(searchRay) };
+    std::sort(results.begin(), results.end(), [&searchRay](std::pair<EntityID, AxisAlignedBounds>& first, std::pair<EntityID, AxisAlignedBounds>& second) {
+        const glm::vec3 intersectionOne { computeIntersections(searchRay, first.second).second.first - searchRay.mStart };
+        const glm::vec3 intersectionTwo { computeIntersections(searchRay, second.second).second.first - searchRay.mStart };
+        return glm::dot(intersectionOne, intersectionOne) < glm::dot(intersectionTwo, intersectionTwo);
+    });
+    return results;
 }

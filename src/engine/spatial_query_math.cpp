@@ -164,10 +164,21 @@ std::pair<uint8_t, std::pair<glm::vec3, glm::vec3>> computeIntersections(const R
             }
         }
     }
+
+    if(nIntersections == 2) {
+        const glm::vec3 pointOne { intersectionPoints[0] - ray.mStart };
+        const glm::vec3 pointTwo { intersectionPoints[1] - ray.mStart };
+        if(glm::dot(pointOne, pointOne) > glm::dot(pointTwo, pointTwo)) {
+            std::swap(intersectionPoints[0], intersectionPoints[1]);
+        }
+    }
+
     return { nIntersections, std::pair<glm::vec3, glm::vec3>(intersectionPoints[0], intersectionPoints[1]) };
 }
 
-bool overlaps(const glm::vec3& point, const AxisAlignedBounds& bounds) { return contains(point, bounds); }
+bool overlaps(const glm::vec3& point, const AxisAlignedBounds& bounds) {
+    return contains(point, bounds);
+}
 
 bool overlaps(const Ray& ray, const AxisAlignedBounds& bounds) {
     assert(ray.isSensible() && "Invalid ray provided");

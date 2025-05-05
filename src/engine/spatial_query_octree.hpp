@@ -3,6 +3,7 @@
 
 #include <memory>
 #include <array>
+#include <algorithm>
 
 #include "spatial_query_math.hpp"
 #include "spatial_query_basic_types.hpp"
@@ -138,12 +139,11 @@ public:
     inline std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const AxisAlignedBounds& searchBounds) const {
         return mRootNode->findEntitiesOverlapping(searchBounds);
     }
+
     /**
      * retrieve all entities that intersect with the ray described by searchRay
      */
-    inline std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const Ray& searchRay) const {
-        return mRootNode->findEntitiesOverlapping(searchRay);
-    }
+    std::vector<std::pair<EntityID, AxisAlignedBounds>> findEntitiesOverlapping(const Ray& searchRay) const;
 
     void insertEntity(EntityID entityID, const AxisAlignedBounds& entityWorldBounds);
     void removeEntity(EntityID entityID);
