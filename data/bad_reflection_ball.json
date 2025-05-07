@@ -12,7 +12,6 @@
     ],
 
     "nodes": [
-
         {
             "name": "not_really_reflective_ball",
             "parent": "",
@@ -90,9 +89,17 @@
                 },
                 {
                     "type": "CameraProperties",
-                    "projectionMode": "frustum",
-                    "orthographicScale": 3.0,
-                    "fov": 120.0
+                    "projection_mode": "frustum",
+                    "orthographic_dimensions": {
+                        "horizontal": 0.0,
+                        "vertical": 0.0
+                    },
+                    "near_far_planes": {
+                        "near": 0.5,
+                        "far": 100
+                    },
+                    "fov": 120.0,
+                    "aspect": 1.0
                 }
             ]
         }

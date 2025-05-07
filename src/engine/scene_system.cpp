@@ -166,6 +166,23 @@ std::tuple<std::string, std::string> SceneNodeCore::nextInPath(const std::string
     return std::tuple<std::string, std::string>{nextNodeName, remainingWhere};
 }
 
+bool SceneNodeCore::hasNode(const std::string& pathToChild) const {
+    if(pathToChild == "/") {
+        return true;
+    }
+
+    assert(pathToChild != "" && "Path to child cannot be an empty string");
+    const std::tuple<std::string, std::string> nextPair { nextInPath(pathToChild) };
+    const std::string& nextNodeName { std::get<0>(nextPair) };
+    const std::string& remainingWhere { std::get<1>(nextPair) };
+    if(mChildren.find(nextNodeName) == mChildren.end()) {
+        return false;
+    }
+
+    return mChildren.at(nextNodeName)->hasNode(remainingWhere);
+}
+
+
 void SceneNodeCore::addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where) {
     assert(node && "Must be a non null pointer to a valid scene node");
     assert(node->mParent.expired() && "Node must not have a parent");
@@ -230,7 +247,7 @@ void SceneNodeCore::setParentViewport(std::shared_ptr<SceneNodeCore> node, std::
         if(newViewport) {
             newViewport->mChildViewports.insert(nodeAsViewport);
         }
-    } 
+    }
 
     // Otherwise, if this is a camera node,
     else if(node->mEntity->isRegistered<CameraSystem>()) {
@@ -378,13 +395,34 @@ void SceneNodeCore::validateName(const std::string& nodeName) {
     assert(containsValidCharacters && "Scene node name may contain only alphanumeric characters and underscores");
 }
 
-void ViewportNode::onDestroyed() {
+ViewportNode::~ViewportNode() {
+    // Remove the render set associated with this node
     getWorld().lock()->getSystem<RenderSystem>()->deleteRenderSet(mRenderSet);
+
+    /** 
+     * NOTE: This works under the assumption that only this place has references to
+     * its descendant nodes.  If the children are referenced elsewhere, they will be in an invalid 
+     * state
+     *
+     * TODO: Make a more involved deletion that takes into account the possibility that 
+     * a descendant viewport shares a world with this node, or that one of this node's 
+     * children is being used elsewhere.
+    */
+
+    // Make sure all descendant nodes (and their respective entities) are deleted before
+    // we destroy this node's world, if it has one.  Also remove our own entity from this 
+    // world
+    mChildViewports.clear();
+    mChildren.clear();
+    mEntity.reset();
+
+    // Destroy this viewport's world
     if(mOwnWorld) {
         mOwnWorld->cleanup();
         mOwnWorld = nullptr;
     }
 }
+
 
 std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, bool allowActionFlowthrough, const ViewportNode::RenderConfiguration& renderConfiguration) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(Placement{}, name) };

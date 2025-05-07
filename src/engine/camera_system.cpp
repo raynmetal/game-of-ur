@@ -23,13 +23,17 @@ void CameraSystem::updateActiveCameraMatrices() {
         switch(cameraProperties.mProjectionType) {
             case CameraProperties::ProjectionType::FRUSTUM:
                 cameraProperties.mProjectionMatrix = glm::perspective(
-                    glm::radians(glm::clamp<double>(cameraProperties.mFov, MIN_FOV, MAX_FOV)), 
-                    static_cast<double>(800.f/600.f),
-                    static_cast<double>(.5f), static_cast<double>(100.f)
+                    glm::radians(glm::clamp(cameraProperties.mFov, MIN_FOV, MAX_FOV)), 
+                    cameraProperties.mAspect,
+                    cameraProperties.mNearFarPlanes.x, cameraProperties.mNearFarPlanes.y
                 );
             break;
             case CameraProperties::ProjectionType::ORTHOGRAPHIC:
-                cameraProperties.mProjectionMatrix = static_cast<float>(cameraProperties.mOrthographicScale) * glm::mat4(1.f) * glm::ortho(-4.f, 4.f, -3.f, 3.f, 0.5f, 4.5f);
+                cameraProperties.mProjectionMatrix = glm::ortho(
+                    -cameraProperties.mOrthographicDimensions.x/2.f, cameraProperties.mOrthographicDimensions.x/2.f,
+                    -cameraProperties.mOrthographicDimensions.y/2.f, cameraProperties.mOrthographicDimensions.y/2.f,
+                    cameraProperties.mNearFarPlanes.x, cameraProperties.mNearFarPlanes.y
+                );
             break;
         }
         updateComponent<CameraProperties>(entity, cameraProperties);

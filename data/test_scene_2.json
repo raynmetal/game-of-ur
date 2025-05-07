@@ -3,20 +3,19 @@
     "resources": [
 
         {
+            "name": "Test_Subscene_3D",
             "type": "SimObject",
             "method": "fromSceneFile",
-            "name": "testSubscene3D",
             "parameters": {
                 "path": "data/test_subscene_2_3d.json"
             }
         },
-
         {
+            "name": "Dumb_UI",
             "type": "SimObject",
             "method": "fromSceneFile",
-            "name": "dumbUIText",
             "parameters": {
-                "path": "data/dumb_ui_text.json"
+                "path": "data/dumb_ui.json"
             }
         },
         {
@@ -62,72 +61,9 @@
         },
 
         {
-            "name": "viewport_UI",
-            "parent": "/",
-            "type": "ViewportNode",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [
-                        1.0, 0.0, 0.0, 0.0
-                    ],
-                    "position": [
-                        0.0, 0.0, 0.0, 1.0
-                    ],
-                    "scale": [
-                        1.0, 1.0, 1.0
-                    ]
-                }
-            ],
-            "inherits_world": false,
-            "prevent_handled_action_propagation": true,
-            "render_configuration": {
-                "base_dimensions": [1366, 768],
-                "update_mode": "on-render-cap-fps",
-                "resize_type": "texture-dimensions",
-                "resize_mode": "fixed-dimensions",
-                "render_type": "basic-3d",
-                "fps_cap": 60,
-                "render_scale": 1.0
-            }
-        },
-        {
-            "components": [
-                {
-                    "fov": 45.0,
-                    "orthographicScale": 3.0,
-                    "projectionMode": "frustum",
-                    "type": "CameraProperties"
-                },
-                {
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
-                    "type": "Placement"
-                }
-            ],
-            "name": "camera",
-            "parent": "/viewport_UI/",
-            "type": "SceneNode"
-        },
-        {
             "type": "Scene",
-            "name": "dumbUIText",
-            "parent": "/viewport_UI/",
+            "name": "Dumb_UI",
+            "parent": "/",
             "copy": true 
         },
 
@@ -163,7 +99,7 @@
         },
         {
             "type": "Scene",
-            "name": "testSubscene3D",
+            "name": "Test_Subscene_3D",
             "parent": "/viewport_3D/",
             "copy": false
         }

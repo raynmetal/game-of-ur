@@ -25,6 +25,7 @@
             }
         }
     ],
+
     "nodes": [
         {
             "components": [
@@ -61,6 +62,7 @@
             "parent": "",
             "type": "SimObject"
         },
+
         {
             "aspects": [
                 {
@@ -70,8 +72,10 @@
             "components": [
                 {
                     "fov": 45.0,
-                    "orthographicScale": 3.0,
-                    "projectionMode": "frustum",
+                    "aspect": 1.77778,
+                    "orthographic_dimensions": {"horizontal": 0, "vertical": 0},
+                    "near_far_planes": {"near": 0.5, "far": 100},
+                    "projection_mode": "frustum",
                     "type": "CameraProperties"
                 },
                 {
@@ -99,6 +103,7 @@
             "parent": "/",
             "type": "SimObject"
         },
+
         {
             "components": [
                 {
@@ -149,6 +154,7 @@
             "parent": "/camera/",
             "type": "SceneNode"
         },
+
         {
             "name": "test_text",
             "parent": "/",
@@ -184,6 +190,7 @@
                 }
             ]
         },
+
         {
             "aspects": [
                 {

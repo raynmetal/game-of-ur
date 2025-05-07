@@ -13,8 +13,10 @@ struct CameraProperties {
         ORTHOGRAPHIC,
     };
     ProjectionType mProjectionType { ProjectionType::FRUSTUM };
-    double mFov {45.f};
-    double mOrthographicScale {3.f};
+    float mFov {45.f};
+    float mAspect { 16.f/9.f };
+    glm::vec2 mOrthographicDimensions { 19.f, 12.f };
+    glm::vec2 mNearFarPlanes { 100.f, -100.f };
     glm::mat4 mProjectionMatrix {};
     glm::mat4 mViewMatrix {};
 
@@ -54,13 +56,21 @@ inline CameraProperties Interpolator<CameraProperties>::operator() (
         .mProjectionType {previousState.mProjectionType
         },
         .mFov { simulationProgress * nextState.mFov + (1.f-simulationProgress) * previousState.mFov },
-        .mOrthographicScale { simulationProgress * nextState.mOrthographicScale 
-            + (1.f-simulationProgress) * previousState.mOrthographicScale
+        .mAspect { simulationProgress * nextState.mAspect + (1.f-simulationProgress) * previousState.mAspect},
+        .mOrthographicDimensions { 
+            (simulationProgress * nextState.mOrthographicDimensions)
+            + (1.f-simulationProgress) * previousState.mOrthographicDimensions
         },
-        .mProjectionMatrix {(simulationProgress * nextState.mProjectionMatrix) 
+        .mNearFarPlanes {
+            (simulationProgress * nextState.mNearFarPlanes)
+            + (1.f-simulationProgress) * previousState.mNearFarPlanes
+        },
+        .mProjectionMatrix {
+            (simulationProgress * nextState.mProjectionMatrix) 
             + ((1.f-simulationProgress) * previousState.mProjectionMatrix)
         },
-        .mViewMatrix {(simulationProgress * nextState.mViewMatrix)
+        .mViewMatrix {
+            (simulationProgress * nextState.mViewMatrix)
             + ((1.f-simulationProgress) * previousState.mViewMatrix)
         },
     };
@@ -68,17 +78,33 @@ inline CameraProperties Interpolator<CameraProperties>::operator() (
 
 inline void from_json(const nlohmann::json& json, CameraProperties& cameraProperties) {
     assert(json.at("type").get<std::string>() == CameraProperties::getComponentTypeName() && "Type mismatch, json must be of camera properties type");
-    json.at("projectionMode").get_to(cameraProperties.mProjectionType);
+    json.at("projection_mode").get_to(cameraProperties.mProjectionType);
     json.at("fov").get_to(cameraProperties.mFov);
-    json.at("orthographicScale").get_to(cameraProperties.mOrthographicScale);
+    json.at("aspect").get_to(cameraProperties.mAspect);
+    json.at("orthographic_dimensions")
+        .at("horizontal")
+        .get_to(cameraProperties.mOrthographicDimensions.x);
+    json.at("orthographic_dimensions")
+        .at("vertical")
+        .get_to(cameraProperties.mOrthographicDimensions.y);
+    json.at("near_far_planes").at("near").get_to(cameraProperties.mNearFarPlanes.x);
+    json.at("near_far_planes").at("far").get_to(cameraProperties.mNearFarPlanes.y);
 }
 
 inline void to_json(nlohmann::json& json, const CameraProperties& cameraProperties) {
     json = {
         {"type", CameraProperties::getComponentTypeName()},
-        {"projectionMode", cameraProperties.mProjectionType},
+        {"projection_mode", cameraProperties.mProjectionType},
         {"fov", cameraProperties.mFov},
-        {"orthographicScale", cameraProperties.mOrthographicScale},
+        {"aspect", cameraProperties.mAspect},
+        {"orthographic_dimensions", {
+            {"horizontal", cameraProperties.mOrthographicDimensions.x},
+            {"vertical", cameraProperties.mOrthographicDimensions.y},
+        }},
+        {"near_far_planes", {
+            {"near", cameraProperties.mNearFarPlanes.x},
+            {"far", cameraProperties.mNearFarPlanes.y},
+        }}
     };
 }
 

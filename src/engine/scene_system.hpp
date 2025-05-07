@@ -84,6 +84,7 @@ public:
     bool isActive() const;
 
     bool isAncestorOf(std::shared_ptr<const SceneNodeCore> sceneNode) const;
+    bool hasNode(const std::string& pathToChild) const;
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
     std::vector<std::shared_ptr<SceneNodeCore>> getChildren();
     std::vector<std::shared_ptr<const SceneNodeCore>> getChildren() const;
@@ -291,6 +292,7 @@ public:
     bool handleAction(const std::pair<ActionDefinition, ActionData>& pendingAction);
     bool disallowsHandledActionPropagation() const { return mPreventHandledActionPropagation; }
 
+    ~ViewportNode() override;
 protected:
     ViewportNode(const Placement& placement, const std::string& name):
     BaseSceneNode<ViewportNode>{placement, name},
@@ -307,7 +309,6 @@ protected:
     std::shared_ptr<ECSWorld> mOwnWorld { nullptr };
     void onActivated() override;
     void onDeactivated() override;
-    void onDestroyed() override;
 
     void joinWorld(ECSWorld& world) override;
 
@@ -368,8 +369,6 @@ public:
     std::shared_ptr<SceneNodeCore> getNode(const std::string& where);
     std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
     void addNode(std::shared_ptr<SceneNodeCore> node, const std::string& where);
-
-
 
     std::weak_ptr<ECSWorld> getRootWorld() const;
     ViewportNode& getRootViewport() const;

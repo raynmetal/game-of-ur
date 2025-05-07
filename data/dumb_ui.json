@@ -1,24 +1,12 @@
 {
-    "resources": [
-        {
-            "method": "fromFile",
-            "name": "boardPieceModel",
-            "parameters": {
-                "path": "data/models/Generic Board Piece.obj"
-            },
-            "type": "StaticModel"
-        },
-        {
-            "type": "SimObject",
-            "method": "fromSceneFile",
-            "name": "boardPieceRing",
-            "parameters": {
-                "path": "data/board_piece_ring.json"
-            }
-        }
-    ],
+
+    "resources": [],
+
     "nodes": [
+
         {
+            "name": "ui_root",
+            "aspects": [],
             "components": [
                 {
                     "orientation": [
@@ -34,38 +22,83 @@
                         1.0
                     ],
                     "scale": [
-                        1.0,
-                        1.0,
+                        1.4142135381698608,
+                        1.4142135381698608,
                         1.0
                     ],
                     "type": "Placement"
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "TickSecond"
                 },
                 {
-                    "type": "RenderDebugViewer"
+                    "ambient": [
+                        0.7,
+                        0.7,
+                        0.7
+                    ],
+                    "diffuse": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "specular": [
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "lightType": "directional",
+                    "type": "LightEmissionData"
                 }
             ],
-            "name": "partial_scene_root",
             "parent": "",
             "type": "SimObject"
         },
+
+
         {
-            "aspects": [
+            "name": "viewport_UI",
+            "parent": "/",
+            "type": "ViewportNode",
+            "components": [
                 {
-                    "type": "FlyCamera"
+                    "type": "Placement",
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ]
                 }
             ],
+            "inherits_world": false,
+            "prevent_handled_action_propagation": true,
+            "render_configuration": {
+                "base_dimensions": [1366, 768],
+                "update_mode": "on-render-cap-fps",
+                "resize_type": "texture-dimensions",
+                "resize_mode": "fixed-dimensions",
+                "render_type": "basic-3d",
+                "fps_cap": 60,
+                "render_scale": 1.0
+            }
+        },
+
+        {
+            "name": "camera",
             "components": [
                 {
                     "fov": 45.0,
-                    "aspect": 1.7778,
-                    "orthographic_dimensions": {"horizontal": 0, "vertical": 0},
-                    "near_far_planes": {"near": 0.5, "far": 100},
-                    "projection_mode": "frustum",
+                    "aspect": 0.0,
+                    "orthographic_dimensions": {
+                        "horizontal": 1366,
+                        "vertical": 768
+                    },
+                    "near_far_planes": {
+                        "near": 1000,
+                        "far": -1000
+                    },
+                    "projection_mode": "orthographic",
                     "type": "CameraProperties"
                 },
                 {
@@ -89,66 +122,47 @@
                     "type": "Placement"
                 }
             ],
-            "name": "camera",
-            "parent": "/",
-            "type": "SimObject"
-        },
-        {
-            "components": [
-                {
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
-                    "type": "Placement"
-                },
-                {
-                    "ambient": [
-                        0.20000000298023224,
-                        0.20000000298023224,
-                        0.20000000298023224
-                    ],
-                    "diffuse": [
-                        2.0,
-                        2.0,
-                        2.0
-                    ],
-                    "innerAngle": 4.0,
-                    "lightType": "spot",
-                    "linearConst": 0.07000000029802322,
-                    "outerAngle": 13.0,
-                    "quadraticConst": 0.029999999329447746,
-                    "specular": [
-                        4.0,
-                        4.0,
-                        4.0
-                    ],
-                    "type": "LightEmissionData"
-                }
-            ],
-            "name": "flashlight",
-            "parent": "/camera/",
+            "parent": "/viewport_UI/",
             "type": "SceneNode"
         },
+
         {
-            "aspects": [
+            "name": "test_text",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
                 {
-                    "type": "Revolve"
+                    "type": "Placement",
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        200.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ]
                 }
             ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "This should work I guess.",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0
+                }
+            ]
+        },
+
+        {
             "components": [
                 {
                     "orientation": [
@@ -172,34 +186,29 @@
                 },
                 {
                     "ambient": [
-                        0.4000000059604645,
-                        0.4000000059604645,
-                        0.4000000059604645
+                        0.7,
+                        0.7,
+                        0.7
                     ],
                     "diffuse": [
-                        20.0,
-                        20.0,
-                        20.0
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "specular": [
+                        0.0,
+                        0.0,
+                        0.0
                     ],
                     "lightType": "directional",
-                    "specular": [
-                        20.0,
-                        20.0,
-                        20.0
-                    ],
                     "type": "LightEmissionData"
                 }
             ],
-            "name": "sunlight",
-            "parent": "/",
-            "type": "SimObject"
-        },
-        {
-            "type": "Scene",
-            "name": "boardPieceRing",
-            "parent": "/",
-            "copy": false
+            "name": "ui_light",
+            "parent": "/viewport_UI/",
+            "type": "SceneNode"
         }
     ],
+
     "connections": []
 }
