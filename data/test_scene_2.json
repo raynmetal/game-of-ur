@@ -64,7 +64,7 @@
             "type": "Scene",
             "name": "Dumb_UI",
             "parent": "/",
-            "copy": true 
+            "copy": true
         },
 
         {

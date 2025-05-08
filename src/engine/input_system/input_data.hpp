@@ -187,6 +187,9 @@ struct InputCombo {
         ON_PRESS,
         ON_RELEASE,
         ON_CHANGE,
+        ON_BUTTON_PRESS,
+        ON_BUTTON_RELEASE,
+        ON_BUTTON_CHANGE,
     };
 
     // Axis value may be sampled from here, if present
@@ -241,9 +244,12 @@ struct InputCombo {
 };
 
 NLOHMANN_JSON_SERIALIZE_ENUM( InputCombo::Trigger, {
-    {InputCombo::Trigger::ON_PRESS, "onPress"},
-    {InputCombo::Trigger::ON_RELEASE, "onRelease"},
-    {InputCombo::Trigger::ON_CHANGE, "onChange"},
+    {InputCombo::Trigger::ON_PRESS, "on-press"},
+    {InputCombo::Trigger::ON_RELEASE, "on-release"},
+    {InputCombo::Trigger::ON_CHANGE, "on-change"},
+    {InputCombo::Trigger::ON_BUTTON_PRESS, "on-button-press"},
+    {InputCombo::Trigger::ON_BUTTON_RELEASE, "on-button-release"},
+    {InputCombo::Trigger::ON_BUTTON_CHANGE, "on-button-change"},
 });
 
 /**
@@ -253,7 +259,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM( InputCombo::Trigger, {
 struct UnmappedInputValue {
     uint32_t mTimestamp {};
     bool mActivated { false };
-    double mValue { 0.f };
+    float mAxisValue { 0.f };
+    float mButtonValue { 0.f };
 };
 
 enum class ActionValueType: uint8_t {
