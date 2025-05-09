@@ -615,10 +615,7 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
             renderSystem->setRenderProperties(
                 mRenderConfiguration.mBaseDimensions, 
                 requestDimensions,
-                {
-                    requestDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, requestDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
-                    mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
-                },
+                getCenteredViewportCoordinates(),
                 mRenderConfiguration.mRenderType
             );
         break;
@@ -626,10 +623,7 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
             renderSystem->setRenderProperties(
                 glm::mat2{mRenderConfiguration.mRenderScale} * mRenderConfiguration.mBaseDimensions,
                 requestDimensions,
-                {
-                    requestDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, requestDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
-                    mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
-                },
+                getCenteredViewportCoordinates(),
                 mRenderConfiguration.mRenderType
             );
         break;
@@ -637,10 +631,7 @@ void ViewportNode::requestDimensions(glm::u16vec2 requestDimensions) {
             renderSystem->setRenderProperties(
                 glm::mat2{mRenderConfiguration.mRenderScale} * mRenderConfiguration.mComputedDimensions, 
                 requestDimensions,
-                {
-                    requestDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, requestDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
-                    mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
-                },
+                getCenteredViewportCoordinates(),
                 mRenderConfiguration.mRenderType
             );
         break;
@@ -802,7 +793,29 @@ void ViewportNode::render_(float simulationProgress) {
 
 }
 
-bool ViewportNode::handleAction(const std::pair<ActionDefinition, ActionData>& pendingAction) {
+bool ViewportNode::handleAction(std::pair<ActionDefinition, ActionData> pendingAction) {
+    // translate pointer input to coordinates that fall within the current viewport
+    if(
+        (pendingAction.first.mAttributes&InputAttributes::STATE_IS_LOCATION)
+        && ((pendingAction.first.mAttributes&InputAttributes::N_AXES) == 2)
+    ) {
+        const SDL_Rect viewportCoordinates { getCenteredViewportCoordinates() };
+        const glm::vec2 viewportToInputRatio {
+            static_cast<float>(viewportCoordinates.w)/mRenderConfiguration.mRequestedDimensions.x,
+            static_cast<float>(viewportCoordinates.h)/mRenderConfiguration.mRequestedDimensions.y
+        };
+        const glm::mat3 inputToViewportTransform {
+            {viewportToInputRatio.x, 0.f, 0.f},
+            {0.f, viewportToInputRatio.y, 0.f},
+            {
+                -(1.f*viewportCoordinates.x/mRenderConfiguration.mRequestedDimensions.x * viewportToInputRatio.x),
+                -(1.f*viewportCoordinates.y/mRenderConfiguration.mRequestedDimensions.y * viewportToInputRatio.y),
+                1.f
+            }
+        };
+        pendingAction.second.mTwoAxisActionData.mValue = static_cast<glm::vec2>(inputToViewportTransform * glm::vec3{pendingAction.second.mTwoAxisActionData.mValue, 1.f});
+    }
+
     if(mRenderConfiguration.mRenderType != RenderConfiguration::RenderType::ADDITION) {
         return mActionDispatch.dispatchAction(pendingAction);
     }

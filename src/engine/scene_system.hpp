@@ -289,7 +289,7 @@ public:
     void requestDimensions(glm::u16vec2 requestedDimensions);
 
     ActionDispatch& getActionDispatch();
-    bool handleAction(const std::pair<ActionDefinition, ActionData>& pendingAction);
+    bool handleAction(std::pair<ActionDefinition, ActionData> pendingAction);
     bool disallowsHandledActionPropagation() const { return mPreventHandledActionPropagation; }
 
     ~ViewportNode() override;
@@ -331,6 +331,14 @@ private:
 
     void render(float simulationProgress, uint32_t variableStep);
     void render_(float simulationProgress);
+
+    inline SDL_Rect getCenteredViewportCoordinates() const {
+        return {
+            mRenderConfiguration.mRequestedDimensions.x/2 - mRenderConfiguration.mComputedDimensions.x/2, mRenderConfiguration.mRequestedDimensions.y/2 - mRenderConfiguration.mComputedDimensions.y/2,
+            mRenderConfiguration.mComputedDimensions.x, mRenderConfiguration.mComputedDimensions.y
+        };
+    }
+
 
     ActionDispatch mActionDispatch {};
     bool mActionFlowthrough { false };
