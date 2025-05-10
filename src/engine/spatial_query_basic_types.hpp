@@ -49,9 +49,10 @@ struct VolumeBase_ {
 
     inline static std::array<glm::vec3, 8> ComputeBoxCorners(const glm::vec3& boxDimensions) {
         const std::array<glm::vec3, 8> cornerSignsArray { GetCornerSignsArray() };
-        std::array<glm::vec3, 8> cornerArray { {.5f * boxDimensions} };
+        glm::vec3 absoluteCornerOffset { .5f * boxDimensions };
+        std::array<glm::vec3, 8> cornerArray { .5f * boxDimensions };
         for(uint8_t corner{0}; corner < 8; ++corner) {
-            cornerArray[corner] *= cornerSignsArray[corner];
+            cornerArray[corner] = cornerSignsArray[corner] * absoluteCornerOffset;
         }
         return cornerArray;
     }

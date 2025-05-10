@@ -22,30 +22,11 @@
                         1.0
                     ],
                     "scale": [
-                        1.4142135381698608,
-                        1.4142135381698608,
+                        1.0,
+                        1.0,
                         1.0
                     ],
                     "type": "Placement"
-                },
-                {
-                    "ambient": [
-                        0.7,
-                        0.7,
-                        0.7
-                    ],
-                    "diffuse": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "specular": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "lightType": "directional",
-                    "type": "LightEmissionData"
                 }
             ],
             "parent": "",
@@ -86,6 +67,7 @@
 
         {
             "name": "camera",
+            "aspects":[{"type": "QueryClick" }],
             "components": [
                 {
                     "fov": 45.0,
@@ -95,8 +77,8 @@
                         "vertical": 768
                     },
                     "near_far_planes": {
-                        "near": 1000,
-                        "far": -1000
+                        "near": -1000,
+                        "far": 1000
                     },
                     "projection_mode": "orthographic",
                     "type": "CameraProperties"
@@ -123,7 +105,7 @@
                 }
             ],
             "parent": "/viewport_UI/",
-            "type": "SceneNode"
+            "type": "SimObject"
         },
 
         {

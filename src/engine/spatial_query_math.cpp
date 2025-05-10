@@ -299,7 +299,7 @@ ObjectBounds ObjectBounds::create(const VolumeCapsule& capsule, const glm::vec3&
 
 void ObjectBounds::applyModelMatrix(const glm::mat4& modelMatrix) {
     mPosition = static_cast<glm::vec3>(modelMatrix * glm::vec4{0.f, 0.f, 0.f, 1.f});
-    mOrientation = glm::quat_cast(glm::transpose(glm::inverse(modelMatrix)));
+    mOrientation = glm::normalize(glm::quat_cast(glm::transpose(glm::inverse(modelMatrix))));
 }
 
 std::array<AreaTriangle, 12> computeBoxFaceTriangles(const std::array<glm::vec3, 8>& boxCorners) {

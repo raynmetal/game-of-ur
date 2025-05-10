@@ -22,6 +22,9 @@ void CameraSystem::updateActiveCameraMatrices() {
         CameraProperties cameraProperties { getComponent<CameraProperties>(entity) };
         switch(cameraProperties.mProjectionType) {
             case CameraProperties::ProjectionType::FRUSTUM:
+                assert(cameraProperties.mNearFarPlanes.x > 0.f && cameraProperties.mNearFarPlanes.y > cameraProperties.mNearFarPlanes.x
+                    && "For frustum cameras, near and far planes must both be greater than 0, with the \
+                    far plane having a higher value than the near plane");
                 cameraProperties.mProjectionMatrix = glm::perspective(
                     glm::radians(glm::clamp(cameraProperties.mFov, MIN_FOV, MAX_FOV)), 
                     cameraProperties.mAspect,

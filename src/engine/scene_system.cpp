@@ -800,18 +800,14 @@ bool ViewportNode::handleAction(std::pair<ActionDefinition, ActionData> pendingA
         && ((pendingAction.first.mAttributes&InputAttributes::N_AXES) == 2)
     ) {
         const SDL_Rect viewportCoordinates { getCenteredViewportCoordinates() };
-        const glm::vec2 viewportToInputRatio {
-            static_cast<float>(viewportCoordinates.w)/mRenderConfiguration.mRequestedDimensions.x,
-            static_cast<float>(viewportCoordinates.h)/mRenderConfiguration.mRequestedDimensions.y
-        };
         const glm::mat3 inputToViewportTransform {
-            {viewportToInputRatio.x, 0.f, 0.f},
-            {0.f, viewportToInputRatio.y, 0.f},
-            {
-                -(1.f*viewportCoordinates.x/mRenderConfiguration.mRequestedDimensions.x * viewportToInputRatio.x),
-                -(1.f*viewportCoordinates.y/mRenderConfiguration.mRequestedDimensions.y * viewportToInputRatio.y),
+            { static_cast<float>(mRenderConfiguration.mRequestedDimensions.x)/viewportCoordinates.w, 0.f, 0.f },
+            { 0.f, static_cast<float>(mRenderConfiguration.mRequestedDimensions.y)/viewportCoordinates.h, 0.f },
+            { 
+                -static_cast<float>(viewportCoordinates.x)/viewportCoordinates.w,
+                -static_cast<float>(viewportCoordinates.y)/viewportCoordinates.h,
                 1.f
-            }
+            },
         };
         pendingAction.second.mTwoAxisActionData.mValue = static_cast<glm::vec2>(inputToViewportTransform * glm::vec3{pendingAction.second.mTwoAxisActionData.mValue, 1.f});
     }
