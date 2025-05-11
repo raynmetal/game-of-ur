@@ -636,10 +636,22 @@ void Octree::removeEntity(EntityID entityID) {
 
 std::vector<std::pair<EntityID, AxisAlignedBounds>> Octree::findEntitiesOverlapping(const Ray& searchRay) const {
     std::vector<std::pair<EntityID, AxisAlignedBounds>> results{ mRootNode->findEntitiesOverlapping(searchRay) };
-    std::sort(results.begin(), results.end(), [&searchRay](std::pair<EntityID, AxisAlignedBounds>& first, std::pair<EntityID, AxisAlignedBounds>& second) {
-        const glm::vec3 intersectionOne { computeIntersections(searchRay, first.second).second.first - searchRay.mStart };
-        const glm::vec3 intersectionTwo { computeIntersections(searchRay, second.second).second.first - searchRay.mStart };
-        return glm::dot(intersectionOne, intersectionOne) < glm::dot(intersectionTwo, intersectionTwo);
+    std::sort(results.begin(), results.end(), [&searchRay](std::pair<EntityID, AxisAlignedBounds>& volumeOne, std::pair<EntityID, AxisAlignedBounds>& volumeTwo) {
+        // the first intersection point for both objects
+        const glm::vec3 intersectionOne { computeIntersections(searchRay, volumeOne.second).second.first - searchRay.mStart };
+        const glm::vec3 intersectionTwo { computeIntersections(searchRay, volumeTwo.second).second.first - searchRay.mStart };
+        const bool volumeOneContainsRayOrigin { contains(searchRay.mStart, volumeOne.second) };
+
+        return (
+            // if the ray starts either inside of or outside of both volumes, then the first ray 
+            // to intersect the volume comes first
+            (
+                volumeOneContainsRayOrigin == contains(searchRay.mStart, volumeTwo.second)
+                && glm::dot(intersectionOne, intersectionOne) < glm::dot(intersectionTwo, intersectionTwo)
+
+            // otherwise, the volume containing the ray's origin takes priority 
+            ) || volumeOneContainsRayOrigin
+        );
     });
     return results;
 }

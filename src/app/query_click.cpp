@@ -1,4 +1,5 @@
 #include "query_click.hpp"
+#include "fly_camera.hpp"
 
 std::shared_ptr<BaseSimObjectAspect> QueryClick::clone() const {
     return std::shared_ptr<QueryClick>(new QueryClick{});
@@ -16,6 +17,12 @@ bool QueryClick::onClick(const ActionData& actionData, const ActionDefinition& a
         return false;
     }
 
+    const glm::vec2 clickCoordinates {
+        (!hasAspect<FlyCamera>() || !getAspect<FlyCamera>().isMouseActive())?
+            glm::vec2{actionData.mTwoAxisActionData.mValue}:
+            glm::vec2{.5f, .5f}
+    };
+
     bool entityFound { false };
     const CameraProperties cameraProps { getComponent<CameraProperties>() };
     const ObjectBounds bounds { getComponent<ObjectBounds>() };
@@ -30,7 +37,7 @@ bool QueryClick::onClick(const ActionData& actionData, const ActionDefinition& a
                 (
                     cameraProps.mOrthographicDimensions 
                     * (
-                        glm::vec2{1.f, -1.f} * glm::vec2{actionData.mTwoAxisActionData.mValue}
+                        glm::vec2{1.f, -1.f} * clickCoordinates 
                         + glm::vec2{ -.5f, .5f }
                     )
                 ),
@@ -49,7 +56,7 @@ bool QueryClick::onClick(const ActionData& actionData, const ActionDefinition& a
                     * (
                         glm::vec2 { -.5f, .5f }
                         + glm::vec2{ 1.f, -1.f }
-                        * static_cast<glm::vec2>(actionData.mTwoAxisActionData.mValue)
+                        * clickCoordinates 
                     )
                 ),
                 -cameraProps.mNearFarPlanes.x

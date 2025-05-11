@@ -18,6 +18,8 @@ public:
 
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
 
+    inline bool isMouseActive() const { return mActive; }
+
 protected:
     bool onMove(const ActionData& actionData, const ActionDefinition& actionDefinition);
     bool onRotate(const ActionData& actionData, const ActionDefinition& actionDefinition);
@@ -75,8 +77,6 @@ private:
     glm::vec3 mVelocity { 0.f };
     float mLookSensitivity { LOOK_SENSITIVITY };
     float mZoomSensitivity { 1.5f };
-
-    uint32_t mTimeSinceLastTick { 0 };
 };
 
 #endif

@@ -159,7 +159,7 @@ std::pair<uint8_t, std::pair<glm::vec3, glm::vec3>> computeIntersections(const R
         if(possibleIntersection.first) {
             intersectionPoints[nIntersections++] = possibleIntersection.second;
             // skip the next triangle on this face
-            if(i % 12 == 0) {
+            if(i % 2 == 0) {
                 ++i;
             }
         }
@@ -342,37 +342,37 @@ std::array<AreaTriangle, 12> computeBoxFaceTriangles(const std::array<glm::vec3,
         // top faces
         AreaTriangle{.mPoints{
             boxCorners[BoxCornerSpecifier::TOP],
-            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP],
+            boxCorners[BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT],
             boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
         }},
         AreaTriangle{.mPoints{
             boxCorners[BoxCornerSpecifier::TOP],
             boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT],
-            boxCorners[BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP]
         }},
 
         // back faces
         AreaTriangle{.mPoints{
-            boxCorners[0],
             boxCorners[BoxCornerSpecifier::RIGHT],
-            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP]
+            boxCorners[0],
+            boxCorners[BoxCornerSpecifier::TOP]
         }},
         AreaTriangle{.mPoints{
-            boxCorners[0],
-            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP],
-            boxCorners[BoxCornerSpecifier::TOP]
+            boxCorners[BoxCornerSpecifier::RIGHT],
+            boxCorners[BoxCornerSpecifier::TOP],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP]
         }},
 
         // front faces
         AreaTriangle{.mPoints{
-            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::FRONT],
             boxCorners[BoxCornerSpecifier::FRONT],
-            boxCorners[BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
         }},
         AreaTriangle{.mPoints{
-            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::FRONT],
-            boxCorners[BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT],
-            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
+            boxCorners[BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::RIGHT|BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT],
+            boxCorners[BoxCornerSpecifier::TOP|BoxCornerSpecifier::FRONT]
         }}
     }};
 }

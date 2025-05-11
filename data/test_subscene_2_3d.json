@@ -64,11 +64,7 @@
         },
 
         {
-            "aspects": [
-                {
-                    "type": "FlyCamera"
-                }
-            ],
+            "aspects": [ {"type": "FlyCamera"}, {"type": "QueryClick"} ],
             "components": [
                 {
                     "fov": 45.0,
