@@ -1,6 +1,6 @@
 #include "query_click.hpp"
 #include "fly_camera.hpp"
-#include "pointer_callback.hpp"
+#include "interface_pointer_callback.hpp"
 
 std::shared_ptr<BaseSimObjectAspect> QueryClick::clone() const {
     return std::shared_ptr<QueryClick>(new QueryClick{});
@@ -75,11 +75,16 @@ bool QueryClick::onClick(const ActionData& actionData, const ActionDefinition& a
     ) {
         entityFound = true;
         std::cout << "- " << foundNode->getViewportLocalPath() << "\n";
+
+        //then click on every aspect of our query results that can be clicked
         if(std::shared_ptr<SimObject> nodeAsSimObject = std::dynamic_pointer_cast<SimObject>(foundNode)) {
-            if(nodeAsSimObject->hasAspect<PointerCallback>()) {
-                nodeAsSimObject->getAspect<PointerCallback>().onClick();
+            if(nodeAsSimObject->hasAspectWithInterface<IClickable>()) {
+                for(IClickable& clickable: nodeAsSimObject->getAspectsWithInterface<IClickable>()) {
+                    clickOn(clickable);
+                }
             }
         }
+
     }
 
     return entityFound;

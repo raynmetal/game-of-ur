@@ -141,7 +141,7 @@
                     "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0
                 },
-                { "type": "PointerCallback" }
+                { "type": "ClickCallbackImpl1" }
             ]
         },
 

@@ -3,9 +3,8 @@
     "nodes": [
         {
             "aspects": [
-                {
-                    "type": "BackAndForth"
-                }
+                {"type": "BackAndForth"},
+                {"type": "ClickCallbackImpl1"}
             ],
             "components": [
                 {
@@ -41,7 +40,8 @@
             "aspects": [
                 {
                     "type": "BackAndForth"
-                }
+                },
+                {"type": "ClickCallbackImpl2"}
             ],
             "components": [
                 {
@@ -77,7 +77,9 @@
             "aspects": [
                 {
                     "type": "BackAndForth"
-                }
+                },
+
+                {"type": "ClickCallbackImpl1"}
             ],
             "components": [
                 {
@@ -113,7 +115,9 @@
             "aspects": [
                 {
                     "type": "BackAndForth"
-                }
+                },
+
+                {"type": "ClickCallbackImpl2"}
             ],
             "components": [
                 {
@@ -149,7 +153,9 @@
             "aspects": [
                 {
                     "type": "BackAndForth"
-                }
+                },
+
+                {"type": "ClickCallbackImpl1"}
             ],
             "components": [
                 {

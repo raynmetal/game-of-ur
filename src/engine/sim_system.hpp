@@ -4,6 +4,7 @@
 #include <memory>
 #include <set>
 #include <cassert>
+#include <functional>
 #include <typeinfo>
 #include <type_traits>
 
@@ -78,9 +79,15 @@ public:
     template <typename TSimObjectAspect>
     bool hasAspect() const;
     bool hasAspect(const std::string& aspectType) const;
+    template <typename TInterface>
+    bool hasAspectWithInterface() const;
+
     template <typename TSimObjectAspect>
     TSimObjectAspect& getAspect();
     BaseSimObjectAspect& getAspect(const std::string& aspectType);
+    template <typename TInterface>
+    std::vector<std::reference_wrapper<TInterface>> getAspectsWithInterface();
+
     template <typename TSimObjectAspect>
     void removeAspect();
     void removeAspect(const std::string& aspectType);
@@ -290,9 +297,30 @@ bool SimObject::hasAspect() const {
     return mSimObjectAspects.find(TSimObjectAspect::getSimObjectAspectTypeName()) != mSimObjectAspects.end();
 }
 
+template <typename TInterface>
+bool SimObject::hasAspectWithInterface() const {
+    for(auto aspect: mSimObjectAspects) {
+        if(auto interfaceReference = std::dynamic_pointer_cast<TInterface>(aspect.second)){
+            return true;
+        }
+    }
+    return false;
+}
+
 template <typename TSimObjectAspect>
 TSimObjectAspect& SimObject::getAspect() {
     return *(static_cast<TSimObjectAspect*>(mSimObjectAspects.at(TSimObjectAspect::getSimObjectAspectTypeName()).get()));
+}
+
+template <typename TInterface>
+std::vector<std::reference_wrapper<TInterface>> SimObject::getAspectsWithInterface() {
+    std::vector<std::reference_wrapper<TInterface>> interfaceImplementations {};
+    for(auto aspect: mSimObjectAspects) {
+        if(auto interfaceReference = std::dynamic_pointer_cast<TInterface>(aspect.second)) {
+            interfaceImplementations.push_back(*interfaceReference);
+        }
+    }
+    return interfaceImplementations;
 }
 
 template <typename TSimObjectAspect>

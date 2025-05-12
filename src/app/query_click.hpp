@@ -5,7 +5,9 @@
 #include "../engine/sim_system.hpp"
 #include "../engine/input_system/input_system.hpp"
 
-class QueryClick: public SimObjectAspect<QueryClick> {
+#include "interface_pointer_callback.hpp"
+
+class QueryClick: public SimObjectAspect<QueryClick>, public IUsePointer {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "QueryClick"; }
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
