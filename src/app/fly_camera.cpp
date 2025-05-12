@@ -111,8 +111,7 @@ void FlyCamera::updateYaw(glm::quat& current, float dYaw) {
 void FlyCamera::setActive(bool active) {
     mActive = active;
     SDL_SetRelativeMouseMode(mActive? SDL_TRUE: SDL_FALSE);
-    SDL_CaptureMouse(mActive? SDL_TRUE: SDL_FALSE);
-    SDL_ShowCursor(mActive? SDL_FALSE: SDL_TRUE);
+    // SDL_ShowCursor(mActive? SDL_FALSE: SDL_TRUE);
 }
 
 void FlyCamera::updateFOV(float dFOV) {

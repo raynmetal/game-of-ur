@@ -9,7 +9,7 @@
         "base_dimensions": [1366, 768],
         "update_mode": "on-render-cap-fps",
         "resize_type": "texture-dimensions",
-        "resize_mode": "expand-horizontally",
+        "resize_mode": "fixed-aspect",
         "render_type": "addition",
         "fps_cap": 60,
         "render_scale": 1.0

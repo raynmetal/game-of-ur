@@ -60,6 +60,9 @@ WindowContext::WindowContext(const nlohmann::json& initialWindowConfiguration) {
     // Disable VSync
     SDL_GL_SetSwapInterval(0);
 
+    // Keep the pointer centered when in mouse relative mode
+    SDL_SetHint(SDL_HINT_MOUSE_RELATIVE_MODE_CENTER, "1");
+
     std::cout << "GL Version: " << glGetString(GL_VERSION) << std::endl;
 
     mpAssetImporter = new Assimp::Importer();
