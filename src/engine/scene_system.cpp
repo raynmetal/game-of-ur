@@ -728,9 +728,15 @@ std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgres
     return mTextureResult;
 }
 
-void ViewportNode::render(float simulationProgress, uint32_t variableStep) {
+uint32_t ViewportNode::render(float simulationProgress, uint32_t variableStep) {
     assert(mRenderConfiguration.mFPSCap > 0.f && "FPS cannot be negative or zero");
-    const uint32_t thresholdTime {static_cast<uint32_t>(1000 / mRenderConfiguration.mFPSCap)};
+    const uint32_t thresholdTime {
+        (
+            mRenderConfiguration.mUpdateMode == RenderConfiguration::UpdateMode::ON_FETCH_CAP_FPS
+            || mRenderConfiguration.mUpdateMode == RenderConfiguration::UpdateMode::ON_RENDER_CAP_FPS
+        )? static_cast<uint32_t>(1000 / mRenderConfiguration.mFPSCap):
+        0
+    };
 
     mTimeSinceLastRender += variableStep;
     if(mTimeSinceLastRender > thresholdTime) {
@@ -749,11 +755,14 @@ void ViewportNode::render(float simulationProgress, uint32_t variableStep) {
 
         case RenderConfiguration::UpdateMode::ON_RENDER:
             render_(simulationProgress);
+
         case RenderConfiguration::UpdateMode::ON_FETCH:
         case RenderConfiguration::UpdateMode::ON_FETCH_CAP_FPS:
         case RenderConfiguration::UpdateMode::NEVER:
         break;
     }
+    const uint32_t nextRenderTimeOffset { thresholdTime - mTimeSinceLastRender };
+    return nextRenderTimeOffset;
 }
 
 void ViewportNode::render_(float simulationProgress) {
@@ -761,6 +770,7 @@ void ViewportNode::render_(float simulationProgress) {
     mTimeSinceLastRender = 0;
     std::shared_ptr<ECSWorld> world = getWorld().lock();
 
+    if(mOwnWorld) mOwnWorld->preRenderStep(simulationProgress);
     if(mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
         // attach textures in reverse order of their appearance in the scene tree, so that viewports higher
         // up have their textures rendered on top of those lower down
@@ -790,7 +800,7 @@ void ViewportNode::render_(float simulationProgress) {
             );
         }
     }
-
+    if(mOwnWorld) mOwnWorld->postRenderStep(simulationProgress);
 }
 
 bool ViewportNode::handleAction(std::pair<ActionDefinition, ActionData> pendingAction) {
@@ -964,26 +974,23 @@ void SceneSystem::variableStep(float simulationProgress, uint32_t simulationLagM
     updateTransforms();
 }
 
-void SceneSystem::render(float simulationProgress, uint32_t variableStep) {
+uint32_t SceneSystem::render(float simulationProgress, uint32_t variableStep) {
+    uint32_t nextRenderTimeOffset { std::numeric_limits<uint32_t>::max() };
     std::vector<std::shared_ptr<ViewportNode>> activeViewports { getActiveViewports() };
-    std::vector<std::weak_ptr<ECSWorld>> activeWorlds { getActiveWorlds() };
-
-    for(std::weak_ptr<ECSWorld> world: activeWorlds) {
-        world.lock()->preRenderStep(variableStep);
-    }
 
     // render viewports in reverse order
     const std::size_t nActiveViewports { activeViewports.size() };
     for(std::size_t i {0}; i < nActiveViewports; ++i) {
-        activeViewports[i]->render(simulationProgress, variableStep);
-    }
-
-    for(std::weak_ptr<ECSWorld> world: activeWorlds) {
-        world.lock()->postRenderStep(variableStep);
+        const uint32_t renderTimeOffset {
+            activeViewports[i]->render(simulationProgress, variableStep)
+        };
+        nextRenderTimeOffset = glm::min(renderTimeOffset, nextRenderTimeOffset);
     }
 
     mRootNode->getWorld().lock()->getSystem<RenderSystem>()->useRenderSet(mRootNode->mRenderSet);
     mRootNode->getWorld().lock()->getSystem<RenderSystem>()->renderToScreen();
+
+    return nextRenderTimeOffset;
 }
 
 void SceneSystem::onApplicationEnd() {

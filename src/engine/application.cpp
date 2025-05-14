@@ -1,6 +1,8 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <chrono>
+#include <thread>
 #include <filesystem>
 
 #include <SDL2/SDL.h>
@@ -29,6 +31,7 @@
 
 constexpr uint32_t kMaxSimStep { 5000 };
 constexpr uint32_t kMinSimStep { 1000/120 };
+constexpr uint32_t kSleepThreshold { 10 };
 
 std::weak_ptr<Application> Application::s_pInstance {};
 bool Application::s_instantiated { false };
@@ -77,6 +80,7 @@ Application::Application(const std::string& projectPath) {
         assert(mSimulationStep >= kMinSimStep && mSimulationStep <= kMaxSimStep && assertionMessage);
     }
 
+
     mSceneSystem = ECSWorld::getSingletonSystem<SceneSystem>();
 
     initialize(projectJSON[0].at("window_configuration"));
@@ -121,6 +125,7 @@ void Application::execute() {
     // Timing related variables
     uint32_t previousTicks { SDL_GetTicks() };
     uint32_t simulationTicks { previousTicks };
+    uint32_t nextUpdateTicks { previousTicks };
 
     // Application loop begins
     SDL_Event event;
@@ -159,13 +164,30 @@ void Application::execute() {
             simulationTicks = updatedSimulationTicks;
         }
         const uint32_t simulationLagMillis { currentTicks - simulationTicks};
+        const uint32_t simulationTimeOffset { mSimulationStep - simulationLagMillis };
 
         // calculate progress towards the next simulation step, apply variable update
         const float simulationProgress { static_cast<float>(simulationLagMillis) / mSimulationStep};
         sceneSystem->variableStep(simulationProgress, simulationLagMillis, variableStep, mInputManager.getTriggeredActions(currentTicks));
 
         // render a frame (or, well, leave it up to the root viewport configuration really)
-        sceneSystem->render(simulationProgress, variableStep);
+        const uint32_t renderTimeOffset { sceneSystem->render(simulationProgress, variableStep) };
+
+        // TODO: Implement this for better support for low power devices
+        // NOTE: keep these around on the off chance we want it later, for eg., if
+        // we want to use 
+        //  `SDL_Delay(time)` 
+        // or 
+        //  `std::this_thread::sleep_for(std::chrono::milliseconds(time))`
+#ifdef ZO_DUMB_DELAY
+        const uint32_t frameEndTime { SDL_GetTicks() };
+        nextUpdateTicks = currentTicks + glm::min(renderTimeOffset, simulationTimeOffset);
+        if(frameEndTime + kSleepThreshold < nextUpdateTicks) {
+            const uint32_t delayTime { (nextUpdateTicks - frameEndTime)/kSleepThreshold * kSleepThreshold };
+            SDL_Delay(delayTime);
+        }
+#endif
+
     }
     sceneSystem->onApplicationEnd();
 }

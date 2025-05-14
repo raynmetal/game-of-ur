@@ -329,7 +329,7 @@ private:
     std::vector<std::shared_ptr<ViewportNode>> getActiveDescendantViewports();
     std::vector<std::weak_ptr<ECSWorld>> getActiveDescendantWorlds();
 
-    void render(float simulationProgress, uint32_t variableStep);
+    uint32_t render(float simulationProgress, uint32_t variableStep);
     void render_(float simulationProgress);
 
     inline SDL_Rect getCenteredViewportCoordinates() const {
@@ -388,7 +388,7 @@ public:
     void simulationStep(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
     void variableStep(float simulationProgress, uint32_t simulationLagMillis, uint32_t variableStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions={});
     void updateTransforms();
-    void render(float simulationProgress, uint32_t variableStep);
+    uint32_t render(float simulationProgress, uint32_t variableStep);
 
 private:
     class SceneSubworld: public System<SceneSubworld, std::tuple<Placement>, std::tuple<Transform, SceneHierarchyData>> {

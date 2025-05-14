@@ -25,8 +25,8 @@ LIBRARY_PATHS := D:\MyDev\MinGW64\Lib
 DYNAMIC_LIBS := mingw32 SDL2main SDL2 OpenGL32 glew32 SDL2_image SDL2_image.dll assimp.dll SDL2_ttf SDL2_ttf.dll
 
 DEBUG_OPTS := -fdiagnostics-color=always -g
-COMPILER_FLAGS_DBG := -Wall
-COMPILER_FLAGS := $(COMPILER_FLAGS_DBG) -Wl,-subsystem,windows
+COMPILER_FLAGS_DBG := -Wall -DZO_DUMB_DELAY
+COMPILER_FLAGS := $(COMPILER_FLAGS_DBG) -Wl,-subsystem,windows 
 
 TARGET_LIB_DIR := build/lib
 TARGET_INCLUDE_DIR := build/include
