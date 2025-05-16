@@ -290,8 +290,8 @@ void LightingRenderStage::execute() {
 
     glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DEPTH_TEST);
-    // glDisable(GL_BLEND);
     glEnable(GL_BLEND);
+    glBlendEquation(GL_FUNC_ADD);
     glBlendFunc(GL_ONE, GL_ONE);
 
     mFramebufferHandle->bind();
@@ -349,7 +349,7 @@ void LightingRenderStage::execute() {
                     {"attrLightEmission.mCosCutoffOuter", RUNTIME, 1, GL_FLOAT}
                 }});
                 glDrawElementsInstanced(
-                    GL_TRIANGLES, first.mMeshHandle->getElementCount(), 
+                    GL_TRIANGLES, first.mMeshHandle->getElementCount(),
                     GL_UNSIGNED_INT, nullptr, lightEmissionList.size()
                 );
             glBindVertexArray(0);

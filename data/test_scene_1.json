@@ -55,9 +55,7 @@
         },
         {
             "aspects": [
-                {
-                    "type": "FlyCamera"
-                }
+                {"type": "FlyCamera"}
             ],
             "components": [
                 {

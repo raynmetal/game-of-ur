@@ -20,16 +20,13 @@ void main() {
     }
     offset /= textureSize(uGenericTexture, 0);
 
-    outColor = weights[0] * texture(uGenericTexture, fragAttr.UV1);
-    for(int i = 1; i < 5; ++i) {
-        outColor += weights[i] * texture(uGenericTexture,
-            i * offset + fragAttr.UV1
+    outColor = vec4(0.f);
+    for(int i = 0; i < 5; ++i) {
+        vec4 sampleOne = texture(uGenericTexture, i * offset + fragAttr.UV1);
+        vec4 sampleTwo = texture(uGenericTexture, -i * offset + fragAttr.UV1);
+        outColor += vec4(
+            weights[i] * (sampleOne.rgb + sampleTwo.rgb), // gaussian/bell-curve for color
+            .25f * (1.f - .2f*i) * (sampleOne.a + sampleTwo.a) // linear for alpha
         );
-        outColor += weights[i] * texture(uGenericTexture,
-            -i * offset + fragAttr.UV1
-        );
-    }
-    if(dot(outColor, outColor) > 0.f) {
-        outColor.a=1.f;
     }
 }
