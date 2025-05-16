@@ -272,6 +272,13 @@ public:
 
     static inline std::string getResourceTypeName() { return "ViewportNode"; }
 
+    void viewNextDebugTexture();
+    void updateExposure(float newExposure);
+    void updateGamma(float newGamma);
+
+    float getExposure();
+    float getGamma();
+
     std::shared_ptr<ViewportNode> getLocalViewport() override;
     virtual std::shared_ptr<const ViewportNode> getLocalViewport() const override;
     std::shared_ptr<Texture> fetchRenderResult(float simulationProgress);

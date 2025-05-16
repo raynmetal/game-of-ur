@@ -524,6 +524,34 @@ void ViewportNode::onDeactivated() {
     mOwnWorld->deactivateSimulation();
 }
 
+void ViewportNode::viewNextDebugTexture() {
+    std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
+    renderSystem->useRenderSet(mRenderSet);
+    renderSystem->renderNextTexture();
+}
+void ViewportNode::updateExposure(float newExposure){
+    std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
+    renderSystem->useRenderSet(mRenderSet);
+    renderSystem->setExposure(newExposure);
+}
+void ViewportNode::updateGamma(float newGamma) {
+    std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
+    renderSystem->useRenderSet(mRenderSet);
+    renderSystem->setGamma(newGamma);
+}
+
+float ViewportNode::getExposure() {
+    std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
+    renderSystem->useRenderSet(mRenderSet);
+    return renderSystem->getExposure();
+}
+
+float ViewportNode::getGamma() {
+    std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
+    renderSystem->useRenderSet(mRenderSet);
+    return renderSystem->getGamma();
+}
+
 void ViewportNode::setActiveCamera(const std::string& cameraPath) {
     std::shared_ptr<SceneNodeCore> cameraNode { getByPath(cameraPath) };
     setActiveCamera(cameraNode);

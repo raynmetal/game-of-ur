@@ -7,28 +7,21 @@
 
 
 bool RenderDebugViewer::onUpdateGamma(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-    std::shared_ptr<RenderSystem> renderSystem {
-        getWorld().lock()->getSystem<RenderSystem>()
-    };
-    renderSystem->setGamma(
-        renderSystem->getGamma() 
+    getLocalViewport().updateGamma(
+        getLocalViewport().getGamma() 
         + actionData.mOneAxisActionData.mValue*mGammaStep
     );
     return true;
 }
 bool RenderDebugViewer::onUpdateExposure(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-    std::shared_ptr<RenderSystem> renderSystem {
-        getWorld().lock()->getSystem<RenderSystem>()
-    };
-    renderSystem->setExposure(
-        renderSystem->getExposure()
+    getLocalViewport().updateExposure(
+        getLocalViewport().getExposure()
         + actionData.mOneAxisActionData.mValue*mExposureStep
     );
     return true;
 }
 bool RenderDebugViewer::onRenderNextTexture(const ActionData& actionData, const ActionDefinition& actionDefinition) {
-    std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
-    renderSystem->renderNextTexture();
+    getLocalViewport().viewNextDebugTexture();
     return true;
 }
 
