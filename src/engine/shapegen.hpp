@@ -28,6 +28,16 @@ private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };
 
+class StaticMeshCuboidDimensions: public ResourceConstructor<StaticMesh, StaticMeshCuboidDimensions> {
+public:
+    StaticMeshCuboidDimensions():
+    ResourceConstructor<StaticMesh, StaticMeshCuboidDimensions>{0}
+    {}
+    inline static std::string getResourceConstructorName() { return "cuboidDimensions"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+};
+
 class StaticModelSphereLatLong: public ResourceConstructor<StaticModel, StaticModelSphereLatLong> {
 public:
     StaticModelSphereLatLong():
@@ -44,6 +54,16 @@ public:
     ResourceConstructor<StaticModel, StaticModelRectangleDimensions>{0}
     {}
     inline static std::string getResourceConstructorName() { return "rectangleDimensions"; }
+private:
+    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+};
+
+class StaticModelCuboidDimensions: public ResourceConstructor<StaticModel, StaticModelCuboidDimensions> {
+public:
+    StaticModelCuboidDimensions():
+    ResourceConstructor<StaticModel, StaticModelCuboidDimensions>{0}
+    {}
+    inline static std::string getResourceConstructorName() { return "cuboidDimensions"; }
 private:
     std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
 };

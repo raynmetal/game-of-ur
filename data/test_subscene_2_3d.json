@@ -9,6 +9,18 @@
             "type": "StaticModel"
         },
         {
+            "name": "CuboidModel",
+            "type": "StaticModel",
+            "method": "cuboidDimensions",
+            "parameters": {
+                "width": 2,
+                "height": 2,
+                "depth": 2,
+                "layout": "row",
+                "flip_texture_y": true 
+            }
+        },
+        {
             "type": "SimObject",
             "method": "fromSceneFile",
             "name": "boardPieceRing",
@@ -188,10 +200,40 @@
         },
 
         {
-            "aspects": [
+            "name": "test_cuboid",
+            "parent": "/",
+            "type": "SimObject",
+            "components": [
                 {
-                    "type": "Revolve"
-                }
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        6.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                },
+                { "resourceName": "CuboidModel", "type": "StaticModel" }
+            ],
+            "aspects": [
+                { "type": "TryCubemap" }
+            ]
+        },
+
+        {
+            "aspects": [
+                { "type": "Revolve" }
             ],
             "components": [
                 {

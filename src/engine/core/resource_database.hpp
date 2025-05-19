@@ -232,6 +232,7 @@ bool ResourceDatabase::HasResource(const std::string& resourceName) {
 
 template <typename TResource>
 std::shared_ptr<IResource> ResourceFactory<TResource>::createResource(const nlohmann::json& resourceDescription) {
+    std::cout << "Loading resource (" << TResource::getResourceTypeName() << ") : " << nlohmann::to_string(resourceDescription["parameters"]) << "\n";
     return mFactoryMethods.at(resourceDescription["method"].get<std::string>())->createResource(
         resourceDescription["parameters"].get<nlohmann::json>()
     );

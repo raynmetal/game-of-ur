@@ -11,6 +11,14 @@
             }
         },
         {
+            "name": "Skybox_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/test_cubemap.png"
+            }
+        },
+        {
             "name": "Dumb_UI",
             "type": "SimObject",
             "method": "fromSceneFile",
