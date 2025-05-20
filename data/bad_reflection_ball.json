@@ -6,7 +6,8 @@
             "method": "sphereLatLong",
             "parameters": {
                 "nLatitudes": 10,
-                "nMeridians": 5
+                "nMeridians": 5,
+                "material_properties": []
             }
         }
     ],

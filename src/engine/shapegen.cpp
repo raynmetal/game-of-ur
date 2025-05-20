@@ -57,12 +57,13 @@ std::shared_ptr<IResource> StaticModelSphereLatLong::createResource(const nlohma
             {"parameters", methodParameters}
         })
     };
+
     std::shared_ptr<Material> sphereMaterial { 
         ResourceDatabase::ConstructAnonymousResource<Material>({
             {"type", Material::getResourceTypeName()},
             {"method", MaterialFromDescription::getResourceConstructorName()},
             {"parameters", {
-                {"properties", nlohmann::json::array()},
+                {"properties", methodParameters.at("material_properties").get<nlohmann::json::array_t>()},
             }}
         })
     };
@@ -90,7 +91,7 @@ std::shared_ptr<IResource> StaticModelRectangleDimensions::createResource(const 
             {"type", Material::getResourceTypeName()},
             {"method", MaterialFromDescription::getResourceConstructorName()},
             {"parameters", {
-                {"properties", nlohmann::json::array()},
+                {"properties", methodParameters.at("material_properties").get<nlohmann::json::array_t>()},
             }}
         })
     };
@@ -119,7 +120,7 @@ std::shared_ptr<IResource> StaticModelCuboidDimensions::createResource(const nlo
             {"type", Material::getResourceTypeName()},
             {"method", MaterialFromDescription::getResourceConstructorName()},
             {"parameters", {
-                {"properties", nlohmann::json::array()},
+                {"properties", methodParameters.at("material_properties").get<nlohmann::json::array_t>()},
             }}
         })
     };
@@ -437,7 +438,7 @@ std::shared_ptr<StaticMesh> generateCuboidMesh(float width, float height, float 
         {
             .mPosition {boxCorners[4], 1.f},
             .mNormal {glm::vec3{0.f, -1.f, 0.f}, 0.f},
-            .mTangent {glm::vec3{-1.f, 0.f, 1.f}, 0.f},
+            .mTangent {glm::vec3{-1.f, 0.f, 0.f}, 0.f},
             .mColor {1.f, 1.f, 1.f, 1.f},
             .mUV1{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {textureCoordinates[13], 1.f}) },
             .mUV2{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {textureCoordinates[13], 1.f}) },
@@ -456,8 +457,8 @@ std::shared_ptr<StaticMesh> generateCuboidMesh(float width, float height, float 
         // right bottom front
         {
             .mPosition {boxCorners[5], 1.f},
-            .mNormal {glm::vec3{-1.f, 0.f, 0.f}, 0.f},
-            .mTangent {glm::vec3{0.f, 0.f, 1.f}, 0.f},
+            .mNormal {glm::vec3{1.f, 0.f, 0.f}, 0.f},
+            .mTangent {glm::vec3{0.f, 0.f, -1.f}, 0.f},
             .mColor {1.f, 1.f, 1.f, 1.f},
             .mUV1{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {textureCoordinates[15], 1.f}) },
             .mUV2{ static_cast<glm::vec2>(textureCoordinateTransform * glm::vec3 {textureCoordinates[15], 1.f}) },
@@ -604,22 +605,22 @@ std::array<glm::vec2, 24> getCubemapTextureCoordinates(Cubemap::Layout cubemapLa
                 // left bottom front
                 glm::vec2{ 1.f / 6.f, 0.f }, // left face
                 glm::vec2{ 3.f / 6.f, 0.f }, // bottom face
-                glm::vec2{ 4.f / 6.f, 0.f }, // front face
+                glm::vec2{ 5.f / 6.f, 0.f }, // front face
 
                 // right bottom front
                 glm::vec2{ 1.f / 6.f, 0.f }, // right face
                 glm::vec2{ 4.f / 6.f, 0.f }, // bottom face
-                glm::vec2{ 5.f / 6.f, 0.f }, // front face
+                glm::vec2{ 4.f / 6.f, 0.f }, // front face
 
                 // left top front
                 glm::vec2{ 1.f / 6.f, 1.f }, // left face
                 glm::vec2{ 2.f / 6.f, 1.f }, // top face
-                glm::vec2{ 4.f / 6.f, 1.f }, // front face
+                glm::vec2{ 5.f / 6.f, 1.f }, // front face
 
                 // right top front
                 glm::vec2{ 1.f / 6.f, 1.f }, // right face
                 glm::vec2{ 3.f / 6.f, 1.f }, // top face
-                glm::vec2{ 5.f / 6.f, 1.f }, // front face
+                glm::vec2{ 4.f / 6.f, 1.f }, // front face
             };
         break;
     };

@@ -68,7 +68,8 @@ void TestText::recomputeTexture() {
         {"parameters", {
             {"width", textTexture->getWidth() * mScale },
             {"height", textTexture->getHeight() * mScale },
-            {"flip_texture_y", true}
+            {"flip_texture_y", true},
+            {"material_properties", nlohmann::json::array()},
         }}
     };
 

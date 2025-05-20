@@ -10,14 +10,7 @@
                 "path": "data/test_subscene_2_3d.json"
             }
         },
-        {
-            "name": "Skybox_Texture",
-            "type": "Texture",
-            "method": "fromFile",
-            "parameters": {
-                "path": "data/textures/test_cubemap.png"
-            }
-        },
+
         {
             "name": "Dumb_UI",
             "type": "SimObject",
