@@ -8,14 +8,7 @@
             },
             "type": "StaticModel"
         },
-        {
-            "name": "Skybox_Texture",
-            "type": "Texture",
-            "method": "fromFile",
-            "parameters": {
-                "path": "data/textures/test_cubemap.png"
-            }
-        },
+
         {
             "name": "CuboidModel",
             "type": "StaticModel",

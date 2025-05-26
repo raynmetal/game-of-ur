@@ -31,6 +31,7 @@ struct RenderSet {
     void addOrAssignRenderSource(const std::string& name, std::shared_ptr<Texture> renderSource);
     void removeRenderSource(const std::string& name);
 
+    void setSkybox(std::shared_ptr<Texture> skyboxTexture);
     void setCamera(EntityID cameraEntity);
     void setGamma(float gamma);
     float getGamma();
@@ -46,6 +47,7 @@ struct RenderSet {
     std::shared_ptr<LightingRenderStage> mLightingRenderStage { nullptr };
     std::shared_ptr<BlurRenderStage> mBlurRenderStage { nullptr };
     std::shared_ptr<TonemappingRenderStage> mTonemappingRenderStage { nullptr };
+    std::shared_ptr<SkyboxRenderStage> mSkyboxRenderStage { nullptr };
     std::shared_ptr<ResizeRenderStage> mResizeRenderStage { nullptr };
     std::shared_ptr<ScreenRenderStage> mScreenRenderStage { nullptr };
     std::shared_ptr<AdditionRenderStage> mAdditionRenderStage { nullptr };
@@ -89,6 +91,8 @@ public:
     void execute(float simulationProgress);
     void updateCameraMatrices(float simulationProgress);
     void renderToScreen();
+    void setSkybox(std::shared_ptr<Texture> skyboxTexture);
+    inline std::shared_ptr<Texture> getSkybox() const { return mSkyboxTexture; }
 
     /* Set the texture to be rendered to the screen by its relative index */
     RenderSetID createRenderSet(
@@ -118,6 +122,7 @@ private:
     void onInitialize() override;
     void copyAndResize();
 
+    std::shared_ptr<Texture> mSkyboxTexture { nullptr };
     std::map<RenderSetID, RenderSet> mRenderSets {};
     RenderSetID mActiveRenderSetID;
     std::set<RenderSetID> mDeletedRenderSetIDs {};

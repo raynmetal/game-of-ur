@@ -213,6 +213,14 @@ std::shared_ptr<IResource> TextureFromFile::createResource(const nlohmann::json&
         .mUsesWebColors { true }
     };
 
+    if(methodParameters.find("cubemap_layout") != methodParameters.end()) {
+        methodParameters.get_to(colorBufferDefinition.mCubemapLayout);
+
+    } else {
+        colorBufferDefinition.mCubemapLayout = ColorBufferDefinition::CubemapLayout::NA;
+
+    }
+
     // Load image from file into a convenient SDL surface, per the image
     SDL_Surface* textureImage { IMG_Load(filepath.c_str()) };
     assert(textureImage && "SDL image loading failed");
@@ -222,8 +230,6 @@ std::shared_ptr<IResource> TextureFromFile::createResource(const nlohmann::json&
     SDL_FreeSurface(textureImage);
     textureImage = nullptr;
     assert(pretexture && "Could not convert SDL image to known image format");
-  
-    //TODO: flip surface along Y axis if necessary
 
     // Move surface pixels to the graphics card
     GLuint texture;
@@ -286,25 +292,31 @@ std::shared_ptr<IResource> TextureFromColorBufferDefinition::createResource(cons
 void from_json(const nlohmann::json& json, ColorBufferDefinition& colorBufferDefinition) {
     json.at("dimensions").at(0).get_to(colorBufferDefinition.mDimensions.x);
     json.at("dimensions").at(1).get_to(colorBufferDefinition.mDimensions.y);
-    colorBufferDefinition.mMagFilter = kStringToFilter.at(json.at("magFilter").get<std::string>());
-    colorBufferDefinition.mMinFilter = kStringToFilter.at(json.at("minFilter").get<std::string>());
-    colorBufferDefinition.mWrapS = kStringToWrap.at(json.at("wrapS").get<std::string>());
-    colorBufferDefinition.mWrapT = kStringToWrap.at(json.at("wrapT").get<std::string>());
-    colorBufferDefinition.mDataType = json.at("dataType") == "float"? GL_FLOAT: GL_UNSIGNED_BYTE;
-    json.at("componentCount").get_to(colorBufferDefinition.mComponentCount);
-    json.at("usesWebColors").get_to(colorBufferDefinition.mUsesWebColors);
+    if(json.find("cubemap_layout") != json.end()) {
+        json.get_to(colorBufferDefinition.mCubemapLayout);
+    } else {
+        colorBufferDefinition.mCubemapLayout = ColorBufferDefinition::CubemapLayout::NA;
+    }
+    colorBufferDefinition.mMagFilter = kStringToFilter.at(json.at("mag_filter").get<std::string>());
+    colorBufferDefinition.mMinFilter = kStringToFilter.at(json.at("min_filter").get<std::string>());
+    colorBufferDefinition.mWrapS = kStringToWrap.at(json.at("wrap_s").get<std::string>());
+    colorBufferDefinition.mWrapT = kStringToWrap.at(json.at("wrap_t").get<std::string>());
+    colorBufferDefinition.mDataType = json.at("data_type") == "float"? GL_FLOAT: GL_UNSIGNED_BYTE;
+    json.at("component_count").get_to(colorBufferDefinition.mComponentCount);
+    json.at("uses_web_colors").get_to(colorBufferDefinition.mUsesWebColors);
     assert(colorBufferDefinition.mComponentCount == 1 || colorBufferDefinition.mComponentCount == 4);
 }
 
 void to_json(nlohmann::json& json, const ColorBufferDefinition& colorBufferDefinition) {
     json = {
         {"dimensions", { colorBufferDefinition.mDimensions.x, colorBufferDefinition.mDimensions.y }},
-        {"magFilter", kFilterToString.at(colorBufferDefinition.mMagFilter)},
-        {"minFilter", kFilterToString.at(colorBufferDefinition.mMinFilter)},
-        {"wrapS", kWrapToString.at(colorBufferDefinition.mWrapS)},
-        {"wrapT", kWrapToString.at(colorBufferDefinition.mWrapT)},
-        {"dataType", colorBufferDefinition.mDataType == GL_FLOAT? "float": "unsigned-byte"},
-        {"componentCount", colorBufferDefinition.mComponentCount},
-        {"usesWebColors", colorBufferDefinition.mUsesWebColors},
+        {"mag_filter", kFilterToString.at(colorBufferDefinition.mMagFilter)},
+        {"min_filter", kFilterToString.at(colorBufferDefinition.mMinFilter)},
+        {"wrap_s", kWrapToString.at(colorBufferDefinition.mWrapS)},
+        {"wrap_t", kWrapToString.at(colorBufferDefinition.mWrapT)},
+        {"data_type", colorBufferDefinition.mDataType == GL_FLOAT? "float": "unsigned-byte"},
+        {"cubemap_layout", colorBufferDefinition.mCubemapLayout},
+        {"component_count", colorBufferDefinition.mComponentCount},
+        {"uses_web_colors", colorBufferDefinition.mUsesWebColors},
     };
 }

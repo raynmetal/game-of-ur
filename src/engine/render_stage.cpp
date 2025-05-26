@@ -4,6 +4,7 @@
 #include "core/resource_database.hpp"
 #include "texture.hpp"
 #include "shader_program.hpp"
+#include "shapegen.hpp"
 #include "framebuffer.hpp"
 #include "light.hpp"
 
@@ -92,6 +93,26 @@ BaseRenderStage{ shaderFilepath }
     mTemplateFramebufferDescription = templateFramebufferDescription;
 }
 
+bool BaseOffscreenRenderStage::hasAttachedRBO() const {
+    return mFramebufferHandle->hasAttachedRBO();
+}
+
+bool BaseOffscreenRenderStage::hasOwnRBO() const {
+    return mFramebufferHandle->hasOwnRBO();
+}
+
+RBO& BaseOffscreenRenderStage::getOwnRBO() {
+    return mFramebufferHandle->getOwnRBO();
+}
+
+void BaseOffscreenRenderStage::attachRBO(RBO& rbo) {
+    mFramebufferHandle->attachRBO(rbo);
+}
+
+void BaseOffscreenRenderStage::detachRBO() {
+    mFramebufferHandle->detachRBO();
+}
+
 std::size_t BaseOffscreenRenderStage::attachTextureAsTarget(std::shared_ptr<Texture> texture) {
     return mFramebufferHandle->addTargetColorBufferHandle(texture);
 }
@@ -103,9 +124,6 @@ std::size_t BaseOffscreenRenderStage::attachTextureAsTarget(const std::string& t
 }
 
 void BaseOffscreenRenderStage::declareRenderTarget(const std::string& name, unsigned int index) {
-    assert(index < std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size() 
-        && "A render stage may not have more render targets than allocated color buffers in its framebuffer"
-    );
     mRenderTargets.insert_or_assign(name, index);
 }
 
@@ -156,12 +174,14 @@ void GeometryRenderStage::validate() {
      * Three colour buffers corresponding to position, normal, albedospec (for now)
      */
     assert(3 == std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size());
-    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->hasRBO());
+    assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->hasOwnRBO());
+    mFramebufferHandle->bind();
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
+    mFramebufferHandle->unbind();
 
     /*
      * TODO: more geometry pass related assertions
      */
-    return;
 }
 
 void GeometryRenderStage::execute() {
@@ -268,8 +288,12 @@ void LightingRenderStage::validate() {
     assert(mTextureAttachments.find("positionMap") != mTextureAttachments.end());
     assert(mTextureAttachments.find("normalMap") != mTextureAttachments.end());
     assert(mTextureAttachments.find("albedoSpecularMap") != mTextureAttachments.end());
-    assert(mFramebufferHandle->hasRBO());
+    assert(mFramebufferHandle->hasOwnRBO());
     assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size() >= 1);
+    mFramebufferHandle->bind();
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
+    mFramebufferHandle->unbind();
+
     /*
      * TODO: more assertions related to the lighting stage
      */
@@ -357,6 +381,63 @@ void LightingRenderStage::execute() {
     mFramebufferHandle->unbind();
 }
 
+void SkyboxRenderStage::setup(const glm::u16vec2& textureDimensions) {
+    setTargetViewport({0, 0, textureDimensions.x, textureDimensions.y});
+    nlohmann::json framebufferDescription = mTemplateFramebufferDescription;
+    framebufferDescription["parameters"]["dimensions"][0] = textureDimensions.x;
+    framebufferDescription["parameters"]["dimensions"][1] = textureDimensions.y;
+    for(nlohmann::json& colorBufferDefinition: framebufferDescription["parameters"]["colorBufferDefinitions"]) {
+        colorBufferDefinition["dimensions"][0] = textureDimensions.x;
+        colorBufferDefinition["dimensions"][1] = textureDimensions.y;
+    }
+    mFramebufferHandle = ResourceDatabase::ConstructAnonymousResource<Framebuffer>(framebufferDescription);
+    mRenderTargets.clear();
+    declareRenderTarget("litSceneWithSkybox", 0);
+
+
+}
+
+void SkyboxRenderStage::validate() {
+    assert(1 == std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size() && "The skybox render stage\
+    must have exactly one color attachment");
+    assert(hasAttachedRBO() && "An RBO must be attached to the skybox render stage");
+    assert(mTextureAttachments.find("skybox") != mTextureAttachments.end() && "Skybox render stage requires a cubemap texture to be attached");
+    assert(mMeshAttachments.find("unitCube") != mMeshAttachments.end() && "Skybox must have cube mesh attached");
+    mFramebufferHandle->bind();
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
+    mFramebufferHandle->unbind();
+}
+
+void SkyboxRenderStage::execute() {
+    mShaderHandle->use();
+    useViewport();
+
+    glEnable(GL_DEPTH_TEST);
+    glDisable(GL_FRAMEBUFFER_SRGB);
+    glDisable(GL_BLEND);
+
+    mFramebufferHandle->bind();
+        const VertexLayout vertexLayout {{
+            { "position", LOCATION_POSITION, 4, GL_FLOAT },
+            { "UV1", LOCATION_UV1, 2, GL_FLOAT },
+        }};
+
+        glBindVertexArray(mVertexArrayObject);
+            std::shared_ptr<StaticMesh> unitCube { mMeshAttachments.at("unitCube") };
+            unitCube->bind(vertexLayout);
+
+            mTextureAttachments.at("skybox")->bind(0);
+            mShaderHandle->setUInt("textureSkybox", 0);
+            getRenderTarget("litSceneWithSkybox")->attachToFramebuffer(0);
+
+            glDrawElementsInstanced(
+                GL_TRIANGLES, unitCube->getElementCount(),
+                GL_UNSIGNED_INT, nullptr, 1
+            );
+        glBindVertexArray(0);
+    mFramebufferHandle->unbind();
+}
+
 void BlurRenderStage::setup(const glm::u16vec2& textureDimensions) {
     setTargetViewport({0,0, textureDimensions.x, textureDimensions.y});
     nlohmann::json framebufferDescription = mTemplateFramebufferDescription;
@@ -380,6 +461,10 @@ void BlurRenderStage::validate() {
     assert(2 == std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size());
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("unblurredImage") != mTextureAttachments.end());
+    mFramebufferHandle->bind();
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
+    mFramebufferHandle->unbind();
+
     /*
      * TODO: assert various other things related to rendering a blur
      */
@@ -462,6 +547,9 @@ void TonemappingRenderStage::validate() {
     assert(mTextureAttachments.find("litScene") != mTextureAttachments.end());
     assert(mTextureAttachments.find("bloomEffect") != mTextureAttachments.end());
     assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size() >= 1);
+    mFramebufferHandle->bind();
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
+    mFramebufferHandle->unbind();
 }
 
 void TonemappingRenderStage::execute() {
@@ -523,6 +611,9 @@ void AdditionRenderStage::setup(const glm::u16vec2& textureDimensions) {
 void AdditionRenderStage::validate() {
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(std::const_pointer_cast<const Framebuffer>(mFramebufferHandle)->getTargetColorBufferHandles().size() >= 1);
+    mFramebufferHandle->bind();
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
+    mFramebufferHandle->unbind();
 }
 
 void AdditionRenderStage::execute() {
@@ -628,6 +719,9 @@ void ResizeRenderStage::setup(const glm::u16vec2& textureDimensions) {
 void ResizeRenderStage::validate() {
     assert(mMeshAttachments.find("screenMesh") != mMeshAttachments.end());
     assert(mTextureAttachments.find("renderSource") != mTextureAttachments.end());
+    mFramebufferHandle->bind();
+        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
+    mFramebufferHandle->unbind();
 }
 
 void ResizeRenderStage::execute() {

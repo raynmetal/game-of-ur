@@ -10,7 +10,21 @@
 #include "core/resource_database.hpp"
 
 struct ColorBufferDefinition {
+    enum class Type {
+        TEXTURE_2D,
+        CUBEMAP,
+    };
+
+    enum class CubemapLayout: uint8_t {
+        NA,
+        ROW,
+        // COLUMN,
+        // ROW_CROSS,
+        // COLUMN_CROSS,
+    };
+
     glm::vec2 mDimensions {800, 600};
+    CubemapLayout mCubemapLayout { CubemapLayout::NA };
     GLenum mMagFilter { GL_LINEAR };
     GLenum mMinFilter { GL_LINEAR };
     GLenum mWrapS { GL_CLAMP_TO_EDGE };
@@ -19,6 +33,7 @@ struct ColorBufferDefinition {
     GLbyte mComponentCount { 4 };
     bool mUsesWebColors { false };
 };
+
 
 inline GLenum deduceInternalFormat(const ColorBufferDefinition& colorBufferDefinition) {
     GLenum internalFormat;
@@ -65,6 +80,9 @@ inline GLenum deduceExternalFormat(const ColorBufferDefinition& colorBufferDefin
 
 void to_json(nlohmann::json& json, const ColorBufferDefinition& colorBufferDefinition);
 void from_json(const nlohmann::json& json, ColorBufferDefinition& colorBufferDefinition);
+NLOHMANN_JSON_SERIALIZE_ENUM(ColorBufferDefinition::CubemapLayout, {
+    {ColorBufferDefinition::CubemapLayout::ROW, "row"},
+});
 
 class Texture : public Resource<Texture> {
 public:
@@ -103,6 +121,7 @@ public:
 
     /* get texture height */
     GLint getHeight() const;
+    
 
     inline static std::string getResourceTypeName() { return "Texture"; }
 

@@ -151,6 +151,7 @@ private:
     static bool detectCycle(std::shared_ptr<SceneNodeCore> node);
     static std::tuple<std::string, std::string> nextInPath(const std::string& where);
     void copyAndReplaceAttributes(const SceneNodeCore& other);
+    void recomputeChildNameIndexMapping();
 
     std::string mName {};
     uint8_t mStateFlags { 0x00 | StateFlags::ENABLED };
@@ -158,7 +159,8 @@ private:
     std::shared_ptr<Entity> mEntity { nullptr };
     std::weak_ptr<SceneNodeCore> mParent {};
     std::weak_ptr<ViewportNode> mParentViewport {};
-    std::unordered_map<std::string, std::shared_ptr<SceneNodeCore>> mChildren {};
+    std::unordered_map<std::string, std::size_t> mChildNameToNode {};
+    std::vector<std::shared_ptr<SceneNodeCore>> mChildren {};
 
     Signature mSystemMask {Signature{}.set()};
 
@@ -266,7 +268,7 @@ public:
         float mFPSCap { 60.f };
     };
 
-    static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld, bool allowActionFlowThrough, const RenderConfiguration& renderConfiguration);
+    static std::shared_ptr<ViewportNode> create(const std::string& name, bool inheritsWorld, bool allowActionFlowThrough, const RenderConfiguration& renderConfiguration, std::shared_ptr<Texture> skybox);
     static std::shared_ptr<ViewportNode> create(const nlohmann::json& sceneNodeDescription);
     static std::shared_ptr<ViewportNode> copy(const std::shared_ptr<const ViewportNode> other);
 
@@ -287,6 +289,7 @@ public:
 
     RenderConfiguration getRenderConfiguration() const;
     void setRenderConfiguration(const RenderConfiguration& renderConfiguration);
+    void setSkybox(std::shared_ptr<Texture> skybox);
     void setResizeType(RenderConfiguration::ResizeType type);
     void setResizeMode(RenderConfiguration::ResizeMode mode);
     void setRenderScale(float renderScale);
@@ -300,19 +303,26 @@ public:
     bool disallowsHandledActionPropagation() const { return mPreventHandledActionPropagation; }
 
     ~ViewportNode() override;
+
+    inline uint32_t getViewportLoadOrdinal() const { return mViewportLoadOrdinal; }
+
 protected:
     ViewportNode(const Placement& placement, const std::string& name):
     BaseSceneNode<ViewportNode>{placement, name},
-    Resource<ViewportNode>{0}
+    Resource<ViewportNode>{0},
+    mViewportLoadOrdinal { SDL_GetTicks() }
     {}
     ViewportNode(const nlohmann::json& jsonSceneNode):
     BaseSceneNode<ViewportNode>{jsonSceneNode},
-    Resource<ViewportNode>{0}
+    Resource<ViewportNode>{0},
+    mViewportLoadOrdinal { SDL_GetTicks() }
     {}
     ViewportNode(const ViewportNode& sceneObject):
     BaseSceneNode<ViewportNode>{sceneObject},
-    Resource<ViewportNode>{0}
+    Resource<ViewportNode>{0},
+    mViewportLoadOrdinal { SDL_GetTicks() }
     {}
+
     std::shared_ptr<ECSWorld> mOwnWorld { nullptr };
     void onActivated() override;
     void onDeactivated() override;
@@ -320,7 +330,7 @@ protected:
     void joinWorld(ECSWorld& world) override;
 
 private:
-    static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration);
+    static std::shared_ptr<ViewportNode> create(const Key& key, const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration, std::shared_ptr<Texture> skybox);
     ViewportNode(const Key& key, const Placement& placement, const std::string& name):
     BaseSceneNode<ViewportNode>{key, Placement{}, name},
     Resource<ViewportNode>{0}
@@ -346,11 +356,18 @@ private:
         };
     }
 
+    struct ViewportChildComp_ {
+        bool operator() (const std::shared_ptr<ViewportNode>& one, const std::shared_ptr<ViewportNode>& two) const {
+            return one->getViewportLoadOrdinal() < two->getViewportLoadOrdinal();
+        }
+    };
 
+    uint32_t mViewportLoadOrdinal { std::numeric_limits<uint32_t>::max() };
+    uint32_t mNLifetimeChildrenAdded { 0 };
     ActionDispatch mActionDispatch {};
     bool mActionFlowthrough { false };
     bool mPreventHandledActionPropagation { true };
-    std::set<std::shared_ptr<ViewportNode>, std::owner_less<std::shared_ptr<ViewportNode>>> mChildViewports {};
+    std::set<std::shared_ptr<ViewportNode>, ViewportChildComp_> mChildViewports {};
     std::shared_ptr<SceneNodeCore> mActiveCamera { nullptr };
     std::set<std::shared_ptr<SceneNodeCore>, std::owner_less<std::shared_ptr<SceneNodeCore>>> mDomainCameras {};
     RenderSetID mRenderSet;

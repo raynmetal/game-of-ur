@@ -93,6 +93,9 @@ void RenderSystem::execute(float simulationProgress) {
             mRenderSets.at(mActiveRenderSetID).mGeometryRenderStage->execute();
             mWorld.lock()->getSystem<LightQueue>()->enqueueTo(*mRenderSets.at(mActiveRenderSetID).mLightingRenderStage, simulationProgress);
             mRenderSets.at(mActiveRenderSetID).mLightingRenderStage->execute();
+            if(mSkyboxTexture) {
+                mRenderSets.at(mActiveRenderSetID).mSkyboxRenderStage->execute();
+            }
             mRenderSets.at(mActiveRenderSetID).mBlurRenderStage->execute();
             mRenderSets.at(mActiveRenderSetID).mTonemappingRenderStage->execute();
         break;
@@ -154,9 +157,10 @@ RenderSetID RenderSystem::createRenderSet(glm::u16vec2 renderDimensions, glm::u1
 
     RenderSet&& newRenderSet {};
     newRenderSet.mGeometryRenderStage = std::make_shared<GeometryRenderStage>("src/shader/geometryShader.json" );
-    newRenderSet.mLightingRenderStage= std::make_shared<LightingRenderStage>("src/shader/lightingShader.json");
+    newRenderSet.mLightingRenderStage = std::make_shared<LightingRenderStage>("src/shader/lightingShader.json");
+    newRenderSet.mSkyboxRenderStage = std::make_shared<SkyboxRenderStage>("src/shader/skyboxShader.json");
     newRenderSet.mBlurRenderStage = std::make_shared<BlurRenderStage>("src/shader/gaussianblurShader.json");
-    newRenderSet.mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>( "src/shader/tonemappingShader.json" );
+    newRenderSet.mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>("src/shader/tonemappingShader.json");
     newRenderSet.mResizeRenderStage = std::make_shared<ResizeRenderStage>("src/shader/basicShader.json");
     newRenderSet.mScreenRenderStage = std::make_shared<ScreenRenderStage>("src/shader/basicShader.json");
     newRenderSet.mAdditionRenderStage = std::make_shared<AdditionRenderStage>("src/shader/combineShader.json");
@@ -174,9 +178,11 @@ RenderSetID RenderSystem::createRenderSet(glm::u16vec2 renderDimensions, glm::u1
     newRenderSet.setRenderProperties(renderDimensions, targetDimensions, viewportDimensions, renderType);
     newRenderSet.setGamma(newRenderSet.mGamma);
     newRenderSet.setExposure(newRenderSet.mExposure);
-
     mRenderSets[newRenderSetID] = std::move(newRenderSet);
 
+    if(mSkyboxTexture) {
+        setSkybox(mSkyboxTexture);
+    }
     return newRenderSetID;
 }
 
@@ -187,6 +193,9 @@ void RenderSystem::useRenderSet(RenderSetID renderSet) {
 
 void RenderSystem::setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions, RenderSet::RenderType renderType) {
     mRenderSets.at(mActiveRenderSetID).setRenderProperties(renderDimensions, targetDimensions, viewportDimensions, renderType);
+    if(mSkyboxTexture) {
+        setSkybox(mSkyboxTexture);
+    }
 }
 
 void RenderSet::setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 targetDimensions, const SDL_Rect& viewportDimensions, RenderType renderType) {
@@ -194,6 +203,7 @@ void RenderSet::setRenderProperties(glm::u16vec2 renderDimensions, glm::u16vec2 
 
     mGeometryRenderStage->setup(renderDimensions);
     mLightingRenderStage->setup(renderDimensions);
+    mSkyboxRenderStage->setup(renderDimensions);
     mBlurRenderStage->setup(renderDimensions);
     mTonemappingRenderStage->setup(renderDimensions);
     mAdditionRenderStage->setup(renderDimensions);
@@ -319,6 +329,39 @@ void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float sim
             lightEmissionData,
             entityTransform.mModelMatrix
         });
+    }
+}
+
+void RenderSystem::setSkybox(std::shared_ptr<Texture> skyboxTexture) {
+    mSkyboxTexture = skyboxTexture;
+    if(mSkyboxTexture) {
+        for(auto renderSet: mRenderSets) {
+            std::shared_ptr<Texture> litSceneTexture {
+                renderSet.second.mLightingRenderStage->getRenderTarget("litScene")
+            };
+            renderSet.second.mSkyboxRenderStage->setup(glm::vec2{litSceneTexture->getWidth(), litSceneTexture->getHeight()});
+            renderSet.second.mSkyboxRenderStage->attachRBO(renderSet.second.mGeometryRenderStage->getOwnRBO());
+            const std::size_t targetID { renderSet.second.mSkyboxRenderStage->attachTextureAsTarget(litSceneTexture) };
+            assert(targetID == 0 && "Too many texture targets specified for skybox render stage");
+            renderSet.second.mSkyboxRenderStage->attachTexture("skybox", mSkyboxTexture);
+            renderSet.second.mSkyboxRenderStage->attachMesh("unitCube", ResourceDatabase::ConstructAnonymousResource<StaticMesh>({
+                {"type", StaticMesh::getResourceTypeName()},
+                {"method", StaticMeshCuboidDimensions::getResourceConstructorName()},
+                {"parameters", {
+                    {"depth", 2.f},
+                    {"width", 2.f},
+                    {"height", 2.f},
+                    {"layout", mSkyboxTexture->getColorBufferDefinition().mCubemapLayout},
+                    {"flip_texture_y", true},
+                }},
+            }));
+            renderSet.second.mSkyboxRenderStage->validate();
+            renderSet.second.mRerendered = true;
+        }
+    } else {
+        for(auto renderSet: mRenderSets) {
+            renderSet.second.mRerendered = true;
+        }
     }
 }
 

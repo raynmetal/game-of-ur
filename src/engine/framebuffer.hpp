@@ -10,6 +10,21 @@
 #include "texture.hpp"
 #include "core/resource_database.hpp"
 
+class Framebuffer;
+
+class RBO {
+public:
+    inline static std::unique_ptr<RBO> create(const glm::vec2& dimensions) {
+        return std::unique_ptr<RBO>{ new RBO{dimensions} };
+    }
+    ~RBO();
+    inline GLuint getID() const { return mID; }
+    void resize(const glm::vec2& dimensions);
+private:
+    RBO(const glm::vec2& dimensions);
+    GLuint mID;
+};
+
 class Framebuffer : public Resource<Framebuffer> {
 public:
     /* Creates a framebuffer with some number of color attachments and color buffers which it manages, optionally
@@ -19,7 +34,7 @@ public:
         glm::vec2 dimensions,
         GLuint nColorAttachments,
         const std::vector<std::shared_ptr<Texture>>& colorBuffers,
-        GLuint rbo
+        std::unique_ptr<RBO> rbo
     );
 
     /*Framebuffer destructor, calls destroyResource */
@@ -40,6 +55,13 @@ public:
     std::vector<std::shared_ptr<const Texture>> getTargetColorBufferHandles() const;
     const std::vector<std::shared_ptr<Texture>>& getTargetColorBufferHandles();
 
+    bool hasAttachedRBO() const;
+    bool hasOwnRBO() const;
+    RBO& getOwnRBO();
+
+    void attachRBO(RBO& rbo);
+    void detachRBO();
+
     /* command to bind this framebuffer */
     void bind();
 
@@ -49,22 +71,25 @@ public:
     default framebuffer) */
     void unbind();
 
-    bool hasRBO() const;
-
     inline static std::string getResourceTypeName() { return "Framebuffer"; }
 
 private:
     GLuint mID {};
-    GLuint mRBO {};
+    std::unique_ptr<RBO> mOwnRBO {};
     GLuint mNColorAttachments {};
     glm::vec2 mDimensions {};
     std::vector<std::shared_ptr<Texture>> mTextureHandles {};
+    bool mHasAttachedRBO { false };
+
+    void attachRBO_(RBO& rbo);
+    void detachRBO_();
 
     void destroyResource();
     void releaseResource();
 
     void copyResource(const Framebuffer& other);
     void stealResource(Framebuffer& other);
+
 };
 
 class FramebufferFromDescription: public ResourceConstructor<Framebuffer, FramebufferFromDescription> {

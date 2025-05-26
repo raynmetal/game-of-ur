@@ -1,6 +1,7 @@
 #include <memory>
 #include <vector>
 
+
 #include <GL/glew.h>
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
@@ -10,20 +11,39 @@
 
 #include "framebuffer.hpp"
 
+RBO::RBO(const glm::vec2& dimensions) {
+    glGenRenderbuffers(1, &mID);
+    resize(dimensions);
+}
+
+void RBO::resize(const glm::vec2& dimensions) {
+    glBindRenderbuffer(GL_RENDERBUFFER, mID);
+        glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, dimensions.x, dimensions.y);
+    glBindRenderbuffer(GL_RENDERBUFFER, 0);
+}
+
+RBO::~RBO() {
+    glDeleteRenderbuffers(1, &mID);
+}
+
 Framebuffer::Framebuffer(
     GLuint framebuffer,
     glm::vec2 dimensions,
     GLuint nColorAttachments,
     const std::vector<std::shared_ptr<Texture>>& colorBuffers,
-    GLuint rbo
+    std::unique_ptr<RBO> rbo
 ) :
 Resource<Framebuffer>{0},
 mID { framebuffer },
-mRBO { rbo },
+mOwnRBO { std::move(rbo) },
 mNColorAttachments { nColorAttachments },
 mDimensions { dimensions },
 mTextureHandles { colorBuffers }
-{}
+{
+    if(mOwnRBO) {
+        attachRBO(*mOwnRBO);
+    }
+}
 
 Framebuffer::Framebuffer(const Framebuffer& other): Resource<Framebuffer>{0}{
     copyResource(other);
@@ -58,6 +78,41 @@ std::size_t Framebuffer::addTargetColorBufferHandle(std::shared_ptr<Texture> tar
     return newIndex;
 }
 
+bool Framebuffer::hasAttachedRBO() const { 
+    return mHasAttachedRBO;
+}
+
+bool Framebuffer::hasOwnRBO() const {
+    return mOwnRBO? true: false;
+}
+
+RBO& Framebuffer::getOwnRBO() {
+    return *mOwnRBO;
+}
+
+void Framebuffer::attachRBO(RBO& rbo) {
+    bind();
+        attachRBO_(rbo);
+    unbind();
+}
+void Framebuffer::attachRBO_(RBO& rbo) {
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo.getID());
+    if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+        throw std::runtime_error("Could not complete creation of framebuffer with ID " + std::to_string(mID));
+    }
+    mHasAttachedRBO = true;
+}
+
+void Framebuffer::detachRBO() {
+    bind();
+        detachRBO_();
+    unbind();
+}
+void Framebuffer::detachRBO_() {
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, 0);
+    mHasAttachedRBO = false;
+}
+
 std::vector<std::shared_ptr<const Texture>>  Framebuffer::getTargetColorBufferHandles() const {
     return { mTextureHandles.cbegin(), mTextureHandles.cend() };
 }
@@ -74,13 +129,12 @@ void Framebuffer::unbind() {
 }
 
 void Framebuffer::destroyResource() {
-    glDeleteRenderbuffers(1, &mRBO);
     glDeleteFramebuffers(1, &mID);
+    mOwnRBO.reset();
     mTextureHandles.clear();
     mDimensions = {0.f, 0.f};
     mNColorAttachments = 0;
     mID = 0;
-    mRBO = 0;
 }
 
 void Framebuffer::releaseResource() {
@@ -88,7 +142,6 @@ void Framebuffer::releaseResource() {
     mDimensions = {0.f, 0.f};
     mNColorAttachments = 0;
     mID = 0;
-    mRBO = 0;
 }
 
 void Framebuffer::copyResource(const Framebuffer& other) {
@@ -102,19 +155,12 @@ void Framebuffer::copyResource(const Framebuffer& other) {
     bind();
         GLuint count {0};
         for(const std::shared_ptr<Texture>& textureHandle: other.mTextureHandles) {
-            std::string colorBufferName { 
-                "framebuffer_" + std::to_string(mID) + "::color_buffer_" + std::to_string(count)
-            };
-            ResourceDatabase::AddResourceDescription(
-                nlohmann::json {
-                    {"name", colorBufferName},
+            mTextureHandles.push_back(
+                ResourceDatabase::ConstructAnonymousResource<Texture>(nlohmann::json{
                     {"type", Texture::getResourceTypeName()},
                     {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
                     {"params", textureHandle->getColorBufferDefinition()}
-                }
-            );
-            mTextureHandles.push_back(
-                ResourceDatabase::GetRegisteredResource<Texture>(colorBufferName)
+                })
             );
             if(count < mNColorAttachments){
                 mTextureHandles.back()->attachToFramebuffer(count);
@@ -131,14 +177,13 @@ void Framebuffer::copyResource(const Framebuffer& other) {
         }
 
         //generate a render buffer object, if necessary
-        if(other.mRBO){
-            if(!mRBO) {
-                glGenRenderbuffers(1, &mRBO);
+        if(other.mOwnRBO){
+            if(!mOwnRBO) {
+                mOwnRBO = RBO::create(mDimensions);
+            } else {
+                mOwnRBO->resize(mDimensions);
             }
-            glBindRenderbuffer(GL_RENDERBUFFER, mRBO);
-                glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, mDimensions.x, mDimensions.y);
-                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, mRBO);
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+            attachRBO_(*mOwnRBO);
         }
 
         if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
@@ -149,7 +194,7 @@ void Framebuffer::copyResource(const Framebuffer& other) {
 
 void Framebuffer::stealResource(Framebuffer& other) {
     mID = other.mID;
-    mRBO = other.mRBO;
+    mOwnRBO = std::move(other.mOwnRBO);
     mNColorAttachments = other.mNColorAttachments;
     mDimensions = other.mDimensions;
     mTextureHandles = other.mTextureHandles;
@@ -157,13 +202,9 @@ void Framebuffer::stealResource(Framebuffer& other) {
     other.releaseResource();
 }
 
-bool Framebuffer::hasRBO() const {
-    return mRBO != 0;
-}
-
 std::shared_ptr<IResource> FramebufferFromDescription::createResource(const nlohmann::json& methodParams) {
     uint32_t nColorAttachments { methodParams.at("nColorAttachments").get<uint32_t>() };
-    bool useRBO { methodParams.at("useRBO").get<bool>() };
+    bool ownsRBO { methodParams.at("ownsRBO").get<bool>() };
     glm::vec2 dimensions { 
         methodParams.at("dimensions").at(0).get<float>(),
         methodParams.at("dimensions").at(1).get<float>()
@@ -171,19 +212,16 @@ std::shared_ptr<IResource> FramebufferFromDescription::createResource(const nloh
     std::vector<nlohmann::json> colorBufferParams { 
         methodParams.at("colorBufferDefinitions").begin(), methodParams.at("colorBufferDefinitions").end()
     };
-    assert((nColorAttachments || useRBO) && "Framebuffer must have at least one color buffer attachment or one depth stencil attachment");
 
     GLuint framebuffer;
-    GLuint rbo { 0 };
+    std::unique_ptr<RBO> rbo {};
     glGenFramebuffers(1, &framebuffer);
 
     glBindFramebuffer(GL_FRAMEBUFFER, framebuffer);
         std::vector<std::shared_ptr<Texture>> textureHandles {};
+
         // If there are color buffers defined, we'll create and store them
         for(uint16_t i {0}; i < colorBufferParams.size(); ++i){
-            std::string colorBufferName {
-                "framebuffer_" + std::to_string(framebuffer) + "::color_buffer_" + std::to_string(i)
-            };
             nlohmann::json colorBufferDescription {
                 {"type", Texture::getResourceTypeName()},
                 {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
@@ -208,16 +246,12 @@ std::shared_ptr<IResource> FramebufferFromDescription::createResource(const nloh
             glDrawBuffers(nColorAttachments, colorAttachments.data());
         }
 
-        if(useRBO) {
-            glGenRenderbuffers(1, &rbo);
-            glBindRenderbuffer(GL_RENDERBUFFER, rbo);
-                glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, dimensions.x, dimensions.y);
-                glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, rbo);
-            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        if(ownsRBO) {
+            rbo = RBO::create(dimensions);
         }
 
-        assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
+        // assert(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE && "Could not complete creation of framebuffer");
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-    return std::make_shared<Framebuffer>(framebuffer, dimensions, nColorAttachments, textureHandles, rbo);
+    return std::make_shared<Framebuffer>(framebuffer, dimensions, nColorAttachments, textureHandles, std::move(rbo));
 }

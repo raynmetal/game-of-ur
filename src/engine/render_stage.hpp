@@ -113,10 +113,19 @@ class BaseOffscreenRenderStage: public BaseRenderStage {
 public:
     BaseOffscreenRenderStage(const std::string& shaderFilepath, const nlohmann::json& templateFramebufferDescription);
 
+    void setTargetTexture(std::shared_ptr<Texture> texture, std::size_t targetID);
     std::size_t attachTextureAsTarget(std::shared_ptr<Texture> textureHandle);
     std::size_t attachTextureAsTarget(const std::string& targetName, std::shared_ptr<Texture> textureHandle);
     void declareRenderTarget(const std::string& name, unsigned int index);
     std::shared_ptr<Texture> getRenderTarget(const std::string& name);
+    void detachTargetTexture(std::size_t targetTextureID);
+    void removeRenderTarget(const std::string& name);
+
+    bool hasAttachedRBO() const;
+    bool hasOwnRBO() const;
+    RBO& getOwnRBO();
+    void attachRBO(RBO& rbo);
+    void detachRBO();
 
 protected:
     std::shared_ptr<Framebuffer> mFramebufferHandle;
@@ -135,7 +144,7 @@ public:
             {"dimensions", nlohmann::json::array({
                 800, 600
             })},
-            {"useRBO", true },
+            {"ownsRBO", true },
             {"colorBufferDefinitions",{
                 ColorBufferDefinition{
                     .mDataType=GL_FLOAT,
@@ -170,7 +179,7 @@ public:
             {"dimensions", nlohmann::json::array({
                 800, 600
             })},
-            {"useRBO", true },
+            {"ownsRBO", true },
             {"colorBufferDefinitions",{
                 ColorBufferDefinition{
                     .mDataType=GL_FLOAT,
@@ -200,7 +209,7 @@ public:
             {"dimensions", nlohmann::json::array({
                 800, 600 
             })},
-            {"useRBO", false},
+            {"ownsRBO", false},
             {"colorBufferDefinitions",{
                 ColorBufferDefinition{
                     .mDataType=GL_FLOAT,
@@ -219,6 +228,28 @@ public:
     virtual void execute() override;
 };
 
+class SkyboxRenderStage : public BaseOffscreenRenderStage {
+public:
+    SkyboxRenderStage(const std::string& filepath)
+    : BaseOffscreenRenderStage(filepath, nlohmann::json::object({
+        {"type", Framebuffer::getResourceTypeName()},
+        {"method", FramebufferFromDescription::getResourceConstructorName()},
+        {"parameters", {
+            {"nColorAttachments", 1},
+            {"dimensions", nlohmann::json::array({
+                800, 600
+            })},
+            {"ownsRBO", false},
+            {"colorBufferDefinitions", nlohmann::json::array()}
+        }}
+    }))
+    {}
+
+    virtual void setup(const glm::u16vec2& textureDimensions) override;
+    virtual void validate() override;
+    virtual void execute() override;
+};
+
 class TonemappingRenderStage : public BaseOffscreenRenderStage {
 public:
     TonemappingRenderStage(const std::string& shaderFilepath)
@@ -230,7 +261,7 @@ public:
             {"dimensions", nlohmann::json::array({
                 800, 600
             })},
-            {"useRBO", false},
+            {"ownsRBO", false},
             {"colorBufferDefinitions",{
                 ColorBufferDefinition{
                     .mDataType=GL_UNSIGNED_BYTE,
@@ -257,7 +288,7 @@ public:
             {"dimensions", nlohmann::json::array({
                 800, 600
             })},
-            {"useRBO", false},
+            {"ownsRBO", false},
             {"colorBufferDefinitions", {
                 ColorBufferDefinition {
                     .mDataType=GL_UNSIGNED_BYTE,
@@ -296,7 +327,7 @@ public:
             {"dimensions", nlohmann::json::array({
                 800, 600
             })},
-            {"useRBO", false},
+            {"ownsRBO", false},
             {"colorBufferDefinitions",{
                 ColorBufferDefinition{
                     .mDataType=GL_UNSIGNED_BYTE,

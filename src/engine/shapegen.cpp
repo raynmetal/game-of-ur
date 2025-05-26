@@ -8,16 +8,15 @@
 #include "vertex.hpp"
 #include "model.hpp"
 #include "material.hpp"
-#include "cubemap.hpp"
 #include  "spatial_query_basic_types.hpp"
 #include "mesh.hpp"
 #include "shapegen.hpp"
 
-std::array<glm::vec2, 24> getCubemapTextureCoordinates(Cubemap::Layout cubemapLayout);
+std::array<glm::vec2, 24> getCubemapTextureCoordinates(ColorBufferDefinition::CubemapLayout cubemapLayout);
 
 std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian, bool flipTextureY=false);
 std::shared_ptr<StaticMesh> generateRectangleMesh(float width=2.f, float height=2.f, bool flipTextureY=false);
-std::shared_ptr<StaticMesh> generateCuboidMesh(float width=2.f, float height=2.f, float depth=2.f, Cubemap::Layout cubemapLayout=Cubemap::Layout::ROW, bool flipTextureY=false);
+std::shared_ptr<StaticMesh> generateCuboidMesh(float width=2.f, float height=2.f, float depth=2.f, ColorBufferDefinition::CubemapLayout cubemapLayout=ColorBufferDefinition::CubemapLayout::ROW, bool flipTextureY=false);
 
 std::shared_ptr<IResource> StaticMeshSphereLatLong::createResource(const nlohmann::json& methodParameters) {
     return generateSphereMesh(
@@ -41,8 +40,8 @@ std::shared_ptr<IResource> StaticMeshCuboidDimensions::createResource(const nloh
         methodParameters.at("height").get<float>(),
         methodParameters.at("depth").get<float>(),
         methodParameters.find("layout") != methodParameters.end()?
-            methodParameters.at("layout").get<Cubemap::Layout>():
-            Cubemap::Layout::ROW,
+            methodParameters.at("layout").get<ColorBufferDefinition::CubemapLayout>():
+            ColorBufferDefinition::CubemapLayout::ROW,
         methodParameters.find("flip_texture_y") != methodParameters.end()?
             methodParameters.at("flip_texture_y").get<bool>():
             false
@@ -290,7 +289,7 @@ std::shared_ptr<StaticMesh> generateRectangleMesh(float width, float height, boo
     return std::make_shared<StaticMesh>(vertices, elements);
 }
 
-std::shared_ptr<StaticMesh> generateCuboidMesh(float width, float height, float depth, Cubemap::Layout layout, bool flipTextureY) {
+std::shared_ptr<StaticMesh> generateCuboidMesh(float width, float height, float depth, ColorBufferDefinition::CubemapLayout layout, bool flipTextureY) {
     assert(width > 0.f);
     assert(height > 0.f);
     assert(depth > 0.f);
@@ -557,7 +556,7 @@ std::shared_ptr<StaticMesh> generateCuboidMesh(float width, float height, float 
         5*3+1, 0*3+1, 1*3+1,
 
         // top face triangles
-        2*3+1, 3*3+1,7*3+1,
+        2*3+1, 3*3+1, 7*3+1,
         2*3+1, 7*3+1, 6*3+1,
 
         // back face triangles
@@ -572,7 +571,7 @@ std::shared_ptr<StaticMesh> generateCuboidMesh(float width, float height, float 
     return std::make_shared<StaticMesh>(vertices, elements);   
 }
 
-std::array<glm::vec2, 24> getCubemapTextureCoordinates(Cubemap::Layout cubemapLayout) {
+std::array<glm::vec2, 24> getCubemapTextureCoordinates(ColorBufferDefinition::CubemapLayout cubemapLayout) {
 
     // NOTE:  Each corner of a cuboid is shared by 3 faces.  The texture contains an unwrapped version
     // of the cuboid layed out in the manner specified by cubemap layout.  For each face, the same corner
@@ -580,7 +579,8 @@ std::array<glm::vec2, 24> getCubemapTextureCoordinates(Cubemap::Layout cubemapLa
     std::array<glm::vec2, 24> textureCoordinates;
 
     switch(cubemapLayout) {
-        case Cubemap::Layout::ROW:
+        case ColorBufferDefinition::CubemapLayout::NA:
+        case ColorBufferDefinition::CubemapLayout::ROW:
             textureCoordinates = {
                 // left bottom back
                 glm::vec2{ 2.f / 6.f, 0.f }, // left face

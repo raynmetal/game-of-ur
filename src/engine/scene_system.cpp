@@ -70,6 +70,13 @@ SceneNodeCore::SceneNodeCore(const SceneNodeCore& other)
     copyAndReplaceAttributes(other);
 }
 
+void SceneNodeCore::recomputeChildNameIndexMapping() {
+    mChildNameToNode.clear();
+    for(std::size_t i{0}; i < mChildren.size(); ++i) {
+        mChildNameToNode[mChildren[i]->mName] = i;
+    }
+}
+
 void SceneNodeCore::copyAndReplaceAttributes(const SceneNodeCore& other) {
     // copy the other entity and its components
     std::shared_ptr<Entity> newEntity { 
@@ -79,6 +86,7 @@ void SceneNodeCore::copyAndReplaceAttributes(const SceneNodeCore& other) {
     mEntity = newEntity;
     mStateFlags = (other.mStateFlags&StateFlags::ENABLED);
     mChildren.clear();
+    mChildNameToNode.clear();
     mName = other.mName;
     mParent.reset();
     mParentViewport.reset();
@@ -87,16 +95,15 @@ void SceneNodeCore::copyAndReplaceAttributes(const SceneNodeCore& other) {
 
 void SceneNodeCore::copyDescendants(const SceneNodeCore& other) {
     // copy descendant nodes, attach them to self
-    for(auto& childPair: other.mChildren) {
-        const std::string& childName { childPair.first };
-        const std::shared_ptr<const SceneNodeCore> childNode { childPair.second };
-        mChildren[childName] = SceneNodeCore::copy(childNode);
+    for(auto& child: other.mChildren) {
+        mChildNameToNode[child->mName] = mChildren.size();
+        mChildren.push_back(SceneNodeCore::copy(child));
 
         // TODO : somehow make this whole thing less delicate. Shared
         // from this depends on the existence of a shared pointer
         // to the current object
-        mChildren[childName]->mParent = shared_from_this();
-        setParentViewport(mChildren[childName], getLocalViewport());
+        mChildren.back()->mParent = shared_from_this();
+        setParentViewport(mChildren.back(), getLocalViewport());
     }
 }
 
@@ -175,11 +182,11 @@ bool SceneNodeCore::hasNode(const std::string& pathToChild) const {
     const std::tuple<std::string, std::string> nextPair { nextInPath(pathToChild) };
     const std::string& nextNodeName { std::get<0>(nextPair) };
     const std::string& remainingWhere { std::get<1>(nextPair) };
-    if(mChildren.find(nextNodeName) == mChildren.end()) {
+    if(mChildNameToNode.find(nextNodeName) == mChildNameToNode.end()) {
         return false;
     }
 
-    return mChildren.at(nextNodeName)->hasNode(remainingWhere);
+    return mChildren[mChildNameToNode.at(nextNodeName)]->hasNode(remainingWhere);
 }
 
 
@@ -187,8 +194,9 @@ void SceneNodeCore::addNode(std::shared_ptr<SceneNodeCore> node, const std::stri
     assert(node && "Must be a non null pointer to a valid scene node");
     assert(node->mParent.expired() && "Node must not have a parent");
     if(where == "/") {
-        assert(mChildren.find(node->mName) == mChildren.end() && "A node with this name already exists at this location");
-        mChildren[node->mName] = node;
+        assert(mChildNameToNode.find(node->mName) == mChildNameToNode.end() && "A node with this name already exists at this location");
+        mChildNameToNode[node->mName] = mChildren.size();
+        mChildren.push_back(node);
         node->mParent = shared_from_this();
         setParentViewport(node, getLocalViewport());
         assert(!detectCycle(node) && "Cycle detected, ancestor node added as child to its descendant.");
@@ -200,22 +208,18 @@ void SceneNodeCore::addNode(std::shared_ptr<SceneNodeCore> node, const std::stri
     std::tuple<std::string, std::string> nextPair{ nextInPath(where) };
     const std::string& nextNodeName { std::get<0>(nextPair) };
     const std::string& remainingWhere { std::get<1>(nextPair) };
-    assert(mChildren.find(nextNodeName) != mChildren.end() && "No child node with this name is known");
+    assert(mChildNameToNode.find(nextNodeName) != mChildNameToNode.end() && "No child node with this name is known");
 
-    mChildren.at(nextNodeName)->addNode(node, remainingWhere);
+    mChildren[mChildNameToNode.at(nextNodeName)]->addNode(node, remainingWhere);
 }
 
 std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::getChildren() {
-    std::vector<std::shared_ptr<SceneNodeCore>> children {};
-    for(auto& pair: mChildren) {
-        children.push_back(pair.second);
-    }
-    return children;
+    return std::vector<std::shared_ptr<SceneNodeCore>>{ mChildren };
 }
 std::vector<std::shared_ptr<const SceneNodeCore>> SceneNodeCore::getChildren() const {
     std::vector<std::shared_ptr<const SceneNodeCore>> children {};
-    for(auto& pair: mChildren) {
-        children.push_back(pair.second);
+    for(auto& child: mChildren) {
+        children.push_back(child);
     }
     return children;
 }
@@ -229,9 +233,9 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::getNode(const std::string& where) 
     std::tuple<std::string, std::string> nextPair{ nextInPath(where) };
     const std::string nextNodeName { std::get<0>(nextPair) };
     const std::string remainingWhere { std::get<1>(nextPair) };
-    assert(mChildren.find(nextNodeName) != mChildren.end() && "No child node with this name is known");
+    assert(mChildNameToNode.find(nextNodeName) != mChildNameToNode.end() && "No child node with this name is known");
 
-    return mChildren.at(nextNodeName)->getNode(remainingWhere);
+    return mChildren[mChildNameToNode.at(nextNodeName)]->getNode(remainingWhere);
 }
 
 void SceneNodeCore::setParentViewport(std::shared_ptr<SceneNodeCore> node, std::shared_ptr<ViewportNode> newViewport)  {
@@ -245,6 +249,7 @@ void SceneNodeCore::setParentViewport(std::shared_ptr<SceneNodeCore> node, std::
         }
         // and add it to the new parent viewport's list of children
         if(newViewport) {
+            nodeAsViewport->mViewportLoadOrdinal = newViewport->mNLifetimeChildrenAdded++;
             newViewport->mChildViewports.insert(nodeAsViewport);
         }
     }
@@ -298,9 +303,9 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::disconnectNode(std::shared_ptr<Sce
     node->mEntity->getWorld().lock()->getSystem<SceneSystem>()->nodeRemoved(node);
 
     //disconnect this node from its parent
-    std::shared_ptr<SceneNodeCore> parent { node->mParent };
-    if(parent) {
-        parent->mChildren.erase(node->mName);
+    if(std::shared_ptr<SceneNodeCore> parent = node->mParent.lock()) {
+        parent->mChildren.erase(std::next(parent->mChildren.begin(), parent->mChildNameToNode[node->mName]));
+        parent->recomputeChildNameIndexMapping();
     }
 
     setParentViewport(node, nullptr);
@@ -318,9 +323,9 @@ std::shared_ptr<SceneNodeCore> SceneNodeCore::removeNode(const std::string& wher
     std::tuple<std::string, std::string> nextPair{ nextInPath(where) };
     const std::string nextNodeName { std::get<0>(nextPair) };
     const std::string remainingWhere { std::get<1>(nextPair) };
-    assert(mChildren.find(nextNodeName) != mChildren.end() && "No child node with this name is known");
+    assert(mChildNameToNode.find(nextNodeName) != mChildNameToNode.end() && "No child node with this name is known");
 
-    return mChildren.at(nextNodeName)->removeNode(remainingWhere);
+    return mChildren[mChildNameToNode.at(nextNodeName)]->removeNode(remainingWhere);
 }
 
 std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::removeChildren() {
@@ -335,9 +340,9 @@ std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::removeChildren() {
 
 std::vector<std::shared_ptr<SceneNodeCore>> SceneNodeCore::getDescendants() {
     std::vector<std::shared_ptr<SceneNodeCore>> descendants {};
-    for(auto& pair: mChildren) {
-        descendants.push_back(pair.second);
-        std::vector<std::shared_ptr<SceneNodeCore>> childDescendants {pair.second->getDescendants()};
+    for(auto& child: mChildren) {
+        descendants.push_back(child);
+        std::vector<std::shared_ptr<SceneNodeCore>> childDescendants {child->getDescendants()};
         descendants.insert(descendants.end(), childDescendants.begin(), childDescendants.end());
     }
     return descendants;
@@ -414,6 +419,7 @@ ViewportNode::~ViewportNode() {
     // world
     mChildViewports.clear();
     mChildren.clear();
+    mChildNameToNode.clear();
     mEntity.reset();
 
     // Destroy this viewport's world
@@ -424,23 +430,30 @@ ViewportNode::~ViewportNode() {
 }
 
 
-std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, bool allowActionFlowthrough, const ViewportNode::RenderConfiguration& renderConfiguration) {
+std::shared_ptr<ViewportNode> ViewportNode::create(const std::string& name, bool inheritsWorld, bool allowActionFlowthrough, const ViewportNode::RenderConfiguration& renderConfiguration, std::shared_ptr<Texture> skybox) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(Placement{}, name) };
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
     newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(renderConfiguration.mBaseDimensions, renderConfiguration.mBaseDimensions, {0, 0, renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y});
     newViewport->setRenderConfiguration(renderConfiguration);
+    if(!inheritsWorld) {
+        newViewport->setSkybox(skybox);
+    }
     newViewport->mActionFlowthrough = allowActionFlowthrough;
     return newViewport;
 }
-std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration) {
+
+std::shared_ptr<ViewportNode> ViewportNode::create(const Key& key, const std::string& name, bool inheritsWorld, const RenderConfiguration& renderConfiguration, std::shared_ptr<Texture> skybox) {
     std::shared_ptr<ViewportNode> newViewport { BaseSceneNode<ViewportNode>::create(key, Placement{}, name) };
     if(!inheritsWorld) {
         newViewport->createAndJoinWorld();
     }
     newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(renderConfiguration.mBaseDimensions, renderConfiguration.mBaseDimensions, {0, 0, renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y}, renderConfiguration.mRenderType);
     newViewport->setRenderConfiguration(renderConfiguration);
+    if(!inheritsWorld) {
+        newViewport->setSkybox(skybox);
+    }
     newViewport->mActionFlowthrough = true;
     return newViewport;
 }
@@ -459,6 +472,14 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewpor
     newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(newViewport->mRenderConfiguration.mBaseDimensions, newViewport->mRenderConfiguration.mBaseDimensions, {0, 0, newViewport->mRenderConfiguration.mBaseDimensions.x, newViewport->mRenderConfiguration.mBaseDimensions.y});
     newViewport->setRenderConfiguration(newViewport->mRenderConfiguration);
 
+    if(viewportNodeDescription.at("inherits_world").get<bool>() == false && viewportNodeDescription.find("skybox_texture") != viewportNodeDescription.end()) {
+        newViewport->setSkybox(
+            ResourceDatabase::GetRegisteredResource<Texture>(viewportNodeDescription.at("skybox_texture").get<std::string>())
+        );
+    } else {
+        assert(viewportNodeDescription.find("skybox_texture") == viewportNodeDescription.end() && "Viewports that don't own their respective worlds cannot specify a skybox texture");
+    }
+
     if(newViewport->mRenderConfiguration.mRenderType == RenderConfiguration::RenderType::ADDITION) {
         assert(viewportNodeDescription.find("allow_action_flowthrough") != viewportNodeDescription.end() && "Addition viewports must set the allow action flowthrough property");
         viewportNodeDescription.at("allow_action_flowthrough").get_to(newViewport->mActionFlowthrough);
@@ -469,6 +490,7 @@ std::shared_ptr<ViewportNode> ViewportNode::create(const nlohmann::json& viewpor
 
     return newViewport;
 }
+
 std::shared_ptr<ViewportNode> ViewportNode::copy(const std::shared_ptr<const ViewportNode> viewportNode) {
     std::shared_ptr<ViewportNode> newViewport {BaseSceneNode<ViewportNode>::copy(viewportNode)};
     return newViewport;
@@ -482,6 +504,9 @@ std::shared_ptr<SceneNodeCore> ViewportNode::clone() const {
     }
     newViewport->mRenderSet = newViewport->getWorld().lock()->getSystem<RenderSystem>()->createRenderSet(mRenderConfiguration.mBaseDimensions, mRenderConfiguration.mBaseDimensions, {0, 0, mRenderConfiguration.mBaseDimensions.x, mRenderConfiguration.mBaseDimensions.y});
     newViewport->setRenderConfiguration(mRenderConfiguration);
+    if(mOwnWorld) {
+        newViewport->setSkybox(mOwnWorld->getSystem<RenderSystem>()->getSkybox());
+    }
     return newSceneNode;
 }
 
@@ -523,7 +548,10 @@ void ViewportNode::onDeactivated() {
     if(!mOwnWorld) return;
     mOwnWorld->deactivateSimulation();
 }
-
+void ViewportNode::setSkybox(std::shared_ptr<Texture> skybox) {
+    assert(mOwnWorld && "Skybox may only be set for a viewport that has its own world");
+    mOwnWorld->getSystem<RenderSystem>()->setSkybox(skybox);
+}
 void ViewportNode::viewNextDebugTexture() {
     std::shared_ptr<RenderSystem> renderSystem { getWorld().lock()->getSystem<RenderSystem>() };
     renderSystem->useRenderSet(mRenderSet);
@@ -1313,7 +1341,7 @@ void SceneSystem::onWorldEntityUpdate(UniversalEntityID UniversalEntityID) {
 }
 
 void SceneSystem::onApplicationInitialize(const ViewportNode::RenderConfiguration& rootViewportRenderConfiguration) {
-    mRootNode = ViewportNode::create(SceneNodeCore::Key{}, kSceneRootName, false, rootViewportRenderConfiguration);
+    mRootNode = ViewportNode::create(SceneNodeCore::Key{}, kSceneRootName, false, rootViewportRenderConfiguration, nullptr);
 
     // Manual setup of root node, since it skips the normal activation procedure
     mRootNode->mStateFlags |= SceneNodeCore::StateFlags::ENABLED;
