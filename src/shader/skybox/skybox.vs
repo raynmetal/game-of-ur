@@ -16,7 +16,7 @@ void main() {
     // color related fragment attributes
     fragAttr.UV1 = attrUV1;
 
-    // pre-NDC position, after projection and before viewport
-    // transform is applied
-    gl_Position = projectionMatrix * fragAttr.position;
+    // The depth of the skybox is the max possible depth for the frustum, exactly at
+    // the far plane relative to the camera.
+    gl_Position = (projectionMatrix * fragAttr.position).xyww;
 }

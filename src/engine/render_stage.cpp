@@ -189,6 +189,7 @@ void GeometryRenderStage::execute() {
     useViewport();
 
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glDisable(GL_BLEND);
     glDisable(GL_FRAMEBUFFER_SRGB);
 
@@ -413,6 +414,7 @@ void SkyboxRenderStage::execute() {
     useViewport();
 
     glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LEQUAL);
     glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_BLEND);
 
