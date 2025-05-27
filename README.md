@@ -6,7 +6,7 @@
 
 This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Royal_Game_of_Ur), written in C++ using SDL and OpenGL.
 
-Game of Ur is a competitive, two-player board game. The player that manages to move all 7 of their pieces to the end of the course first, wins the game.
+Game of Ur is a competitive, two-player board game. The player who moves all 7 of their pieces to the end of the course first, wins the game.
 
 ### Motivation
 
@@ -33,6 +33,10 @@ I decided against making an original game because I wanted to focus on the techn
 
 raynmetal/game-of-ur is distributed under the terms of the MIT License.
 
-This program makes extensive use of the following libraries: 
+This program makes extensive use of the following libraries:
 
 - [SDL](https://www.libsdl.org/)
+- [SDL Image](https://github.com/libsdl-org/SDL_image)
+- [GLEW](https://github.com/nigels-com/glew)
+- [Nlohmann JSON](https://json.nlohmann.me/)
+- [GLM](https://github.com/g-truc/glm)

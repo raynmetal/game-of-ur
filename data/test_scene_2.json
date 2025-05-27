@@ -1,0 +1,119 @@
+{
+
+    "resources": [
+
+        {
+            "name": "Test_Subscene_3D",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/test_subscene_2_3d.json"
+            }
+        },
+
+        {
+            "name": "Dumb_UI",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/dumb_ui.json"
+            }
+        },
+        {
+            "name": "Roboto_Mono_Regular_24",
+            "type": "TextFont",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/fonts/Roboto_Mono/static/RobotoMono-Regular.ttf",
+                "point_size": 24
+            }
+        },
+        {
+            "name": "Skybox_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/test_cubemap.png",
+                "cubemap_layout": "row"
+            }
+        }
+    ],
+
+    "nodes": [
+        {
+            "components": [
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                }
+            ],
+            "aspects": [],
+            "name": "scene_root",
+            "parent": "",
+            "type": "SimObject"
+        },
+
+        {
+            "type": "Scene",
+            "name": "Dumb_UI",
+            "parent": "/",
+            "copy": true
+        },
+
+        {
+            "name": "viewport_3D",
+            "parent": "/",
+            "type": "ViewportNode",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ]
+                }
+            ],
+            "inherits_world": false,
+            "prevent_handled_action_propagation": false,
+            "skybox_texture": "Skybox_Texture",
+            "render_configuration": {
+                "base_dimensions": [1366, 768],
+                "update_mode": "on-render-cap-fps",
+                "resize_type": "texture-dimensions",
+                "resize_mode": "fixed-dimensions",
+                "render_type": "basic-3d",
+                "fps_cap": 60,
+                "render_scale": 0.85
+            }
+        },
+        {
+            "type": "Scene",
+            "name": "Test_Subscene_3D",
+            "parent": "/viewport_3D/",
+            "copy": false
+        }
+    ],
+
+    "connections": []
+}
