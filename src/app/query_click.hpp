@@ -7,20 +7,20 @@
 
 #include "interface_pointer_callback.hpp"
 
-class QueryClick: public SimObjectAspect<QueryClick>, public IUsePointer {
+class QueryClick: public ToyMakersEngine::SimObjectAspect<QueryClick>, public IUsePointer {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "QueryClick"; }
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
 
 protected:
-    bool onClick(const ActionData& actionData, const ActionDefinition& actionDefinition);
+    bool onClick(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
 
-    std::weak_ptr<FixedActionBinding> handlerClick {
+    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerClick {
         declareFixedActionBinding(
             "UI",
             "Tap",
-            [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
+            [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
                 return this->onClick(actionData, actionDefinition);
             }
         )

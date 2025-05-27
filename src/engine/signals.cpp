@@ -1,5 +1,7 @@
 #include "signals.hpp"
 
+using namespace ToyMakersEngine;
+
 SignalTracker::SignalTracker() = default;
 
 // let copy constructor just create its own signal list

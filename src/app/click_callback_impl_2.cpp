@@ -7,10 +7,10 @@ bool ClickCallbackImpl2::onPointerClick() {
     return true;
 }
 
-std::shared_ptr<BaseSimObjectAspect> ClickCallbackImpl2::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> ClickCallbackImpl2::create(const nlohmann::json& jsonAspectProperties) {
     return std::shared_ptr<ClickCallbackImpl2>{ new ClickCallbackImpl2{} };
 }
 
-std::shared_ptr<BaseSimObjectAspect> ClickCallbackImpl2::clone() const {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> ClickCallbackImpl2::clone() const {
     return std::shared_ptr<ClickCallbackImpl2>{ new ClickCallbackImpl2{} };
 }

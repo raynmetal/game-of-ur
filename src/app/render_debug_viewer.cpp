@@ -6,35 +6,35 @@
 #include "render_debug_viewer.hpp"
 
 
-bool RenderDebugViewer::onUpdateGamma(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+bool RenderDebugViewer::onUpdateGamma(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
     getLocalViewport().updateGamma(
         getLocalViewport().getGamma() 
         + actionData.mOneAxisActionData.mValue*mGammaStep
     );
     return true;
 }
-bool RenderDebugViewer::onUpdateExposure(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+bool RenderDebugViewer::onUpdateExposure(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
     getLocalViewport().updateExposure(
         getLocalViewport().getExposure()
         + actionData.mOneAxisActionData.mValue*mExposureStep
     );
     return true;
 }
-bool RenderDebugViewer::onRenderNextTexture(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+bool RenderDebugViewer::onRenderNextTexture(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
     getLocalViewport().viewNextDebugTexture();
     return true;
 }
 
-std::shared_ptr<BaseSimObjectAspect> RenderDebugViewer::clone() const {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> RenderDebugViewer::clone() const {
     return std::shared_ptr<RenderDebugViewer>(new RenderDebugViewer {});
 }
 
-std::shared_ptr<BaseSimObjectAspect> RenderDebugViewer::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> RenderDebugViewer::create(const nlohmann::json& jsonAspectProperties) {
     return std::shared_ptr<RenderDebugViewer>(new RenderDebugViewer {});
 }
 
 void RenderDebugViewer::printWindowProps() {
-    WindowContext& windowCtxManager { WindowContext::getInstance() };
+    ToyMakersEngine::WindowContext& windowCtxManager { ToyMakersEngine::WindowContext::getInstance() };
     std::cout << "Window State:\n"
         << "\tdisplay index: " << windowCtxManager.getDisplayID() << "\n"
         << "\ttitle: " << windowCtxManager.getTitle() << "\n"

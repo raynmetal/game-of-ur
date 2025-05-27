@@ -5,6 +5,8 @@
 
 #include "material.hpp"
 
+using namespace ToyMakersEngine;
+
 Material* Material::defaultMaterial { nullptr };
 
 Material::~Material() { destroyResource(); }

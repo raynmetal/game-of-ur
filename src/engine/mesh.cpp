@@ -10,6 +10,8 @@
 #include "vertex.hpp"
 #include "mesh.hpp"
 
+using namespace ToyMakersEngine;
+
 StaticMesh::StaticMesh(
     const std::vector<BuiltinVertexData>& vertices,
     const std::vector<GLuint>& elements,

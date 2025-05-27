@@ -1,9 +1,9 @@
-#ifndef ZOREFLECTIVEBALL_H
-#define ZOREFLECTIVEBALL_H
+#ifndef ZOAPPREFLECTIVEBALL_H
+#define ZOAPPREFLECTIVEBALL_H
 
 #include "../engine/sim_system.hpp"
 
-class ReflectiveBall: public SimObjectAspect<ReflectiveBall> {
+class ReflectiveBall: public ToyMakersEngine::SimObjectAspect<ReflectiveBall> {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "ReflectiveBall"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
@@ -16,8 +16,8 @@ public:
 private:
     ReflectiveBall(): SimObjectAspect<ReflectiveBall>{0} {}
 
-    std::weak_ptr<ViewportNode> mReflectionViewport {};
-    std::weak_ptr<Material> mBallMaterial {};
+    std::weak_ptr<ToyMakersEngine::ViewportNode> mReflectionViewport {};
+    std::weak_ptr<ToyMakersEngine::Material> mBallMaterial {};
 };
 
 #endif

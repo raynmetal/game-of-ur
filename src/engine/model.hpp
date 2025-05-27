@@ -1,5 +1,5 @@
-#ifndef ZOMODEL_H
-#define ZOMODEL_H
+#ifndef FOOLSENGINE_MODEL_H
+#define FOOLSENGINE_MODEL_H
 
 #include <vector>
 #include <string>
@@ -27,67 +27,69 @@
  *  c) Stores the hierarchical relationship between the meshes
  *  d) Stores material properties used by shaders for each mesh
  */
-class StaticModel : public Resource<StaticModel>{
-public:
-    inline static std::string getResourceTypeName() { return "StaticModel"; }
-    inline static std::string getComponentTypeName() { return "StaticModel"; }
-    StaticModel(const std::vector<std::shared_ptr<StaticMesh>>& meshHandles, const std::vector<std::shared_ptr<Material>>& materialHandles);
+namespace ToyMakersEngine {
+    class StaticModel : public Resource<StaticModel>{
+    public:
+        inline static std::string getResourceTypeName() { return "StaticModel"; }
+        inline static std::string getComponentTypeName() { return "StaticModel"; }
+        StaticModel(const std::vector<std::shared_ptr<StaticMesh>>& meshHandles, const std::vector<std::shared_ptr<Material>>& materialHandles);
 
-    /* Model destructor */
-    ~StaticModel();
+        /* Model destructor */
+        ~StaticModel();
 
-    /* Move constructor */
-    StaticModel(StaticModel&& other);
-    /* Copy constructor */
-    StaticModel(const StaticModel& other);
+        /* Move constructor */
+        StaticModel(StaticModel&& other);
+        /* Copy constructor */
+        StaticModel(const StaticModel& other);
 
-    /* Move assignment */
-    StaticModel& operator=(StaticModel&& other);
-    /* Copy assignment */
-    StaticModel& operator=(const StaticModel& other);
+        /* Move assignment */
+        StaticModel& operator=(StaticModel&& other);
+        /* Copy assignment */
+        StaticModel& operator=(const StaticModel& other);
 
-    std::vector<std::shared_ptr<StaticMesh>> getMeshHandles() const;
-    std::vector<std::shared_ptr<Material>> getMaterialHandles() const;
+        std::vector<std::shared_ptr<StaticMesh>> getMeshHandles() const;
+        std::vector<std::shared_ptr<Material>> getMaterialHandles() const;
 
-private:
-    /*
-     * Meshes that make up this model
-     */
-    std::vector<std::shared_ptr<StaticMesh>> mMeshHandles {};
-    /*
-     * The materials that correspond to each mesh on this model
-     */
-    std::vector<std::shared_ptr<Material>> mMaterialHandles {};
+    private:
+        /*
+        * Meshes that make up this model
+        */
+        std::vector<std::shared_ptr<StaticMesh>> mMeshHandles {};
+        /*
+        * The materials that correspond to each mesh on this model
+        */
+        std::vector<std::shared_ptr<Material>> mMaterialHandles {};
 
-    /* 
-     * Utility method for destroying resources associated with
-     * this model
-     */
-    void free();
+        /* 
+        * Utility method for destroying resources associated with
+        * this model
+        */
+        void free();
 
-    /*
-     * Utility method for taking resources from another instance of
-     * this class 
-     */
-    void stealResources(StaticModel& other);
+        /*
+        * Utility method for taking resources from another instance of
+        * this class 
+        */
+        void stealResources(StaticModel& other);
 
-    /*
-     * Utility method for deeply replicating resources from another 
-     * instance of this class
-     */
-    void copyResources(const StaticModel& other);
+        /*
+        * Utility method for deeply replicating resources from another 
+        * instance of this class
+        */
+        void copyResources(const StaticModel& other);
 
-    void destroyResource();
-    void releaseResource();
-};
+        void destroyResource();
+        void releaseResource();
+    };
 
-class StaticModelFromFile: public ResourceConstructor<StaticModel, StaticModelFromFile> {
-public:
-    StaticModelFromFile();
-    inline static std::string getResourceConstructorName() { return "fromFile"; }
+    class StaticModelFromFile: public ResourceConstructor<StaticModel, StaticModelFromFile> {
+    public:
+        StaticModelFromFile();
+        inline static std::string getResourceConstructorName() { return "fromFile"; }
 
-private:
-    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
-};
+    private:
+        std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+    };
+}
 
 #endif

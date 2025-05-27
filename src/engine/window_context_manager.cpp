@@ -11,6 +11,8 @@
 
 #include "window_context_manager.hpp"
 
+using namespace ToyMakersEngine;
+
 WindowContext::WindowContext(const nlohmann::json& initialWindowConfiguration) {
     assert(SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") && "Could not enable DPI awareness for this SDL app");
     assert(SDL_Init(SDL_INIT_VIDEO) >= 0 && "Could not initialise SDL2 library");

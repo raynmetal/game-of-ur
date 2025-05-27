@@ -4,7 +4,7 @@
 #include "interface_pointer_callback.hpp"
 #include "../engine/sim_system.hpp"
 
-class ClickCallbackImpl1: public SimObjectAspect<ClickCallbackImpl1>, public IClickable {
+class ClickCallbackImpl1: public ToyMakersEngine::SimObjectAspect<ClickCallbackImpl1>, public IClickable {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "ClickCallbackImpl1"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);

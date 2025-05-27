@@ -3,7 +3,7 @@
 
 #include "../engine/sim_system.hpp"
 
-class BackAndForth: public SimObjectAspect<BackAndForth> {
+class BackAndForth: public ToyMakersEngine::SimObjectAspect<BackAndForth> {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "BackAndForth"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
@@ -12,7 +12,7 @@ public:
 
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
 
-    Signal<float> mSigDirectionChanged {*this, "directionChanged"};
+    ToyMakersEngine::Signal<float> mSigDirectionChanged {*this, "directionChanged"};
 
 private:
     BackAndForth() : SimObjectAspect<BackAndForth>{0} {}

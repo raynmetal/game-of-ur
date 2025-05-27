@@ -1,5 +1,6 @@
 #include <SDL2/SDL.h>
 
+#include "../engine/input_system/input_data.hpp"
 #include "../engine/spatial_query_system.hpp"
 #include "../engine/scene_system.hpp"
 #include "../engine/camera_system.hpp"
@@ -15,7 +16,7 @@ const float MIN_FOV {40.f};
 void FlyCamera::variableUpdate(uint32_t variableStepMillis) {
     if(!mActive) return;
 
-    Placement placement { getComponent<Placement>() };
+    ToyMakersEngine::Placement placement { getComponent<ToyMakersEngine::Placement>() };
 
     const glm::mat4 rotationMatrix { glm::mat4_cast(placement.mOrientation) };
     const glm::vec4 localForward { rotationMatrix * glm::vec4{0.f, 0.f, -1.f, 0.f} };
@@ -27,26 +28,26 @@ void FlyCamera::variableUpdate(uint32_t variableStepMillis) {
             +  mVelocity.x * localRight
         )
     );
-    updateComponent<Placement>(placement);
+    updateComponent<ToyMakersEngine::Placement>(placement);
 }
 
-bool FlyCamera::onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition){
+bool FlyCamera::onToggleControl(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
     setActive(!mActive);
     return true;
 }
 
-bool FlyCamera::onRotate(const ActionData& actionData, const ActionDefinition & actionDefinition) {
+bool FlyCamera::onRotate(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition & actionDefinition) {
     if(!mActive) return false;
 
     // Handle camera rotation commands
-    Placement placement { getComponent<Placement>() };
+    ToyMakersEngine::Placement placement { getComponent<ToyMakersEngine::Placement>() };
     updatePitch(placement.mOrientation, actionData.mTwoAxisActionData.mValue.y);
     updateYaw(placement.mOrientation, actionData.mTwoAxisActionData.mValue.x);
-    updateComponent<Placement>(placement);
+    updateComponent<ToyMakersEngine::Placement>(placement);
     return true;
 }
 
-bool FlyCamera::onMove(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+bool FlyCamera::onMove(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
     if(!mActive) return false;
     // movement commands
     mVelocity.x = mMaxSpeed * actionData.mTwoAxisActionData.mValue.x;
@@ -54,7 +55,7 @@ bool FlyCamera::onMove(const ActionData& actionData, const ActionDefinition& act
     return true;
 }
 
-bool FlyCamera::onUpdateFOV(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+bool FlyCamera::onUpdateFOV(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
     if(!mActive) return false;
     // "Zoom" commands
     const float dFOV { static_cast<float>(-actionData.mOneAxisActionData.mValue) };
@@ -115,17 +116,17 @@ void FlyCamera::setActive(bool active) {
 }
 
 void FlyCamera::updateFOV(float dFOV) {
-    CameraProperties cameraProps { getComponent<CameraProperties>() };
+    ToyMakersEngine::CameraProperties cameraProps { getComponent<ToyMakersEngine::CameraProperties>() };
     cameraProps.mFov += mZoomSensitivity * dFOV;
     if(cameraProps.mFov > MAX_FOV) { cameraProps.mFov = MAX_FOV; }
     else if(cameraProps.mFov < MIN_FOV) { cameraProps.mFov = MIN_FOV; }
-    updateComponent<CameraProperties>(cameraProps);
+    updateComponent<ToyMakersEngine::CameraProperties>(cameraProps);
 }
 
-std::shared_ptr<BaseSimObjectAspect> FlyCamera::clone() const {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> FlyCamera::clone() const {
     return std::shared_ptr<FlyCamera>(new FlyCamera{});
 }
 
-std::shared_ptr<BaseSimObjectAspect> FlyCamera::create(const nlohmann::json& jsonAspectProeprties) {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> FlyCamera::create(const nlohmann::json& jsonAspectProeprties) {
     return std::shared_ptr<FlyCamera>(new FlyCamera{});
 }

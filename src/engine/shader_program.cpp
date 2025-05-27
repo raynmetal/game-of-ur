@@ -15,6 +15,8 @@
 
 #include "shader_program.hpp"
 
+using namespace ToyMakersEngine;
+
 GLint loadAndCompileShader(const std::vector<std::string>& shaderPaths, GLuint& shaderID, GLuint shaderType);
 void freeProgram(GLuint programID);
 GLuint buildProgram(const std::vector<std::string>& vertexPaths, const std::vector<std::string>& fragmentPaths);

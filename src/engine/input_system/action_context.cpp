@@ -2,6 +2,8 @@
 
 #include "input_system.hpp"
 
+using namespace ToyMakersEngine;
+
 ActionData ActionContext::ApplyInput(const ActionDefinition& actionDefinition, const ActionData& actionData, const AxisFilter targetAxis, const UnmappedInputValue& inputValue) {
     // write action state into the actionData variable
     const float valueSign { targetAxis&AxisFilterMask::SIGN? -1.f: 1.f };

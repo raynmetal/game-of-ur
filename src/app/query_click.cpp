@@ -2,15 +2,15 @@
 #include "fly_camera.hpp"
 #include "interface_pointer_callback.hpp"
 
-std::shared_ptr<BaseSimObjectAspect> QueryClick::clone() const {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> QueryClick::clone() const {
     return std::shared_ptr<QueryClick>(new QueryClick{});
 }
 
-std::shared_ptr<BaseSimObjectAspect> QueryClick::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> QueryClick::create(const nlohmann::json& jsonAspectProperties) {
     return std::shared_ptr<QueryClick>(new QueryClick{});
 }
 
-bool QueryClick::onClick(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+bool QueryClick::onClick(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
     if(
         (actionData.mTwoAxisActionData.mValue.x < 0.f || actionData.mTwoAxisActionData.mValue.y < 0.f)
         || (actionData.mTwoAxisActionData.mValue.x > 1.f || actionData.mTwoAxisActionData.mValue.y > 1.f)
@@ -25,15 +25,15 @@ bool QueryClick::onClick(const ActionData& actionData, const ActionDefinition& a
     };
 
     bool entityFound { false };
-    const CameraProperties cameraProps { getComponent<CameraProperties>() };
-    const ObjectBounds bounds { getComponent<ObjectBounds>() };
+    const ToyMakersEngine::CameraProperties cameraProps { getComponent<ToyMakersEngine::CameraProperties>() };
+    const ToyMakersEngine::ObjectBounds bounds { getComponent<ToyMakersEngine::ObjectBounds>() };
     const glm::vec3 cameraPosition { bounds.getComputedWorldPosition() };
     const glm::quat cameraOrientation { bounds.getComputedWorldOrientation() };
 
-    Ray cameraRay { .mLength { cameraProps.mNearFarPlanes.y - cameraProps.mNearFarPlanes.x } };
+    ToyMakersEngine::Ray cameraRay { .mLength { cameraProps.mNearFarPlanes.y - cameraProps.mNearFarPlanes.x } };
     glm::vec3 relativeCameraPlaneIntersection;
     switch(cameraProps.mProjectionType) {
-        case CameraProperties::ProjectionType::ORTHOGRAPHIC: {
+        case ToyMakersEngine::CameraProperties::ProjectionType::ORTHOGRAPHIC: {
             relativeCameraPlaneIntersection = {
                 (
                     cameraProps.mOrthographicDimensions 
@@ -49,7 +49,7 @@ bool QueryClick::onClick(const ActionData& actionData, const ActionDefinition& a
         }
         break;
 
-        case CameraProperties::ProjectionType::FRUSTUM: {
+        case ToyMakersEngine::CameraProperties::ProjectionType::FRUSTUM: {
             const float twoTanFovByTwo { 2.f * glm::tan(glm::radians(cameraProps.mFov/2.f)) };
             relativeCameraPlaneIntersection = {
                 (
@@ -71,13 +71,13 @@ bool QueryClick::onClick(const ActionData& actionData, const ActionDefinition& a
 
     for(
         const auto& foundNode:
-        getWorld().lock()->getSystem<SpatialQuerySystem>()->findNodesOverlapping(cameraRay)
+        getWorld().lock()->getSystem<ToyMakersEngine::SpatialQuerySystem>()->findNodesOverlapping(cameraRay)
     ) {
         entityFound = true;
         std::cout << "- " << foundNode->getViewportLocalPath() << "\n";
 
         //then click on every aspect of our query results that can be clicked
-        if(std::shared_ptr<SimObject> nodeAsSimObject = std::dynamic_pointer_cast<SimObject>(foundNode)) {
+        if(std::shared_ptr<ToyMakersEngine::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMakersEngine::SimObject>(foundNode)) {
             if(nodeAsSimObject->hasAspectWithInterface<IClickable>()) {
                 for(IClickable& clickable: nodeAsSimObject->getAspectsWithInterface<IClickable>()) {
                     clickOn(clickable);

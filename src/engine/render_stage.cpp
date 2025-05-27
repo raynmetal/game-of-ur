@@ -10,6 +10,8 @@
 
 #include "render_stage.hpp"
 
+using namespace ToyMakersEngine;
+
 BaseRenderStage::BaseRenderStage(
     const std::string& shaderFilepath
 ) : 

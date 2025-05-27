@@ -1,10 +1,10 @@
 #include "tick_second.hpp"
 
-std::shared_ptr<BaseSimObjectAspect> TickSecond::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> TickSecond::create(const nlohmann::json& jsonAspectProperties) {
     return std::shared_ptr<TickSecond>(new TickSecond {});
 }
 
-std::shared_ptr<BaseSimObjectAspect> TickSecond::clone() const {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> TickSecond::clone() const {
     return std::shared_ptr<TickSecond>(new TickSecond {});
 }
 

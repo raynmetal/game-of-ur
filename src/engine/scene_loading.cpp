@@ -4,6 +4,8 @@
 
 #include "scene_loading.hpp"
 
+using namespace ToyMakersEngine;
+
 std::shared_ptr<IResource> SceneFromFile::createResource(const nlohmann::json& sceneFileDescription) {
     std::string scenePath { sceneFileDescription.at("path").get<std::string>() };
     std::ifstream jsonFileStream;

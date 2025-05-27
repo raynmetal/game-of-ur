@@ -11,6 +11,8 @@
 
 #include "framebuffer.hpp"
 
+using namespace ToyMakersEngine;
+
 RBO::RBO(const glm::vec2& dimensions) {
     glGenRenderbuffers(1, &mID);
     resize(dimensions);

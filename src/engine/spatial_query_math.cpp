@@ -1,9 +1,11 @@
 #include <cmath>
 #include "spatial_query_math.hpp"
 
+using namespace ToyMakersEngine;
+
 inline float squareDistance(const glm::vec3& vector) { return glm::dot(vector, vector); }
 
-std::pair<bool, glm::vec3> computeIntersection(const Ray& ray, const Plane& plane) {
+std::pair<bool, glm::vec3> ToyMakersEngine::computeIntersection(const Ray& ray, const Plane& plane) {
     assert(ray.isSensible() && "Invalid ray provided");
     assert(plane.isSensible() && "Invalid plane provided");
 
@@ -35,7 +37,7 @@ std::pair<bool, glm::vec3> computeIntersection(const Ray& ray, const Plane& plan
     return { true, ray.mStart + rayIntersectionDistance * rayDirection };
 }
 
-std::pair<bool, glm::vec3> computeIntersection(const Ray& ray, const AreaTriangle& triangle) {
+std::pair<bool, glm::vec3> ToyMakersEngine::computeIntersection(const Ray& ray, const AreaTriangle& triangle) {
     assert(ray.isSensible() && "Invalid ray provided");
     assert(triangle.isSensible() && "Invalid triangle provided");
 
@@ -139,7 +141,7 @@ std::pair<bool, glm::vec3> computeIntersection(const Ray& ray, const AreaTriangl
     return { false, glm::vec3{std::numeric_limits<float>::infinity()} };
 }
 
-std::pair<uint8_t, std::pair<glm::vec3, glm::vec3>> computeIntersections(const Ray& ray, const AxisAlignedBounds& bounds) {
+std::pair<uint8_t, std::pair<glm::vec3, glm::vec3>> ToyMakersEngine::computeIntersections(const Ray& ray, const AxisAlignedBounds& bounds) {
     assert(ray.isSensible() && "Invalid ray provided");
     assert(
         bounds.isSensible() && "Invalid axis-aligned box provided"
@@ -176,11 +178,11 @@ std::pair<uint8_t, std::pair<glm::vec3, glm::vec3>> computeIntersections(const R
     return { nIntersections, std::pair<glm::vec3, glm::vec3>(intersectionPoints[0], intersectionPoints[1]) };
 }
 
-bool overlaps(const glm::vec3& point, const AxisAlignedBounds& bounds) {
+bool ToyMakersEngine::overlaps(const glm::vec3& point, const AxisAlignedBounds& bounds) {
     return contains(point, bounds);
 }
 
-bool overlaps(const Ray& ray, const AxisAlignedBounds& bounds) {
+bool ToyMakersEngine::overlaps(const Ray& ray, const AxisAlignedBounds& bounds) {
     assert(ray.isSensible() && "Invalid ray provided");
     assert(bounds.isSensible() && "Invalid axis aligned box provided");
 
@@ -200,7 +202,7 @@ bool overlaps(const Ray& ray, const AxisAlignedBounds& bounds) {
     );
 }
 
-bool overlaps(const AxisAlignedBounds& one, const AxisAlignedBounds& two) {
+bool ToyMakersEngine::overlaps(const AxisAlignedBounds& one, const AxisAlignedBounds& two) {
     assert (
         one.isSensible() && two.isSensible() && "Invalid axis aligned box provided"
     );
@@ -223,7 +225,7 @@ bool overlaps(const AxisAlignedBounds& one, const AxisAlignedBounds& two) {
     );
 }
 
-bool contains(const glm::vec3& point, const AxisAlignedBounds& bounds) {
+bool ToyMakersEngine::contains(const glm::vec3& point, const AxisAlignedBounds& bounds) {
     assert(
         bounds.isSensible() && "Invalid axis aligned box provided"
     );
@@ -240,7 +242,7 @@ bool contains(const glm::vec3& point, const AxisAlignedBounds& bounds) {
         && point.z >= boxExtents.second.z;
 }
 
-bool contains(const Ray& ray, const AxisAlignedBounds& bounds) {
+bool ToyMakersEngine::contains(const Ray& ray, const AxisAlignedBounds& bounds) {
     assert(ray.isSensible() && "Invalid ray provided");
     assert(bounds.isSensible() && "Invalid axis-aligned box provided");
     if(!isFinite(ray.mLength)) return false;
@@ -249,7 +251,7 @@ bool contains(const Ray& ray, const AxisAlignedBounds& bounds) {
     return contains(ray.mStart, bounds) && contains(rayEnd, bounds);
 }
 
-bool contains(const AxisAlignedBounds& one, const AxisAlignedBounds& two) {
+bool ToyMakersEngine::contains(const AxisAlignedBounds& one, const AxisAlignedBounds& two) {
     assert(one.isSensible() && two.isSensible() && "Invalid axis-aligned box provided");
 
     const AxisAlignedBounds::Extents ourExtents { two.getAxisAlignedBoxExtents() };
@@ -302,7 +304,7 @@ void ObjectBounds::applyModelMatrix(const glm::mat4& modelMatrix) {
     mOrientation = glm::normalize(glm::quat_cast(glm::transpose(glm::inverse(modelMatrix))));
 }
 
-std::array<AreaTriangle, 12> computeBoxFaceTriangles(const std::array<glm::vec3, 8>& boxCorners) {
+std::array<AreaTriangle, 12> ToyMakersEngine::computeBoxFaceTriangles(const std::array<glm::vec3, 8>& boxCorners) {
     return std::array<AreaTriangle, 12> {{
         // left faces
         AreaTriangle{.mPoints{

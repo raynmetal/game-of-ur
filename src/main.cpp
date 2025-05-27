@@ -14,7 +14,7 @@
 
 int main(int argc, char* argv[]) {
 
-    if(std::shared_ptr<Application> app { Application::instantiate("data/project.json") }) {
+    if(std::shared_ptr<ToyMakersEngine::Application> app { ToyMakersEngine::Application::instantiate("data/project.json") }) {
         app->execute();
 
     } else return 1;

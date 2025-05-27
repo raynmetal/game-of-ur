@@ -1,5 +1,7 @@
 #include "sim_system.hpp"
 
+using namespace ToyMakersEngine;
+
 SimObject::~SimObject() {
     for(const auto& aspectPair: mSimObjectAspects) {
         aspectPair.second->detach();

@@ -2,6 +2,8 @@
 
 #include "resource_database.hpp"
 
+using namespace ToyMakersEngine;
+
 void ResourceDatabase::AssertResourceDescriptionValidity(const nlohmann::json& resourceDescription)  {
     ResourceDatabase& resourceDatabase { ResourceDatabase::GetInstance() };
 

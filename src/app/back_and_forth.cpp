@@ -8,7 +8,7 @@
 
 void BackAndForth::variableUpdate(uint32_t variableStepMillis) {
     mElapsedTime += variableStepMillis;
-    Placement placement  { getComponent<Placement>() };
+    ToyMakersEngine::Placement placement  { getComponent<ToyMakersEngine::Placement>() };
     const float prevZ { placement.mPosition.z };
     placement.mPosition.z = glm::sin(glm::radians(mElapsedTime/10.f + getEntityID()*45.f));
 
@@ -19,13 +19,13 @@ void BackAndForth::variableUpdate(uint32_t variableStepMillis) {
         mSigDirectionChanged.emit(direction);
     }
 
-    updateComponent<Placement>(placement);
+    updateComponent<ToyMakersEngine::Placement>(placement);
 }
 
-std::shared_ptr<BaseSimObjectAspect> BackAndForth::clone() const {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> BackAndForth::clone() const {
     return std::shared_ptr<BackAndForth>(new BackAndForth{});
 }
 
-std::shared_ptr<BaseSimObjectAspect> BackAndForth::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> BackAndForth::create(const nlohmann::json& jsonAspectProperties) {
     return std::shared_ptr<BackAndForth>(new BackAndForth{});
 }

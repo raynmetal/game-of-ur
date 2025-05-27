@@ -6,7 +6,7 @@
 
 #include "test_text.hpp"
 
-std::shared_ptr<BaseSimObjectAspect> TestText::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> TestText::create(const nlohmann::json& jsonAspectProperties) {
     const std::string text { 
         jsonAspectProperties.find("text") != jsonAspectProperties.end()?
             jsonAspectProperties.at("text").get<std::string>():
@@ -23,7 +23,7 @@ std::shared_ptr<BaseSimObjectAspect> TestText::create(const nlohmann::json& json
             .01f
     };
 
-    std::shared_ptr<TextFont> font { ResourceDatabase::GetRegisteredResource<TextFont>(fontResourceName) };
+    std::shared_ptr<ToyMakersEngine::TextFont> font { ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName) };
     std::shared_ptr<TestText> testTextAspect { std::make_shared<TestText>() };
     testTextAspect->mFont = font;
     testTextAspect->mText = text;
@@ -32,7 +32,7 @@ std::shared_ptr<BaseSimObjectAspect> TestText::create(const nlohmann::json& json
     return testTextAspect;
 }
 
-std::shared_ptr<BaseSimObjectAspect> TestText::clone() const {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> TestText::clone() const {
     std::shared_ptr<TestText> testTextAspect { std::make_shared<TestText>() };
     testTextAspect->mFont = mFont;
     testTextAspect->mText = mText;
@@ -56,15 +56,15 @@ void TestText::updateText(const std::string& text) {
 }
 
 void TestText::updateFont(const std::string& fontResourceName) {
-    mFont = ResourceDatabase::GetRegisteredResource<TextFont>(fontResourceName);
+    mFont = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName);
     recomputeTexture();
 }
 
 void TestText::recomputeTexture() {
-    std::shared_ptr<Texture> textTexture { mFont->renderText(mText, glm::u8vec3 {0x0}, glm::u8vec3 {0xFF}) };
+    std::shared_ptr<ToyMakersEngine::Texture> textTexture { mFont->renderText(mText, glm::u8vec3 {0x0}, glm::u8vec3 {0xFF}) };
     const nlohmann::json rectangleParameters = { 
-        {"type", StaticModel::getResourceTypeName()},
-        {"method", StaticModelRectangleDimensions::getResourceConstructorName()},
+        {"type", ToyMakersEngine::StaticModel::getResourceTypeName()},
+        {"method", ToyMakersEngine::StaticModelRectangleDimensions::getResourceConstructorName()},
         {"parameters", {
             {"width", textTexture->getWidth() * mScale },
             {"height", textTexture->getHeight() * mScale },
@@ -73,17 +73,17 @@ void TestText::recomputeTexture() {
         }}
     };
 
-    if(!hasComponent<std::shared_ptr<StaticModel>>()) {
-        addComponent<std::shared_ptr<StaticModel>>(
-            ResourceDatabase::ConstructAnonymousResource<StaticModel>(rectangleParameters)
+    if(!hasComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()) {
+        addComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
+            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
         );
     } else {
-        updateComponent<std::shared_ptr<StaticModel>>(
-            ResourceDatabase::ConstructAnonymousResource<StaticModel>(rectangleParameters)
+        updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
+            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
         );
     }
 
-    std::shared_ptr<Material> material { getComponent<std::shared_ptr<StaticModel>>()->getMaterialHandles()[0] };
+    std::shared_ptr<ToyMakersEngine::Material> material { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()->getMaterialHandles()[0] };
     material->updateTextureProperty(
         "textureAlbedo",
         textTexture

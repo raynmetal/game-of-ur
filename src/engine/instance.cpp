@@ -2,6 +2,8 @@
 #include <GL/glew.h>
 #include "instance.hpp"
 
+using namespace ToyMakersEngine;
+
 BaseInstanceAllocator::~BaseInstanceAllocator() {
     if(!mUploaded) return;
     glDeleteBuffers(1, &mVertexBufferIndex);

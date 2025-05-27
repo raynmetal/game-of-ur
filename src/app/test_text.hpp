@@ -4,7 +4,7 @@
 #include "../engine/sim_system.hpp"
 #include "../engine/text_render.hpp"
 
-class TestText: public SimObjectAspect<TestText> {
+class TestText: public ToyMakersEngine::SimObjectAspect<TestText> {
 public:
     TestText(): SimObjectAspect<TestText>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "TestText"; }
@@ -20,7 +20,7 @@ public:
 private:
     void recomputeTexture();
 
-    std::shared_ptr<TextFont> mFont {};
+    std::shared_ptr<ToyMakersEngine::TextFont> mFont {};
     std::string mText {};
     float mScale { 1e-2 };
 };

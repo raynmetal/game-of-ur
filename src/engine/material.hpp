@@ -1,5 +1,5 @@
-#ifndef ZOMATERIAL_H
-#define ZOMATERIAL_H
+#ifndef FOOLSENGINE_MATERIAL_H
+#define FOOLSENGINE_MATERIAL_H
 
 #include <vector>
 #include <string>
@@ -11,67 +11,71 @@
 #include "texture.hpp"
 #include "core/resource_database.hpp"
 
-class Material : public Resource<Material> {
-public:
-    virtual ~Material();
-    Material();
+namespace ToyMakersEngine {
 
-    Material(const Material& other);
-    Material(Material&& other);
+    class Material : public Resource<Material> {
+    public:
+        virtual ~Material();
+        Material();
 
-    Material& operator=(const Material& other);
-    Material& operator=(Material&& other);
-    
+        Material(const Material& other);
+        Material(Material&& other);
 
-    // TODO: not happy with all of the redundant code here, but I don't 
-    // know how I'd go about making it more compact
-    void updateFloatProperty(const std::string& name, float value);
-    float getFloatProperty(const std::string& name);
-    void updateIntProperty(const std::string& name, int value);
-    int getIntProperty(const std::string& name);
-    void updateVec2Property(const std::string& name, const glm::vec2& value);
-    glm::vec2 getVec2Property(const std::string& name);
-    void updateVec4Property(const std::string& name, const glm::vec4& value);
-    glm::vec4 getVec4Property(const std::string& name);
-    void updateTextureProperty(const std::string& name, std::shared_ptr<Texture> value);
-    std::shared_ptr<Texture> getTextureProperty(const std::string& name);
+        Material& operator=(const Material& other);
+        Material& operator=(Material&& other);
+        
 
-    static void RegisterFloatProperty(const std::string& name, float defaultValue);
-    static void RegisterIntProperty(const std::string& name, int defaultValue);
-    static void RegisterVec4Property(const std::string& name, const glm::vec4& defaultValue);
-    static void RegisterVec2Property(const std::string& name, const glm::vec2& defaultValue);
-    static void RegisterTextureHandleProperty(const std::string& name, std::shared_ptr<Texture> defaultValue);
+        // TODO: not happy with all of the redundant code here, but I don't 
+        // know how I'd go about making it more compact
+        void updateFloatProperty(const std::string& name, float value);
+        float getFloatProperty(const std::string& name);
+        void updateIntProperty(const std::string& name, int value);
+        int getIntProperty(const std::string& name);
+        void updateVec2Property(const std::string& name, const glm::vec2& value);
+        glm::vec2 getVec2Property(const std::string& name);
+        void updateVec4Property(const std::string& name, const glm::vec4& value);
+        glm::vec4 getVec4Property(const std::string& name);
+        void updateTextureProperty(const std::string& name, std::shared_ptr<Texture> value);
+        std::shared_ptr<Texture> getTextureProperty(const std::string& name);
 
-    inline static std::string getResourceTypeName() { return "Material"; }
+        static void RegisterFloatProperty(const std::string& name, float defaultValue);
+        static void RegisterIntProperty(const std::string& name, int defaultValue);
+        static void RegisterVec4Property(const std::string& name, const glm::vec4& defaultValue);
+        static void RegisterVec2Property(const std::string& name, const glm::vec2& defaultValue);
+        static void RegisterTextureHandleProperty(const std::string& name, std::shared_ptr<Texture> defaultValue);
 
-    static void Init();
+        inline static std::string getResourceTypeName() { return "Material"; }
 
-    static void Clear();
+        static void Init();
 
-private:
+        static void Clear();
 
-    static Material* defaultMaterial;
+    private:
 
-    std::map<std::string, float> mFloatProperties {};
-    std::map<std::string, int> mIntProperties {};
-    std::map<std::string, glm::vec4> mVec4Properties {};
-    std::map<std::string, glm::vec2> mVec2Properties {};
-    std::map<std::string, std::shared_ptr<Texture>> mTextureProperties {};
+        static Material* defaultMaterial;
 
-    void destroyResource();
-    void releaseResource();
-};
+        std::map<std::string, float> mFloatProperties {};
+        std::map<std::string, int> mIntProperties {};
+        std::map<std::string, glm::vec4> mVec4Properties {};
+        std::map<std::string, glm::vec2> mVec2Properties {};
+        std::map<std::string, std::shared_ptr<Texture>> mTextureProperties {};
 
-class MaterialFromDescription: public ResourceConstructor<Material, MaterialFromDescription> {
-public:
+        void destroyResource();
+        void releaseResource();
+    };
 
-    MaterialFromDescription():
-    ResourceConstructor<Material, MaterialFromDescription> {0}
-    {}
-    inline static std::string getResourceConstructorName() { return "fromDescription"; }
+    class MaterialFromDescription: public ResourceConstructor<Material, MaterialFromDescription> {
+    public:
 
-private:
-    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
-};
+        MaterialFromDescription():
+        ResourceConstructor<Material, MaterialFromDescription> {0}
+        {}
+        inline static std::string getResourceConstructorName() { return "fromDescription"; }
+
+    private:
+        std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+    };
+
+}
 
 #endif

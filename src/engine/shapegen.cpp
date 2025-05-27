@@ -12,6 +12,8 @@
 #include "mesh.hpp"
 #include "shapegen.hpp"
 
+using namespace ToyMakersEngine;
+
 std::array<glm::vec2, 24> getCubemapTextureCoordinates(ColorBufferDefinition::CubemapLayout cubemapLayout);
 
 std::shared_ptr<StaticMesh> generateSphereMesh(int nLatitude, int nMeridian, bool flipTextureY=false);

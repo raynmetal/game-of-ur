@@ -29,6 +29,9 @@
 
 #include "application.hpp"
 
+
+using namespace ToyMakersEngine;
+
 constexpr uint32_t kMaxSimStep { 5000 };
 constexpr uint32_t kMinSimStep { 1000/120 };
 constexpr uint32_t kSleepThreshold { 10 };
@@ -36,14 +39,14 @@ constexpr uint32_t kSleepThreshold { 10 };
 std::weak_ptr<Application> Application::s_pInstance {};
 bool Application::s_instantiated { false };
 
-void printSceneHierarchyData(std::shared_ptr<SceneNodeCore> rootNode) {
-    std::vector<std::pair<std::shared_ptr<SceneNodeCore>, int>> nodeAndLevel {{rootNode, 0}};
+void printSceneHierarchyData(std::shared_ptr<ToyMakersEngine::SceneNodeCore> rootNode) {
+    std::vector<std::pair<std::shared_ptr<ToyMakersEngine::SceneNodeCore>, int>> nodeAndLevel {{rootNode, 0}};
     while(!nodeAndLevel.empty()) {
-        std::shared_ptr<SceneNodeCore> currentNode { nodeAndLevel.back().first };
+        std::shared_ptr<ToyMakersEngine::SceneNodeCore> currentNode { nodeAndLevel.back().first };
         int indentation{ nodeAndLevel.back().second };
         nodeAndLevel.pop_back();
 
-        for(std::shared_ptr<SceneNodeCore> child: currentNode->getChildren()) {
+        for(std::shared_ptr<ToyMakersEngine::SceneNodeCore> child: currentNode->getChildren()) {
             nodeAndLevel.push_back( { child, indentation+1 });
         }
 

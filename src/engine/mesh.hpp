@@ -1,5 +1,5 @@
-#ifndef ZOMESH_H
-#define ZOMESH_H
+#ifndef FOOLSENGINE_MESH_H
+#define FOOLSENGINE_MESH_H
 
 #include <vector>
 #include <map>
@@ -13,65 +13,68 @@
 #include "core/resource_database.hpp"
 #include "vertex.hpp"
 
-/**
- *  A class whose current main purpose is to store geometry related info, and to
- * upload it to GPU memory when requested
- */
-class StaticMesh: public Resource<StaticMesh> {
-public:
-    StaticMesh(const std::vector<BuiltinVertexData>& mVertices, const std::vector<GLuint>& mElements, GLuint vertexBuffer=0, GLuint elementBuffer=0, bool isUploaded=false);
+namespace ToyMakersEngine {
+    /**
+     *  A class whose current main purpose is to store geometry related info, and to
+     * upload it to GPU memory when requested
+     */
+    class StaticMesh: public Resource<StaticMesh> {
+    public:
+        StaticMesh(const std::vector<BuiltinVertexData>& mVertices, const std::vector<GLuint>& mElements, GLuint vertexBuffer=0, GLuint elementBuffer=0, bool isUploaded=false);
 
-    StaticMesh(const StaticMesh& other);
-    StaticMesh& operator=(const StaticMesh& other);
+        StaticMesh(const StaticMesh& other);
+        StaticMesh& operator=(const StaticMesh& other);
 
-    StaticMesh(StaticMesh&& other);
-    StaticMesh& operator=(StaticMesh&& other);
+        StaticMesh(StaticMesh&& other);
+        StaticMesh& operator=(StaticMesh&& other);
 
-    ~StaticMesh();
+        ~StaticMesh();
 
-    GLuint getElementCount() {
-        return mElements.size();
-    }
+        GLuint getElementCount() {
+            return mElements.size();
+        }
 
-    void bind(const VertexLayout& shaderVertexLayout);
-    void unbind();
+        void bind(const VertexLayout& shaderVertexLayout);
+        void unbind();
 
-    std::vector<BuiltinVertexData>::const_iterator getVertexListBegin() const;
-    std::vector<BuiltinVertexData>::const_iterator getVertexListEnd() const;
+        std::vector<BuiltinVertexData>::const_iterator getVertexListBegin() const;
+        std::vector<BuiltinVertexData>::const_iterator getVertexListEnd() const;
 
-    VertexLayout getVertexLayout() const;
-    inline static std::string getResourceTypeName() { return "StaticMesh"; }
+        VertexLayout getVertexLayout() const;
+        inline static std::string getResourceTypeName() { return "StaticMesh"; }
 
 
-private:
+    private:
 
-    void setAttributePointers(const VertexLayout& shaderVertexLayout, std::size_t startingOffset=0);
+        void setAttributePointers(const VertexLayout& shaderVertexLayout, std::size_t startingOffset=0);
 
-    std::vector<BuiltinVertexData> mVertices {};
-    std::vector<GLuint> mElements {};
+        std::vector<BuiltinVertexData> mVertices {};
+        std::vector<GLuint> mElements {};
 
-    VertexLayout mVertexLayout;
-    bool mIsUploaded { false };
+        VertexLayout mVertexLayout;
+        bool mIsUploaded { false };
 
-    GLuint mVertexBuffer { 0 };
-    GLuint mElementBuffer { 0 };
+        GLuint mVertexBuffer { 0 };
+        GLuint mElementBuffer { 0 };
 
-    void upload();
-    void unload();
-    void destroyResource();
-    void releaseResource();
-};
+        void upload();
+        void unload();
+        void destroyResource();
+        void releaseResource();
+    };
 
-class StaticMeshFromDescription: public ResourceConstructor<StaticMesh, StaticMeshFromDescription> {
-public:
-    StaticMeshFromDescription():
-    ResourceConstructor<StaticMesh, StaticMeshFromDescription>{0}
-    {}
+    class StaticMeshFromDescription: public ResourceConstructor<StaticMesh, StaticMeshFromDescription> {
+    public:
+        StaticMeshFromDescription():
+        ResourceConstructor<StaticMesh, StaticMeshFromDescription>{0}
+        {}
 
-    inline static std::string getResourceConstructorName(){ return "fromDescription"; }
+        inline static std::string getResourceConstructorName(){ return "fromDescription"; }
 
-private:
-    std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
-};
+    private:
+        std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
+    };
+
+}
 
 #endif

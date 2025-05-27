@@ -8,7 +8,7 @@
 extern const float DEFAULT_CAMERA_SPEED;
 extern const float LOOK_SENSITIVITY;
 
-class FlyCamera: public SimObjectAspect<FlyCamera> {
+class FlyCamera: public ToyMakersEngine::SimObjectAspect<FlyCamera> {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "FlyCamera"; }
 
@@ -21,45 +21,46 @@ public:
     inline bool isMouseActive() const { return mActive; }
 
 protected:
-    bool onMove(const ActionData& actionData, const ActionDefinition& actionDefinition);
-    bool onRotate(const ActionData& actionData, const ActionDefinition& actionDefinition);
-    bool onToggleControl(const ActionData& actionData, const ActionDefinition& actionDefinition);
-    bool onUpdateFOV(const ActionData& actionData, const ActionDefinition& actionDefinition);
+    bool onMove(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
+    bool onRotate(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
+    bool onToggleControl(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
+    bool onUpdateFOV(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
 
-    std::weak_ptr<FixedActionBinding> handlerMove { 
+    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerMove { 
         declareFixedActionBinding(
             "Camera",
             "Move",
-            [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
+            [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
                 return this->onMove(actionData, actionDefinition);
             }
         )
     };
 
-    std::weak_ptr<FixedActionBinding> handlerRotate { 
+    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerRotate { 
         declareFixedActionBinding(
             "Camera",
             "Rotate",
-            [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
+            [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
                 return this->onRotate(actionData, actionDefinition);
             }
         )
     };
 
-    std::weak_ptr<FixedActionBinding> handlerUpdateFOV {
+    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerUpdateFOV {
         declareFixedActionBinding(
             "Camera",
             "UpdateFOV",
-            [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
+            [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
                 return this->onUpdateFOV(actionData, actionDefinition);
             }
         )
     };
-    std::weak_ptr<FixedActionBinding> handlerToggleControl {
+
+    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerToggleControl {
         declareFixedActionBinding(
             "Camera",
             "ToggleControl",
-            [this](const ActionData& actionData, const ActionDefinition& actionDefinition) {
+            [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
                 return this->onToggleControl(actionData, actionDefinition);
             }
         )

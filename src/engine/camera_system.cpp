@@ -4,9 +4,10 @@
 #include "scene_system.hpp"
 #include "camera_system.hpp"
 
+using namespace ToyMakersEngine;
+
 const float MAX_FOV {90.f};
 const float MIN_FOV {40.f};
-
 
 void CameraSystem::updateActiveCameraMatrices() {
     std::set<EntityID> enabledEntities { getEnabledEntities() };
