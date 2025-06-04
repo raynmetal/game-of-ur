@@ -4,13 +4,13 @@
 
 Game of Ur is the oldest board game known to date.  It is informally named after the ruins the first board of its kind was excavated from, the Royal Cemetary at Ur, an ancient Sumer burial site.  The other, more formal name for the Game of Ur is the "Game of Twenty Squares."
 
-It is hypothesized to be a race game, with some variants possibly using additional rules for complex betting.  Two players, each with 5 (or 7, or 9) playing pieces, attempt to move all their pieces from the start of the board to the end and off the board.  The one to do so first, wins.
+It is thought to be a race game, with some variants possibly using additional rules for complex betting.  Two players, each with 5 (or 7, or 9) playing pieces, attempt to move all their pieces from the start of the board to the end and off the board.  The one to do so first, wins.
 
 The version of the game used as the basis for this document (and prototype) is the one described by Irving Finkel in [Ancient Board Games in Perspective](https://archive.org/details/ancientboardgame0000unse), in the chapter titled *On the Rules for the Royal Game of Ur*.  It is based on a cuneiform manuscript written in ancient Babylon, and appears to describe a special variant of the game played there.
 
 ### Modifications
 
-There are a few differences from the rules given here and the ones written by Irving Finkel.  Some of these modifications make decisions about rules that were left open to interpretation.  Others attempt to make the game more interesting by giving each player more tactical freedom.
+There are a few differences from the rules given here and the ones layed down by Irving Finkel.  Some of these modifications make decisions about rules that were left open to interpretation.  Others attempt to make the game more interesting by giving each player more tactical freedom.
 
 - game pieces need not be launched in any specific order
 - all counters in the common pool go the the winner, rather than just those counters won by them during play by moving their pieces
@@ -22,6 +22,18 @@ There are a few differences from the rules given here and the ones written by Ir
 ### Camera
 
 Fixed camera positioned in 3/4ths view above the board, close to the player's side. (orthogonal or frustum with narrow FOV?).  The camera may move around slightly to focus on action taking place on or around the board.
+
+### Menus and screens
+
+- A main menu at the start of the game, with buttons to play the game and to see credits
+- A game selection screen, where the player may choose whether to play against the computer or play against a local player
+- The game screen, where the game proper is played, and which the bulk of this document pertains to
+
+### Controls, interactions
+
+The game should be playable entirely by mouse.  Hovering over a game element provides previews, tooltips, and the like.  Clicking on an element performs an action.  For example, clicking on a die causes it to be rolled, and clicking on a game piece once the die (or dice) has been rolled, causes it to move along the track.
+
+If feasible, perhaps some keyboard shortcuts may also be provided.  Space, for example, might end one's turn, while arrow keys change which interaction is selected, with enter performing the action associated with said interactable.
 
 ### UI
 
