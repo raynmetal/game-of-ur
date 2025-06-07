@@ -9,11 +9,11 @@
 build/**/*
 
 #Media files
-/**/*.png
+# /**/*.png
 /**/*.jpg
 /**/*.fbx
-/**/*.obj
-/**/*.mtl
+# /**/*.obj
+# /**/*.mtl
 /**/*.txt
 /**/*.aseprite
 /**/*.dae
