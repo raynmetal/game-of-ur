@@ -9,33 +9,23 @@
             "components": [
                 {
                     "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
+                        1.0, 0.0, 0.0, 0.0
                     ],
                     "position": [
-                        0.0,
-                        -1.0,
-                        -1.0,
-                        1.0
+                        0.0, -1.0, -1.0, 1.0
                     ],
                     "scale": [
-                        1.0,
-                        1.0,
-                        1.0
+                        1.0, 1.0, 1.0
                     ],
                     "type": "Placement"
                 },
-                {
-                    "resourceName": "boardPieceModel",
-                    "type": "StaticModel"
-                }
+                { "resourceName": "boardPieceModel", "type": "StaticModel" }
             ],
             "name": "board_piece",
             "parent": "",
             "type": "SimObject"
         },
+
         {
             "aspects": [
                 {

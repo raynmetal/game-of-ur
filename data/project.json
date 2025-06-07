@@ -1,8 +1,8 @@
 {
     "window_configuration": {
         "application_title": "My Game of Ur",
-        "window_width": 800,
-        "window_height": 600 
+        "window_width": 1366,
+        "window_height": 768
     },
 
     "root_viewport_render_configuration": {
@@ -18,5 +18,5 @@
     "simulation_step": 33,
 
     "input_map_path": "input_bindings.json",
-    "root_scene_path": "test_scene_2.json"
+    "root_scene_path": "ur_prototype.json"
 }

@@ -56,32 +56,20 @@
             "components": [
                 {
                     "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
+                        1.0, 0.0, 0.0, 0.0
                     ],
                     "position": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
+                        0.0, 0.0, 0.0, 1.0
                     ],
                     "scale": [
-                        1.0,
-                        1.0,
-                        1.0
+                        1.0, 1.0, 1.0
                     ],
                     "type": "Placement"
                 }
             ],
             "aspects": [
-                {
-                    "type": "TickSecond"
-                },
-                {
-                    "type": "RenderDebugViewer"
-                }
+                { "type": "TickSecond" },
+                { "type": "RenderDebugViewer" }
             ],
             "name": "partial_scene_root",
             "parent": "",

@@ -1,0 +1,394 @@
+{
+    "resources": [
+        {
+            "method": "fromFile",
+            "name": "SwallowModel",
+            "parameters": {
+                "path": "data/models/PrototypeSwallow.obj"
+            },
+            "type": "StaticModel"
+        },
+        {
+            "method": "fromFile",
+            "name": "StormbirdModel",
+            "parameters": {
+                "path": "data/models/PrototypeStormbird.obj"
+            },
+            "type": "StaticModel"
+        },
+        {
+            "method": "fromFile",
+            "name": "RavenModel",
+            "parameters": {
+                "path": "data/models/PrototypeRaven.obj"
+            },
+            "type": "StaticModel"
+        },
+        {
+            "method": "fromFile",
+            "name": "RoosterModel",
+            "parameters": {
+                "path": "data/models/PrototypeRooster.obj"
+            },
+            "type": "StaticModel"
+        },
+        {
+            "method": "fromFile",
+            "name": "EagleModel",
+            "parameters": {
+                "path": "data/models/PrototypeEagle.obj"
+            },
+            "type": "StaticModel"
+        },
+
+        {
+            "method": "fromFile",
+            "name": "GameboardModel",
+            "parameters": {
+                "path": "data/models/PrototypeGameboard.obj"
+            },
+            "type": "StaticModel"
+        },
+
+        {
+            "name": "Skybox_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/test_cubemap.png",
+                "cubemap_layout": "row"
+            }
+        }
+    ],
+
+    "nodes": [
+        {
+            "components": [
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                }
+            ],
+            "aspects": [],
+            "name": "scene_root_3D",
+            "parent": "",
+            "type": "SimObject"
+        },
+
+        {
+            "name": "viewport_3D",
+            "parent": "/",
+            "type": "ViewportNode",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ]
+                }
+            ],
+            "inherits_world": false,
+            "prevent_handled_action_propagation": false,
+            "skybox_texture": "Skybox_Texture",
+            "render_configuration": {
+                "base_dimensions": [1366, 768],
+                "update_mode": "on-render-cap-fps",
+                "resize_type": "texture-dimensions",
+                "resize_mode": "fixed-dimensions",
+                "render_type": "basic-3d",
+                "fps_cap": 60,
+                "render_scale": 0.85
+            }
+        },
+
+        {
+            "components": [
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                }
+            ],
+            "aspects": [
+                { "type": "RenderDebugViewer" }
+            ],
+            "name": "render_debug",
+            "parent": "/viewport_3D/",
+            "type": "SimObject"
+        },
+
+        {
+            "aspects": [
+                { "type": "RenderDebugViewer" },
+                { "type": "FlyCamera" },
+                { "type": "QueryClick" }
+            ],
+            "components": [
+                {
+                    "fov": 45.0,
+                    "aspect": 1.77778,
+                    "orthographic_dimensions": {"horizontal": 0, "vertical": 0},
+                    "near_far_planes": {"near": 0.5, "far": 100},
+                    "projection_mode": "frustum",
+                    "type": "CameraProperties"
+                },
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                }
+            ],
+            "name": "camera",
+            "parent": "/viewport_3D/",
+            "type": "SimObject"
+        },
+
+        {
+            "components": [
+                {
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [
+                        0.20000000298023224, 0.20000000298023224, 0.20000000298023224
+                    ],
+                    "diffuse": [
+                        2.0, 2.0, 2.0
+                    ],
+                    "innerAngle": 4.0,
+                    "lightType": "spot",
+                    "linearConst": 0.07000000029802322,
+                    "outerAngle": 13.0,
+                    "quadraticConst": 0.029999999329447746,
+                    "specular": [
+                        4.0,
+                        4.0,
+                        4.0
+                    ],
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "flashlight",
+            "parent": "/viewport_3D/camera/",
+            "type": "SceneNode"
+        },
+
+        {
+            "aspects": [ { "type": "Revolve" } ],
+            "components": [
+                {
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, 0.0, 1.0
+                    ],
+                    "scale": [
+                        1.4142135381698608, 1.4142135381698608, 1.0
+                    ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [
+                        0.4000000059604645, 0.4000000059604645, 0.4000000059604645
+                    ],
+                    "diffuse": [
+                        20.0, 20.0, 20.0
+                    ],
+                    "lightType": "directional",
+                    "specular": [
+                        20.0, 20.0, 20.0
+                    ],
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "sunlight",
+            "parent": "/viewport_3D/",
+            "type": "SimObject"
+        },
+
+        {
+            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl1"} ],
+            "components": [
+                {
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        0.0, 0.0, -1.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ],
+                    "type": "Placement"
+                },
+                { "resourceName": "SwallowModel", "type": "StaticModel" }
+            ],
+            "name": "swallow",
+            "parent": "/viewport_3D/",
+            "type": "SimObject"
+        },
+        {
+            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl2"} ],
+            "components": [
+                {
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        -1.0, 0.0, -1.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ],
+                    "type": "Placement"
+                },
+                { "resourceName": "StormbirdModel", "type": "StaticModel" }
+            ],
+            "name": "storm_bird",
+            "parent": "/viewport_3D/",
+            "type": "SimObject"
+        },
+        {
+            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl2"} ],
+            "components": [
+                {
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        1.0, 0.0, -1.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ],
+                    "type": "Placement"
+                },
+                { "resourceName": "RavenModel", "type": "StaticModel" }
+            ],
+            "name": "raven",
+            "parent": "/viewport_3D/",
+            "type": "SimObject"
+        },
+        {
+            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl1"} ],
+            "components": [
+                {
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        -2.0, 0.0, -1.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ],
+                    "type": "Placement"
+                },
+                { "resourceName": "RoosterModel", "type": "StaticModel" }
+            ],
+            "name": "rooster",
+            "parent": "/viewport_3D/",
+            "type": "SimObject"
+        },
+        {
+            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl1"} ],
+            "components": [
+                {
+                    "orientation": [
+                        1.0, 0.0, 0.0, 0.0
+                    ],
+                    "position": [
+                        2.0, 0.0, -1.0, 1.0
+                    ],
+                    "scale": [
+                        1.0, 1.0, 1.0
+                    ],
+                    "type": "Placement"
+                },
+                { "resourceName": "EagleModel", "type": "StaticModel" }
+            ],
+            "name": "eagle",
+            "parent": "/viewport_3D/",
+            "type": "SimObject"
+        },
+
+        {
+            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl2"} ],
+            "components": [
+                {
+                    "orientation": [1.0, 0.0, 0.0, 0.0],
+                    "position": [0.0, -1.0, -1.0, 1.0],
+                    "scale": [1.0, 1.0, 1.0],
+                    "type": "Placement"
+                },
+                { "resourceName": "GameboardModel", "type": "StaticModel" }
+            ],
+            "name": "gameboard",
+            "parent": "/viewport_3D/",
+            "type": "SimObject"
+        }
+    ],
+    "connections": []
+}
