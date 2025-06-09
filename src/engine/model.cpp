@@ -121,6 +121,21 @@ std::shared_ptr<IResource> StaticModelFromFile::createResource(const nlohmann::j
         "There must be as many materials as there are meshes"
     );
 
+    if(methodParameters.find("material_overrides") != methodParameters.end()) {
+        for(
+            auto override { methodParameters.at("material_overrides").begin() };
+            override != methodParameters.at("material_overrides").end();
+            ++override
+        ) {
+            assert(std::all_of(override.key().begin(), override.key().end(), ::isdigit)
+                && "Invalid material key; key must be a string comprised of numeric characters"
+            );
+            std::size_t materialIndex { std::stoull(override.key()) };
+            assert(materialIndex < materialHandles.size());
+            Material::ApplyOverrides(override.value(), materialHandles[materialIndex]);
+        }
+    }
+
     return std::make_shared<StaticModel>(meshHandles, materialHandles);
 }
 

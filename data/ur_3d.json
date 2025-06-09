@@ -4,7 +4,23 @@
             "method": "fromFile",
             "name": "SwallowModel",
             "parameters": {
-                "path": "data/models/PrototypeSwallow.obj"
+                "path": "data/models/PrototypeSwallow.obj",
+                "material_overrides": {
+                    "0": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.1, 1.0, 0.1, 1.0]
+                        }
+                    ],
+                    "1": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.7, 0.1, 0.5, 1.0]
+                        }
+                    ]
+                }
             },
             "type": "StaticModel"
         },
@@ -157,12 +173,11 @@
         {
             "aspects": [
                 { "type": "RenderDebugViewer" },
-                { "type": "FlyCamera" },
                 { "type": "QueryClick" }
             ],
             "components": [
                 {
-                    "fov": 45.0,
+                    "fov": 55.5,
                     "aspect": 1.77778,
                     "orthographic_dimensions": {"horizontal": 0, "vertical": 0},
                     "near_far_planes": {"near": 0.5, "far": 100},
@@ -171,15 +186,15 @@
                 },
                 {
                     "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
+                        0.310491145,
+                        -0.0720598251,
+                        -0.923300385,
+                        -0.214287385 
                     ],
                     "position": [
-                        0.0,
-                        0.0,
-                        0.0,
+                        -4.87555504,
+                        3.94099879,
+                        -5.59419203,
                         1.0
                     ],
                     "scale": [
@@ -235,7 +250,7 @@
         },
 
         {
-            "aspects": [ { "type": "Revolve" } ],
+            "aspects": [],
             "components": [
                 {
                     "orientation": [
@@ -251,14 +266,14 @@
                 },
                 {
                     "ambient": [
-                        0.4000000059604645, 0.4000000059604645, 0.4000000059604645
+                        0.0300000059604645, 0.0300000059604645, 0.0300000059604645
                     ],
                     "diffuse": [
-                        20.0, 20.0, 20.0
+                        0.3, 0.3, 0.3
                     ],
                     "lightType": "directional",
                     "specular": [
-                        20.0, 20.0, 20.0
+                        0.3, 0.3, 0.3
                     ],
                     "type": "LightEmissionData"
                 }
@@ -269,7 +284,7 @@
         },
 
         {
-            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl1"} ],
+            "aspects": [ {"type": "ClickCallbackImpl1"} ],
             "components": [
                 {
                     "orientation": [
@@ -290,7 +305,7 @@
             "type": "SimObject"
         },
         {
-            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl2"} ],
+            "aspects": [ {"type": "ClickCallbackImpl2"} ],
             "components": [
                 {
                     "orientation": [
@@ -311,7 +326,7 @@
             "type": "SimObject"
         },
         {
-            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl2"} ],
+            "aspects": [ {"type": "ClickCallbackImpl2"} ],
             "components": [
                 {
                     "orientation": [
@@ -332,7 +347,7 @@
             "type": "SimObject"
         },
         {
-            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl1"} ],
+            "aspects": [ {"type": "ClickCallbackImpl1"} ],
             "components": [
                 {
                     "orientation": [
@@ -353,7 +368,7 @@
             "type": "SimObject"
         },
         {
-            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl1"} ],
+            "aspects": [ {"type": "ClickCallbackImpl1"} ],
             "components": [
                 {
                     "orientation": [
@@ -375,7 +390,7 @@
         },
 
         {
-            "aspects": [ {"type": "BackAndForth"}, {"type": "ClickCallbackImpl2"} ],
+            "aspects": [ {"type": "ClickCallbackImpl2"} ],
             "components": [
                 {
                     "orientation": [1.0, 0.0, 0.0, 0.0],
