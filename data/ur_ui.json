@@ -123,7 +123,7 @@
                     ],
                     "position": [
                         0.0,
-                        200.0,
+                        300.0,
                         0.0,
                         1.0
                     ],
@@ -137,11 +137,11 @@
             "aspects": [
                 {
                     "type": "TestText",
-                    "text": "This should work I guess.",
+                    "text": "Click me to roll!",
                     "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0
                 },
-                { "type": "ClickCallbackImpl1" }
+                { "type": "ClickToRoll" }
             ]
         },
 

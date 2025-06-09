@@ -2,7 +2,7 @@
 
 #include "click_callback_impl_2.hpp"
 
-bool ClickCallbackImpl2::onPointerClick() {
+bool ClickCallbackImpl2::onPointerLeftClick() {
     std::cout << "\t\"I believe I have been clicked by something!\"\n";
     return true;
 }

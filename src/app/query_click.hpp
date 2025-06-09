@@ -14,19 +14,34 @@ public:
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
 
 protected:
-    bool onClick(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
+    bool onLeftClick(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
+    bool onRightClick(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
 
-    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerClick {
+    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerLeftClick {
         declareFixedActionBinding(
             "UI",
             "Tap",
             [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
-                return this->onClick(actionData, actionDefinition);
+                return this->onLeftClick(actionData, actionDefinition);
             }
         )
     };
+
+    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerRightClick {
+        declareFixedActionBinding(
+            "UI",
+            "RightTap",
+            [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+                return this->onRightClick(actionData, actionDefinition);
+            }
+        )
+    };
+
 private:
     QueryClick(): SimObjectAspect<QueryClick>{0} {}
+
+    ToyMakersEngine::Ray rayFromClickCoordinates(glm::vec2 clickCoordinates);
+
 };
 
 #endif
