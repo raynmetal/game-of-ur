@@ -14,7 +14,7 @@ build/**/*
 /**/*.fbx
 # /**/*.obj
 # /**/*.mtl
-/**/*.txt
+# /**/*.txt
 /**/*.aseprite
 /**/*.dae
 /**/*.gltf 
