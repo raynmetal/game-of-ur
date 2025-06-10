@@ -1,5 +1,4 @@
 #include "query_click.hpp"
-#include "fly_camera.hpp"
 #include "interface_pointer_callback.hpp"
 
 ToyMakersEngine::Ray QueryClick::rayFromClickCoordinates(glm::vec2 clickCoordinates) {

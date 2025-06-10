@@ -140,39 +140,7 @@
         },
 
         {
-            "components": [
-                {
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
-                    "type": "Placement"
-                }
-            ],
             "aspects": [
-                { "type": "RenderDebugViewer" }
-            ],
-            "name": "render_debug",
-            "parent": "/viewport_3D/",
-            "type": "SimObject"
-        },
-
-        {
-            "aspects": [
-                { "type": "RenderDebugViewer" },
                 { "type": "QueryClick" }
             ],
             "components": [
@@ -284,7 +252,7 @@
         },
 
         {
-            "aspects": [ {"type": "ClickCallbackImpl1"} ],
+            "aspects": [],
             "components": [
                 {
                     "orientation": [
@@ -305,7 +273,7 @@
             "type": "SimObject"
         },
         {
-            "aspects": [ {"type": "ClickCallbackImpl2"} ],
+            "aspects": [],
             "components": [
                 {
                     "orientation": [
@@ -325,8 +293,9 @@
             "parent": "/viewport_3D/",
             "type": "SimObject"
         },
+
         {
-            "aspects": [ {"type": "ClickCallbackImpl2"} ],
+            "aspects": [],
             "components": [
                 {
                     "orientation": [
@@ -346,8 +315,9 @@
             "parent": "/viewport_3D/",
             "type": "SimObject"
         },
+
         {
-            "aspects": [ {"type": "ClickCallbackImpl1"} ],
+            "aspects": [],
             "components": [
                 {
                     "orientation": [
@@ -367,8 +337,9 @@
             "parent": "/viewport_3D/",
             "type": "SimObject"
         },
+
         {
-            "aspects": [ {"type": "ClickCallbackImpl1"} ],
+            "aspects": [],
             "components": [
                 {
                     "orientation": [
@@ -390,7 +361,7 @@
         },
 
         {
-            "aspects": [ {"type": "ClickCallbackImpl2"} ],
+            "aspects": [],
             "components": [
                 {
                     "orientation": [1.0, 0.0, 0.0, 0.0],

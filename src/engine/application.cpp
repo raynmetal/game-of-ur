@@ -25,8 +25,6 @@
 #include "render_system.hpp"
 #include "text_render.hpp"
 
-#include "../app/fly_camera.hpp"
-
 #include "application.hpp"
 
 
