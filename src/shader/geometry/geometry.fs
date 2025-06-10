@@ -23,11 +23,11 @@ void main() {
         geometryNormal = tbnMatrix * (texture(uMaterial.mTextureNormal, fragAttr.UV1) * 2.f - 1.f);
     }
 
-    geometryAlbedoSpec = fragAttr.color;
+    geometryAlbedoSpec = uMaterial.mColorMultiplier * fragAttr.color;
     if(uMaterial.mUsingAlbedoMap) {
-        geometryAlbedoSpec = vec4(texture(uMaterial.mTextureAlbedo, fragAttr.UV1).rgb, 0.1f);
+        geometryAlbedoSpec = uMaterial.mColorMultiplier * vec4(texture(uMaterial.mTextureAlbedo, fragAttr.UV1).rgb, 0.1f);
     }
     if(uMaterial.mUsingSpecularMap) {
-        geometryAlbedoSpec.a = texture(uMaterial.mTextureSpecular, fragAttr.UV1).r;
+        geometryAlbedoSpec.a = texture(uMaterial.mTextureSpecular, fragAttr.UV1).r * uMaterial.mColorMultiplier.a;
     }
 }

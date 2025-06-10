@@ -6,6 +6,7 @@ struct Material {
     bool mUsingAlbedoMap;
     bool mUsingSpecularMap;
     float mSpecularExponent;
+    vec4 mColorMultiplier;
 };
 
 uniform Material uMaterial;
