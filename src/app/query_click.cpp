@@ -1,3 +1,5 @@
+#include "../engine/spatial_query_math.hpp"
+
 #include "query_click.hpp"
 #include "interface_pointer_callback.hpp"
 
@@ -79,8 +81,9 @@ bool QueryClick::onLeftClick(const ToyMakersEngine::ActionData& actionData, cons
         //then click on every aspect of our query results that can be clicked
         if(std::shared_ptr<ToyMakersEngine::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMakersEngine::SimObject>(foundNode)) {
             if(nodeAsSimObject->hasAspectWithInterface<ILeftClickable>()) {
+                glm::vec4 intersectionLocation { ToyMakersEngine::computeIntersections(cameraRay, foundNode->getComponent<ToyMakersEngine::AxisAlignedBounds>()).second.first, 1.f };
                 for(ILeftClickable& clickable: nodeAsSimObject->getAspectsWithInterface<ILeftClickable>()) {
-                    leftClickOn(clickable);
+                    leftClickOn(clickable, intersectionLocation);
                 }
             }
         }
@@ -111,8 +114,9 @@ bool QueryClick::onRightClick(const ToyMakersEngine::ActionData& actionData, con
         //then click on every aspect of our query results that can be clicked
         if(std::shared_ptr<ToyMakersEngine::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMakersEngine::SimObject>(foundNode)) {
             if(nodeAsSimObject->hasAspectWithInterface<ILeftClickable>()) {
+                glm::vec4 intersectionLocation { ToyMakersEngine::computeIntersections(cameraRay, foundNode->getComponent<ToyMakersEngine::AxisAlignedBounds>()).second.first, 1.f };
                 for(IRightClickable& clickable: nodeAsSimObject->getAspectsWithInterface<IRightClickable>()) {
-                    rightClickOn(clickable);
+                    rightClickOn(clickable, intersectionLocation);
                 }
             }
         }

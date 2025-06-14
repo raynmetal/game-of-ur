@@ -361,7 +361,7 @@
         },
 
         {
-            "aspects": [],
+            "aspects": [ { "type": "BoardLocations" } ],
             "components": [
                 {
                     "orientation": [1.0, 0.0, 0.0, 0.0],

@@ -54,88 +54,35 @@ std::pair<bool, glm::vec3> ToyMakersEngine::computeIntersection(const Ray& ray, 
     // computation returned)
     if(!planeIntersection.first) return planeIntersection;
 
-    // plane intersection found, see if intersection point lies within triangle
+    // See: https://math.stackexchange.com/questions/4322/check-whether-a-point-is-within-a-3d-triangle
+    // Plane intersection found, see if intersection point lies within triangle.
     // Sum of areas of triangles formed between each pair of triangle points and the point of intersection
     // will be the same as the area of the triangle iff the point lies within the triangle
-
-    const float triangleAreaDoubledSquared { 
-        .25f * squareDistance(glm::cross(triangle.mPoints[1] - triangle.mPoints[0], triangle.mPoints[2] - triangle.mPoints[0]))
+    const float triangleArea {
+        glm::length(glm::cross(triangle.mPoints[1] - triangle.mPoints[0], triangle.mPoints[2] - triangle.mPoints[0]))
+        / 2.f
     };
-    const float quadAreaDoubledSquared { .25f * (
-        squareDistance(glm::cross(triangle.mPoints[0] - planeIntersection.second, triangle.mPoints[1] - planeIntersection.second))
-        + squareDistance(glm::cross(triangle.mPoints[0] - planeIntersection.second, triangle.mPoints[2] - planeIntersection.second))
-        + squareDistance(glm::cross(triangle.mPoints[1] - planeIntersection.second, triangle.mPoints[2] - planeIntersection.second))
-    )};
+    const float alpha {
+        glm::length(glm::cross(triangle.mPoints[0] - planeIntersection.second, triangle.mPoints[1] - planeIntersection.second))
+        / (2.f * triangleArea)
+    };
+    const float beta {
+        glm::length(glm::cross(triangle.mPoints[0] - planeIntersection.second, triangle.mPoints[2] - planeIntersection.second))
+        / (2.f * triangleArea)
+    };
+    const float gamma {
+        glm::length(glm::cross(triangle.mPoints[1] - planeIntersection.second, triangle.mPoints[2] - planeIntersection.second))
+        / (2.f * triangleArea)
+    };
 
     if(
-        // either quad area is obviously lesser than triangle area
-        quadAreaDoubledSquared <= triangleAreaDoubledSquared
-
-        // or they're approximately equal, and we need to do a relative epsilon
-        // based equality comparison
-        || (
-            std::abs(quadAreaDoubledSquared - triangleAreaDoubledSquared) 
-            <= (std::numeric_limits<float>::epsilon() * std::max(quadAreaDoubledSquared, triangleAreaDoubledSquared))
-        )
+        (alpha >= 0.f && alpha <= 1.f)
+        && (beta >= 0.f && beta <= 1.f) 
+        && (gamma >= 0.f && gamma <= 1.f)
+        && std::fabs(alpha + beta + gamma - 1.f) <= std::numeric_limits<float>::epsilon()
     ) {
         return planeIntersection;
     }
-
-    /** If the ray and the triangle happen to lie on the same plane, we still have a shot.
-     * TODO: Honestly, this is a bit more studying than I'm willing to do at this point.  Just let
-     * this edge case be.
-     * NOTE: We can determine whether an intersection took place easily enough with the code commented
-     * out.  It's slightly more complicated to determine the location of the intersection
-     */
-    // if(!glm::dot(triangleNormal, ray.mDirection)) {
-    //     const glm::vec3 rayUnitDirection { glm::normalize(ray.mDirection) };
-    //     const std::array<std::pair<uint8_t, uint8_t>, 3> trianglePointIndexPairs {{ { 0, 1 }, { 0, 2 }, { 1, 2 } }};
-    //     // check all edges against projections on triangle edges
-    //     for(const auto& indexPair: trianglePointIndexPairs) {
-    //         const glm::vec3 triangleEdgeUnitDirection { glm::normalize(triangle.mPoints[indexPair.first] - triangle.mPoints[indexPair.second]) };
-    //         const std::array<float, 3> trianglePointProjections {{
-    //             glm::dot(triangle.mPoints[0] - triangle.mPoints[1], triangleEdgeUnitDirection),
-    //             glm::dot(triangle.mPoints[0] - triangle.mPoints[2], triangleEdgeUnitDirection),
-    //             glm::dot(triangle.mPoints[1] - triangle.mPoints[2], triangleEdgeUnitDirection),
-    //         }};
-
-    //         std::array<float, 2> rayPointProjections {
-    //             glm::dot(ray.mStart - ray.mStart, triangleEdgeUnitDirection),
-    //             glm::dot((ray.mStart + ray.mLength * rayUnitDirection) - ray.mStart, triangleEdgeUnitDirection),
-    //         };
-    //         const float triangleMax { *std::max_element(trianglePointProjections.begin(), trianglePointProjections.end()) };
-    //         const float triangleMin { *std::min_element(trianglePointProjections.begin(), trianglePointProjections.end()) };
-    //         const float rayMax { std::max(rayPointProjections[0], rayPointProjections[1]) };
-    //         const float rayMin { std::min(rayPointProjections[0], rayPointProjections[1]) };
-
-    //         if(triangleMax < rayMin || triangleMin > rayMax) { 
-    //             return { false, glm::vec3{ std::numeric_limits<float>::infinity() }};
-    //         }
-    //     }
-
-    //     // check all edges against projection on ray edge
-    //     const std::array<float, 3> trianglePointProjections {{
-    //         glm::dot(triangle.mPoints[0] - triangle.mPoints[1], rayUnitDirection),
-    //         glm::dot(triangle.mPoints[0] - triangle.mPoints[2], rayUnitDirection),
-    //         glm::dot(triangle.mPoints[1] - triangle.mPoints[2], rayUnitDirection),
-    //     }};
-    //     std::array<float, 2> rayPointProjections {
-    //         glm::dot(ray.mStart - ray.mStart, rayUnitDirection),
-    //         glm::dot((ray.mStart + ray.mLength * rayUnitDirection) - ray.mStart, rayUnitDirection),
-    //     };
-    //     const float triangleMax { *std::max_element(trianglePointProjections.begin(), trianglePointProjections.end()) };
-    //     const float triangleMin { *std::min_element(trianglePointProjections.begin(), trianglePointProjections.end()) };
-    //     const float rayMax { std::max(rayPointProjections[0], rayPointProjections[1]) };
-    //     const float rayMin { std::min(rayPointProjections[0], rayPointProjections[1]) };
-
-    //     // no overlap on any axis, so we're done
-    //     if(triangleMax < rayMin || triangleMin > rayMax) {
-    //         return { false, glm::vec3{ std::numeric_limits<float>::infinity() } };
-    //     }
-
-    //     // find point of intersection between ray and triangle
-    //     static_assert(false && "Finding point of intersection b/w line and triangle lying on a single plane unimplemented");
-    // }
 
     // No point of intersection found
     return { false, glm::vec3{std::numeric_limits<float>::infinity()} };

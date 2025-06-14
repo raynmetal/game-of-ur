@@ -13,12 +13,13 @@ void ClickToRoll::rollYesNo() {
     mYesNoDie = mYesNoDieDistribution(mRandomEngine);
 }
 
-bool ClickToRoll::onPointerLeftClick() {
+bool ClickToRoll::onPointerLeftClick(glm::vec4 clickLocation) {
     rollPrimary();
     setResultText();
     return true;
 }
-bool ClickToRoll::onPointerRightClick() {
+
+bool ClickToRoll::onPointerRightClick(glm::vec4 clickLocation) {
     rollYesNo();
     setResultText();
     return true;

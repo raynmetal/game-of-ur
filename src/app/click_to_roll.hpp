@@ -1,5 +1,5 @@
-#ifndef ZOAPPCLICKCALLBACKIMPL2
-#define ZOAPPCLICKCALLBACKIMPL2
+#ifndef ZOAPPCLICKTOROLL_H
+#define ZOAPPCLICKTOROLL_H
 
 #include <random>
 
@@ -16,8 +16,8 @@ public:
     inline static std::string getSimObjectAspectTypeName() { return "ClickToRoll"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
-    bool onPointerLeftClick()  override;
-    bool onPointerRightClick() override;
+    bool onPointerLeftClick(glm::vec4 clickLocation)  override;
+    bool onPointerRightClick(glm::vec4 clickLocation) override;
 
     inline bool getYesNoDieState() const { return mYesNoDie; }
     uint8_t getPrimaryDieState() const { return mPrimaryDie; }
