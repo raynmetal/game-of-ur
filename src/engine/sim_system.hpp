@@ -173,7 +173,7 @@ namespace ToyMakersEngine{
         template <typename TComponent>
         void updateComponent(const TComponent& component);
         template <typename TComponent>
-        TComponent getComponent(const float simulationProgress=1.f);
+        TComponent getComponent(const float simulationProgress=1.f) const;
         template <typename TComponent>
         void removeComponent();
 
@@ -286,7 +286,7 @@ namespace ToyMakersEngine{
         mSimObject->updateComponent<TComponent>(component);
     }
     template <typename TComponent>
-    TComponent BaseSimObjectAspect::getComponent(const float simulationProgress) {
+    TComponent BaseSimObjectAspect::getComponent(const float simulationProgress) const {
         return mSimObject->getComponent<TComponent>(simulationProgress);
     }
     template <typename TComponent>

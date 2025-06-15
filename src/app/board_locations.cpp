@@ -33,6 +33,27 @@ void BoardLocation::setType(BoardLocation::CellType type) {
 
 bool BoardLocations::onPointerLeftClick(glm::vec4 clickLocation) {
     std::cout << "Left click: " << glm::to_string(clickLocation) << "\n";
+    if(clickLocation.y >= -std::numeric_limits<float>::epsilon()) {
+        glm::uvec2 gridLocation { boardPointToGridIndices({clickLocation.x, clickLocation.z}) };
+        const BoardLocation boardLocation { mGrid[gridLocation.x][gridLocation.y] };
+        std::cout << "\tcell type: ";
+        switch(boardLocation.getType()) {
+            case BoardLocation::CellType::BATTLEFIELD:
+                std::cout << "battlefield\n";
+                break;
+            case BoardLocation::CellType::INVALID:
+                std::cout << "invalid\n";
+                break;
+            case BoardLocation::CellType::PLAYER_ONE:
+                std::cout << "player one\n";
+                break;
+            case BoardLocation::CellType::PLAYER_TWO:
+                std::cout << "player two\n";
+                break;
+        }
+        std::cout << "\trow: " << static_cast<int>(boardLocation.getRow()) << "\n";
+        std::cout << "\tcol: " << static_cast<int>(boardLocation.getCol()) << "\n";
+    }
     return true;
 }
 
@@ -49,3 +70,16 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> BoardLocations::clone() co
     return std::shared_ptr<BoardLocations>{ new BoardLocations{} };
 }
 
+glm::uvec2 BoardLocations::boardPointToGridIndices (glm::vec2 point) const {
+    const ToyMakersEngine::AxisAlignedBounds::Extents boardExtents { getComponent<ToyMakersEngine::AxisAlignedBounds>().getAxisAlignedBoxExtents() };
+    glm::vec2 normalizedPoint {
+        (point.x - boardExtents.second.x) / (boardExtents.first.x - boardExtents.second.x),
+        (point.y - boardExtents.second.z) / (boardExtents.first.z - boardExtents.second.z),
+    };
+    assert(
+        normalizedPoint.x >= 0.f && normalizedPoint.x <= 1.f
+        && normalizedPoint.y >= 0.f && normalizedPoint.y <= 1.f
+        && "selected point is beyond the bounds of the board"
+    );
+    return {normalizedPoint.x * mGrid.size(), normalizedPoint.y * mGrid[0].size()};
+}

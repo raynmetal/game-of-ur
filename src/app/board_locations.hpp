@@ -35,7 +35,7 @@ private:
     static const uint8_t kColOffset { 0 };
     static const uint8_t kRowOffset { 4 };
 
-    static const uint8_t kColMask { 0x0E };
+    static const uint8_t kColMask { 0x0F };
     static const uint8_t kRowMask { 0x30 };
     static const uint8_t kCellTypeMask { 0xC0 };
 };
@@ -50,36 +50,9 @@ public:
 
 private:
     BoardLocations(): SimObjectAspect<BoardLocations>{0} {}
+    glm::uvec2 boardPointToGridIndices (glm::vec2 point) const;
 
     std::array<std::array<BoardLocation, 12>, 3> mGrid {{
-        { 
-            BoardLocation{BoardLocation::CellType::PLAYER_TWO, 0, 0},
-            BoardLocation{BoardLocation::CellType::PLAYER_TWO, 0, 1},
-            BoardLocation{BoardLocation::CellType::PLAYER_TWO, 0, 2},
-            BoardLocation{BoardLocation::CellType::PLAYER_TWO, 0, 3},
-            BoardLocation{BoardLocation::CellType::INVALID, 0, 4},
-            BoardLocation{BoardLocation::CellType::INVALID, 0, 5},
-            BoardLocation{BoardLocation::CellType::INVALID, 0, 6},
-            BoardLocation{BoardLocation::CellType::INVALID, 0, 7},
-            BoardLocation{BoardLocation::CellType::INVALID, 0, 8},
-            BoardLocation{BoardLocation::CellType::INVALID, 0, 9},
-            BoardLocation{BoardLocation::CellType::INVALID, 0, 10},
-            BoardLocation{BoardLocation::CellType::INVALID, 0, 11},
-        },
-        {
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 0},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 1},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 2},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 3},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 4},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 5},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 6},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 7},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 8},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 9},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 10},
-            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 0, 11},
-        },
         { 
             BoardLocation{BoardLocation::CellType::PLAYER_ONE, 0, 0},
             BoardLocation{BoardLocation::CellType::PLAYER_ONE, 0, 1},
@@ -94,8 +67,35 @@ private:
             BoardLocation{BoardLocation::CellType::INVALID, 0, 10},
             BoardLocation{BoardLocation::CellType::INVALID, 0, 11},
         },
+        {
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 0},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 1},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 2},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 3},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 4},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 5},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 6},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 7},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 8},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 9},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 10},
+            BoardLocation{BoardLocation::CellType::BATTLEFIELD, 1, 11},
+        },
+        { 
+            BoardLocation{BoardLocation::CellType::PLAYER_TWO, 2, 0},
+            BoardLocation{BoardLocation::CellType::PLAYER_TWO, 2, 1},
+            BoardLocation{BoardLocation::CellType::PLAYER_TWO, 2, 2},
+            BoardLocation{BoardLocation::CellType::PLAYER_TWO, 2, 3},
+            BoardLocation{BoardLocation::CellType::INVALID, 2, 4},
+            BoardLocation{BoardLocation::CellType::INVALID, 2, 5},
+            BoardLocation{BoardLocation::CellType::INVALID, 2, 6},
+            BoardLocation{BoardLocation::CellType::INVALID, 2, 7},
+            BoardLocation{BoardLocation::CellType::INVALID, 2, 8},
+            BoardLocation{BoardLocation::CellType::INVALID, 2, 9},
+            BoardLocation{BoardLocation::CellType::INVALID, 2, 10},
+            BoardLocation{BoardLocation::CellType::INVALID, 2, 11},
+        },
     }};
 };
-
 
 #endif
