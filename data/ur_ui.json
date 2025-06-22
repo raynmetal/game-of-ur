@@ -6,23 +6,9 @@
             "aspects": [],
             "components": [
                 {
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
                     "type": "Placement"
                 }
             ],
@@ -37,15 +23,9 @@
             "components": [
                 {
                     "type": "Placement",
-                    "orientation": [
-                        1.0, 0.0, 0.0, 0.0
-                    ],
-                    "position": [
-                        0.0, 0.0, 0.0, 1.0
-                    ],
-                    "scale": [
-                        1.0, 1.0, 1.0
-                    ]
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
             "inherits_world": false,
@@ -80,23 +60,9 @@
                     "type": "CameraProperties"
                 },
                 {
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ],
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
                     "type": "Placement"
                 }
             ],
@@ -111,23 +77,9 @@
             "components": [
                 {
                     "type": "Placement",
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        300.0,
-                        0.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.0,
-                        1.0,
-                        1.0
-                    ]
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -683.0, 300.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
             "aspects": [
@@ -135,7 +87,8 @@
                     "type": "TestText",
                     "text": "Click me to roll!",
                     "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0
+                    "scale": 1.0,
+                    "anchor": [0.0, 0.0]
                 },
                 { "type": "ClickToRoll" }
             ]
@@ -144,41 +97,15 @@
         {
             "components": [
                 {
-                    "orientation": [
-                        1.0,
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "position": [
-                        0.0,
-                        0.0,
-                        0.0,
-                        1.0
-                    ],
-                    "scale": [
-                        1.4142135381698608,
-                        1.4142135381698608,
-                        1.0
-                    ],
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.4142135381698608, 1.4142135381698608, 1.0 ],
                     "type": "Placement"
                 },
                 {
-                    "ambient": [
-                        0.7,
-                        0.7,
-                        0.7
-                    ],
-                    "diffuse": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
-                    "specular": [
-                        0.0,
-                        0.0,
-                        0.0
-                    ],
+                    "ambient": [ 0.7, 0.7, 0.7 ],
+                    "diffuse": [ 0.0, 0.0, 0.0 ],
+                    "specular": [ 0.0, 0.0, 0.0 ],
                     "lightType": "directional",
                     "type": "LightEmissionData"
                 }

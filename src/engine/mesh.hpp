@@ -37,6 +37,8 @@ namespace ToyMakersEngine {
         void bind(const VertexLayout& shaderVertexLayout);
         void unbind();
 
+        std::vector<BuiltinVertexData>::iterator getVertexListBegin();
+        std::vector<BuiltinVertexData>::iterator getVertexListEnd();
         std::vector<BuiltinVertexData>::const_iterator getVertexListBegin() const;
         std::vector<BuiltinVertexData>::const_iterator getVertexListEnd() const;
 

@@ -22,12 +22,21 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> TestText::create(const nlo
             jsonAspectProperties.at("scale").get<float>():
             .01f
     };
+    const glm::vec2 anchor {
+        jsonAspectProperties.find("anchor") != jsonAspectProperties.end()?
+        glm::vec2{
+            jsonAspectProperties.at("anchor")[0].get<float>(),
+            jsonAspectProperties.at("anchor")[1].get<float>()
+        }:
+        glm::vec2{.5f, .5f}
+    };
 
     std::shared_ptr<ToyMakersEngine::TextFont> font { ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName) };
     std::shared_ptr<TestText> testTextAspect { std::make_shared<TestText>() };
     testTextAspect->mFont = font;
     testTextAspect->mText = text;
     testTextAspect->mScale = scale;
+    testTextAspect->mAnchor;
 
     return testTextAspect;
 }
@@ -62,12 +71,12 @@ void TestText::updateFont(const std::string& fontResourceName) {
 
 void TestText::recomputeTexture() {
     std::shared_ptr<ToyMakersEngine::Texture> textTexture { mFont->renderText(mText, glm::u8vec3 {0x0}, glm::u8vec3 {0xFF}) };
+    const glm::vec2 textDimensions { textTexture->getWidth() * mScale, textTexture->getHeight() * mScale };
     const nlohmann::json rectangleParameters = { 
         {"type", ToyMakersEngine::StaticModel::getResourceTypeName()},
         {"method", ToyMakersEngine::StaticModelRectangleDimensions::getResourceConstructorName()},
         {"parameters", {
-            {"width", textTexture->getWidth() * mScale },
-            {"height", textTexture->getHeight() * mScale },
+            {"width", textDimensions.x }, {"height", textDimensions.y },
             {"flip_texture_y", true},
             {"material_properties", nlohmann::json::array()},
         }}
@@ -82,6 +91,19 @@ void TestText::recomputeTexture() {
             ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
         );
     }
+
+    std::shared_ptr<ToyMakersEngine::StaticModel>  rectangle { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>() };
+    for(auto mesh: rectangle->getMeshHandles()) {
+        for(auto iVertex{ mesh->getVertexListBegin() }, end {mesh->getVertexListEnd()}; iVertex != end; ++iVertex) {
+            iVertex->mPosition += glm::vec4{
+                textDimensions.x * (.5f - mAnchor.x),
+                textDimensions.y * (mAnchor.y - .5f),
+                0.f,
+                0.f,
+            };
+        }
+    }
+    updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(rectangle);
 
     std::shared_ptr<ToyMakersEngine::Material> material { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()->getMaterialHandles()[0] };
     material->updateTextureProperty(

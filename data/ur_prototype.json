@@ -78,8 +78,9 @@
     "connections": [
         {
             "from": "/scene_root_3D/viewport_3D/gameboard/@BoardLocations",
-            "to": "/@GameOfUrController",
             "signal": "BoardClicked",
+
+            "to": "/@GameOfUrController",
             "observer": "BoardClickedObserved"
         }
     ]
