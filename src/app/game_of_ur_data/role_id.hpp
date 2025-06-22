@@ -1,7 +1,7 @@
 #ifndef ZOAPPPLAYERROLEID_H
 #define ZOAPPPLAYERROLEID_H
 
-enum PlayerRoleID {
+enum RoleID {
     NA,
     ONE,
     TWO,

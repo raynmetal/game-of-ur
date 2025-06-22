@@ -5,7 +5,6 @@
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> GameOfUrController::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<GameOfUrController> controller { std::make_shared<GameOfUrController>() };
-    std::cout << "GameOfUrController: possible moves: " << controller->mModel.getAllPossibleMoves().size() << "\n";
     return controller;
 }
 

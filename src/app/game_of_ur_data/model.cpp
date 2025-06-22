@@ -1,7 +1,7 @@
 #include <cmath>
 
-#include "game_of_ur_model.hpp"
-#include "game_piece_type.hpp"
+#include "model.hpp"
+#include "piece_type.hpp"
 
 void GameOfUrModel::reset() {
     *this = GameOfUrModel{};
@@ -20,8 +20,8 @@ void GameOfUrModel::startPhasePlay() {
 
     // assign roles to each player
     mCurrentPlayer = playerAGoesFirst? PlayerID::PLAYER_A: PlayerID::PLAYER_B;
-    mPlayers[PlayerID::PLAYER_A].initializeRole(playerAGoesFirst? PlayerRoleID::ONE: PlayerRoleID::TWO);
-    mPlayers[PlayerID::PLAYER_B].initializeRole(playerAGoesFirst? PlayerRoleID::TWO: PlayerRoleID::ONE);
+    mPlayers[PlayerID::PLAYER_A].initializeWithRole(playerAGoesFirst? RoleID::ONE: RoleID::TWO);
+    mPlayers[PlayerID::PLAYER_B].initializeWithRole(playerAGoesFirst? RoleID::TWO: RoleID::ONE);
 
     // collect 10 counters from each player and place them in the common pool
     deductCounters(10, PlayerID::PLAYER_A);
@@ -43,23 +43,23 @@ void GameOfUrModel::rollDice(PlayerID requester) {
         )
     ) {
         mTurnPhase = TurnPhase::END;
-        mRoundPhase = getRole(requester) == PlayerRoleID::TWO? RoundPhase::END: RoundPhase::IN_PROGRESS;
+        mRoundPhase = getRole(requester) == RoleID::TWO? RoundPhase::END: RoundPhase::IN_PROGRESS;
     }
 }
 
-void GameOfUrModel::movePiece(GamePieceIdentity piece, glm::u8vec2 toLocation, PlayerID requester) {
+void GameOfUrModel::movePiece(PieceIdentity piece, glm::u8vec2 toLocation, PlayerID requester) {
     assert(canMovePiece(piece, toLocation, requester) && "this player may not move this piece at the present time");
     const MoveResultData moveResults { getMoveData(piece, toLocation) };
 
     // update moved piece state
-    std::shared_ptr<GamePiece> movedPiece { mPlayers[requester].getPiece(piece.mType) };
+    std::shared_ptr<Piece> movedPiece { mPlayers[requester].getPiece(piece.mType) };
     movedPiece->setState(moveResults.mMovedPiece.mState);
 
     // update displaced piece state, if necessary
-    std::weak_ptr<GamePiece> weakPtrDisplacedPiece {mBoard.move(getRole(requester), movedPiece, toLocation, mDice->getResult(mGamePhase))};
-    if(std::shared_ptr<GamePiece> displacedPiece = weakPtrDisplacedPiece.lock()) {
-        assert(moveResults.mDisplacedPiece.mState == GamePiece::State::UNLAUNCHED && "Results should indicate that the piece is in the UNLAUNCHED state after move");
-        displacedPiece->setState(GamePiece::State::UNLAUNCHED);
+    std::weak_ptr<Piece> weakPtrDisplacedPiece {mBoard.move(getRole(requester), movedPiece, toLocation, mDice->getResult(mGamePhase))};
+    if(std::shared_ptr<Piece> displacedPiece = weakPtrDisplacedPiece.lock()) {
+        assert(moveResults.mDisplacedPiece.mState == Piece::State::UNLAUNCHED && "Results should indicate that the piece is in the UNLAUNCHED state after move");
+        displacedPiece->setState(Piece::State::UNLAUNCHED);
     }
 
     // update counters for the player who moved
@@ -68,7 +68,7 @@ void GameOfUrModel::movePiece(GamePieceIdentity piece, glm::u8vec2 toLocation, P
 
     // update phase data
     mTurnPhase = TurnPhase::END;
-    mRoundPhase = piece.mOwner == PlayerRoleID::TWO? RoundPhase::END: RoundPhase::IN_PROGRESS;
+    mRoundPhase = piece.mOwner == RoleID::TWO? RoundPhase::END: RoundPhase::IN_PROGRESS;
 
     if(moveResults.mFlags&MoveResultData::ENDS_GAME) {
         mGamePhase = GamePhase::END;
@@ -108,8 +108,8 @@ bool GameOfUrModel::canRollDice(PlayerID requester) const {
     );
 }
 
-const GamePiece& GameOfUrModel::getPiece(const GamePieceIdentity& pieceIdentity) const {
-    assert(pieceIdentity.mOwner != PlayerRoleID::NA && "A piece without an owner role is invalid");
+const Piece& GameOfUrModel::getPiece(const PieceIdentity& pieceIdentity) const {
+    assert(pieceIdentity.mOwner != RoleID::NA && "A piece without an owner role is invalid");
     assert(mGamePhase != GamePhase::INITIATIVE && "Roles and pieces have not been assigned to players yet");
 
     bool ownerFound { false };
@@ -126,10 +126,10 @@ const GamePiece& GameOfUrModel::getPiece(const GamePieceIdentity& pieceIdentity)
     return mPlayers[owner].cGetPiece(pieceIdentity.mType);
 }
 
-PlayerRoleID GameOfUrModel::getWinner() const {
-    if(mGamePhase != GamePhase::END) return PlayerRoleID::NA;
-    const uint8_t nVictoryPiecesA { mPlayers[PLAYER_A].getNPieces(GamePiece::State::FINISHED) };
-    const uint8_t nVictoryPiecesB { mPlayers[PLAYER_B].getNPieces(GamePiece::State::FINISHED) };
+RoleID GameOfUrModel::getWinner() const {
+    if(mGamePhase != GamePhase::END) return RoleID::NA;
+    const uint8_t nVictoryPiecesA { mPlayers[PLAYER_A].getNPieces(Piece::State::FINISHED) };
+    const uint8_t nVictoryPiecesB { mPlayers[PLAYER_B].getNPieces(Piece::State::FINISHED) };
     assert(
         nVictoryPiecesA != nVictoryPiecesB
         && (
@@ -140,13 +140,13 @@ PlayerRoleID GameOfUrModel::getWinner() const {
     return nVictoryPiecesA == 5? getRole(PLAYER_A): getRole(PLAYER_B);
 }
 
-PlayerRoleID GameOfUrModel::getRole(PlayerID player) const {
+RoleID GameOfUrModel::getRole(PlayerID player) const {
     return mPlayers[player].getRole();
 }
 
-PlayerID GameOfUrModel::getPlayer(PlayerRoleID role) const {
+PlayerID GameOfUrModel::getPlayer(RoleID role) const {
     assert(mGamePhase != GamePhase::INITIATIVE && "Player rolls are not assigned until after the initiative phase ends");
-    assert(role != PlayerRoleID::NA && "Cannot retrieve a player without a role through this method");
+    assert(role != RoleID::NA && "Cannot retrieve a player without a role through this method");
     for(uint8_t player{0}; player < 2; ++player){
         if(mPlayers[player].getRole() == role) {
             return static_cast<PlayerID>(player);
@@ -155,8 +155,8 @@ PlayerID GameOfUrModel::getPlayer(PlayerRoleID role) const {
     assert(false && "After the initiative phase, both players should have roles assigned");
 }
 
-bool GameOfUrModel::canMovePiece(GamePieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const {
-    assert(pieceIdentity.mOwner != PlayerRoleID::NA && "A piece without an owner role is invalid");
+bool GameOfUrModel::canMovePiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const {
+    assert(pieceIdentity.mOwner != RoleID::NA && "A piece without an owner role is invalid");
     // a piece may only be moved by a player if the piece belongs to 
     // them, the current turn phase permits it, and if there is space on
     // a valid destination to move to
@@ -217,13 +217,13 @@ HouseData GameOfUrModel::getHouseData(glm::u8vec2 location) const {
     };
 }
 
-GamePieceData GameOfUrModel::getPieceData(GamePieceIdentity gamePiece) const {
-    assert(gamePiece.mOwner != PlayerRoleID::NA && "Game pieces without owners are not valid");
+GamePieceData GameOfUrModel::getPieceData(PieceIdentity gamePiece) const {
+    assert(gamePiece.mOwner != RoleID::NA && "Game pieces without owners are not valid");
     assert(mGamePhase != GamePhase::INITIATIVE && "Game piece data does not exist until after the initiative phase is over");
     return getPieceData(getPlayer(gamePiece.mOwner), gamePiece.mType);
 }
 
-GamePieceData GameOfUrModel::getPieceData(PlayerID player, GamePieceTypeID pieceType) const {
+GamePieceData GameOfUrModel::getPieceData(PlayerID player, PieceTypeID pieceType) const {
     assert(mGamePhase != GamePhase::INITIATIVE && "Game piece data does not exist until after the initiative phase is over");
     return {
         .mIdentity { mPlayers[player].cGetPiece(pieceType).getIdentity() },
@@ -238,9 +238,9 @@ PlayerData GameOfUrModel::getPlayerData(PlayerID player) const {
         .mRole { mPlayers[player].getRole() },
         .mIsWinner { mPlayers[player].getRole() == getWinner() },
         .mCounters { mPlayers[player].getNCounters() },
-        .mNUnlaunchedPieces { mPlayers[player].getNPieces(GamePiece::State::UNLAUNCHED) },
-        .mNBoardPieces { mPlayers[player].getNPieces(GamePiece::State::ON_BOARD) },
-        .mNVictoryPieces { mPlayers[player].getNPieces(GamePiece::State::FINISHED) },
+        .mNUnlaunchedPieces { mPlayers[player].getNPieces(Piece::State::UNLAUNCHED) },
+        .mNBoardPieces { mPlayers[player].getNPieces(Piece::State::ON_BOARD) },
+        .mNVictoryPieces { mPlayers[player].getNPieces(Piece::State::FINISHED) },
     };
 }
 
@@ -248,7 +248,7 @@ PlayerData GameOfUrModel::getCurrentPlayer() const {
     return getPlayerData(mCurrentPlayer);
 }
 
-PlayerData GameOfUrModel::getPlayerData(PlayerRoleID role) const {
+PlayerData GameOfUrModel::getPlayerData(RoleID role) const {
     return getPlayerData(getPlayer(role));
 }
 
@@ -261,13 +261,13 @@ DiceData GameOfUrModel::getDiceData() const {
     };
 }
 
-MoveResultData GameOfUrModel::getBoardMoveData(GamePieceIdentity pieceID) const {
-    assert(pieceID.mOwner != PlayerRoleID::NA && "Pieces without owners are invalid");
+MoveResultData GameOfUrModel::getBoardMoveData(PieceIdentity pieceID) const {
+    assert(pieceID.mOwner != RoleID::NA && "Pieces without owners are invalid");
     if(mGamePhase != GamePhase::PLAY || mTurnPhase != TurnPhase::MOVE_PIECE) {
         return { };
     }
 
-    const GamePiece& piece { mPlayers[getPlayer(pieceID.mOwner)].cGetPiece(pieceID.mType) };
+    const Piece& piece { mPlayers[getPlayer(pieceID.mOwner)].cGetPiece(pieceID.mType) };
     const glm::u8vec2 moveLocation { mBoard.computeMoveLocation(piece, mDice->getResult(mGamePhase)) };
     if(!canMovePiece(pieceID, moveLocation, getPlayer(pieceID.mOwner))) {
         return { };
@@ -276,13 +276,12 @@ MoveResultData GameOfUrModel::getBoardMoveData(GamePieceIdentity pieceID) const 
     return getMoveData(pieceID, moveLocation);
 }
 
-MoveResultData GameOfUrModel::getLaunchMoveData(GamePieceIdentity pieceID, glm::u8vec2 launchLocation) const {
-    assert(pieceID.mOwner != PlayerRoleID::NA && "Pieces without owners are invalid");
+MoveResultData GameOfUrModel::getLaunchMoveData(PieceIdentity pieceID, glm::u8vec2 launchLocation) const {
+    assert(pieceID.mOwner != RoleID::NA && "Pieces without owners are invalid");
     if(mGamePhase != GamePhase::PLAY || mTurnPhase != TurnPhase::MOVE_PIECE) {
         return {};
     }
 
-    const GamePiece& piece { mPlayers[getPlayer(pieceID.mOwner)].cGetPiece(pieceID.mType) };
     if(!canMovePiece(pieceID, launchLocation, getPlayer(pieceID.mOwner))) {
         return {};
     }
@@ -290,16 +289,16 @@ MoveResultData GameOfUrModel::getLaunchMoveData(GamePieceIdentity pieceID, glm::
     return getMoveData(pieceID, launchLocation);
 }
 
-MoveResultData GameOfUrModel::getMoveData(GamePieceIdentity pieceID, glm::u8vec2 moveLocation) const {
-    const GamePiece& piece { mPlayers[getPlayer(pieceID.mOwner)].cGetPiece(pieceID.mType) };
+MoveResultData GameOfUrModel::getMoveData(PieceIdentity pieceID, glm::u8vec2 moveLocation) const {
+    const Piece& piece { mPlayers[getPlayer(pieceID.mOwner)].cGetPiece(pieceID.mType) };
     MoveResultData::flags moveFlags {
         MoveResultData::IS_POSSIBLE
     };
 
-    GamePieceData displacedPieceData { .mIdentity{ .mOwner=PlayerRoleID::NA } };
+    GamePieceData displacedPieceData { .mIdentity{ .mOwner=RoleID::NA } };
     if(mBoard.houseIsOccupied(moveLocation)) {
         displacedPieceData.mIdentity = mBoard.getOccupant(moveLocation);
-        displacedPieceData.mState = GamePiece::State::UNLAUNCHED;
+        displacedPieceData.mState = Piece::State::UNLAUNCHED;
         displacedPieceData.mLocation = glm::u8vec2 {0, 0};
     }
 
@@ -312,7 +311,7 @@ MoveResultData GameOfUrModel::getMoveData(GamePieceIdentity pieceID, glm::u8vec2
     moveFlags |= (
         (moveFlags&MoveResultData::COMPLETES_ROUTE) && (
             (
-                mPlayers[getPlayer(pieceID.mOwner)].getNPieces(GamePiece::State::FINISHED)
+                mPlayers[getPlayer(pieceID.mOwner)].getNPieces(Piece::State::FINISHED)
                 + 1 
             ) == 5
         )
@@ -325,13 +324,13 @@ MoveResultData GameOfUrModel::getMoveData(GamePieceIdentity pieceID, glm::u8vec2
                 (moveFlags&MoveResultData::LANDS_ON_ROSETTE) 
                 || (moveFlags&MoveResultData::COMPLETES_ROUTE)
             )
-        )? std::min(kGamePieceTypes[piece.getType()].mCost, mPlayers[getPlayer(pieceID.mOwner)].getNCounters()):
-        0
+        )? static_cast<uint8_t>(std::min(kGamePieceTypes[piece.getType()].mCost, mPlayers[getPlayer(pieceID.mOwner)].getNCounters())):
+        static_cast<uint8_t>(0)
     };
     const uint8_t nCountersWon { 
         (moveFlags&MoveResultData::LANDS_ON_ROSETTE)?
-        std::min(kGamePieceTypes[piece.getType()].mCost, mCounters):
-        moveFlags&MoveResultData::ENDS_GAME? mCounters: 0
+        static_cast<uint8_t>(std::min(kGamePieceTypes[piece.getType()].mCost, mCounters)):
+        moveFlags&MoveResultData::ENDS_GAME? static_cast<uint8_t>(mCounters): static_cast<uint8_t>(0)
     };
 
     return {
@@ -343,28 +342,28 @@ MoveResultData GameOfUrModel::getMoveData(GamePieceIdentity pieceID, glm::u8vec2
     };
 }
 
-std::vector<std::pair<GamePieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPossibleMoves() const {
+std::vector<std::pair<PieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPossibleMoves() const {
     if(
         mGamePhase != GamePhase::PLAY
         || mTurnPhase != TurnPhase::MOVE_PIECE
     ) return {};
 
-    std::vector<std::pair<GamePieceIdentity, glm::u8vec2>> possibleMoves {};
+    std::vector<std::pair<PieceIdentity, glm::u8vec2>> possibleMoves {};
 
-    for(uint8_t type {0}; type < GamePieceTypeID::TOTAL; ++type) {
+    for(uint8_t type {0}; type < PieceTypeID::TOTAL; ++type) {
 
-        const GamePieceIdentity pieceIdentity { GamePieceIdentity{.mType { static_cast<GamePieceTypeID>(type) }, .mOwner {getRole(mCurrentPlayer)} } };
-        const GamePiece& piece { getPiece(GamePieceIdentity{.mType { static_cast<GamePieceTypeID>(type) }, .mOwner { getRole(mCurrentPlayer) }}) };
+        const PieceIdentity pieceIdentity { PieceIdentity{.mType { static_cast<PieceTypeID>(type) }, .mOwner {getRole(mCurrentPlayer)} } };
+        const Piece& piece { getPiece(PieceIdentity{.mType { static_cast<PieceTypeID>(type) }, .mOwner { getRole(mCurrentPlayer) }}) };
 
         switch(piece.getState()) {
 
-            case GamePiece::State::UNLAUNCHED:
+            case Piece::State::UNLAUNCHED:
                 for(glm::u8vec2 launchPosition: mBoard.getValidLaunchPositions(piece.getIdentity())) {
                     possibleMoves.push_back({pieceIdentity, launchPosition});
                 }
                 break;
 
-            case GamePiece::State::ON_BOARD: 
+            case Piece::State::ON_BOARD: 
                 {
                     const glm::u8vec2 movePosition { mBoard.computeMoveLocation(piece, mDice->getResult(GamePhase::PLAY)) };
                     if(mBoard.canMove(piece.getOwner(), piece, movePosition, mDice->getResult(GamePhase::PLAY))) {
@@ -373,7 +372,7 @@ std::vector<std::pair<GamePieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPoss
                 }
                 break;
 
-            case GamePiece::State::FINISHED:
+            case Piece::State::FINISHED:
                 break;
         }
     }

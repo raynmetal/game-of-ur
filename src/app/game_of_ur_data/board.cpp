@@ -1,13 +1,13 @@
-#include "game_piece_type.hpp"
+#include "piece_type.hpp"
 #include "board.hpp"
 
-std::weak_ptr<GamePiece> Board::move(PlayerRoleID player, std::weak_ptr<GamePiece> gamePiece, glm::u8vec2 toLocation, uint8_t roll) {
+std::weak_ptr<Piece> Board::move(RoleID player, std::weak_ptr<Piece> gamePiece, glm::u8vec2 toLocation, uint8_t roll) {
     assert(!gamePiece.expired() && "game piece pointer must point to an existing object");
     assert(canMove(player, *gamePiece.lock(), toLocation, roll) && "this move is invalid and should not have been attempted");
 
-    std::shared_ptr<GamePiece> lockedGamePiece { gamePiece.lock() };
+    std::shared_ptr<Piece> lockedGamePiece { gamePiece.lock() };
 
-    if(lockedGamePiece->getState() == GamePiece::State::ON_BOARD) {
+    if(lockedGamePiece->getState() == Piece::State::ON_BOARD) {
         const glm::u8vec2 pieceLocation { lockedGamePiece->getLocation() };
         mGrid[pieceLocation.x][pieceLocation.y].move(nullptr);
     }
@@ -15,7 +15,7 @@ std::weak_ptr<GamePiece> Board::move(PlayerRoleID player, std::weak_ptr<GamePiec
     lockedGamePiece->setLocation(toLocation);
 
     if(isValidHouse(toLocation)) {
-        std::weak_ptr<GamePiece> knockedOut { mGrid[toLocation.x][toLocation.y].getOccupantReference() };
+        std::weak_ptr<Piece> knockedOut { mGrid[toLocation.x][toLocation.y].getOccupantReference() };
         if(std::shared_ptr opponentPiece = knockedOut.lock()) {
             opponentPiece->setLocation(glm::u8vec2{0,0});
         }
@@ -23,10 +23,10 @@ std::weak_ptr<GamePiece> Board::move(PlayerRoleID player, std::weak_ptr<GamePiec
     }
 
     // otherwise, this piece has won
-    return std::weak_ptr<GamePiece>{};
+    return std::weak_ptr<Piece>{};
 }
 
-std::weak_ptr<GamePiece> Board::getOccupantReference(glm::u8vec2 location) {
+std::weak_ptr<Piece> Board::getOccupantReference(glm::u8vec2 location) {
     assert(isValidHouse(location) && "no house exists at the specified location");
     return mGrid[location.x][location.y].getOccupantReference();
 }
@@ -44,7 +44,7 @@ bool Board::isRouteEnd(glm::u8vec2 location) const {
     return location.x == 1 && location.y == mGrid[1].size();
 }
 
-bool Board::canMove(PlayerRoleID role, const GamePiece& gamePiece, glm::u8vec2 toLocation, uint8_t roll) const {
+bool Board::canMove(RoleID role, const Piece& gamePiece, glm::u8vec2 toLocation, uint8_t roll) const {
     // no roll means that no piece is being moved
     if(roll == 0) return false;
 
@@ -59,10 +59,10 @@ bool Board::canMove(PlayerRoleID role, const GamePiece& gamePiece, glm::u8vec2 t
 
     const bool moveCorrespondsToDice {
         (
-            gamePiece.getState()==GamePiece::State::ON_BOARD 
+            gamePiece.getState()==Piece::State::ON_BOARD 
             && computeMoveLocation(gamePiece, roll) == toLocation
         ) || (
-            gamePiece.getState()==GamePiece::State::UNLAUNCHED
+            gamePiece.getState()==Piece::State::UNLAUNCHED
             && isValidLaunchHouse(toLocation, gamePiece)
         )
     };
@@ -70,8 +70,8 @@ bool Board::canMove(PlayerRoleID role, const GamePiece& gamePiece, glm::u8vec2 t
     return destinationAvailable && moveCorrespondsToDice;
 }
 
-bool Board::movePassesRosette(const GamePiece& gamePiece, glm::u8vec2 toLocation) const {
-    if(gamePiece.getState() != GamePiece::State::ON_BOARD) return false;
+bool Board::movePassesRosette(const Piece& gamePiece, glm::u8vec2 toLocation) const {
+    if(gamePiece.getState() != Piece::State::ON_BOARD) return false;
     glm::u8vec2 currentLocation { gamePiece.getLocation() };
     assert(isValidHouse(currentLocation));
 
@@ -87,7 +87,7 @@ bool Board::movePassesRosette(const GamePiece& gamePiece, glm::u8vec2 toLocation
     return false;
 }
 
-bool Board::moveDisplacesOpponent(PlayerRoleID role, const GamePiece& gamePiece, glm::u8vec2 toLocation, uint8_t roll) const {
+bool Board::moveDisplacesOpponent(RoleID role, const Piece& gamePiece, glm::u8vec2 toLocation, uint8_t roll) const {
     return (
         canMove(role, gamePiece, toLocation, roll) 
         && isValidHouse(toLocation)
@@ -95,8 +95,8 @@ bool Board::moveDisplacesOpponent(PlayerRoleID role, const GamePiece& gamePiece,
     );
 }
 
-glm::u8vec2 Board::computeMoveLocation(const GamePiece& gamePiece, uint8_t roll) const {
-    assert(gamePiece.getState() == GamePiece::State::ON_BOARD && "moves may only be computed for pieces that are on the board");
+glm::u8vec2 Board::computeMoveLocation(const Piece& gamePiece, uint8_t roll) const {
+    assert(gamePiece.getState() == Piece::State::ON_BOARD && "moves may only be computed for pieces that are on the board");
 
     glm::u8vec2 currentLocation { gamePiece.getLocation() };
     for(
@@ -118,11 +118,11 @@ glm::u8vec2 Board::computeMoveLocation(const GamePiece& gamePiece, uint8_t roll)
     return currentLocation;
 }
 
-bool Board::isValidLaunchHouse(glm::u8vec2 location, const GamePiece& gamePiece) const {
-    const GamePieceType::LaunchType launchType { kGamePieceTypes[gamePiece.getType()].mLaunchType };
+bool Board::isValidLaunchHouse(glm::u8vec2 location, const Piece& gamePiece) const {
+    const PieceType::LaunchType launchType { kGamePieceTypes[gamePiece.getType()].mLaunchType };
     return (
         (
-            launchType == GamePieceType::ONE_BEFORE_ROSETTE
+            launchType == PieceType::ONE_BEFORE_ROSETTE
             && (
                 location.x < mGrid.size()
                 && (
@@ -159,17 +159,17 @@ House::Region Board::getRegion(glm::u8vec2 location) const {
     return mGrid[location.x][location.y].getRegion();
 }
 
-GamePieceIdentity Board::getOccupant(glm::u8vec2 location) const {
+PieceIdentity Board::getOccupant(glm::u8vec2 location) const {
     assert(isValidHouse(location) && "This location does not correspond to a valid house on this board");
     return mGrid[location.x][location.y].getOccupant();
 }
 
-std::vector<glm::u8vec2> Board::getValidLaunchPositions(GamePieceIdentity pieceIdentity) const {
-    assert(pieceIdentity.mOwner != PlayerRoleID::NA && "Each piece must have a corresponding player role");
+std::vector<glm::u8vec2> Board::getValidLaunchPositions(PieceIdentity pieceIdentity) const {
+    assert(pieceIdentity.mOwner != RoleID::NA && "Each piece must have a corresponding player role");
 
     std::vector<glm::u8vec2> results {};
     switch(kGamePieceTypes[pieceIdentity.mType].mLaunchType) {
-        case GamePieceType::ONE_BEFORE_ROSETTE:
+        case PieceType::ONE_BEFORE_ROSETTE:
             results.push_back({
                 mGrid[0][0].getRegion() == static_cast<House::Region>(pieceIdentity.mOwner)? 0: 2,
                 1

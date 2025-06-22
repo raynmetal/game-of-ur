@@ -7,14 +7,10 @@ void Dice::reset() { mState = State::UNROLLED; }
 uint8_t Dice::getResult(GamePhase currentPhase) const {
     switch(currentPhase) {
         case GamePhase::INITIATIVE:
-            assert(mState == State::SECONDARY_ROLLED && "Both rolls should be made before attempting to retrive initiative result");
-            return mSecondaryRoll? upgradedRoll(): mPrimaryRoll;
+            if(mState == State::SECONDARY_ROLLED) { return 0; }
 
         case GamePhase::PLAY:
-            assert(
-                (mState != State::UNROLLED)
-                && "At least one of the two dice should have been rolled during the play phase"
-            );
+            if(mState == State::UNROLLED) return 0;
             if(mState == State::SECONDARY_ROLLED) {
                 return mSecondaryRoll? upgradedRoll(): 0;
             }

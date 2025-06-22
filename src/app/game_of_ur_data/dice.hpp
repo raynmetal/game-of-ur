@@ -4,7 +4,7 @@
 #include <cstdint>
 #include <random>
 
-#include "game_phase.hpp"
+#include "phase.hpp"
 
 class Dice {
 public:

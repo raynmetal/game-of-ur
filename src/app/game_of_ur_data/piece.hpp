@@ -5,15 +5,15 @@
 
 #include <glm/glm.hpp>
 
-#include "player_role_id.hpp"
-#include "game_piece_type_id.hpp"
+#include "role_id.hpp"
+#include "piece_type_id.hpp"
 
-struct GamePieceIdentity {
-    GamePieceTypeID mType;
-    PlayerRoleID mOwner;
+struct PieceIdentity {
+    PieceTypeID mType;
+    RoleID mOwner;
 };
 
-class GamePiece {
+class Piece {
 public:
     enum class State: uint8_t {
         UNLAUNCHED,
@@ -21,24 +21,24 @@ public:
         FINISHED,
     };
 
-    GamePiece(GamePieceTypeID type, PlayerRoleID owner):
+    Piece(PieceTypeID type, RoleID owner):
     mIdentity{ .mType { type }, .mOwner { owner } }
     {}
 
-    PlayerRoleID getOwner() const { return mIdentity.mOwner; }
-    GamePieceTypeID getType() const { return mIdentity.mType; }
-    GamePieceIdentity getIdentity() const { return mIdentity; }
+    RoleID getOwner() const { return mIdentity.mOwner; }
+    PieceTypeID getType() const { return mIdentity.mType; }
+    PieceIdentity getIdentity() const { return mIdentity; }
     State getState() const { return mState; }
     glm::u8vec2 getLocation() const { return mLocation; }
 
     void setState(State state) { mState = state; }
     void setLocation(glm::u8vec2 location) { mLocation = location; }
 
-    bool canMove(uint8_t roll, PlayerRoleID player) const;
+    bool canMove(uint8_t roll, RoleID player) const;
 
 private:
     State mState { State::UNLAUNCHED };
-    GamePieceIdentity mIdentity;
+    PieceIdentity mIdentity;
     glm::u8vec2 mLocation {0, 0};
 };
 

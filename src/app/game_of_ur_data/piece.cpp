@@ -1,7 +1,7 @@
-#include "game_piece.hpp"
-#include "game_piece_type.hpp"
+#include "piece_type.hpp"
+#include "piece.hpp"
 
-bool GamePiece::canMove(uint8_t roll, PlayerRoleID player) const {
+bool Piece::canMove(uint8_t roll, RoleID player) const {
     return ( 
         !(mState == State::FINISHED) || (
             (

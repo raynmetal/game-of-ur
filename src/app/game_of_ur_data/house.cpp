@@ -1,12 +1,12 @@
 #include "house.hpp"
 
-bool House::canMove(const GamePiece& gamePiece) const {
+bool House::canMove(const Piece& gamePiece) const {
     // to be able to move to this cell, this cell ...
     return (
         // ... must be region accessible to this player, ...
         (
             mRegion == Region::BATTLEFIELD
-            || mRegion == gamePiece.getOwner()
+            || static_cast<RoleID>(mRegion) == gamePiece.getOwner()
         )
 
         // ... and ... 
@@ -25,7 +25,7 @@ bool House::canMove(const GamePiece& gamePiece) const {
     );
 }
 
-void House::move(std::shared_ptr<GamePiece> gamePiece) {
+void House::move(std::shared_ptr<Piece> gamePiece) {
     if(!gamePiece) {
         mOccupant.reset();
     }
@@ -35,12 +35,12 @@ void House::move(std::shared_ptr<GamePiece> gamePiece) {
     mOccupant = gamePiece;
 }
 
-GamePieceIdentity House::getOccupant() const {
+PieceIdentity House::getOccupant() const {
     if(mOccupant.expired()) {
-        return GamePieceIdentity {
-            .mOwner { PlayerRoleID::NA },
+        return PieceIdentity {
+            .mOwner { RoleID::NA },
         };
     }
 
-    mOccupant.lock()->getIdentity();
+    return mOccupant.lock()->getIdentity();
 }

@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-enum GamePieceTypeID: uint8_t {
+enum PieceTypeID: uint8_t {
     SWALLOW=0,
     STORMBIRD,
     RAVEN,
