@@ -5,7 +5,7 @@
 
 #include <glm/glm.hpp>
 
-#include "game_piece.hpp"
+#include "piece.hpp"
 
 
 class House {
@@ -16,8 +16,8 @@ public:
     };
     enum Region: uint8_t {
         BATTLEFIELD,
-        ONE=PlayerRoleID::ONE,
-        TWO=PlayerRoleID::TWO,
+        ONE=RoleID::ONE,
+        TWO=RoleID::TWO,
     };
     House(glm::i8vec2 nextCell, Type houseType, Region region):
     mNextCell { nextCell },
@@ -25,9 +25,9 @@ public:
     mRegion { region }
     {}
 
-    void move(std::shared_ptr<GamePiece> gamePiece);
-    std::weak_ptr<GamePiece> getOccupantReference() { return mOccupant; }
-    GamePieceIdentity getOccupant() const;
+    void move(std::shared_ptr<Piece> gamePiece);
+    std::weak_ptr<Piece> getOccupantReference() { return mOccupant; }
+    PieceIdentity getOccupant() const;
 
     bool isOccupied() const { return !mOccupant.expired(); }
     bool isRosette() const { return mType == Type::ROSETTE; };
@@ -36,13 +36,13 @@ public:
     Type getType() const { return mType; }
     glm::i8vec2 getNextCellDirection() const { return mNextCell; }
 
-    bool canMove(const GamePiece& gamePiece) const;
+    bool canMove(const Piece& gamePiece) const;
 
 private:
     glm::i8vec2 mNextCell;
     Type mType;
     Region mRegion;
-    std::weak_ptr<GamePiece> mOccupant {};
+    std::weak_ptr<Piece> mOccupant {};
 };
 
 #endif

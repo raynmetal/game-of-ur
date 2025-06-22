@@ -11,26 +11,26 @@
 class Board {
 public:
     // validates and applies the move, returning opponent piece that was knocked out, if any
-    std::weak_ptr<GamePiece> move(PlayerRoleID role, std::weak_ptr<GamePiece> gamePiece, glm::u8vec2 toLocation, uint8_t roll);
-    std::weak_ptr<GamePiece> getOccupantReference(glm::u8vec2 location);
+    std::weak_ptr<Piece> move(RoleID role, std::weak_ptr<Piece> gamePiece, glm::u8vec2 toLocation, uint8_t roll);
+    std::weak_ptr<Piece> getOccupantReference(glm::u8vec2 location);
 
-    bool canMove(PlayerRoleID role, const GamePiece& gamePiece, glm::u8vec2 toLocation, uint8_t roll) const;
-    bool movePassesRosette(const GamePiece& gamePiece, glm::u8vec2 toLocation) const;
-    bool moveDisplacesOpponent(PlayerRoleID role, const GamePiece& gamePiece, glm::u8vec2 toLocation, uint8_t roll) const;
+    bool canMove(RoleID role, const Piece& gamePiece, glm::u8vec2 toLocation, uint8_t roll) const;
+    bool movePassesRosette(const Piece& gamePiece, glm::u8vec2 toLocation) const;
+    bool moveDisplacesOpponent(RoleID role, const Piece& gamePiece, glm::u8vec2 toLocation, uint8_t roll) const;
 
     House::Type getType(glm::u8vec2 location) const;
     House::Region getRegion(glm::u8vec2 location) const;
-    GamePieceIdentity getOccupant(glm::u8vec2 location) const;
+    PieceIdentity getOccupant(glm::u8vec2 location) const;
     glm::i8vec2 getNextCellDirection(glm::u8vec2 location) const;
-    std::vector<glm::u8vec2> getValidLaunchPositions(GamePieceIdentity pieceIdentity) const;
+    std::vector<glm::u8vec2> getValidLaunchPositions(PieceIdentity pieceIdentity) const;
 
     bool houseIsOccupied(glm::u8vec2 location) const;
     bool isValidHouse(glm::u8vec2 location) const;
-    bool isValidLaunchHouse(glm::u8vec2 location, const GamePiece& gamePiece) const;
+    bool isValidLaunchHouse(glm::u8vec2 location, const Piece& gamePiece) const;
     bool isRosette(glm::u8vec2 location) const;
     bool isRouteEnd(glm::u8vec2 location) const;
 
-    glm::u8vec2 computeMoveLocation(const GamePiece& gamePiece, uint8_t roll) const;
+    glm::u8vec2 computeMoveLocation(const Piece& gamePiece, uint8_t roll) const;
 private:
     std::array<std::vector<House>, 3> mGrid {{
         {
