@@ -120,6 +120,23 @@ void SceneNodeCore::addComponent(const nlohmann::json& jsonComponent, const bool
     }
 }
 
+bool SceneNodeCore::hasComponent(const std::string& typeName) const {
+    return mEntity->hasComponent(typeName);
+}
+
+void SceneNodeCore::updateComponent(const nlohmann::json& jsonComponent) {
+    mEntity->updateComponent(jsonComponent);
+}
+
+void SceneNodeCore::addOrUpdateComponent(const nlohmann::json& jsonComponent, const bool bypassSceneActivityCheck) {
+    if(!hasComponent(jsonComponent.at("type"))) {
+        addComponent(jsonComponent, bypassSceneActivityCheck);
+        return;
+    }
+    updateComponent(jsonComponent);
+}
+
+
 bool SceneNodeCore::detectCycle(std::shared_ptr<SceneNodeCore> node) {
     if(!node) return false;
 
@@ -152,9 +169,15 @@ bool SceneNodeCore::isAncestorOf(std::shared_ptr<const SceneNodeCore> sceneNode)
     return static_cast<bool>(currentNode);
 }
 
+void SceneNodeCore::setName(const std::string& name) {
+    validateName(name);
+    mName = name;
+}
+
 std::string SceneNodeCore::getName() const {
     return mName;
 }
+
 std::string SceneNodeCore::getViewportLocalPath() const {
     return getPathFromAncestor(getLocalViewport());
 }

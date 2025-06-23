@@ -331,8 +331,27 @@ void ComponentManager::addComponent(EntityID entityID, const nlohmann::json& jso
     mEntityToSignature.at(entityID).set(componentType, true);
 }
 
+void ComponentManager::updateComponent(EntityID entityID, const nlohmann::json& jsonComponent) {
+    const std::string componentTypeName { jsonComponent.at("type").get<std::string>() };
+    const std::size_t componentHash { mNameToComponentHash.at(componentTypeName) };
+    mHashToComponentArray.at(componentHash)->updateComponent(entityID, jsonComponent);
+}
+
+bool ComponentManager::hasComponent(EntityID entityID, const std::string& type) {
+    return getComponentArray(type)->hasComponent(entityID);
+}
+
+void ComponentManager::removeComponent(EntityID entityID, const std::string& type) {
+    getComponentArray(type)->removeComponent(entityID);
+}
+
 Signature ComponentManager::getSignature(EntityID entityID) {
     return mEntityToSignature[entityID];
+}
+
+ComponentType ComponentManager::getComponentType(const std::string& typeName) const {
+    const std::size_t componentHash { mNameToComponentHash.at(typeName) };
+    return mHashToComponentType.at(componentHash);
 }
 
 void ComponentManager::copyComponents(EntityID to, EntityID from) {
@@ -384,9 +403,31 @@ void ECSWorld::addComponent(EntityID entityID, const nlohmann::json& jsonCompone
     Signature signature { mComponentManager->getSignature(entityID) };
     mSystemManager->handleEntitySignatureChanged(entityID, signature);
 }
+bool ECSWorld::hasComponent(EntityID entityID, const std::string& typeName) const {
+    return mComponentManager->hasComponent(entityID, typeName);
+}
+void ECSWorld::updateComponent(EntityID entityID, const nlohmann::json& jsonComponent) {
+    mComponentManager->updateComponent(entityID, jsonComponent);
+    const Signature signature { mComponentManager->getSignature(entityID) };
+    mSystemManager->handleEntityUpdated(entityID, signature, mComponentManager->getComponentType(jsonComponent.at("type")));
+}
+void ECSWorld::removeComponent(EntityID entityID, const std::string& typeName) {
+    mComponentManager->removeComponent(entityID, typeName);
+    Signature signature { mComponentManager->getSignature(entityID) };
+    mSystemManager->handleEntitySignatureChanged(entityID, signature);
+}
 
 void Entity::addComponent(const nlohmann::json& jsonComponent) {
     mWorld.lock()->addComponent(mID, jsonComponent);
+}
+bool Entity::hasComponent(const std::string& typeName) const {
+    return mWorld.lock()->hasComponent(mID, typeName);
+}
+void Entity::updateComponent(const nlohmann::json& jsonComponent) {
+    mWorld.lock()->updateComponent(mID, jsonComponent);
+}
+void Entity::removeComponent(const std::string& typeName) {
+    mWorld.lock()->removeComponent(mID, typeName);
 }
 
 std::weak_ptr<const ECSWorld> ECSWorld::getPrototype() {

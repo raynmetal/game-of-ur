@@ -22,7 +22,6 @@ public:
     inline bool getYesNoDieState() const { return mYesNoDie; }
     uint8_t getPrimaryDieState() const { return mPrimaryDie; }
     uint8_t getResultScore() const;
-protected:
 
 private:
     ClickToRoll(): SimObjectAspect<ClickToRoll>{0} {}

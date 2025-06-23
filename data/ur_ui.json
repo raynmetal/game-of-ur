@@ -1,5 +1,14 @@
 {
-    "resources": [],
+    "resources": [
+        {
+            "name": "Game_Of_Ur_UI__Launch_Piece",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_ui_launch_piece.json"
+            }
+        }
+    ],
     "nodes": [
         {
             "name": "ui_root",
@@ -42,6 +51,27 @@
         },
 
         {
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.4142135381698608, 1.4142135381698608, 1.0 ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [ 0.7, 0.7, 0.7 ],
+                    "diffuse": [ 0.0, 0.0, 0.0 ],
+                    "specular": [ 0.0, 0.0, 0.0 ],
+                    "lightType": "directional",
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "ui_light",
+            "parent": "/viewport_UI/",
+            "type": "SceneNode"
+        },
+
+        {
             "name": "camera",
             "aspects":[{"type": "QueryClick" }],
             "components": [
@@ -71,7 +101,7 @@
         },
 
         {
-            "name": "test_text",
+            "name": "dice_roll",
             "parent": "/viewport_UI/",
             "type": "SimObject",
             "components": [
@@ -95,24 +125,56 @@
         },
 
         {
-            "components": [
-                {
-                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
-                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
-                    "scale": [ 1.4142135381698608, 1.4142135381698608, 1.0 ],
-                    "type": "Placement"
-                },
-                {
-                    "ambient": [ 0.7, 0.7, 0.7 ],
-                    "diffuse": [ 0.0, 0.0, 0.0 ],
-                    "specular": [ 0.0, 0.0, 0.0 ],
-                    "lightType": "directional",
-                    "type": "LightEmissionData"
-                }
-            ],
-            "name": "ui_light",
             "parent": "/viewport_UI/",
-            "type": "SceneNode"
+            "type": "Scene",
+            "name": "Game_Of_Ur_UI__Launch_Piece",
+            "copy": true,
+            "overrides": {
+                "name": "swallow",
+                "components": [
+                    {
+                        "orientation": [1.0, 0.0, 0.0, 0.0],
+                        "position": [ -683.0, 268.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ],
+                        "type": "Placement"
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "TestText",
+                        "text": "Launch Swallow",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0]
+                    }
+                ]
+            }
+        },
+        {
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "name": "Game_Of_Ur_UI__Launch_Piece",
+            "copy": true,
+            "overrides": {
+                "name": "stormbird",
+                "components": [
+                    {
+                        "orientation": [1.0, 0.0, 0.0, 0.0],
+                        "position": [ -683.0, 236.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ],
+                        "type": "Placement"
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "TestText",
+                        "text": "Launch Stormbird",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0]
+                    }
+                ]
+            }
         }
     ],
 

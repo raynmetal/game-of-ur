@@ -1,0 +1,22 @@
+{
+    "resources": [],
+
+    "nodes": [
+        {
+            "name": "ui_launch_piece",
+            "aspects": [],
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ],
+            "parent": "",
+            "type": "SimObject"
+        }
+    ],
+
+    "connections": []
+}

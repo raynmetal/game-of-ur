@@ -84,6 +84,9 @@ namespace ToyMakersEngine{
         template <typename TInterface>
         bool hasAspectWithInterface() const;
 
+        void addOrReplaceAspect(const BaseSimObjectAspect& simObjectAspect);
+        void addOrReplaceAspect(const nlohmann::json& jsonAspectProperties);
+
         template <typename TSimObjectAspect>
         TSimObjectAspect& getAspect();
         BaseSimObjectAspect& getAspect(const std::string& aspectType);
@@ -187,6 +190,9 @@ namespace ToyMakersEngine{
         BaseSimObjectAspect& getAspect(const std::string& aspectType);
         template <typename TSimObjectAspect>
         void removeAspect();
+
+        void addOrReplaceAspect(const BaseSimObjectAspect& aspect);
+        void addOrReplaceAspect(const nlohmann::json& jsonAspectProperties);
 
         std::weak_ptr<FixedActionBinding> declareFixedActionBinding(const std::string& context, const std::string& action, std::function<bool(const ActionData&, const ActionDefinition&)>);
         EntityID getEntityID() const;

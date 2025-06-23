@@ -112,7 +112,18 @@ std::shared_ptr<SimObject> SceneFromDescription::loadSceneNodes(const nlohmann::
             if(nodeDescription.at("copy").get<bool>()) {
                 node = SimObject::copy(std::static_pointer_cast<SimObject>(node));
             }
-
+            if(nodeDescription.find("overrides") != nodeDescription.end()) {
+                const nlohmann::json& overrides = nodeDescription.at("overrides");
+                if(overrides.find("name") != overrides.end()) {
+                    node->setName(overrides.at("name").get<std::string>());
+                }
+                if(overrides.find("components") != overrides.end()) {
+                    overrideComponents(std::static_pointer_cast<ToyMakersEngine::SimObject>(node), overrides.at("components"));
+                }
+                if(overrides.find("aspects") != overrides.end()) {
+                    overrideAspects(std::static_pointer_cast<ToyMakersEngine::SimObject>(node), overrides.at("aspects"));
+                }
+            }
         } else {
             assert(false && "Scene nodes in file must be scene nodes, sim objects, or reference to a scene node file resource");
         }
@@ -132,6 +143,16 @@ void SceneFromDescription::loadConnections(const nlohmann::json& connectionList,
             connection.at("observer").get<std::string>(),
             signalFrom
         );
+    }
+}
+void SceneFromDescription::overrideComponents(std::shared_ptr<SimObject> node, const nlohmann::json& components) {
+    for(const auto& component: components) {
+        node->addOrUpdateComponent(component);
+    }
+}
+void SceneFromDescription::overrideAspects(std::shared_ptr<SimObject> node, const nlohmann::json& aspects) {
+    for(const auto& aspect: aspects) {
+        node->addOrReplaceAspect(aspect);
     }
 }
 
