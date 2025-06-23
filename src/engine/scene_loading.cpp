@@ -110,7 +110,10 @@ std::shared_ptr<SimObject> SceneFromDescription::loadSceneNodes(const nlohmann::
                 nodeDescription.at("name").get<std::string>()
             );
             if(nodeDescription.at("copy").get<bool>()) {
-                node = SimObject::copy(std::static_pointer_cast<SimObject>(node));
+                std::shared_ptr<SceneNodeCore> prototype { node };
+                node = SimObject::copy(std::static_pointer_cast<SimObject>(prototype));
+                // TODO: think of a safer way to accomplish this.
+                node->setPrototype_(prototype);
             }
             if(nodeDescription.find("overrides") != nodeDescription.end()) {
                 const nlohmann::json& overrides = nodeDescription.at("overrides");

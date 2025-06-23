@@ -113,6 +113,8 @@ namespace ToyMakersEngine {
         void setName(const std::string& name);
         std::string getViewportLocalPath() const;
 
+        // TODO: Think of a safer way to accomplish this
+        inline void setPrototype_(std::shared_ptr<SceneNodeCore> prototype) { mPrototype=prototype; }
     protected:
 
         virtual void joinWorld(ECSWorld& world);
@@ -169,6 +171,10 @@ namespace ToyMakersEngine {
         std::weak_ptr<ViewportNode> mParentViewport {};
         std::unordered_map<std::string, std::size_t> mChildNameToNode {};
         std::vector<std::shared_ptr<SceneNodeCore>> mChildren {};
+
+        // Allows a prototype scene node to be retained as a resource so long
+        // as the scene it was used to create continues to exist
+        std::shared_ptr<SceneNodeCore> mPrototype { nullptr };
 
         Signature mSystemMask {Signature{}.set()};
 
