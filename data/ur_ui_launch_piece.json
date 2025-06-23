@@ -15,6 +15,29 @@
             ],
             "parent": "",
             "type": "SimObject"
+        },
+
+        {
+            "name": "status",
+            "parent": "/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 300.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "unlaunched~",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [0.0, 0.0]
+                }
+            ]
         }
     ],
 
