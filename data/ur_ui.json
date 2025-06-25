@@ -1,18 +1,11 @@
 {
-    "resources": [
-        {
-            "name": "Game_Of_Ur_UI__Launch_Piece",
-            "type": "SimObject",
-            "method": "fromSceneFile",
-            "parameters": {
-                "path": "data/ur_ui_launch_piece.json"
-            }
-        }
-    ],
+    "resources": [],
     "nodes": [
         {
             "name": "ui_root",
-            "aspects": [],
+            "aspects": [
+                {"type": "UrUIView", "controller_path": "/scene_root/"}
+            ],
             "components": [
                 {
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
@@ -125,56 +118,118 @@
         },
 
         {
+            "name": "current_turn",
             "parent": "/viewport_UI/",
-            "type": "Scene",
-            "name": "Game_Of_Ur_UI__Launch_Piece",
-            "copy": true,
-            "overrides": {
-                "name": "swallow",
-                "components": [
-                    {
-                        "orientation": [1.0, 0.0, 0.0, 0.0],
-                        "position": [ -683.0, 268.0, 0.0, 1.0 ],
-                        "scale": [ 1.0, 1.0, 1.0 ],
-                        "type": "Placement"
-                    }
-                ],
-                "aspects": [
-                    {
-                        "type": "TestText",
-                        "text": "Launch Swallow",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
-                        "scale": 1.0,
-                        "anchor": [0.0, 0.0]
-                    }
-                ]
-            }
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 384.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "Current Turn",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [0.5, 0.0]
+                }
+            ]
         },
+
         {
+            "name": "phase",
             "parent": "/viewport_UI/",
-            "type": "Scene",
-            "name": "Game_Of_Ur_UI__Launch_Piece",
-            "copy": true,
-            "overrides": {
-                "name": "stormbird",
-                "components": [
-                    {
-                        "orientation": [1.0, 0.0, 0.0, 0.0],
-                        "position": [ -683.0, 236.0, 0.0, 1.0 ],
-                        "scale": [ 1.0, 1.0, 1.0 ],
-                        "type": "Placement"
-                    }
-                ],
-                "aspects": [
-                    {
-                        "type": "TestText",
-                        "text": "Launch Stormbird",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
-                        "scale": 1.0,
-                        "anchor": [0.0, 0.0]
-                    }
-                ]
-            }
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 352.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "Phase: ",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [0.5, 0.0]
+                }
+            ]
+        },
+
+        {
+            "name": "common_pile",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 683.0, 352.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "Common pile: ",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [1.0, 0.0]
+                }
+            ]
+        },
+
+        {
+            "name": "one_pile",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 683.0, 320.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "player one: ",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [1.0, 0.0]
+                }
+            ]
+        },
+
+        {
+            "name": "two_pile",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 683.0, 288.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "player two: ",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [1.0, 0.0]
+                }
+            ]
         }
     ],
 

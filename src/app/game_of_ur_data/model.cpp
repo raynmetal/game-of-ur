@@ -167,6 +167,26 @@ bool GameOfUrModel::canMovePiece(PieceIdentity pieceIdentity, glm::u8vec2 toLoca
         && mBoard.canMove(mPlayers[requester].getRole(), getPiece(pieceIdentity), toLocation, mDice->getResult(mGamePhase))
     );
 }
+bool GameOfUrModel::canMoveBoardPiece(PieceIdentity pieceIdentity, PlayerID requester) const {
+    assert(pieceIdentity.mOwner != RoleID::NA && "A piece without an owner role is invalid");
+    return (
+        canMovePiece(
+            pieceIdentity, 
+            getBoardMoveData(pieceIdentity).mMovedPiece.mLocation,
+            requester
+        ) && getPiece(pieceIdentity).getState() == Piece::State::ON_BOARD
+    );
+}
+bool GameOfUrModel::canLaunchPiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const  {
+    assert(pieceIdentity.mOwner != RoleID::NA && "A piece without an owner role is invalid");
+    return (
+        canMovePiece(
+            pieceIdentity, 
+            getBoardMoveData(pieceIdentity).mMovedPiece.mLocation,
+            requester
+        ) && getPiece(pieceIdentity).getState() == Piece::State::UNLAUNCHED
+    );
+}
 
 bool GameOfUrModel::canAdvanceOneTurn(PlayerID requester) const {
     // current turn may be ended only if the game hasn't ended, but
@@ -203,6 +223,16 @@ GamePhaseData GameOfUrModel::getCurrentPhase() const {
         .mTurnPhase { mTurnPhase },
         .mTurn { mCurrentPlayer },
         .mWinner { getWinner() },
+    };
+}
+
+GameScoreData GameOfUrModel::getScore() const {
+    return {
+        .mCommonPoolCounters { mCounters },
+        .mPlayerOneCounters { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::ONE)].getNCounters(): 0) },
+        .mPlayerTwoCounters { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::TWO)].getNCounters(): 0) },
+        .mPlayerOneVictoryPieces { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::ONE)].getNPieces(Piece::State::FINISHED): 0) },
+        .mPlayerTwoVictoryPieces { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::TWO)].getNPieces(Piece::State::FINISHED): 0) },
     };
 }
 
@@ -258,6 +288,7 @@ DiceData GameOfUrModel::getDiceData() const {
         .mPrimaryRoll { mDice->getSecondaryRoll() },
         .mSecondaryRoll { mDice->getSecondaryRoll() },
         .mResultScore { mDice->getResult(mGamePhase) },
+        .mPreviousResult { mPreviousRoll },
     };
 }
 

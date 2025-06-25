@@ -54,7 +54,7 @@
                     "type": "Placement"
                 }
             ],
-            "aspects": [ { "type": "GameOfUrController" } ],
+            "aspects": [ { "type": "UrController" } ],
             "name": "scene_root",
             "parent": "",
             "type": "SimObject"
@@ -75,13 +75,5 @@
         }
     ],
 
-    "connections": [
-        {
-            "from": "/scene_root_3D/viewport_3D/gameboard/@BoardLocations",
-            "signal": "BoardClicked",
-
-            "to": "/@GameOfUrController",
-            "observer": "BoardClickedObserved"
-        }
-    ]
+    "connections": []
 }

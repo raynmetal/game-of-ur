@@ -38,11 +38,21 @@ struct GamePhaseData {
     RoleID mWinner;
 };
 
+struct GameScoreData {
+    uint8_t mCommonPoolCounters;
+    uint8_t mPlayerOneCounters;
+    uint8_t mPlayerTwoCounters;
+
+    uint8_t mPlayerOneVictoryPieces;
+    uint8_t mPlayerTwoVictoryPieces;
+};
+
 struct DiceData {
     Dice::State mState;
     uint8_t mPrimaryRoll;
     bool mSecondaryRoll;
     uint8_t mResultScore;
+    uint8_t mPreviousResult;
 };
 
 struct PlayerData {
@@ -91,6 +101,7 @@ public:
     std::vector<std::pair<PieceIdentity, glm::u8vec2>> getAllPossibleMoves() const;
     uint8_t getNCounters() const { return mCounters; }
     GamePhaseData getCurrentPhase() const;
+    GameScoreData getScore() const;
     HouseData getHouseData(glm::u8vec2 location) const;
     GamePieceData getPieceData(PieceIdentity gamePiece) const;
     GamePieceData getPieceData(PlayerID player, PieceTypeID pieceType) const;
@@ -102,11 +113,13 @@ public:
     MoveResultData getLaunchMoveData(PieceIdentity piece, glm::u8vec2 launchLocation) const;
 
     bool canRollDice(PlayerID requester) const;
-    bool canMovePiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const;
+    bool canLaunchPiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const;
+    bool canMoveBoardPiece(PieceIdentity pieceIdentity, PlayerID requester) const;
     bool canAdvanceOneTurn(PlayerID requester) const;
     bool canStartPhasePlay() const;
 
 private:
+    bool canMovePiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const;
     RoleID getWinner() const;
     RoleID getRole(PlayerID player) const;
     PlayerID getPlayer(RoleID role) const;
