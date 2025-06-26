@@ -28,7 +28,6 @@ private:
     std::map<PieceIdentity, std::shared_ptr<ToyMakersEngine::SceneNode>> mPieceNodeMap {};
     std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrController {};
     std::string mControllerPath {};
-    PlayerID mCurrentPlayer { PlayerID::PLAYER_A };
     Mode mMode { Mode::GENERAL };
 
     void onBoardClicked(glm::u8vec2 boardLocation);

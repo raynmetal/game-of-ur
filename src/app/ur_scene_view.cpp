@@ -1,16 +1,40 @@
-#include "ur_controller.hpp"
+#include "game_of_ur_data/serialize.hpp"
 
+#include "../engine/core/resource_database.hpp"
+
+#include "ur_controller.hpp"
 #include "ur_scene_view.hpp"
+
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneView::clone() const {
     std::shared_ptr<UrSceneView> uiView{ std::make_shared<UrSceneView>() };
     uiView->mControllerPath = mControllerPath;
+    uiView->mPieceModelMap = mPieceModelMap;
     return uiView;
 }
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneView::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<UrSceneView> uiView { std::make_shared<UrSceneView>() };
     uiView->mControllerPath = jsonAspectProperties.at("controller_path").get<std::string>();
+    for(const auto& pieceDescription: jsonAspectProperties.at("piece_to_model")) {
+        const PieceIdentity pieceIdentity { pieceDescription.at("piece").get<PieceIdentity>() };
+        uiView->mPieceModelMap.insert_or_assign(pieceIdentity, pieceDescription.at("model").get<std::string>());
+    }
+    for(uint8_t role { RoleID::ONE }; role <= RoleID::TWO; ++role) {
+        for(uint8_t piece { PieceTypeID::SWALLOW }; piece < PieceTypeID::TOTAL; ++piece) {
+            const PieceIdentity pieceIdentity { .mType=static_cast<PieceTypeID>(piece), .mOwner=static_cast<RoleID>(role) };
+            assert(
+                uiView->mPieceModelMap.find(pieceIdentity) != uiView->mPieceModelMap.end()
+                    && "A certain piece type does not have a corresponding model assigned."
+            );
+            assert(
+                ToyMakersEngine::ResourceDatabase::HasResourceDescription(
+                    uiView->mPieceModelMap.at(pieceIdentity)
+                ) && "There is no static model corresponding to the resource name specified in the piece-model map"
+            );
+        }
+    }
+
     return uiView;
 }
 

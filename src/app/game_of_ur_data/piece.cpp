@@ -15,3 +15,11 @@ bool Piece::canMove(uint8_t roll, RoleID player) const {
         )
     );
 }
+
+bool operator<(const PieceIdentity& one, const PieceIdentity& two) {
+    assert(one.mOwner != RoleID::NA && two.mOwner != RoleID::NA && "The owner of a piece cannot be NA");
+    return (
+        static_cast<uint8_t>(one.mOwner) < static_cast<uint8_t>(two.mOwner)
+        || (static_cast<uint8_t>(two.mType) < static_cast<uint8_t>(two.mType))
+    );
+}

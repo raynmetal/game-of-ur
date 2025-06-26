@@ -13,6 +13,8 @@ struct PieceIdentity {
     RoleID mOwner;
 };
 
+bool operator<(const PieceIdentity& one, const PieceIdentity& two);
+
 class Piece {
 public:
     enum class State: uint8_t {
