@@ -24,6 +24,7 @@ void UrSceneView::onActivated() {
 const GameOfUrModel& UrSceneView::getModel() const {
     return mGameOfUrController.lock()->getAspect<UrController>().getModel();
 }
+
 void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
     std::cout << "UrSceneView: Board location clicked: \n";
     const GameOfUrModel& model { getModel() };
@@ -51,3 +52,15 @@ void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
     }
     std::cout << "\ttype: " << ((houseData.mType == House::Type::REGULAR)? "regular": "rosette") << "\n";   
 }
+
+
+void UrSceneView::onLaunchPieceInitiated(PieceTypeID piece) {
+    std::cout << "UrSceneView: Launch piece initiated\n";
+}
+void UrSceneView::onLaunchPieceCanceled() {
+    std::cout << "UrSceneView: Launch piece canceled\n";
+}
+void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
+    std::cout << "UrSceneView: move made\n";
+}
+

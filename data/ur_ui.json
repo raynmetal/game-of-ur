@@ -108,12 +108,146 @@
             "aspects": [
                 {
                     "type": "TestText",
-                    "text": "Click me to roll!",
+                    "text": "Roll Dice!",
                     "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "anchor": [0.0, 0.0]
                 },
-                { "type": "ClickToRoll" }
+                {
+                    "type": "ValueOnClick",
+                    "return_value": "dice_roll"
+                }
+            ]
+        },
+
+        {
+            "name": "launch_swallow",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -683.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "Swallow!",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [0.0, 0.0]
+                },
+                {
+                    "type": "ValueOnClick",
+                    "return_value": "swallow"
+                }
+            ]
+        },
+        {
+            "name": "launch_storm_bird",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -683.0, -32.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "Storm Bird!",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [0.0, 0.0]
+                },
+                {
+                    "type": "ValueOnClick",
+                    "return_value": "storm_bird"
+                }
+            ]
+        },
+        {
+            "name": "launch_raven",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -683.0, -64.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "Raven!",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [0.0, 0.0]
+                },
+                {
+                    "type": "ValueOnClick",
+                    "return_value": "raven"
+                }
+            ]
+        },
+        {
+            "name": "launch_rooster",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -683.0, -96.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "Rooster!",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [0.0, 0.0]
+                },
+                {
+                    "type": "ValueOnClick",
+                    "return_value": "rooster"
+                }
+            ]
+        },
+        {
+            "name": "launch_eagle",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -683.0, -128.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "Eagle!",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [0.0, 0.0]
+                },
+                {
+                    "type": "ValueOnClick",
+                    "return_value": "eagle"
+                }
             ]
         },
 
@@ -230,8 +364,85 @@
                     "anchor": [1.0, 0.0]
                 }
             ]
+        },
+
+        {
+            "name": "next_turn",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 683.0, -352.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "TestText",
+                    "text": "Next Turn!",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [1.0, 1.0]
+                },
+                {
+                    "type": "ValueOnClick",
+                    "return_value": "next_turn"
+                }
+            ]
         }
     ],
 
-    "connections": []
+    "connections": [
+        {
+            "from": "/viewport_UI/dice_roll/@ValueOnClick",
+            "signal": "Clicked",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/next_turn/@ValueOnClick",
+            "signal": "Clicked",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/launch_swallow/@ValueOnClick",
+            "signal": "Clicked",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/launch_storm_bird/@ValueOnClick",
+            "signal": "Clicked",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/launch_raven/@ValueOnClick",
+            "signal": "Clicked",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/launch_rooster/@ValueOnClick",
+            "signal": "Clicked",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/launch_eagle/@ValueOnClick",
+            "signal": "Clicked",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        }
+    ]
 }

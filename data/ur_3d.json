@@ -2,7 +2,7 @@
     "resources": [
         {
             "method": "fromFile",
-            "name": "SwallowModel",
+            "name": "SwallowModel_One",
             "parameters": {
                 "path": "data/models/PrototypeSwallow.obj",
                 "material_overrides": {
@@ -10,14 +10,14 @@
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 1.0, 0.1, 1.0]
+                            "value": [0.1, 0.1, 0.1, 1.0]
                         }
                     ],
                     "1": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.7, 0.1, 0.5, 1.0]
+                            "value": [0.1, 0.1, 0.1, 1.0]
                         }
                     ]
                 }
@@ -26,7 +26,112 @@
         },
         {
             "method": "fromFile",
-            "name": "StormbirdModel",
+            "name": "StormbirdModel_One",
+            "parameters": {
+                "path": "data/models/PrototypeStormbird.obj",
+                "material_overrides": {
+                    "0": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.1, 0.1, 0.1, 1.0]
+                        }
+                    ],
+                    "1": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.1, 0.1, 0.1, 1.0]
+                        }
+                    ]
+                }
+            },
+            "type": "StaticModel"
+        },
+        {
+            "method": "fromFile",
+            "name": "RavenModel_One",
+            "parameters": {
+                "path": "data/models/PrototypeRaven.obj",
+                "material_overrides": {
+                    "0": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.1, 0.1, 0.1, 1.0]
+                        }
+                    ],
+                    "1": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.1, 0.1, 0.1, 1.0]
+                        }
+                    ]
+                }
+            },
+            "type": "StaticModel"
+        },
+        {
+            "method": "fromFile",
+            "name": "RoosterModel_One",
+            "parameters": {
+                "path": "data/models/PrototypeRooster.obj",
+                "material_overrides": {
+                    "0": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.1, 0.1, 0.1, 1.0]
+                        }
+                    ],
+                    "1": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.1, 0.1, 0.1, 1.0]
+                        }
+                    ]
+                }
+            },
+            "type": "StaticModel"
+        },
+        {
+            "method": "fromFile",
+            "name": "EagleModel_One",
+            "parameters": {
+                "path": "data/models/PrototypeEagle.obj",
+                "material_overrides": {
+                    "0": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.1, 0.1, 0.1, 1.0]
+                        }
+                    ],
+                    "1": [
+                        {
+                            "name": "colorMultiplier",
+                            "type": "vec4",
+                            "value": [0.1, 0.1, 0.1, 1.0]
+                        }
+                    ]
+                }
+            },
+            "type": "StaticModel"
+        },
+
+        {
+            "method": "fromFile",
+            "name": "SwallowModel_Two",
+            "parameters": {
+                "path": "data/models/PrototypeSwallow.obj"
+            },
+            "type": "StaticModel"
+        },
+        {
+            "method": "fromFile",
+            "name": "StormbirdModel_Two",
             "parameters": {
                 "path": "data/models/PrototypeStormbird.obj"
             },
@@ -34,7 +139,7 @@
         },
         {
             "method": "fromFile",
-            "name": "RavenModel",
+            "name": "RavenModel_Two",
             "parameters": {
                 "path": "data/models/PrototypeRaven.obj"
             },
@@ -42,7 +147,7 @@
         },
         {
             "method": "fromFile",
-            "name": "RoosterModel",
+            "name": "RoosterModel_Two",
             "parameters": {
                 "path": "data/models/PrototypeRooster.obj"
             },
@@ -50,7 +155,7 @@
         },
         {
             "method": "fromFile",
-            "name": "EagleModel",
+            "name": "EagleModel_Two",
             "parameters": {
                 "path": "data/models/PrototypeEagle.obj"
             },
@@ -65,7 +170,6 @@
             },
             "type": "StaticModel"
         },
-
         {
             "name": "Skybox_Texture",
             "type": "Texture",
@@ -184,45 +288,6 @@
         },
 
         {
-            "components": [
-                {
-                    "orientation": [
-                        1.0, 0.0, 0.0, 0.0
-                    ],
-                    "position": [
-                        0.0, 0.0, 0.0, 1.0
-                    ],
-                    "scale": [
-                        1.0, 1.0, 1.0
-                    ],
-                    "type": "Placement"
-                },
-                {
-                    "ambient": [
-                        0.20000000298023224, 0.20000000298023224, 0.20000000298023224
-                    ],
-                    "diffuse": [
-                        2.0, 2.0, 2.0
-                    ],
-                    "innerAngle": 4.0,
-                    "lightType": "spot",
-                    "linearConst": 0.07000000029802322,
-                    "outerAngle": 13.0,
-                    "quadraticConst": 0.029999999329447746,
-                    "specular": [
-                        4.0,
-                        4.0,
-                        4.0
-                    ],
-                    "type": "LightEmissionData"
-                }
-            ],
-            "name": "flashlight",
-            "parent": "/viewport_3D/camera/",
-            "type": "SceneNode"
-        },
-
-        {
             "aspects": [],
             "components": [
                 {
@@ -252,115 +317,6 @@
                 }
             ],
             "name": "sunlight",
-            "parent": "/viewport_3D/",
-            "type": "SimObject"
-        },
-
-        {
-            "aspects": [],
-            "components": [
-                {
-                    "orientation": [
-                        1.0, 0.0, 0.0, 0.0
-                    ],
-                    "position": [
-                        0.0, 0.0, -1.0, 1.0
-                    ],
-                    "scale": [
-                        1.0, 1.0, 1.0
-                    ],
-                    "type": "Placement"
-                },
-                { "resourceName": "SwallowModel", "type": "StaticModel" }
-            ],
-            "name": "swallow",
-            "parent": "/viewport_3D/",
-            "type": "SimObject"
-        },
-        {
-            "aspects": [],
-            "components": [
-                {
-                    "orientation": [
-                        1.0, 0.0, 0.0, 0.0
-                    ],
-                    "position": [
-                        -1.0, 0.0, -1.0, 1.0
-                    ],
-                    "scale": [
-                        1.0, 1.0, 1.0
-                    ],
-                    "type": "Placement"
-                },
-                { "resourceName": "StormbirdModel", "type": "StaticModel" }
-            ],
-            "name": "storm_bird",
-            "parent": "/viewport_3D/",
-            "type": "SimObject"
-        },
-
-        {
-            "aspects": [],
-            "components": [
-                {
-                    "orientation": [
-                        1.0, 0.0, 0.0, 0.0
-                    ],
-                    "position": [
-                        1.0, 0.0, -1.0, 1.0
-                    ],
-                    "scale": [
-                        1.0, 1.0, 1.0
-                    ],
-                    "type": "Placement"
-                },
-                { "resourceName": "RavenModel", "type": "StaticModel" }
-            ],
-            "name": "raven",
-            "parent": "/viewport_3D/",
-            "type": "SimObject"
-        },
-
-        {
-            "aspects": [],
-            "components": [
-                {
-                    "orientation": [
-                        1.0, 0.0, 0.0, 0.0
-                    ],
-                    "position": [
-                        -2.0, 0.0, -1.0, 1.0
-                    ],
-                    "scale": [
-                        1.0, 1.0, 1.0
-                    ],
-                    "type": "Placement"
-                },
-                { "resourceName": "RoosterModel", "type": "StaticModel" }
-            ],
-            "name": "rooster",
-            "parent": "/viewport_3D/",
-            "type": "SimObject"
-        },
-
-        {
-            "aspects": [],
-            "components": [
-                {
-                    "orientation": [
-                        1.0, 0.0, 0.0, 0.0
-                    ],
-                    "position": [
-                        2.0, 0.0, -1.0, 1.0
-                    ],
-                    "scale": [
-                        1.0, 1.0, 1.0
-                    ],
-                    "type": "Placement"
-                },
-                { "resourceName": "EagleModel", "type": "StaticModel" }
-            ],
-            "name": "eagle",
             "parent": "/viewport_3D/",
             "type": "SimObject"
         },

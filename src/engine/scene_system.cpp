@@ -903,13 +903,11 @@ bool ViewportNode::handleAction(std::pair<ActionDefinition, ActionData> pendingA
         pendingAction.second.mTwoAxisActionData.mValue = static_cast<glm::vec2>(inputToViewportTransform * glm::vec3{pendingAction.second.mTwoAxisActionData.mValue, 1.f});
     }
 
-    if(mRenderConfiguration.mRenderType != RenderConfiguration::RenderType::ADDITION) {
-        return mActionDispatch.dispatchAction(pendingAction);
-    }
-
-    if(!mActionFlowthrough) return false;
-
     bool actionHandled { false };
+    actionHandled =  mActionDispatch.dispatchAction(pendingAction);
+
+    if(!mActionFlowthrough) return actionHandled;
+
     for(std::shared_ptr<ViewportNode> child: mChildViewports) {
         if(child->isActive()) {
             bool childHandledAction { child->handleAction(pendingAction) };

@@ -75,5 +75,56 @@
         }
     ],
 
-    "connections": []
+    "connections": [
+        {
+            "from": "/@UrController", "signal": "MoveMade",
+            "to": "/scene_root_3D/@UrSceneView", "observer": "MoveMadeObserved"
+        }, 
+        {
+            "from": "/@UrController", "signal": "MoveMade",
+            "to": "/ui_root/@UrUIView", "observer": "MoveMadeObserved"
+        },
+        {
+            "from": "/@UrController", "signal": "PhaseUpdated",
+            "to": "/ui_root/@UrUIView", "observer": "PhaseUpdatedObserved"
+        },
+        {
+            "from": "/@UrController", "signal": "ScoreUpdated",
+            "to": "/ui_root/@UrUIView", "observer": "ScoreUpdatedObserved"
+        },
+        {
+            "from": "/@UrController", "signal": "PlayerUpdated",
+            "to": "/ui_root/@UrUIView", "observer": "PlayerUpdatedObserved"
+        },
+        {
+            "from": "/@UrController", "signal": "DiceUpdated",
+            "to": "/ui_root/@UrUIView", "observer": "DiceUpdatedObserved"
+        },
+
+        {
+            "to": "/@UrController", "observer": "NextTurnAttemptedObserved",
+            "from": "/ui_root/@UrUIView", "signal": "NextTurnAttempted"
+        },
+        {
+            "to": "/@UrController", "observer": "DiceRollAttemptedObserved",
+            "from": "/ui_root/@UrUIView", "signal": "DiceRollAttempted"
+        },
+        {
+            "to": "/@UrController", "observer": "MovePieceAttemptedObserved",
+            "from": "/scene_root_3D/@UrSceneView", "signal": "MovePieceAttempted"
+        },
+        {
+            "to": "/@UrController", "observer": "LaunchPieceAttemptedObserved",
+            "from": "/scene_root_3D/@UrSceneView", "signal": "LaunchPieceAttempted"
+        },
+
+        {
+            "from": "/ui_root/@UrUIView", "signal": "LaunchPieceInitiated",
+            "to": "/scene_root_3D/@UrSceneView", "observer": "LaunchPieceInitiatedObserved"
+        },
+        {
+            "from": "/ui_root/@UrUIView", "signal": "LaunchPieceCanceled",
+            "to": "/scene_root_3D/@UrSceneView", "observer": "LaunchPieceCanceledObserved"
+        }
+    ]
 }

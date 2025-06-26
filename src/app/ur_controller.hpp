@@ -18,16 +18,14 @@ public:
 private:
     GameOfUrModel mModel {};
 
-
     void onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, glm::u8vec2 launchLocation=glm::u8vec2{0,0});
     void onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piece);
     void onNextTurnAttempted(PlayerID player);
     void onDiceRollAttempted(PlayerID player);
 
 public:
-
     ToyMakersEngine::SignalObserver<PlayerID, PieceIdentity, glm::u8vec2> mObservePieceLaunchAttempted {
-        *this, "PieceLaunchAttemptedObserved",
+        *this, "LaunchPieceAttemptedObserved",
         [this](PlayerID player, PieceIdentity piece, glm::u8vec2 location) { this->onLaunchPieceAttempted(player, piece, location); }
     };
     ToyMakersEngine::SignalObserver<PlayerID> mObserveEndTurnAttempted {

@@ -2,7 +2,8 @@
     "action_contexts": [
         "Camera",
         "Graphics",
-        "UI"
+        "UI",
+        "General"
     ],
     "actions": [
         {
@@ -114,12 +115,12 @@
                 "has_button_value": true,
                 "has_change_value": false,
                 "has_negative": false,
-                "has_state_value": true,
-                "n_axes": 2,
-                "state_is_location": true
+                "has_state_value": false,
+                "n_axes": 0,
+                "state_is_location": false
             },
-            "context": "UI",
-            "name": "RightTap",
+            "context": "General",
+            "name": "Cancel",
             "value_type": "state"
         }
     ],
@@ -939,14 +940,13 @@
             },
             "target_axis": "+y"
         },
-
         {
-            "action": "RightTap",
-            "context": "UI",
+            "action": "Cancel",
+            "context": "General",
             "input_combo": {
                 "deadzone": 0.0,
                 "main_control": {
-                    "filter": "+x",
+                    "filter": "simple",
                     "input_source": {
                         "control": 3,
                         "control_type": "button",
@@ -973,22 +973,22 @@
                     }
                 },
                 "threshold": 0.5,
-                "trigger": "on-button-press"
+                "trigger": "on-press"
             },
-            "target_axis": "+x"
+            "target_axis": "simple"
         },
         {
-            "action": "RightTap",
-            "context": "UI",
+            "action": "Cancel",
+            "context": "General",
             "input_combo": {
                 "deadzone": 0.0,
                 "main_control": {
-                    "filter": "+y",
+                    "filter": "simple",
                     "input_source": {
-                        "control": 3,
+                        "control": 27,
                         "control_type": "button",
                         "device": 0,
-                        "device_type": "mouse"
+                        "device_type": "keyboard"
                     }
                 },
                 "modifier_1": {
@@ -1010,9 +1010,9 @@
                     }
                 },
                 "threshold": 0.5,
-                "trigger": "on-button-press"
+                "trigger": "on-press"
             },
-            "target_axis": "+y"
+            "target_axis": "simple"
         }
     ]
 }
