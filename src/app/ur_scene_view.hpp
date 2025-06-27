@@ -5,6 +5,7 @@
 #include "../engine/signals.hpp"
 #include "../engine/text_render.hpp"
 
+#include "board_locations.hpp"
 #include "game_of_ur_data/model.hpp"
 
 class UrSceneView: public ToyMakersEngine::SimObjectAspect<UrSceneView> {
@@ -15,8 +16,8 @@ public:
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
 
-    void onActivated() override;
     const GameOfUrModel& getModel() const;
+    const BoardLocations& getBoard() const;
 
 private:
     enum class Mode {
@@ -27,6 +28,7 @@ private:
     std::map<PieceIdentity, std::string> mPieceModelMap {};
     std::map<PieceIdentity, std::shared_ptr<ToyMakersEngine::SceneNode>> mPieceNodeMap {};
     std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrController {};
+    std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrBoard {};
     std::string mControllerPath {};
     Mode mMode { Mode::GENERAL };
 
@@ -35,6 +37,7 @@ private:
     void onLaunchPieceCanceled();
     void onMoveMade(const MoveResultData& moveResultData);
 
+    void onActivated() override;
 public:
     ToyMakersEngine::SignalObserver<glm::u8vec2> mObserveBoardClicked { 
         *this, "BoardClickedObserved",

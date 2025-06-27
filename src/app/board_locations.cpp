@@ -36,7 +36,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> BoardLocations::clone() co
     return std::shared_ptr<BoardLocations>{ new BoardLocations{} };
 }
 
-glm::uvec2 BoardLocations::boardPointToGridIndices (glm::vec2 point) const {
+glm::uvec2 BoardLocations::boardPointToGridIndices(glm::vec2 point) const {
     const ToyMakersEngine::AxisAlignedBounds::Extents boardExtents { getComponent<ToyMakersEngine::AxisAlignedBounds>().getAxisAlignedBoxExtents() };
     glm::vec2 normalizedPoint {
         (point.x - boardExtents.second.x) / (boardExtents.first.x - boardExtents.second.x),
@@ -48,4 +48,23 @@ glm::uvec2 BoardLocations::boardPointToGridIndices (glm::vec2 point) const {
         && "selected point is beyond the bounds of the board"
     );
     return {normalizedPoint.x * mRowLengths.size(), normalizedPoint.y * mRowLengths[1]};
+}
+
+glm::vec4 BoardLocations::gridIndicesToBoardPoint(glm::u8vec2 gridIndices) const {
+    const ToyMakersEngine::AxisAlignedBounds::Extents boardExtents {
+        getComponent<ToyMakersEngine::AxisAlignedBounds>().getAxisAlignedBoxExtents()
+    };
+    const glm::vec4 centerOffset {
+        (boardExtents.first.x - boardExtents.second.x) / (2.f * mRowLengths.size()),
+        0.f,
+        (boardExtents.first.z - boardExtents.second.z) / (2.f * mRowLengths[1]),
+        0.f,
+    };
+    const glm::vec4 cellSize { 2.f * centerOffset };
+    const glm::vec4 newCoordinates {
+        glm::vec4{boardExtents.second.x, 0.f, boardExtents.second.z, 1.f}
+        + cellSize * glm::vec4{gridIndices.x, 0.f, gridIndices.y, 0.f}
+        + centerOffset
+    };
+    return newCoordinates;
 }

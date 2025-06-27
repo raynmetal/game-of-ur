@@ -17,9 +17,11 @@ public:
 
     ToyMakersEngine::Signal<glm::u8vec2> mSigBoardClicked { *this, "BoardClicked" };
 
+    glm::uvec2 boardPointToGridIndices (glm::vec2 point) const;
+    glm::vec4 gridIndicesToBoardPoint(glm::u8vec2 gridIndices) const;
+
 private:
     BoardLocations(): SimObjectAspect<BoardLocations>{0} {}
-    glm::uvec2 boardPointToGridIndices (glm::vec2 point) const;
 
     std::array<uint8_t, 3> mRowLengths {4, 12, 4};
 };

@@ -15,6 +15,7 @@ public:
 
     inline const GameOfUrModel& getModel() const { return mModel; }
 
+
 private:
     GameOfUrModel mModel {};
 
@@ -22,6 +23,8 @@ private:
     void onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piece);
     void onNextTurnAttempted(PlayerID player);
     void onDiceRollAttempted(PlayerID player);
+
+    void onActivated() override;
 
 public:
     ToyMakersEngine::SignalObserver<PlayerID, PieceIdentity, glm::u8vec2> mObservePieceLaunchAttempted {

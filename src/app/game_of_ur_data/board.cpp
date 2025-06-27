@@ -129,7 +129,7 @@ bool Board::isValidLaunchHouse(glm::u8vec2 location, const Piece& gamePiece) con
                     (
                         location.x == 1 
                         && location.y < mGrid[1].size() 
-                        && location.y % 4 == 3
+                        && location.y % 4 == 2
                     ) || (
                         location.y == 1
                         && mGrid[location.x][0].getRegion() == static_cast<House::Region>(gamePiece.getOwner())
@@ -174,7 +174,7 @@ std::vector<glm::u8vec2> Board::getValidLaunchPositions(PieceIdentity pieceIdent
                 mGrid[0][0].getRegion() == static_cast<House::Region>(pieceIdentity.mOwner)? 0: 2,
                 1
             });
-            for(uint8_t y { 3 }; y < mGrid[1].size(); y+=4) {
+            for(uint8_t y { 2 }; y < mGrid[1].size(); y+=4) {
                 results.push_back({1, y});
             }
             break;

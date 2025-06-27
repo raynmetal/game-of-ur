@@ -16,6 +16,7 @@ void GameOfUrModel::startPhasePlay() {
     mGamePhase = GamePhase::PLAY;
     mTurnPhase = TurnPhase::ROLL_DICE;
     mRoundPhase = RoundPhase::IN_PROGRESS;
+    mDice->reset();
     mPreviousRoll = 0;
 
     // assign roles to each player
@@ -37,13 +38,25 @@ void GameOfUrModel::rollDice(PlayerID requester) {
     if(
         mDice->getState() == Dice::State::SECONDARY_ROLLED
         && (
-            mGamePhase == GamePhase::INITIATIVE 
-            || !mDice->getResult(GamePhase::PLAY)
+            mGamePhase == GamePhase::INITIATIVE
+            || !(mDice->getResult(GamePhase::PLAY))
             || getAllPossibleMoves().empty()
         )
     ) {
         mTurnPhase = TurnPhase::END;
-        mRoundPhase = getRole(requester) == RoleID::TWO? RoundPhase::END: RoundPhase::IN_PROGRESS;
+        if(
+            (mGamePhase == GamePhase::INITIATIVE && mCurrentPlayer == PlayerID::PLAYER_B)
+            || (mGamePhase == GamePhase::PLAY && getRole(mCurrentPlayer) == RoleID::TWO)
+        ) {
+            mRoundPhase = RoundPhase::END;
+        } else {
+            mRoundPhase = RoundPhase::IN_PROGRESS;
+        }
+        return;
+
+    } else if(mGamePhase == GamePhase::PLAY) {
+        mTurnPhase = TurnPhase::MOVE_PIECE;
+        mRoundPhase = RoundPhase::IN_PROGRESS;
     }
 }
 
@@ -53,14 +66,17 @@ void GameOfUrModel::movePiece(PieceIdentity piece, glm::u8vec2 toLocation, Playe
 
     // update moved piece state
     std::shared_ptr<Piece> movedPiece { mPlayers[requester].getPiece(piece.mType) };
-    movedPiece->setState(moveResults.mMovedPiece.mState);
 
     // update displaced piece state, if necessary
-    std::weak_ptr<Piece> weakPtrDisplacedPiece {mBoard.move(getRole(requester), movedPiece, toLocation, mDice->getResult(mGamePhase))};
+    std::weak_ptr<Piece> weakPtrDisplacedPiece {
+        mBoard.move(getRole(requester), movedPiece, toLocation, mDice->getResult(mGamePhase))
+    };
+
     if(std::shared_ptr<Piece> displacedPiece = weakPtrDisplacedPiece.lock()) {
         assert(moveResults.mDisplacedPiece.mState == Piece::State::UNLAUNCHED && "Results should indicate that the piece is in the UNLAUNCHED state after move");
         displacedPiece->setState(Piece::State::UNLAUNCHED);
     }
+    movedPiece->setState(moveResults.mMovedPiece.mState);
 
     // update counters for the player who moved
     deductCounters(moveResults.mCountersLost, requester);
@@ -80,7 +96,7 @@ void GameOfUrModel::advanceOneTurn(PlayerID requester) {
 
     // store the current dice roll in case it will be needed later on
     mPreviousRoll = mDice->getResult(mGamePhase);
-    mDice.reset();
+    mDice->reset();
     mCurrentPlayer = static_cast<PlayerID>((mCurrentPlayer + 1) % mPlayers.size());
     mRoundPhase = RoundPhase::IN_PROGRESS;
     mTurnPhase = TurnPhase::ROLL_DICE;
@@ -182,7 +198,7 @@ bool GameOfUrModel::canLaunchPiece(PieceIdentity pieceIdentity, glm::u8vec2 toLo
     return (
         canMovePiece(
             pieceIdentity, 
-            getBoardMoveData(pieceIdentity).mMovedPiece.mLocation,
+            toLocation,
             requester
         ) && getPiece(pieceIdentity).getState() == Piece::State::UNLAUNCHED
     );
@@ -364,6 +380,8 @@ MoveResultData GameOfUrModel::getMoveData(PieceIdentity pieceID, glm::u8vec2 mov
         moveFlags&MoveResultData::ENDS_GAME? static_cast<uint8_t>(mCounters): static_cast<uint8_t>(0)
     };
 
+    movedPieceData.mState = ((moveFlags&MoveResultData::COMPLETES_ROUTE)? Piece::State::FINISHED: Piece::State::ON_BOARD);
+
     return {
         .mFlags { moveFlags },
         .mDisplacedPiece { displacedPieceData },
@@ -409,4 +427,9 @@ std::vector<std::pair<PieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPossible
     }
 
     return possibleMoves;
+}
+
+glm::u8vec2 GameOfUrModel::getLaunchLocation(PieceTypeID pieceType) const {
+    assert(pieceType != PieceTypeID::SWALLOW && "Swallows have more than one launch location and are ineligible for this function");
+    return { 1, static_cast<uint8_t>(kGamePieceTypes[pieceType].mLaunchType) - 1 };
 }

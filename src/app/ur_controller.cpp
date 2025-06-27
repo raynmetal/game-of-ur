@@ -12,6 +12,12 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrController::clone() cons
     return std::make_shared<UrController>();
 }
 
+void UrController::onActivated() {
+    mSigScoreUpdated.emit(mModel.getScore());
+    mSigPhaseUpdated.emit(mModel.getCurrentPhase());
+    mSigDiceUpdated.emit(mModel.getDiceData());
+}
+
 void UrController::onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, glm::u8vec2 launchLocation) {
     if(!mModel.canLaunchPiece(piece, launchLocation, player)) return;
 
@@ -47,16 +53,17 @@ void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piec
 }
 
 void UrController::onNextTurnAttempted(PlayerID player) {
-    if(!mModel.canAdvanceOneTurn(player) || !mModel.canStartPhasePlay()) {
+    if(!mModel.canAdvanceOneTurn(player) && !mModel.canStartPhasePlay()) {
         return;
     }
 
-    if(mModel.canAdvanceOneTurn(player)) { mModel.advanceOneTurn(player); }
+    const bool canAdvanceOneTurn { mModel.canAdvanceOneTurn(player) };
+    if(canAdvanceOneTurn) { mModel.advanceOneTurn(player); }
     else { mModel.startPhasePlay(); }
 
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
     mSigDiceUpdated.emit(mModel.getDiceData());
-    if(mModel.canAdvanceOneTurn(player)) { return; }
+    if(canAdvanceOneTurn) { return; }
 
     mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_A));
     mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_B));
@@ -68,7 +75,5 @@ void UrController::onDiceRollAttempted(PlayerID player) {
 
     mModel.rollDice(player);
     mSigDiceUpdated.emit(mModel.getDiceData());
-    if(mModel.getCurrentPhase().mTurnPhase == TurnPhase::END) {
-        mSigPhaseUpdated.emit(mModel.getCurrentPhase());
-    }
+    mSigPhaseUpdated.emit(mModel.getCurrentPhase());
 }

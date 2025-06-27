@@ -20,13 +20,14 @@ public:
 
 private:
     enum Buttons {
+        SWALLOW=PieceTypeID::SWALLOW,
+        STORMBIRD=PieceTypeID::STORMBIRD,
+        RAVEN=PieceTypeID::RAVEN,
+        ROOSTER=PieceTypeID::ROOSTER,
+        EAGLE=PieceTypeID::EAGLE,
+
         NEXT_TURN,
         DICE,
-        SWALLOW,
-        STORMBIRD,
-        RAVEN,
-        ROOSTER,
-        EAGLE,
     };
     std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrController {};
     std::string mControllerPath {};
@@ -39,7 +40,7 @@ private:
     void onPlayerUpdated(PlayerData player);
     void onDiceUpdated(DiceData dice);
     void onMoveMade(MoveResultData moveData);
-    bool onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) const;
+    bool onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
 
     std::weak_ptr<ToyMakersEngine::FixedActionBinding> handleCancel { declareFixedActionBinding(
         "General", "Cancel", [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
@@ -76,7 +77,7 @@ public:
     ToyMakersEngine::Signal<PlayerID> mSigDiceRollAttempted { *this, "DiceRollAttempted" };
     ToyMakersEngine::Signal<PlayerID> mSigNextTurnAttempted { *this, "NextTurnAttempted" };
     ToyMakersEngine::Signal<PieceTypeID> mSigLaunchPieceInitiated { *this, "LaunchPieceInitiated" };
-    ToyMakersEngine::Signal<PieceTypeID> mSigLaunchPieceCanceled { *this, "LaunchPieceCanceled" };
+    ToyMakersEngine::Signal<> mSigLaunchPieceCanceled { *this, "LaunchPieceCanceled" };
 };
 
 #endif
