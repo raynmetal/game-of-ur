@@ -8,21 +8,27 @@ std::weak_ptr<Piece> Board::move(RoleID player, std::weak_ptr<Piece> gamePiece, 
     std::shared_ptr<Piece> lockedGamePiece { gamePiece.lock() };
 
     if(lockedGamePiece->getState() == Piece::State::ON_BOARD) {
+        // disconnect this piece from its previous location
         const glm::u8vec2 pieceLocation { lockedGamePiece->getLocation() };
         mGrid[pieceLocation.x][pieceLocation.y].move(nullptr);
     }
 
+    // associate the piece with its new location ...
     lockedGamePiece->setLocation(toLocation);
-
     if(isValidHouse(toLocation)) {
+
+        // ... taking care to remove the opponents piece previously occupying this house
         std::weak_ptr<Piece> knockedOut { mGrid[toLocation.x][toLocation.y].getOccupantReference() };
         if(std::shared_ptr opponentPiece = knockedOut.lock()) {
             opponentPiece->setLocation(glm::u8vec2{0,0});
         }
+
         mGrid[toLocation.x][toLocation.y].move(lockedGamePiece);
+
+        return knockedOut;
     }
 
-    // otherwise, this piece has won
+    // otherwise, this piece has successfully moved to the end of the route
     return std::weak_ptr<Piece>{};
 }
 
@@ -64,6 +70,7 @@ bool Board::canMove(RoleID role, const Piece& gamePiece, glm::u8vec2 toLocation,
         ) || (
             gamePiece.getState()==Piece::State::UNLAUNCHED
             && isValidLaunchHouse(toLocation, gamePiece)
+            && roll == kGamePieceTypes[gamePiece.getType()].mLaunchRoll
         )
     };
 
@@ -108,7 +115,9 @@ glm::u8vec2 Board::computeMoveLocation(const Piece& gamePiece, uint8_t roll) con
 
         // step
         roll--, currentLocation += house.getNextCellDirection()
-    );
+    ) {
+        house = mGrid[currentLocation.x][currentLocation.y];
+    }
 
     // If it's a move that takes the piece off the board, but not exactly, the move
     // fails, and we return the piece's current location
@@ -180,7 +189,7 @@ std::vector<glm::u8vec2> Board::getValidLaunchPositions(PieceIdentity pieceIdent
             break;
 
         default:
-            results.push_back({1, static_cast<uint8_t>(kGamePieceTypes[pieceIdentity.mType].mLaunchType) - 1});
+            results.push_back({1, static_cast<uint8_t>(kGamePieceTypes[pieceIdentity.mType].mLaunchRoll) - 1});
             break;
     };
 

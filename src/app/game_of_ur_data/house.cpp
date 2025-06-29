@@ -28,6 +28,7 @@ bool House::canMove(const Piece& gamePiece) const {
 void House::move(std::shared_ptr<Piece> gamePiece) {
     if(!gamePiece) {
         mOccupant.reset();
+        return;
     }
 
     assert(canMove(*gamePiece) && "This piece cannot move to this location");

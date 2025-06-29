@@ -76,6 +76,12 @@ void GameOfUrModel::movePiece(PieceIdentity piece, glm::u8vec2 toLocation, Playe
         assert(moveResults.mDisplacedPiece.mState == Piece::State::UNLAUNCHED && "Results should indicate that the piece is in the UNLAUNCHED state after move");
         displacedPiece->setState(Piece::State::UNLAUNCHED);
     }
+    assert(
+        (
+            moveResults.mMovedPiece.mState == Piece::State::ON_BOARD 
+            || moveResults.mMovedPiece.mState == Piece::State::FINISHED
+        ) && "The moved piece must either have entered the board or completed its route"
+    );
     movedPiece->setState(moveResults.mMovedPiece.mState);
 
     // update counters for the player who moved
@@ -356,13 +362,12 @@ MoveResultData GameOfUrModel::getMoveData(PieceIdentity pieceID, glm::u8vec2 mov
     moveFlags |= mBoard.isRosette(moveLocation)? MoveResultData::LANDS_ON_ROSETTE: 0;
     moveFlags |= mBoard.isRouteEnd(moveLocation)? MoveResultData::COMPLETES_ROUTE: 0;
     moveFlags |= (
-        (moveFlags&MoveResultData::COMPLETES_ROUTE) && (
-            (
-                mPlayers[getPlayer(pieceID.mOwner)].getNPieces(Piece::State::FINISHED)
-                + 1 
-            ) == 5
+        (
+            (moveFlags&MoveResultData::COMPLETES_ROUTE)
+        ) && (
+            mPlayers[getPlayer(pieceID.mOwner)].getNPieces(Piece::State::FINISHED) == 4
         )
-    );
+    )? MoveResultData::ENDS_GAME: 0;
 
 
     const uint8_t nCountersLost { 
@@ -377,7 +382,7 @@ MoveResultData GameOfUrModel::getMoveData(PieceIdentity pieceID, glm::u8vec2 mov
     const uint8_t nCountersWon { 
         (moveFlags&MoveResultData::LANDS_ON_ROSETTE)?
         static_cast<uint8_t>(std::min(kGamePieceTypes[piece.getType()].mCost, mCounters)):
-        moveFlags&MoveResultData::ENDS_GAME? static_cast<uint8_t>(mCounters): static_cast<uint8_t>(0)
+        (moveFlags&MoveResultData::ENDS_GAME)? static_cast<uint8_t>(mCounters): static_cast<uint8_t>(0)
     };
 
     movedPieceData.mState = ((moveFlags&MoveResultData::COMPLETES_ROUTE)? Piece::State::FINISHED: Piece::State::ON_BOARD);
@@ -408,7 +413,9 @@ std::vector<std::pair<PieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPossible
 
             case Piece::State::UNLAUNCHED:
                 for(glm::u8vec2 launchPosition: mBoard.getValidLaunchPositions(piece.getIdentity())) {
-                    possibleMoves.push_back({pieceIdentity, launchPosition});
+                    if(mBoard.canMove(piece.getOwner(), piece, launchPosition, mDice->getResult(GamePhase::PLAY))) {
+                        possibleMoves.push_back({pieceIdentity, launchPosition});
+                    }
                 }
                 break;
 

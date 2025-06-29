@@ -27,6 +27,7 @@ void UrController::onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, 
     if(moveResults.mDisplacedPiece.mIdentity.mOwner != RoleID::NA) {
         mSigPlayerUpdated.emit(mModel.getPlayerData(moveResults.mDisplacedPiece.mIdentity.mOwner));
     }
+
     mSigPlayerUpdated.emit(mModel.getPlayerData(moveResults.mMovedPiece.mIdentity.mOwner));
     mSigMoveMade.emit(moveResults);
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
@@ -41,10 +42,7 @@ void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piec
     if(moveResults.mDisplacedPiece.mIdentity.mOwner != RoleID::NA) {
         mSigPlayerUpdated.emit(mModel.getPlayerData(moveResults.mDisplacedPiece.mIdentity.mOwner));
     }
-    if(
-        (moveResults.mFlags&MoveResultData::COMPLETES_ROUTE)
-        || (moveResults.mFlags&MoveResultData::LANDS_ON_ROSETTE)
-    ) {
+    if(moveResults.mCountersLost || moveResults.mCountersWon) {
         mSigScoreUpdated.emit(mModel.getScore());
         mSigPlayerUpdated.emit(mModel.getPlayerData(moveResults.mMovedPiece.mIdentity.mOwner));
     }
