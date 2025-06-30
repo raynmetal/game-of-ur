@@ -99,7 +99,7 @@ public:
     void advanceOneTurn(PlayerID requester);
 
     std::vector<std::pair<PieceIdentity, glm::u8vec2>> getAllPossibleMoves() const;
-    glm::u8vec2 getLaunchLocation(PieceTypeID pieceType) const;
+    std::vector<glm::u8vec2> getLaunchPositions(const PieceIdentity& pieceIdentity) const;
     uint8_t getNCounters() const { return mCounters; }
     GamePhaseData getCurrentPhase() const;
     GameScoreData getScore() const;
@@ -129,6 +129,7 @@ private:
 
     void deductCounters(uint8_t counters, PlayerID fromPlayer);
     void payCounters(uint8_t counters, PlayerID toPlayer);
+    void endTurn();
 
     GamePhase mGamePhase { GamePhase::INITIATIVE };
     TurnPhase mTurnPhase { TurnPhase::ROLL_DICE };

@@ -22,7 +22,7 @@ public:
 private:
     enum class Mode {
         GENERAL,
-        LAUNCH_SWALLOW,
+        LAUNCH_POSITION_SELECTION,
     };
 
     std::map<PieceIdentity, std::string> mPieceModelMap {};

@@ -10,10 +10,7 @@
 struct PieceType {
     enum LaunchType {
         ONE_BEFORE_ROSETTE,
-        FIVE=5,
-        SIX=6,
-        SEVEN=7,
-        TEN=10,
+        SAME_AS_LAUNCH_ROLL,
     };
 
     std::string mName;
@@ -23,11 +20,11 @@ struct PieceType {
 };
 
 inline const std::array<const PieceType, 5> kGamePieceTypes {{
-    {.mName="swallow", .mLaunchRoll=2, .mLaunchType=PieceType::ONE_BEFORE_ROSETTE, .mCost=3},
-    {.mName="storm-bird", .mLaunchRoll=5,  .mLaunchType=PieceType::FIVE, .mCost=4},
-    {.mName="raven", .mLaunchRoll=6, .mLaunchType=PieceType::SIX, .mCost=4},
-    {.mName="rooster", .mLaunchRoll=7, .mLaunchType=PieceType::SEVEN, .mCost=4},
-    {.mName="eagle", .mLaunchRoll=10, .mLaunchType=PieceType::TEN, .mCost=5},
+    {.mName="swallow", .mLaunchRoll=2, .mLaunchType=PieceType::LaunchType::ONE_BEFORE_ROSETTE, .mCost=3},
+    {.mName="storm-bird", .mLaunchRoll=5,  .mLaunchType=PieceType::LaunchType::SAME_AS_LAUNCH_ROLL, .mCost=4},
+    {.mName="raven", .mLaunchRoll=6, .mLaunchType=PieceType::LaunchType::SAME_AS_LAUNCH_ROLL, .mCost=4},
+    {.mName="rooster", .mLaunchRoll=7, .mLaunchType=PieceType::LaunchType::SAME_AS_LAUNCH_ROLL, .mCost=4},
+    {.mName="eagle", .mLaunchRoll=10, .mLaunchType=PieceType::LaunchType::SAME_AS_LAUNCH_ROLL, .mCost=5},
 }};
 
 #endif

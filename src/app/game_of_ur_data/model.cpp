@@ -7,6 +7,23 @@ void GameOfUrModel::reset() {
     *this = GameOfUrModel{};
 }
 
+void GameOfUrModel::endTurn() {
+    assert(mGamePhase != GamePhase::END && "There are no turns in the game end phase");
+
+    // end the turn,
+    mTurnPhase = TurnPhase::END;
+
+    // and see if the round has ended as well
+    if(
+        (mGamePhase == GamePhase::INITIATIVE && mCurrentPlayer == PlayerID::PLAYER_B)
+        || (mGamePhase == GamePhase::PLAY && getRole(mCurrentPlayer) == RoleID::TWO)
+    ) {
+        mRoundPhase = RoundPhase::END;
+    } else {
+        mRoundPhase = RoundPhase::IN_PROGRESS;
+    }
+}
+
 void GameOfUrModel::startPhasePlay() {
     assert(canStartPhasePlay() && "Invalid conditions for starting the play phase");
 
@@ -27,37 +44,48 @@ void GameOfUrModel::startPhasePlay() {
     // collect 10 counters from each player and place them in the common pool
     deductCounters(10, PlayerID::PLAYER_A);
     deductCounters(10, PlayerID::PLAYER_B);
+
+    assert(mCounters == 20 && "There should now be 20 counters in the common pool");
+    assert(
+        mPlayers[PlayerID::PLAYER_A].getNPieces(Piece::State::UNLAUNCHED) == 5 
+        && "Player A should have exactly 5 unlaunched pieces"
+    );
+    assert(
+        mPlayers[PlayerID::PLAYER_B].getNPieces(Piece::State::UNLAUNCHED) == 5
+        && "Player B should have exactly 5 unlaunched pieces"
+    );
 }
 
 void GameOfUrModel::rollDice(PlayerID requester) {
     assert(canRollDice(requester) && "This player cannot roll dice presently");
     mDice->roll();
 
-    // If the dice have been rolled a second time, and there are no
-    // pieces to move, we've reached the end of this turn
-    if(
-        mDice->getState() == Dice::State::SECONDARY_ROLLED
-        && (
+    // If the dice have been rolled a second time, and...
+    if(mDice->getState() == Dice::State::SECONDARY_ROLLED) {
+        // ... we've reached the end of the turn...
+        if(
             mGamePhase == GamePhase::INITIATIVE
             || !(mDice->getResult(GamePhase::PLAY))
             || getAllPossibleMoves().empty()
-        )
-    ) {
-        mTurnPhase = TurnPhase::END;
-        if(
-            (mGamePhase == GamePhase::INITIATIVE && mCurrentPlayer == PlayerID::PLAYER_B)
-            || (mGamePhase == GamePhase::PLAY && getRole(mCurrentPlayer) == RoleID::TWO)
         ) {
-            mRoundPhase = RoundPhase::END;
+            endTurn();
+
+        // ... or there is still a move that can be made
+        } else if (mGamePhase == GamePhase::PLAY && !(getAllPossibleMoves().empty())){
+            mTurnPhase = TurnPhase::MOVE_PIECE;
+
         } else {
-            mRoundPhase = RoundPhase::IN_PROGRESS;
+            assert(false && "One of the other conditions should have been entered. Game is in an invalid state now");
         }
         return;
+    } 
 
-    } else if(mGamePhase == GamePhase::PLAY) {
-        mTurnPhase = TurnPhase::MOVE_PIECE;
-        mRoundPhase = RoundPhase::IN_PROGRESS;
-    }
+    assert(mDice->getState() == Dice::State::PRIMARY_ROLLED && "At this point, the dice should have been rolled exactly once");
+    if(mGamePhase == GamePhase::INITIATIVE) return;
+    assert(mGamePhase == GamePhase::PLAY && "If we've gotten this far, that must mean we're in the play phase");
+
+    mTurnPhase = TurnPhase::MOVE_PIECE;
+    mRoundPhase = RoundPhase::IN_PROGRESS;
 }
 
 void GameOfUrModel::movePiece(PieceIdentity piece, glm::u8vec2 toLocation, PlayerID requester) {
@@ -71,11 +99,12 @@ void GameOfUrModel::movePiece(PieceIdentity piece, glm::u8vec2 toLocation, Playe
     std::weak_ptr<Piece> weakPtrDisplacedPiece {
         mBoard.move(getRole(requester), movedPiece, toLocation, mDice->getResult(mGamePhase))
     };
-
     if(std::shared_ptr<Piece> displacedPiece = weakPtrDisplacedPiece.lock()) {
         assert(moveResults.mDisplacedPiece.mState == Piece::State::UNLAUNCHED && "Results should indicate that the piece is in the UNLAUNCHED state after move");
+        assert(moveResults.mMovedPiece.mState != Piece::State::FINISHED && "No piece may be displaced when the moved piece has completed its route");
         displacedPiece->setState(Piece::State::UNLAUNCHED);
     }
+
     assert(
         (
             moveResults.mMovedPiece.mState == Piece::State::ON_BOARD 
@@ -89,11 +118,17 @@ void GameOfUrModel::movePiece(PieceIdentity piece, glm::u8vec2 toLocation, Playe
     payCounters(moveResults.mCountersWon, requester);
 
     // update phase data
-    mTurnPhase = TurnPhase::END;
-    mRoundPhase = piece.mOwner == RoleID::TWO? RoundPhase::END: RoundPhase::IN_PROGRESS;
+    endTurn();
 
+    // end game if necessary
     if(moveResults.mFlags&MoveResultData::ENDS_GAME) {
         mGamePhase = GamePhase::END;
+    } else {
+        assert(
+            mPlayers[requester].getNPieces(Piece::State::FINISHED) < 5
+            && "There should be at least one piece that hasn't reached the end of the route \
+            for this not to be a game ending move"
+        );
     }
 }
 
@@ -106,17 +141,36 @@ void GameOfUrModel::advanceOneTurn(PlayerID requester) {
     mCurrentPlayer = static_cast<PlayerID>((mCurrentPlayer + 1) % mPlayers.size());
     mRoundPhase = RoundPhase::IN_PROGRESS;
     mTurnPhase = TurnPhase::ROLL_DICE;
+
+    assert(mDice->getState() == Dice::State::UNROLLED && "The dice should have its state reset by now");
+    assert(
+        mCurrentPlayer != requester 
+        && "The requester should have been the one to end the turn, handing over control\
+        to the other player"
+    );
 }
 
 void GameOfUrModel::payCounters(uint8_t counters, PlayerID player) {
     if(counters > mCounters) counters = mCounters;
     mCounters -= counters;
     mPlayers[player].depositCounters(counters);
+    assert(
+        (
+            (mCounters + mPlayers[PlayerID::PLAYER_A].getNCounters() + mPlayers[PlayerID::PLAYER_B].getNCounters())
+            == 50
+        ) && "There should be 50 counters in all"
+    );
 }
 
 void GameOfUrModel::deductCounters(uint8_t counters, PlayerID player) {
     counters = mPlayers[player].deductCounters(counters);
     mCounters += counters;
+    assert(
+        (
+            (mCounters + mPlayers[PlayerID::PLAYER_A].getNCounters() + mPlayers[PlayerID::PLAYER_B].getNCounters())
+            == 50
+        ) && "There should be 50 counters in all"
+    );
 }
 
 bool GameOfUrModel::canRollDice(PlayerID requester) const {
@@ -216,9 +270,16 @@ bool GameOfUrModel::canAdvanceOneTurn(PlayerID requester) const {
     return (
         mTurnPhase == TurnPhase::END
         && requester == mCurrentPlayer && (
-            mGamePhase == GamePhase::PLAY || (
+            (
+                mGamePhase == GamePhase::PLAY 
+            ) || (
                 mGamePhase == GamePhase::INITIATIVE && (
+                    // the round hasn't ended yet, and the game roles remain
+                    // undetermined still
                     mRoundPhase == RoundPhase::IN_PROGRESS
+
+                    // continue rolling dice for initiative until one player rolls
+                    // higher than the other
                     || mPreviousRoll == mDice->getResult(GamePhase::INITIATIVE)
                 )
             )
@@ -401,19 +462,20 @@ std::vector<std::pair<PieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPossible
         mGamePhase != GamePhase::PLAY
         || mTurnPhase != TurnPhase::MOVE_PIECE
     ) return {};
+    const RoleID activeRole { getRole(mCurrentPlayer) };
 
     std::vector<std::pair<PieceIdentity, glm::u8vec2>> possibleMoves {};
 
     for(uint8_t type {0}; type < PieceTypeID::TOTAL; ++type) {
 
-        const PieceIdentity pieceIdentity { PieceIdentity{.mType { static_cast<PieceTypeID>(type) }, .mOwner {getRole(mCurrentPlayer)} } };
-        const Piece& piece { getPiece(PieceIdentity{.mType { static_cast<PieceTypeID>(type) }, .mOwner { getRole(mCurrentPlayer) }}) };
+        const PieceIdentity pieceIdentity { PieceIdentity{.mType { static_cast<PieceTypeID>(type) }, .mOwner {activeRole} } };
+        const Piece& piece { getPiece(pieceIdentity) };
+        const uint8_t diceRoll { mDice->getResult(GamePhase::PLAY) };
 
         switch(piece.getState()) {
-
             case Piece::State::UNLAUNCHED:
-                for(glm::u8vec2 launchPosition: mBoard.getValidLaunchPositions(piece.getIdentity())) {
-                    if(mBoard.canMove(piece.getOwner(), piece, launchPosition, mDice->getResult(GamePhase::PLAY))) {
+                for(glm::u8vec2 launchPosition: mBoard.getLaunchPositions(pieceIdentity)) {
+                    if(mBoard.canMove(activeRole, piece, launchPosition, diceRoll)) {
                         possibleMoves.push_back({pieceIdentity, launchPosition});
                     }
                 }
@@ -421,8 +483,8 @@ std::vector<std::pair<PieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPossible
 
             case Piece::State::ON_BOARD: 
                 {
-                    const glm::u8vec2 movePosition { mBoard.computeMoveLocation(piece, mDice->getResult(GamePhase::PLAY)) };
-                    if(mBoard.canMove(piece.getOwner(), piece, movePosition, mDice->getResult(GamePhase::PLAY))) {
+                    const glm::u8vec2 movePosition { mBoard.computeMoveLocation(piece, diceRoll) };
+                    if(mBoard.canMove(activeRole, piece, mBoard.computeMoveLocation(piece, diceRoll), diceRoll)) {
                         possibleMoves.push_back({pieceIdentity, movePosition});
                     }
                 }
@@ -436,7 +498,6 @@ std::vector<std::pair<PieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPossible
     return possibleMoves;
 }
 
-glm::u8vec2 GameOfUrModel::getLaunchLocation(PieceTypeID pieceType) const {
-    assert(pieceType != PieceTypeID::SWALLOW && "Swallows have more than one launch location and are ineligible for this function");
-    return { 1, static_cast<uint8_t>(kGamePieceTypes[pieceType].mLaunchType) - 1 };
+std::vector<glm::u8vec2> GameOfUrModel::getLaunchPositions(const PieceIdentity& pieceIdentity) const {
+    return mBoard.getLaunchPositions(pieceIdentity);
 }

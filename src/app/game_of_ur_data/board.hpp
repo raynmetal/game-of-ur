@@ -22,7 +22,7 @@ public:
     House::Region getRegion(glm::u8vec2 location) const;
     PieceIdentity getOccupant(glm::u8vec2 location) const;
     glm::i8vec2 getNextCellDirection(glm::u8vec2 location) const;
-    std::vector<glm::u8vec2> getValidLaunchPositions(PieceIdentity pieceIdentity) const;
+    std::vector<glm::u8vec2> getLaunchPositions(PieceIdentity pieceIdentity) const;
 
     bool houseIsOccupied(glm::u8vec2 location) const;
     bool isValidHouse(glm::u8vec2 location) const;
@@ -60,6 +60,8 @@ private:
             House{{0, -1}, House::REGULAR, House::TWO},
         },
     }};
+
+    glm::u8vec2 getLaunchPosition(PieceTypeID pieceType) const;
 };
 
 #endif

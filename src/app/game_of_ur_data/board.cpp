@@ -128,10 +128,10 @@ glm::u8vec2 Board::computeMoveLocation(const Piece& gamePiece, uint8_t roll) con
 }
 
 bool Board::isValidLaunchHouse(glm::u8vec2 location, const Piece& gamePiece) const {
-    const PieceType::LaunchType launchType { kGamePieceTypes[gamePiece.getType()].mLaunchType };
+    const PieceType& pieceType { kGamePieceTypes[gamePiece.getType()] };
     return (
         (
-            launchType == PieceType::ONE_BEFORE_ROSETTE
+            pieceType.mLaunchType == PieceType::ONE_BEFORE_ROSETTE
             && (
                 location.x < mGrid.size()
                 && (
@@ -146,7 +146,7 @@ bool Board::isValidLaunchHouse(glm::u8vec2 location, const Piece& gamePiece) con
                 )
             )
         ) || (
-            location.x == 1 && location.y == (static_cast<uint8_t>(launchType) - 1)
+            location.x == 1 && location.y == (pieceType.mLaunchRoll - 1)
         )
     );
 }
@@ -173,7 +173,7 @@ PieceIdentity Board::getOccupant(glm::u8vec2 location) const {
     return mGrid[location.x][location.y].getOccupant();
 }
 
-std::vector<glm::u8vec2> Board::getValidLaunchPositions(PieceIdentity pieceIdentity) const {
+std::vector<glm::u8vec2> Board::getLaunchPositions(PieceIdentity pieceIdentity) const {
     assert(pieceIdentity.mOwner != RoleID::NA && "Each piece must have a corresponding player role");
 
     std::vector<glm::u8vec2> results {};
@@ -189,7 +189,7 @@ std::vector<glm::u8vec2> Board::getValidLaunchPositions(PieceIdentity pieceIdent
             break;
 
         default:
-            results.push_back({1, static_cast<uint8_t>(kGamePieceTypes[pieceIdentity.mType].mLaunchRoll) - 1});
+            results.push_back(getLaunchPosition(pieceIdentity.mType));
             break;
     };
 
@@ -199,4 +199,9 @@ std::vector<glm::u8vec2> Board::getValidLaunchPositions(PieceIdentity pieceIdent
 glm::i8vec2 Board::getNextCellDirection(glm::u8vec2 location) const {
     assert(isValidHouse(location) && "This location does not correspond to a valid house on this board");
     return mGrid[location.x][location.y].getNextCellDirection();
+}
+
+glm::u8vec2 Board::getLaunchPosition(PieceTypeID pieceType) const {
+    assert(kGamePieceTypes[pieceType].mLaunchType == PieceType::LaunchType::SAME_AS_LAUNCH_ROLL && "This must be a piece whose launch roll corresponds to its launch house");
+    return { 1, static_cast<uint8_t>(kGamePieceTypes[pieceType].mLaunchRoll) - 1 };
 }
