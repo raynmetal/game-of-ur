@@ -23,6 +23,8 @@ private:
     std::shared_ptr<ToyMakersEngine::TextFont> mFont {};
     std::string mText {};
     float mScale { 1e-2 };
+
+    glm::vec2 mAnchor {0.f, 0.f};
 };
 
 #endif

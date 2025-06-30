@@ -1,8 +1,8 @@
 {
     "window_configuration": {
         "application_title": "My Game of Ur",
-        "window_width": 1366,
-        "window_height": 768
+        "window_width": 800,
+        "window_height": 600 
     },
 
     "root_viewport_render_configuration": {

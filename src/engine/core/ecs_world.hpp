@@ -63,7 +63,9 @@ namespace ToyMakersEngine {
         virtual void copyComponent(EntityID to, EntityID from)=0;
         virtual void copyComponent(EntityID to, EntityID from, BaseComponentArray& other) = 0;
         virtual void addComponent(EntityID to, const nlohmann::json& jsonComponent)=0;
+        virtual void updateComponent(EntityID to, const nlohmann::json& jsonComponent)=0;
         virtual bool hasComponent(EntityID entityID) const=0;
+        virtual void removeComponent(EntityID entityID)=0;
         virtual std::shared_ptr<BaseComponentArray> instantiate(std::weak_ptr<ECSWorld> world) const = 0;
 
     protected:
@@ -128,10 +130,11 @@ namespace ToyMakersEngine {
          * Removes the component associated with a specific entity, maintaining
          * packing but not order.
          */
-        void removeComponent(EntityID entityID);
+        void removeComponent(EntityID entityID) override;
         TComponent getComponent(EntityID entityID, float simulationProgress=1.f) const;
         bool hasComponent(EntityID entityID) const override;
         void updateComponent(EntityID entityID, const TComponent& newValue);
+        void updateComponent(EntityID entityID, const nlohmann::json& value) override;
         virtual void handleEntityDestroyed(EntityID entityID) override;
         virtual void handlePreSimulationStep() override;
         virtual void copyComponent(EntityID to, EntityID from) override;
@@ -173,28 +176,35 @@ namespace ToyMakersEngine {
             assert(mHashToComponentType.find(componentHash) != mHashToComponentType.end() && "This component type has not been registered");
             return std::dynamic_pointer_cast<ComponentArray<TComponent>>(mHashToComponentArray.at(componentHash));
         }
+        std::shared_ptr<BaseComponentArray> getComponentArray(const std::string& componentTypeName) const {
+            const std::size_t componentHash { mNameToComponentHash.at(componentTypeName) };
+            return mHashToComponentArray.at(componentHash);
+        }
 
         template<typename TComponent>
         ComponentType getComponentType() const; 
+        ComponentType getComponentType(const std::string& typeName) const;
 
         Signature getSignature(EntityID entityID);
 
         template<typename TComponent>
         void addComponent(EntityID entityID, const TComponent& component);
-
         void addComponent(EntityID entityID, const nlohmann::json& jsonComponent);
 
         template<typename TComponent>
         void removeComponent(EntityID entityID);
+        void removeComponent(EntityID entityID, const std::string& type);
 
         template<typename TComponent>
         bool hasComponent(EntityID entityID) const;
+        bool hasComponent(EntityID entityID, const std::string& type);
 
         template<typename TComponent>
         TComponent getComponent(EntityID entityID, float simulationProgress=1.f) const;
 
         template<typename TComponent>
         void updateComponent(EntityID entityID, const TComponent& newValue);
+        void updateComponent(EntityID entityID, const nlohmann::json& componentProperties);
 
         template<typename TComponent>
         void copyComponent(EntityID to, EntityID from);
@@ -452,15 +462,20 @@ namespace ToyMakersEngine {
 
         template <typename TComponent>
         bool hasComponent(EntityID entityID) const;
+        bool hasComponent(EntityID entityID, const std::string& typeName) const;
 
         template<typename TComponent>
         void updateComponent(EntityID entityID, const TComponent& newValue);
+        void updateComponent(EntityID entityID, const nlohmann::json& newValue);
 
         template<typename TComponent, typename TSystem>
         void updateComponent(EntityID entityID, const TComponent& newValue);
+        template<typename TSystem>
+        void updateComponent(EntityID entityID, const nlohmann::json& newValue);
 
         template<typename TComponent>
         void removeComponent(EntityID entityID);
+        void removeComponent(EntityID entityID, const std::string& typeName);
 
         void removeComponentsAll(EntityID entityID);
 
@@ -497,15 +512,18 @@ namespace ToyMakersEngine {
 
         template<typename TComponent> 
         void removeComponent();
+        void removeComponent(const std::string& typeName);
 
         template<typename TComponent>
         bool hasComponent() const;
+        bool hasComponent(const std::string& typeName) const;
 
         template<typename TComponent> 
         TComponent getComponent(float simulationProgress=1.f) const;
 
         template<typename TComponent>
         void updateComponent(const TComponent& newValue);
+        void updateComponent(const nlohmann::json& jsonValue);
 
         template<typename TSystem>
         bool isEnabled() const;
@@ -557,6 +575,11 @@ namespace ToyMakersEngine {
     template <typename TComponent>
     void ComponentArray<TComponent>::addComponent(EntityID entityID, const nlohmann::json& jsonComponent) {
         addComponent(entityID, ComponentFromJSON<TComponent>::get(jsonComponent));
+    }
+
+    template <typename TComponent>
+    void ComponentArray<TComponent>::updateComponent(EntityID entityID, const nlohmann::json& jsonComponent) {
+        updateComponent(entityID, ComponentFromJSON<TComponent>::get(jsonComponent));
     }
 
     template<typename TComponent>
@@ -909,6 +932,23 @@ namespace ToyMakersEngine {
             entityID,
             mComponentManager->getSignature(entityID),
             mComponentManager->getComponentType<TComponent>()
+        );
+    }
+
+    template <typename TSystem>
+    void ECSWorld::updateComponent(EntityID entityID, const nlohmann::json& newValue) {
+        assert(
+            (
+                mSystemManager->mNameToSignature.at(TSystem::getSystemTypeName())
+                    .test(mComponentManager->getComponentType(newValue.at("type")))
+            )
+            && "This system cannot access this kind of component"
+        );
+        mComponentManager->updateComponent(entityID, newValue);
+        mSystemManager->handleEntityUpdatedBySystem<TSystem>(
+            entityID,
+            mComponentManager->getSignature(entityID),
+            mComponentManager->getComponentType(newValue.at("type"))
         );
     }
 

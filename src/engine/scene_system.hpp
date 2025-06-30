@@ -51,7 +51,6 @@ namespace ToyMakersEngine {
 
         template <typename TComponent>
         void addComponent(const TComponent& component, const bool bypassSceneActivityCheck=false);
-
         void addComponent(const nlohmann::json& jsonComponent, const bool bypassSceneActivityCheck=false);
 
         template <typename TComponent>
@@ -59,9 +58,15 @@ namespace ToyMakersEngine {
 
         template <typename TComponent>
         bool hasComponent() const;
+        bool hasComponent(const std::string& type) const;
 
         template <typename TComponent>
         void updateComponent(const TComponent& component);
+        void updateComponent(const nlohmann::json& component);
+
+        template <typename TComponent>
+        void addOrUpdateComponent(const TComponent& component, const bool bypassSceneActivityCheck=false);
+        void addOrUpdateComponent(const nlohmann::json& component, const bool bypassSceneActivityCheck=false);
 
         template <typename TComponent>
         void removeComponent();
@@ -105,8 +110,11 @@ namespace ToyMakersEngine {
         std::shared_ptr<SceneNodeCore> removeNode(const std::string& where);
         std::vector<std::shared_ptr<SceneNodeCore>> removeChildren();
         std::string getName() const;
+        void setName(const std::string& name);
         std::string getViewportLocalPath() const;
 
+        // TODO: Think of a safer way to accomplish this
+        inline void setPrototype_(std::shared_ptr<SceneNodeCore> prototype) { mPrototype=prototype; }
     protected:
 
         virtual void joinWorld(ECSWorld& world);
@@ -163,6 +171,10 @@ namespace ToyMakersEngine {
         std::weak_ptr<ViewportNode> mParentViewport {};
         std::unordered_map<std::string, std::size_t> mChildNameToNode {};
         std::vector<std::shared_ptr<SceneNodeCore>> mChildren {};
+
+        // Allows a prototype scene node to be retained as a resource so long
+        // as the scene it was used to create continues to exist
+        std::shared_ptr<SceneNodeCore> mPrototype { nullptr };
 
         Signature mSystemMask {Signature{}.set()};
 
@@ -604,6 +616,15 @@ namespace ToyMakersEngine {
     template <typename TComponent>
     void SceneNodeCore::updateComponent(const TComponent& component) {
         mEntity->updateComponent<TComponent>(component);
+    }
+
+    template <typename TComponent>
+    void SceneNodeCore::addOrUpdateComponent(const TComponent& component, const bool bypassSceneActivityCheck) {
+        if(!hasComponent<TComponent>()) {
+            addComponent<TComponent>(component, bypassSceneActivityCheck);
+            return;
+        }
+        updateComponent<TComponent>(component);
     }
 
     template <typename TComponent>

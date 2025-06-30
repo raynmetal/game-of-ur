@@ -146,7 +146,14 @@ void Material::releaseResource() {
 
 std::shared_ptr<IResource> MaterialFromDescription::createResource(const nlohmann::json& methodParameters) {
     std::shared_ptr<Material> material {std::make_shared<Material>()};
-    for(const nlohmann::json& property: methodParameters.at("properties").get<std::vector<nlohmann::json>>()) {
+    Material::ApplyOverrides(methodParameters.at("properties"), material);
+    return material;
+}
+
+std::shared_ptr<Material> Material::ApplyOverrides(const nlohmann::json& materialOverrides, std::shared_ptr<Material> material) {
+    assert(material != nullptr && "Must pass a valid shared pointer to a Material");
+    assert(materialOverrides.is_array() && "Material overrides must be an array");
+    for(const nlohmann::json& property: materialOverrides) {
         std::string propertyName { property.at("name").get<std::string>() };
         std::string propertyType { property.at("type").get<std::string>() };
 

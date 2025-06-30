@@ -43,6 +43,15 @@ APP_TARGET := application
 ####   READ-ONLY, DO NOT MODIFY  ####
 #====================================
 
+# Per the stack overflow answer here: https://stackoverflow.com/a/18258352
+# - `parameter 2` in foreach is a list of files and dirs present in the current dir (or one 
+# specified by the user), provided as the `argument 1` of rwildcard or in later iterations
+# one of its subdirectories
+# - `parameter 3` calls rwildcard on each file and directory on the list.  The second part
+# of `parameter 3` essentially just prints the current item, so long as it matches
+# the pattern provided in `argument 2` of rwildcard
+rwildcard=$(foreach d,$(wildcard $(1:=/*)),$(call rwildcard,$d,$2) $(filter $(subst *,%,$2),$d)) 
+
 APP_EXECUTABLE := $(TARGET_BIN_DIR)/$(APP_TARGET).exe
 ENGINE_SHARED_LIB_TARGETS := $(TARGET_BIN_DIR)/$(ENGINE_TARGET_BASE).dll $(TARGET_LIB_DIR)/lib$(ENGINE_TARGET_BASE).dll.a
 ENGINE_STATIC_LIB_TARGETS := $(TARGET_LIB_DIR)/lib$(ENGINE_TARGET_BASE).a
@@ -51,13 +60,13 @@ ENGINE_TARGET := $(ENGINE_STATIC_LIB_TARGETS)
 ENGINE_LIB := $(patsubst lib%.a,%,$(notdir $(filter %.a,$(ENGINE_TARGET))))
 ENGINE_HEADERS := \
 	$(patsubst $(SRC_DIR)/$(ENGINE_SRC_DIR)/%,$(TARGET_INCLUDE_DIR)/$(ENGINE_SRC_DIR)/%, \
-		$(wildcard $(SRC_DIR)/$(ENGINE_SRC_DIR)/*.hpp $(SRC_DIR)/$(ENGINE_SRC_DIR)/**/*.hpp) \
+		$(call rwildcard,$(SRC_DIR),$(ENGINE_SRC_DIR),*.hpp) \
 	)
-ENGINE_SOURCES := $(wildcard $(SRC_DIR)/$(ENGINE_SRC_DIR)/*.cpp $(SRC_DIR)/$(ENGINE_SRC_DIR)/**/*.cpp)
+ENGINE_SOURCES := $(call rwildcard,$(SRC_DIR)/$(ENGINE_SRC_DIR),*.cpp)
 ENGINE_OBJS := $(patsubst $(SRC_DIR)/$(ENGINE_SRC_DIR)/%.cpp,$(OBJ_DIR)/$(ENGINE_SRC_DIR)/%.o,$(ENGINE_SOURCES))
 
-APP_HEADERS := $(filter-out $(SRC_DIR)/$(ENGINE_SRC_DIR)/%, $(wildcard $(SRC_DIR)/*.hpp $(SRC_DIR)/**/*.hpp))
-APP_SOURCES := $(filter-out $(SRC_DIR)/$(ENGINE_SRC_DIR)/%, $(wildcard $(SRC_DIR)/*.cpp $(SRC_DIR)/**/*.cpp))
+APP_HEADERS := $(filter-out $(ENGINE_HEADERS), $(call rwildcard,$(SRC_DIR),*.hpp))
+APP_SOURCES := $(filter-out $(ENGINE_SOURCES), $(call rwildcard,$(SRC_DIR),*.cpp))
 APP_OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(APP_SOURCES))
 
 REQUIRED_SUBDIRS := $(dir $(ENGINE_HEADERS) $(ENGINE_OBJS) $(APP_OBJS))

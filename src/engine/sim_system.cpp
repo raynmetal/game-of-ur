@@ -126,13 +126,29 @@ void SimObject::addAspect(const BaseSimObjectAspect& aspect) {
     mSimObjectAspects.at(aspectType)->attach(this);
 }
 
+void SimObject::addOrReplaceAspect(const BaseSimObjectAspect& aspect) {
+    const std::string& aspectType { aspect.getAspectTypeName() };
+    if(mSimObjectAspects.find(aspectType) != mSimObjectAspects.end()) {
+        removeAspect(aspectType);
+    }
+    addAspect(aspect);
+}
+
 void SimObject::addAspect(const nlohmann::json& jsonAspectProperties) {
     const std::string& aspectType { jsonAspectProperties.at("type").get<std::string>() };
+    std::shared_ptr<BaseSimObjectAspect> newAspect { getWorld().lock()->getSystem<SimSystem>()->constructAspect(jsonAspectProperties) };
     mSimObjectAspects.try_emplace(
         aspectType,
-        getWorld().lock()->getSystem<SimSystem>()->constructAspect(jsonAspectProperties)
+        newAspect
     );
     mSimObjectAspects.at(aspectType)->attach(this);
+}
+void SimObject::addOrReplaceAspect(const nlohmann::json& jsonAspectProperties) {
+    const std::string& aspectType { jsonAspectProperties.at("type").get<std::string>() };
+    if(mSimObjectAspects.find(aspectType) != mSimObjectAspects.end()) {
+        removeAspect(aspectType);
+    }
+    addAspect(jsonAspectProperties);
 }
 
 bool SimObject::hasAspect(const std::string& aspectType) const {
@@ -174,6 +190,14 @@ void BaseSimObjectAspect::addAspect(const BaseSimObjectAspect& aspect) {
 void BaseSimObjectAspect::addAspect(const nlohmann::json& jsonAspectProperties) {
     mSimObject->addAspect(jsonAspectProperties);
 }
+
+void BaseSimObjectAspect::addOrReplaceAspect(const BaseSimObjectAspect& aspect) {
+    mSimObject->addAspect(aspect);
+}
+void BaseSimObjectAspect::addOrReplaceAspect(const nlohmann::json& jsonAspectProperties) {
+    mSimObject->addAspect(jsonAspectProperties);
+}
+
 BaseSimObjectAspect& BaseSimObjectAspect::getAspect(const std::string& aspectType) {
     return mSimObject->getAspect(aspectType);
 }

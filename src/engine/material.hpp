@@ -15,6 +15,8 @@ namespace ToyMakersEngine {
 
     class Material : public Resource<Material> {
     public:
+        static std::shared_ptr<Material> ApplyOverrides(const nlohmann::json& materialOverrides, std::shared_ptr<Material> material=std::shared_ptr<Material>(new Material{}));
+
         virtual ~Material();
         Material();
 

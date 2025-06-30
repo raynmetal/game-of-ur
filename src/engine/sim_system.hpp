@@ -84,6 +84,9 @@ namespace ToyMakersEngine{
         template <typename TInterface>
         bool hasAspectWithInterface() const;
 
+        void addOrReplaceAspect(const BaseSimObjectAspect& simObjectAspect);
+        void addOrReplaceAspect(const nlohmann::json& jsonAspectProperties);
+
         template <typename TSimObjectAspect>
         TSimObjectAspect& getAspect();
         BaseSimObjectAspect& getAspect(const std::string& aspectType);
@@ -173,7 +176,7 @@ namespace ToyMakersEngine{
         template <typename TComponent>
         void updateComponent(const TComponent& component);
         template <typename TComponent>
-        TComponent getComponent(const float simulationProgress=1.f);
+        TComponent getComponent(const float simulationProgress=1.f) const;
         template <typename TComponent>
         void removeComponent();
 
@@ -187,6 +190,9 @@ namespace ToyMakersEngine{
         BaseSimObjectAspect& getAspect(const std::string& aspectType);
         template <typename TSimObjectAspect>
         void removeAspect();
+
+        void addOrReplaceAspect(const BaseSimObjectAspect& aspect);
+        void addOrReplaceAspect(const nlohmann::json& jsonAspectProperties);
 
         std::weak_ptr<FixedActionBinding> declareFixedActionBinding(const std::string& context, const std::string& action, std::function<bool(const ActionData&, const ActionDefinition&)>);
         EntityID getEntityID() const;
@@ -286,7 +292,7 @@ namespace ToyMakersEngine{
         mSimObject->updateComponent<TComponent>(component);
     }
     template <typename TComponent>
-    TComponent BaseSimObjectAspect::getComponent(const float simulationProgress) {
+    TComponent BaseSimObjectAspect::getComponent(const float simulationProgress) const {
         return mSimObject->getComponent<TComponent>(simulationProgress);
     }
     template <typename TComponent>

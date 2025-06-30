@@ -169,6 +169,7 @@ void GeometryRenderStage::setup(const glm::u16vec2& textureDimensions) {
     Material::RegisterIntProperty("usesTextureAlbedo", false);
     Material::RegisterIntProperty("usesTextureSpecular", false);
     Material::RegisterIntProperty("usesTextureNormal", false);
+    Material::RegisterVec4Property("colorMultiplier", glm::vec4{1.f, 1.f, 1.f, 1.f});
 }
 
 void GeometryRenderStage::validate() {
@@ -253,6 +254,10 @@ void GeometryRenderStage::execute() {
                 mShaderHandle->setUBool(
                     "uMaterial.mUsingNormalMap", 
                     first.mMaterialHandle->getIntProperty("usesTextureNormal")
+                );
+
+                mShaderHandle->setUVec4("uMaterial.mColorMultiplier",
+                    first.mMaterialHandle->getVec4Property("colorMultiplier")
                 );
 
                 glDrawElementsInstanced(

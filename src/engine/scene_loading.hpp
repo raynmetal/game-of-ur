@@ -35,6 +35,9 @@ namespace ToyMakersEngine {
         std::shared_ptr<SimObject> loadSceneNodes(const nlohmann::json& nodeList);
         void loadConnections(const nlohmann::json& connectionList, std::shared_ptr<SceneNodeCore> localRoot);
 
+        void overrideComponents(std::shared_ptr<SimObject> node, const nlohmann::json& componentList);
+        void overrideAspects(std::shared_ptr<SimObject> node, const nlohmann::json& aspectList);
+
         std::shared_ptr<IResource> createResource(const nlohmann::json& methodParams) override;
     };
 

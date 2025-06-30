@@ -120,6 +120,23 @@ void SceneNodeCore::addComponent(const nlohmann::json& jsonComponent, const bool
     }
 }
 
+bool SceneNodeCore::hasComponent(const std::string& typeName) const {
+    return mEntity->hasComponent(typeName);
+}
+
+void SceneNodeCore::updateComponent(const nlohmann::json& jsonComponent) {
+    mEntity->updateComponent(jsonComponent);
+}
+
+void SceneNodeCore::addOrUpdateComponent(const nlohmann::json& jsonComponent, const bool bypassSceneActivityCheck) {
+    if(!hasComponent(jsonComponent.at("type"))) {
+        addComponent(jsonComponent, bypassSceneActivityCheck);
+        return;
+    }
+    updateComponent(jsonComponent);
+}
+
+
 bool SceneNodeCore::detectCycle(std::shared_ptr<SceneNodeCore> node) {
     if(!node) return false;
 
@@ -152,9 +169,15 @@ bool SceneNodeCore::isAncestorOf(std::shared_ptr<const SceneNodeCore> sceneNode)
     return static_cast<bool>(currentNode);
 }
 
+void SceneNodeCore::setName(const std::string& name) {
+    validateName(name);
+    mName = name;
+}
+
 std::string SceneNodeCore::getName() const {
     return mName;
 }
+
 std::string SceneNodeCore::getViewportLocalPath() const {
     return getPathFromAncestor(getLocalViewport());
 }
@@ -880,13 +903,11 @@ bool ViewportNode::handleAction(std::pair<ActionDefinition, ActionData> pendingA
         pendingAction.second.mTwoAxisActionData.mValue = static_cast<glm::vec2>(inputToViewportTransform * glm::vec3{pendingAction.second.mTwoAxisActionData.mValue, 1.f});
     }
 
-    if(mRenderConfiguration.mRenderType != RenderConfiguration::RenderType::ADDITION) {
-        return mActionDispatch.dispatchAction(pendingAction);
-    }
-
-    if(!mActionFlowthrough) return false;
-
     bool actionHandled { false };
+    actionHandled =  mActionDispatch.dispatchAction(pendingAction);
+
+    if(!mActionFlowthrough) return actionHandled;
+
     for(std::shared_ptr<ViewportNode> child: mChildViewports) {
         if(child->isActive()) {
             bool childHandledAction { child->handleAction(pendingAction) };
