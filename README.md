@@ -40,3 +40,4 @@ This program makes extensive use of the following libraries:
 - [GLEW](https://github.com/nigels-com/glew)
 - [Nlohmann JSON](https://json.nlohmann.me/)
 - [GLM](https://github.com/g-truc/glm)
+- [Assimp](https://github.com/assimp/assimp)
