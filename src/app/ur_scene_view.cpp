@@ -88,19 +88,15 @@ void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
         mMode = Mode::GENERAL;
         std::cout << "UrSceneView: Attempting to launch swallow to " << glm::to_string(boardLocation) << "\n";
         mSigLaunchPieceAttempted.emit(
-            getModel().getCurrentPlayer().mPlayer,
-            {
-                .mType { PieceTypeID::SWALLOW },
-                .mOwner { getModel().getCurrentPlayer().mRole }
-            },
+            PieceTypeID::SWALLOW,
             boardLocation
         );
         return;
     }
 
-    const PieceIdentity selectedPiece { houseData.mOccupant };
+    const PieceIdentity& selectedPiece { houseData.mOccupant };
     if(houseData.mOccupant.mOwner != RoleID::NA) {
-        mSigMovePieceAttempted.emit(getModel().getCurrentPlayer().mPlayer, selectedPiece);
+        mSigMovePieceAttempted.emit(selectedPiece);
     }
 }
 
@@ -112,7 +108,7 @@ void UrSceneView::onLaunchPieceInitiated(PieceTypeID pieceType) {
         .mOwner{ getModel().getCurrentPlayer().mRole },
     };
 
-    const std::vector<glm::u8vec2> launchPositions { getModel().getLaunchPositions(pieceIdentity)};
+    const std::vector<glm::u8vec2> launchPositions { getModel().getLaunchPositions(pieceIdentity) };
     assert(launchPositions.size() && "Every piece must have at least one launch position associated with it");
     if(launchPositions.size() > 1) {
         std::cout << "UrSceneView: Switched to launch position selection mode\n";
@@ -123,8 +119,7 @@ void UrSceneView::onLaunchPieceInitiated(PieceTypeID pieceType) {
     mMode = Mode::GENERAL;
     const glm::u8vec2 launchLocation { launchPositions[0] };
     mSigLaunchPieceAttempted.emit(
-        getModel().getCurrentPlayer().mPlayer,
-        pieceIdentity,
+        pieceType,
         launchLocation
     );
 }

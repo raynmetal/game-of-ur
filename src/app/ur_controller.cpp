@@ -4,18 +4,23 @@
 
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrController::create(const nlohmann::json& jsonAspectProperties) {
-    std::shared_ptr<UrController> controller { std::make_shared<UrController>() };
+    std::shared_ptr<UrController> controller { new UrController{} };
     return controller;
 }
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrController::clone() const {
-    return std::make_shared<UrController>();
+    return std::shared_ptr<UrController>( new UrController {} );
 }
 
 void UrController::onActivated() {
     mSigScoreUpdated.emit(mModel.getScore());
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
     mSigDiceUpdated.emit(mModel.getDiceData());
+}
+
+std::unique_ptr<UrPlayerControls> UrController::createControls() {
+    assert(mControlsCreated < 2 && "There can be no more than 2 player controls in existence created by this controller");
+    return UrPlayerControls::create(static_cast<PlayerID>(mControlsCreated++), *this);
 }
 
 void UrController::onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, glm::u8vec2 launchLocation) {
@@ -74,4 +79,18 @@ void UrController::onDiceRollAttempted(PlayerID player) {
     mModel.rollDice(player);
     mSigDiceUpdated.emit(mModel.getDiceData());
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
+}
+
+void UrPlayerControls::attemptDiceRoll() {
+    mUrController.onDiceRollAttempted(mPlayer);
+}
+void UrPlayerControls::attemptLaunchPiece(PieceTypeID pieceType, glm::u8vec2 launchLocation) {
+    const PieceIdentity piece { .mType { pieceType }, .mOwner { mUrController.getModel().getPlayerData(mPlayer).mRole } };
+    mUrController.onLaunchPieceAttempted(mPlayer, piece, launchLocation);
+}
+void UrPlayerControls::attemptMoveBoardPiece(PieceIdentity piece) {
+    mUrController.onMoveBoardPieceAttempted(mPlayer, piece);
+}
+void UrPlayerControls::attemptNextTurn() {
+    mUrController.onNextTurnAttempted(mPlayer);
 }

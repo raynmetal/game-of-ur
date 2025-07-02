@@ -61,6 +61,63 @@
         },
 
         {
+            "components": [
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                }
+            ],
+            "aspects": [ { "type": "UrPlayerLocal", "controller_path": "/scene_root/" } ],
+            "name": "player_local_a",
+            "parent": "/",
+            "type": "SimObject"
+        },
+        {
+            "components": [
+                {
+                    "orientation": [
+                        1.0,
+                        0.0,
+                        0.0,
+                        0.0
+                    ],
+                    "position": [
+                        0.0,
+                        0.0,
+                        0.0,
+                        1.0
+                    ],
+                    "scale": [
+                        1.0,
+                        1.0,
+                        1.0
+                    ],
+                    "type": "Placement"
+                }
+            ],
+            "aspects": [ { "type": "UrPlayerLocal", "controller_path": "/scene_root/" } ],
+            "name": "player_local_b",
+            "parent": "/",
+            "type": "SimObject"
+        },
+
+        {
             "type": "Scene",
             "name": "Game_Of_Ur_UI",
             "parent": "/",
@@ -79,7 +136,7 @@
         {
             "from": "/@UrController", "signal": "MoveMade",
             "to": "/scene_root_3D/@UrSceneView", "observer": "MoveMadeObserved"
-        }, 
+        },
         {
             "from": "/@UrController", "signal": "MoveMade",
             "to": "/ui_root/@UrUIView", "observer": "MoveMadeObserved"
@@ -102,19 +159,35 @@
         },
 
         {
-            "to": "/@UrController", "observer": "NextTurnAttemptedObserved",
+            "to": "/player_local_a/@UrPlayerLocal", "observer": "NextTurnAttemptedObserved",
             "from": "/ui_root/@UrUIView", "signal": "NextTurnAttempted"
         },
         {
-            "to": "/@UrController", "observer": "DiceRollAttemptedObserved",
+            "to": "/player_local_b/@UrPlayerLocal", "observer": "NextTurnAttemptedObserved",
+            "from": "/ui_root/@UrUIView", "signal": "NextTurnAttempted"
+        },
+        {
+            "to": "/player_local_a/@UrPlayerLocal", "observer": "DiceRollAttemptedObserved",
             "from": "/ui_root/@UrUIView", "signal": "DiceRollAttempted"
         },
         {
-            "to": "/@UrController", "observer": "MovePieceAttemptedObserved",
+            "to": "/player_local_b/@UrPlayerLocal", "observer": "DiceRollAttemptedObserved",
+            "from": "/ui_root/@UrUIView", "signal": "DiceRollAttempted"
+        },
+        {
+            "to": "/player_local_a/@UrPlayerLocal", "observer": "MovePieceAttemptedObserved",
             "from": "/scene_root_3D/@UrSceneView", "signal": "MovePieceAttempted"
         },
         {
-            "to": "/@UrController", "observer": "LaunchPieceAttemptedObserved",
+            "to": "/player_local_b/@UrPlayerLocal", "observer": "MovePieceAttemptedObserved",
+            "from": "/scene_root_3D/@UrSceneView", "signal": "MovePieceAttempted"
+        },
+        {
+            "to": "/player_local_a/@UrPlayerLocal", "observer": "LaunchPieceAttemptedObserved",
+            "from": "/scene_root_3D/@UrSceneView", "signal": "LaunchPieceAttempted"
+        },
+        {
+            "to": "/player_local_b/@UrPlayerLocal", "observer": "LaunchPieceAttemptedObserved",
             "from": "/scene_root_3D/@UrSceneView", "signal": "LaunchPieceAttempted"
         },
 

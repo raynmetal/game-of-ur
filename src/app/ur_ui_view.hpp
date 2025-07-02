@@ -74,8 +74,8 @@ public:
         [this](MoveResultData moveData) { this->onMoveMade(moveData); }
     };
 
-    ToyMakersEngine::Signal<PlayerID> mSigDiceRollAttempted { *this, "DiceRollAttempted" };
-    ToyMakersEngine::Signal<PlayerID> mSigNextTurnAttempted { *this, "NextTurnAttempted" };
+    ToyMakersEngine::Signal<> mSigDiceRollAttempted { *this, "DiceRollAttempted" };
+    ToyMakersEngine::Signal<> mSigNextTurnAttempted { *this, "NextTurnAttempted" };
     ToyMakersEngine::Signal<PieceTypeID> mSigLaunchPieceInitiated { *this, "LaunchPieceInitiated" };
     ToyMakersEngine::Signal<> mSigLaunchPieceCanceled { *this, "LaunchPieceCanceled" };
 };
