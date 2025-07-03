@@ -43,11 +43,14 @@ friend class UrPlayerControls;
 
 class UrPlayerControls {
 public:
+    inline PlayerID getPlayer() const { return mPlayer; }
+
     void attemptLaunchPiece(PieceTypeID pieceType, glm::u8vec2 launchLocation=glm::u8vec2{0,0});
     void attemptMoveBoardPiece(PieceIdentity piece);
     void attemptNextTurn();
     void attemptDiceRoll();
 
+    inline const GameOfUrModel& getModel() { return mUrController.getModel(); }
 private:
     inline static std::unique_ptr<UrPlayerControls> create(PlayerID player, UrController& urController) {
         return std::unique_ptr<UrPlayerControls>(new UrPlayerControls{ player, urController });
