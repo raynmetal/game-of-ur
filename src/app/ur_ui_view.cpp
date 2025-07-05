@@ -56,11 +56,11 @@ void UrUIView::onButtonClicked(const std::string& button) {
             break;
         case DICE:
             std::cout << "dice roll attempted\n";
-            mSigDiceRollAttempted.emit(getModel().getCurrentPlayer().mPlayer);
+            mSigDiceRollAttempted.emit();
             break;
         case NEXT_TURN:
             std::cout << "next turn clicked\n";
-            mSigNextTurnAttempted.emit(getModel().getCurrentPlayer().mPlayer);
+            mSigNextTurnAttempted.emit();
             break;
     }
 }

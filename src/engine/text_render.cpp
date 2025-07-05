@@ -87,3 +87,51 @@ std::shared_ptr<Texture> TextFont::renderText(
 
     return std::make_shared<Texture>(texture, colorBufferDefinition, "");
 }
+
+std::shared_ptr<Texture> TextFont::renderText(const std::string& text, glm::u8vec4 textColor) const {
+    SDL_Surface* renderedText { TTF_RenderUTF8_Solid(
+        mFont, 
+        text.c_str(),
+        SDL_Color{
+            .r { textColor.r },
+            .g { textColor.g },
+            .b { textColor.b },
+            .a { textColor.a }
+        }
+    )};
+    ColorBufferDefinition colorBufferDefinition {
+        .mDataType { GL_UNSIGNED_BYTE },
+        .mComponentCount { 4 },
+        .mUsesWebColors { true }
+    };
+    SDL_Surface* pretexture { SDL_ConvertSurfaceFormat(renderedText, SDL_PIXELFORMAT_RGBA32, 0) };
+    SDL_FreeSurface(renderedText);
+    renderedText = nullptr;
+    assert(pretexture && "Could not convert SDL image to known image format");
+
+    // Move surface pixels to the graphics card
+    GLuint texture;
+    colorBufferDefinition.mDimensions = {pretexture->w, pretexture->h};
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_2D, texture);
+    glTexImage2D(GL_TEXTURE_2D, 0,
+        deduceInternalFormat(colorBufferDefinition),
+        colorBufferDefinition.mDimensions.x, colorBufferDefinition.mDimensions.y,
+        0, GL_RGBA, GL_UNSIGNED_BYTE,
+        reinterpret_cast<void*>(pretexture->pixels)
+    );
+    SDL_FreeSurface(pretexture);
+    pretexture = nullptr;
+
+    // Check for OpenGL errors
+    GLuint error { glGetError() };
+    assert(error == GL_NO_ERROR && "An error occurred during allocation of openGL texture");
+
+    // Configure a few texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, colorBufferDefinition.mWrapS);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, colorBufferDefinition.mWrapT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, colorBufferDefinition.mMinFilter);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, colorBufferDefinition.mMagFilter);
+
+    return std::make_shared<Texture>(texture, colorBufferDefinition, "");
+}

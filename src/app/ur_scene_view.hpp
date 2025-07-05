@@ -38,6 +38,7 @@ private:
     void onMoveMade(const MoveResultData& moveResultData);
 
     void onActivated() override;
+
 public:
     ToyMakersEngine::SignalObserver<glm::u8vec2> mObserveBoardClicked { 
         *this, "BoardClickedObserved",
@@ -56,10 +57,10 @@ public:
         [this](const MoveResultData& moveResultData) { this->onMoveMade(moveResultData); }
     };
 
-    ToyMakersEngine::Signal<PlayerID, PieceIdentity, glm::u8vec2> mSigLaunchPieceAttempted {
+    ToyMakersEngine::Signal<PieceTypeID, glm::u8vec2> mSigLaunchPieceAttempted {
         *this, "LaunchPieceAttempted"
     };
-    ToyMakersEngine::Signal<PlayerID, PieceIdentity> mSigMovePieceAttempted {
+    ToyMakersEngine::Signal<PieceIdentity> mSigMovePieceAttempted {
         *this, "MovePieceAttempted"
     };
 };

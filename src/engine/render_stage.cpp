@@ -194,7 +194,7 @@ void GeometryRenderStage::execute() {
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LESS);
     glDisable(GL_BLEND);
-    glDisable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_FRAMEBUFFER_SRGB);
 
     mFramebufferHandle->bind();
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -401,8 +401,6 @@ void SkyboxRenderStage::setup(const glm::u16vec2& textureDimensions) {
     mFramebufferHandle = ResourceDatabase::ConstructAnonymousResource<Framebuffer>(framebufferDescription);
     mRenderTargets.clear();
     declareRenderTarget("litSceneWithSkybox", 0);
-
-
 }
 
 void SkyboxRenderStage::validate() {
@@ -422,7 +420,7 @@ void SkyboxRenderStage::execute() {
 
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-    glDisable(GL_FRAMEBUFFER_SRGB);
+    glEnable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_BLEND);
 
     mFramebufferHandle->bind();
@@ -543,7 +541,7 @@ void TonemappingRenderStage::setup(const glm::u16vec2& textureDimensions) {
     mFramebufferHandle = ResourceDatabase::ConstructAnonymousResource<Framebuffer>(framebufferDescription);
 
     Material::RegisterFloatProperty("exposure", 1.f);
-    Material::RegisterFloatProperty("gamma", 2.2f);
+    Material::RegisterFloatProperty("gamma", 2.4f);
     Material::RegisterIntProperty("combine", true);
 
     mRenderTargets.clear();
@@ -690,7 +688,7 @@ void ScreenRenderStage::execute() {
     useViewport();
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glDisable(GL_BLEND);
-    glEnable(GL_FRAMEBUFFER_SRGB);
+    glDisable(GL_FRAMEBUFFER_SRGB);
     glDisable(GL_DEPTH_TEST);
     glClear(GL_COLOR_BUFFER_BIT);
     glBindVertexArray(mVertexArrayObject);

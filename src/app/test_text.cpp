@@ -71,7 +71,7 @@ void TestText::updateFont(const std::string& fontResourceName) {
 }
 
 void TestText::recomputeTexture() {
-    std::shared_ptr<ToyMakersEngine::Texture> textTexture { mFont->renderText(mText, glm::u8vec3 {0x0}, glm::u8vec3 {0xFF}) };
+    std::shared_ptr<ToyMakersEngine::Texture> textTexture { mFont->renderText(mText, glm::u8vec4 {0x0,0x0,0x0,0xFF}) };
     const glm::vec2 textDimensions { textTexture->getWidth() * mScale, textTexture->getHeight() * mScale };
     const nlohmann::json rectangleParameters = { 
         {"type", ToyMakersEngine::StaticModel::getResourceTypeName()},
