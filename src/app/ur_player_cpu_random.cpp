@@ -22,7 +22,7 @@ void PlayerCPURandom::onActivated() {
     assert(mControls && "We should have controls assigned now");
 }
 
-void PlayerCPURandom::onPhaseUpdated(GamePhaseData phaseData) {
+void PlayerCPURandom::onMovePrompted(GamePhaseData phaseData) {
     // If it isn't our turn to take an action, do nothing
     if(
         phaseData.mGamePhase == GamePhase::END

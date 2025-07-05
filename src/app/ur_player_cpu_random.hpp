@@ -22,9 +22,9 @@ private:
     std::default_random_engine mRandomEngine { mRandomDevice() };
 
     void onActivated() override;
-    void onPhaseUpdated(GamePhaseData phaseData);
+    void onMovePrompted(GamePhaseData phaseData);
 
-    ToyMakersEngine::SignalObserver<GamePhaseData> mObservePhaseUpdated { *this, "PhaseUpdatedObserved", [this](GamePhaseData phaseData) { this->onPhaseUpdated(phaseData); }};
+    ToyMakersEngine::SignalObserver<GamePhaseData> mObserveMovePrompted { *this, "MovePromptedObserved", [this](GamePhaseData phaseData) { this->onMovePrompted(phaseData); }};
 public:
 };
 

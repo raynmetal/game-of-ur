@@ -38,6 +38,7 @@ public:
     ToyMakersEngine::Signal<DiceData> mSigDiceUpdated { *this, "DiceUpdated" };
     ToyMakersEngine::Signal<MoveResultData> mSigMoveMade { *this, "MoveMade" };
 
+    ToyMakersEngine::Signal<GamePhaseData> mSigMovePrompted { *this, "MovePrompted" };
 friend class UrPlayerControls;
 };
 

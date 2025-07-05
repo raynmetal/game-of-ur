@@ -146,8 +146,8 @@
             "to": "/ui_root/@UrUIView", "observer": "PhaseUpdatedObserved"
         },
         {
-            "from": "/@UrController", "signal": "PhaseUpdated",
-            "to": "/player_local_b/@UrPlayerCPURandom", "observer": "PhaseUpdatedObserved"
+            "from": "/@UrController", "signal": "MovePrompted",
+            "to": "/player_local_b/@UrPlayerCPURandom", "observer": "MovePromptedObserved"
         },
         {
             "from": "/@UrController", "signal": "ScoreUpdated",

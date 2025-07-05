@@ -16,6 +16,8 @@ void UrController::onActivated() {
     mSigScoreUpdated.emit(mModel.getScore());
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
     mSigDiceUpdated.emit(mModel.getDiceData());
+
+    mSigMovePrompted.emit(mModel.getCurrentPhase());
 }
 
 std::unique_ptr<UrPlayerControls> UrController::createControls() {
@@ -36,6 +38,8 @@ void UrController::onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, 
     mSigPlayerUpdated.emit(mModel.getPlayerData(moveResults.mMovedPiece.mIdentity.mOwner));
     mSigMoveMade.emit(moveResults);
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
+
+    mSigMovePrompted.emit(mModel.getCurrentPhase());
 }
 
 void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piece) {
@@ -53,6 +57,8 @@ void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piec
     }
     mSigMoveMade.emit(moveResults);
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
+
+    mSigMovePrompted.emit(mModel.getCurrentPhase());
 }
 
 void UrController::onNextTurnAttempted(PlayerID player) {
@@ -66,11 +72,15 @@ void UrController::onNextTurnAttempted(PlayerID player) {
 
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
     mSigDiceUpdated.emit(mModel.getDiceData());
-    if(canAdvanceOneTurn) { return; }
 
-    mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_A));
-    mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_B));
-    mSigScoreUpdated.emit(mModel.getScore());
+    // We've started the play phase; scores and player data must be updated
+    if(!canAdvanceOneTurn) {
+        mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_A));
+        mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_B));
+        mSigScoreUpdated.emit(mModel.getScore());
+    }
+
+    mSigMovePrompted.emit(mModel.getCurrentPhase());
 }
 
 void UrController::onDiceRollAttempted(PlayerID player) {
@@ -79,6 +89,7 @@ void UrController::onDiceRollAttempted(PlayerID player) {
     mModel.rollDice(player);
     mSigDiceUpdated.emit(mModel.getDiceData());
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
+    mSigMovePrompted.emit(mModel.getCurrentPhase());
 }
 
 void UrPlayerControls::attemptDiceRoll() {
