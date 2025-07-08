@@ -1,5 +1,24 @@
 {
-    "resources": [],
+    "resources": [
+        {
+            "name": "Bad_Panel_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_panel.png",
+                "cubemap_layout": "row"
+            }
+        },
+        {
+            "name": "Bad_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Panel_Texture",
+                "content_region": [ 0.25, 0.25, 0.484375, 0.40625 ]
+            }
+        }
+    ],
     "nodes": [
         {
             "name": "ui_root",
@@ -296,7 +315,27 @@
                 }
             ]
         },
-
+        {
+            "name": "bad_panel",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 320.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "Panel",
+                    "panel_resource_name": "Bad_Panel",
+                    "anchor": [0.5, 0.0],
+                    "content_size": [400, 32]
+                }
+            ]
+        },
         {
             "name": "common_pile",
             "parent": "/viewport_UI/",
