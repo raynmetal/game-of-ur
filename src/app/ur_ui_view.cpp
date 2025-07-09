@@ -4,7 +4,7 @@
 #include "game_of_ur_data/model.hpp"
 
 #include "ur_controller.hpp"
-#include "test_text.hpp"
+#include "ui_text.hpp"
 
 #include "ur_ui_view.hpp"
 
@@ -92,15 +92,15 @@ void UrUIView::onPhaseUpdated(GamePhaseData phase){
             phaseText << "end";
             break;
     }
-    getSimObject().getByPath<TestText&>("/viewport_UI/current_turn/@TestText").updateText(playerText);
-    getSimObject().getByPath<TestText&>("/viewport_UI/phase/@TestText").updateText(phaseText.str());
+    getSimObject().getByPath<UIText&>("/viewport_UI/current_turn/@UIText").updateText(playerText);
+    getSimObject().getByPath<UIText&>("/viewport_UI/phase/@UIText").updateText(phaseText.str());
 }
 
 void UrUIView::onScoreUpdated(GameScoreData score) {
     std::cout << "UrUIView: on score updated\n";
-    getSimObject().getByPath<TestText&>("/viewport_UI/common_pile/@TestText").updateText("common: " + std::to_string(static_cast<int>(score.mCommonPoolCounters)));
-    getSimObject().getByPath<TestText&>("/viewport_UI/one_pile/@TestText").updateText("one: " + std::to_string(static_cast<int>(score.mPlayerOneCounters)));
-    getSimObject().getByPath<TestText&>("/viewport_UI/two_pile/@TestText").updateText("two: " + std::to_string(static_cast<int>(score.mPlayerTwoCounters)));
+    getSimObject().getByPath<UIText&>("/viewport_UI/common_pile/@UIText").updateText("common: " + std::to_string(static_cast<int>(score.mCommonPoolCounters)));
+    getSimObject().getByPath<UIText&>("/viewport_UI/one_pile/@UIText").updateText("one: " + std::to_string(static_cast<int>(score.mPlayerOneCounters)));
+    getSimObject().getByPath<UIText&>("/viewport_UI/two_pile/@UIText").updateText("two: " + std::to_string(static_cast<int>(score.mPlayerTwoCounters)));
 }
 
 void UrUIView::onPlayerUpdated(PlayerData player) {
@@ -121,7 +121,7 @@ void UrUIView::onDiceUpdated(DiceData dice) {
             displayString = "final roll " + std::to_string(static_cast<int>(dice.mResultScore));
             break;
     }
-    getSimObject().getByPath<TestText&>("/viewport_UI/dice_roll/@TestText").updateText(displayString);
+    getSimObject().getByPath<UIText&>("/viewport_UI/dice_roll/@UIText").updateText(displayString);
 }
 
 void UrUIView::onMoveMade(MoveResultData moveData) {

@@ -1,14 +1,14 @@
-#ifndef ZOAPPPANEL_H
-#define ZOAPPPANEL_H
+#ifndef ZOAPPUIPANEL_H
+#define ZOAPPUIPANEL_H
 
 #include "../engine/sim_system.hpp"
 
 #include "nine_slice_panel.hpp"
 
-class Panel: public ToyMakersEngine::SimObjectAspect<Panel> {
+class UIPanel: public ToyMakersEngine::SimObjectAspect<UIPanel> {
 public:
-    Panel(): SimObjectAspect<Panel>{0} {}
-    inline static std::string getSimObjectAspectTypeName() { return "Panel"; }
+    UIPanel(): SimObjectAspect<UIPanel>{0} {}
+    inline static std::string getSimObjectAspectTypeName() { return "UIPanel"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
 

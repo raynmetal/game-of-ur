@@ -1,7 +1,7 @@
 #include "nine_slice_panel.hpp"
-#include "panel.hpp"
+#include "ui_panel.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> Panel::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIPanel::create(const nlohmann::json& jsonAspectProperties) {
     const std::string panelResourceName {
         jsonAspectProperties.at("panel_resource_name").get<std::string>()
     };
@@ -19,7 +19,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> Panel::create(const nlohma
     };
 
     std::shared_ptr<NineSlicePanel> panel { ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelResourceName) };
-    std::shared_ptr<Panel> panelAspect { std::make_shared<Panel>() };
+    std::shared_ptr<UIPanel> panelAspect { std::make_shared<UIPanel>() };
 
     panelAspect->mBasePanel = panel;
     panelAspect->mContentSize = contentSize;
@@ -28,24 +28,24 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> Panel::create(const nlohma
     return panelAspect;
 }
 
-void Panel::updateContentSize(glm::vec2 contentSize) {
+void UIPanel::updateContentSize(glm::vec2 contentSize) {
     if(contentSize == mContentSize) return;
     mContentSize = contentSize;
     recomputeTexture();
 }
-void Panel::updateAnchor(glm::vec2 anchor) {
+void UIPanel::updateAnchor(glm::vec2 anchor) {
     if(anchor == mAnchor) return;
     mAnchor = anchor;
     recomputeTexture();
 }
-void Panel::updateBasePanel(std::shared_ptr<NineSlicePanel> newPanel) {
+void UIPanel::updateBasePanel(std::shared_ptr<NineSlicePanel> newPanel) {
     if(newPanel == mBasePanel) return;
     mBasePanel = newPanel;
     recomputeTexture();
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> Panel::clone() const {
-    std::shared_ptr<Panel> panelAspect { std::make_shared<Panel>() };
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIPanel::clone() const {
+    std::shared_ptr<UIPanel> panelAspect { std::make_shared<UIPanel>() };
 
     panelAspect->mBasePanel = mBasePanel;
     panelAspect->mContentSize = mContentSize;
@@ -54,11 +54,11 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> Panel::clone() const {
     return panelAspect;
 }
 
-void Panel::onActivated() {
+void UIPanel::onActivated() {
     recomputeTexture();
 }
 
-void Panel::recomputeTexture() {
+void UIPanel::recomputeTexture() {
     std::shared_ptr<ToyMakersEngine::Texture> panelTexture { mBasePanel->generateTexture(mContentSize) };
     const glm::vec2 panelDimensions { panelTexture->getWidth(), panelTexture->getHeight() };
     const nlohmann::json rectangleParameters = {

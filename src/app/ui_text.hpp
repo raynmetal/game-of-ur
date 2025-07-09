@@ -1,13 +1,13 @@
-#ifndef ZOAPPTESTTEXT_H
-#define ZOAPPTESTTEXT_H
+#ifndef ZOAPPUITEXT_H
+#define ZOAPPUITEXT_H
 
 #include "../engine/sim_system.hpp"
 #include "../engine/text_render.hpp"
 
-class TestText: public ToyMakersEngine::SimObjectAspect<TestText> {
+class UIText: public ToyMakersEngine::SimObjectAspect<UIText> {
 public:
-    TestText(): SimObjectAspect<TestText>{0} {}
-    inline static std::string getSimObjectAspectTypeName() { return "TestText"; }
+    UIText(): SimObjectAspect<UIText>{0} {}
+    inline static std::string getSimObjectAspectTypeName() { return "UIText"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
 

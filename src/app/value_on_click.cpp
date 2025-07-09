@@ -2,7 +2,7 @@
 #include <random>
 #include <sstream>
 
-#include "test_text.hpp"
+#include "ui_text.hpp"
 #include "value_on_click.hpp"
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> ValueOnClick::create(const nlohmann::json& jsonAspectProperties) {
