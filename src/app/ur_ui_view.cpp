@@ -5,6 +5,7 @@
 
 #include "ur_controller.hpp"
 #include "ui_text.hpp"
+#include "ui_button.hpp"
 
 #include "ur_ui_view.hpp"
 
@@ -121,7 +122,7 @@ void UrUIView::onDiceUpdated(DiceData dice) {
             displayString = "final roll " + std::to_string(static_cast<int>(dice.mResultScore));
             break;
     }
-    getSimObject().getByPath<UIText&>("/viewport_UI/dice_roll/@UIText").updateText(displayString);
+    getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton").updateText(displayString);
 }
 
 void UrUIView::onMoveMade(MoveResultData moveData) {

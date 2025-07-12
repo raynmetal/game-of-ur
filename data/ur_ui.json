@@ -9,13 +9,93 @@
                 "cubemap_layout": "row"
             }
         },
+
+        {
+            "name": "Bad_Button_Active_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_active.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Hover_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_hover.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Inactive_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_inactive.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Pressed_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_pressed.png"
+            }
+        },
+
         {
             "name": "Bad_Panel",
             "type": "NineSlicePanel",
             "method": "fromDescription",
             "parameters": {
                 "base_texture": "Bad_Panel_Texture",
-                "content_region": [ 0.15625, 0.15625, 0.6875, 0.6875]
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+
+        {
+            "name": "Bad_Button_Active_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Active_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Hover_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Hover_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Inactive_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Inactive_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Pressed_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Pressed_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+
+        {
+            "name": "Ur_Button",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_button.json"
             }
         }
     ],
@@ -113,162 +193,193 @@
         },
 
         {
-            "name": "dice_roll",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, 300.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Roll Dice!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "dice_roll"
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "dice_roll",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -683.0, 300.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Roll Dice!",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "dice_roll",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel"
+                    }
+                ]
+            }
         },
 
         {
-            "name": "launch_swallow",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, 0.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Swallow!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "swallow"
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_swallow",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -683.0, 0.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Sw",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "swallow",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel"
+                    }
+                ]
+            }
         },
         {
-            "name": "launch_storm_bird",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, -32.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Storm Bird!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "storm_bird"
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_storm_bird",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -683.0, -60.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "St",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "storm_bird",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel"
+                    }
+                ]
+            }
         },
         {
-            "name": "launch_raven",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, -64.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Raven!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "raven"
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_raven",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -683.0, -120.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Ra",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "raven",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel"
+                    }
+                ]
+            }
         },
         {
-            "name": "launch_rooster",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, -96.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Rooster!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "rooster"
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_rooster",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -683.0, -180.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Ro",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "rooster",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel"
+                    }
+                ]
+            }
         },
         {
-            "name": "launch_eagle",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, -128.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Eagle!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "eagle"
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_eagle",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -683.0, -240.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Ea",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "eagle",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel"
+                    }
+                ]
+            }
         },
+
 
         {
             "name": "current_turn",
@@ -312,27 +423,6 @@
                     "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0]
-                }
-            ]
-        },
-        {
-            "name": "bad_panel",
-            "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 0.0, 320.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIPanel",
-                    "panel_resource_name": "Bad_Panel",
-                    "anchor": [0.5, 0.0],
-                    "content_size": [400, 32]
                 }
             ]
         },
@@ -406,79 +496,84 @@
         },
 
         {
-            "name": "next_turn",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 683.0, -352.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Next Turn!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [1.0, 1.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "next_turn"
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "next_turn",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 683.0, -352.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Next Turn!",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "scale": 1.0,
+                        "anchor": [1.0, 1.0],
+                        "value": "next_turn",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel"
+                    }
+                ]
+            }
         }
     ],
 
     "connections": [
         {
-            "from": "/viewport_UI/dice_roll/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/dice_roll/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/next_turn/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/next_turn/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_swallow/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/launch_swallow/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_storm_bird/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/launch_storm_bird/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_raven/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/launch_raven/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_rooster/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/launch_rooster/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_eagle/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/launch_eagle/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"

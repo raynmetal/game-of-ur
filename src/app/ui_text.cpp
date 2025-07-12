@@ -56,17 +56,22 @@ void UIText::updateScale(float scale) {
     mScale = scale;
     recomputeTexture();
 }
-
 void UIText::updateText(const std::string& text) {
     if(mText == text) return;
     mText = text;
     recomputeTexture();
 }
-
 void UIText::updateFont(const std::string& fontResourceName) {
-    std::shared_ptr<ToyMakersEngine::TextFont> font { ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName) };
+    std::shared_ptr<ToyMakersEngine::TextFont> font {
+        ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName)
+    };
     if(font == mFont) return;
     mFont = font;
+    recomputeTexture();
+}
+void UIText::updateAnchor(glm::vec2 anchor) {
+    if(anchor == mAnchor) return;
+    mAnchor = anchor;
     recomputeTexture();
 }
 

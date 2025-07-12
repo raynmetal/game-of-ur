@@ -16,6 +16,7 @@ public:
     void updateText(const std::string& newText);
     void updateScale(float scale);
     void updateFont(const std::string& textResourceName);
+    void updateAnchor(glm::vec2 anchor);
 
 private:
     void recomputeTexture();

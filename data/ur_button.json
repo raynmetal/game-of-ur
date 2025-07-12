@@ -1,0 +1,58 @@
+{
+    "resources": [
+
+    ],
+    "nodes": [
+        {
+            "name": "ur_button",
+            "aspects": [
+                {
+                    "type": "UIButton",
+                    "anchor": [0.5, 0.5],
+                    "text": "Default Text",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "value": "",
+                    "panel_active": "Bad_Panel",
+                    "panel_inactive": "Bad_Panel",
+                    "panel_hover": "Bad_Panel",
+                    "panel_pressed": "Bad_Panel"
+                }
+            ],
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ],
+            "parent": "",
+            "type": "SimObject"
+        },
+
+        {
+            "name": "button_text",
+            "parent": "/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Default Text",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [1.0, 1.0]
+                }
+            ]
+        }
+    ],
+    "connections": []
+}
