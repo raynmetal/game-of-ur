@@ -41,6 +41,8 @@ private:
     void onDiceUpdated(DiceData dice);
     void onMoveMade(MoveResultData moveData);
     bool onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
+    std::shared_ptr<ToyMakersEngine::SimObject> getLaunchButton(PieceTypeID pieceType);
+    std::shared_ptr<ToyMakersEngine::SimObject> getEndTurnButton();
 
     std::weak_ptr<ToyMakersEngine::FixedActionBinding> handleCancel { declareFixedActionBinding(
         "General", "Cancel", [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {

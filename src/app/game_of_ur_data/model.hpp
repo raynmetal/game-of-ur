@@ -98,6 +98,7 @@ public:
     void movePiece(PieceIdentity piece, glm::u8vec2 toLocation, PlayerID requester);
     void advanceOneTurn(PlayerID requester);
 
+    std::vector<PieceTypeID> getUnlaunchedPieceTypes(PlayerID player) const;
     std::vector<std::pair<PieceIdentity, glm::u8vec2>> getAllPossibleMoves() const;
     std::vector<glm::u8vec2> getLaunchPositions(const PieceIdentity& pieceIdentity) const;
     uint8_t getNCounters() const { return mCounters; }

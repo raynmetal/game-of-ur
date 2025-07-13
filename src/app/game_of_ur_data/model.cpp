@@ -501,3 +501,14 @@ std::vector<std::pair<PieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPossible
 std::vector<glm::u8vec2> GameOfUrModel::getLaunchPositions(const PieceIdentity& pieceIdentity) const {
     return mBoard.getLaunchPositions(pieceIdentity);
 }
+
+std::vector<PieceTypeID> GameOfUrModel::getUnlaunchedPieceTypes(PlayerID player) const {
+    if(mGamePhase == GamePhase::INITIATIVE) return {};
+    std::vector<PieceTypeID> unlaunchedPieceTypes {};
+    for(uint8_t type {PieceTypeID::SWALLOW}; type < PieceTypeID::TOTAL; ++type) {
+        const Piece& piece { mPlayers[player].cGetPiece(static_cast<PieceTypeID>(type)) };
+        if(piece.getState() != Piece::State::UNLAUNCHED) { continue; }
+        unlaunchedPieceTypes.push_back(static_cast<PieceTypeID>(type));
+    }
+    return unlaunchedPieceTypes;
+}
