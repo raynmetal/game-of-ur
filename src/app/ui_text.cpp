@@ -30,12 +30,23 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIText::create(const nlohm
         }:
         glm::vec2{.5f, .5f}
     };
+    const glm::u8vec4 color {
+        jsonAspectProperties.find("color") != jsonAspectProperties.end()?
+        glm::u8vec4 {
+            jsonAspectProperties.at("color")[0].get<float>(),
+            jsonAspectProperties.at("color")[1].get<float>(),
+            jsonAspectProperties.at("color")[2].get<float>(),
+            jsonAspectProperties.at("color")[3].get<float>(),
+        }:
+        glm::u8vec4 { 0x00, 0x00, 0x00, 0xFF }
+    };
     std::shared_ptr<ToyMakersEngine::TextFont> font { ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName) };
     std::shared_ptr<UIText> testTextAspect { std::make_shared<UIText>() };
     testTextAspect->mFont = font;
     testTextAspect->mText = text;
     testTextAspect->mScale = scale;
     testTextAspect->mAnchor = anchor;
+    testTextAspect->mColor = color;
     return testTextAspect;
 }
 
@@ -44,6 +55,8 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIText::clone() const {
     testTextAspect->mFont = mFont;
     testTextAspect->mText = mText;
     testTextAspect->mScale = mScale;
+    testTextAspect->mAnchor = mAnchor;
+    testTextAspect->mColor = mColor;
     return testTextAspect;
 }
 
@@ -74,9 +87,14 @@ void UIText::updateAnchor(glm::vec2 anchor) {
     mAnchor = anchor;
     recomputeTexture();
 }
+void UIText::updateColor(glm::u8vec4 color) {
+    if(color == mColor) return;
+    mColor = color;
+    recomputeTexture();
+}
 
 void UIText::recomputeTexture() {
-    std::shared_ptr<ToyMakersEngine::Texture> textTexture { mFont->renderText(mText, glm::u8vec4 {0x0,0x0,0x0,0xFF}) };
+    std::shared_ptr<ToyMakersEngine::Texture> textTexture { mFont->renderText(mText, mColor) };
     const glm::vec2 textDimensions { textTexture->getWidth() * mScale, textTexture->getHeight() * mScale };
     const nlohmann::json rectangleParameters = { 
         {"type", ToyMakersEngine::StaticModel::getResourceTypeName()},

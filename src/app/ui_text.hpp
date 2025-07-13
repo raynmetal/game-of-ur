@@ -14,6 +14,7 @@ public:
     void onActivated() override;
 
     void updateText(const std::string& newText);
+    void updateColor(glm::u8vec4 newColour);
     void updateScale(float scale);
     void updateFont(const std::string& textResourceName);
     void updateAnchor(glm::vec2 anchor);
@@ -21,6 +22,7 @@ public:
 private:
     void recomputeTexture();
 
+    glm::u8vec4 mColor {0x00, 0x00, 0x00, 0xFF};
     std::shared_ptr<ToyMakersEngine::TextFont> mFont {};
     std::string mText {};
     float mScale { 1e-2 };

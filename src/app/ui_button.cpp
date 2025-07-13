@@ -25,6 +25,16 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::create(const nlo
             jsonAspectProperties.at("scale").get<float>():
             .01f
     };
+    const glm::u8vec4 color {
+        jsonAspectProperties.find("color") != jsonAspectProperties.end()?
+        glm::u8vec4 {
+            jsonAspectProperties.at("color")[0].get<float>(),
+            jsonAspectProperties.at("color")[1].get<float>(),
+            jsonAspectProperties.at("color")[2].get<float>(),
+            jsonAspectProperties.at("color")[3].get<float>(),
+        }:
+        glm::u8vec4 { 0x00, 0x00, 0x00, 0xFF }
+    };
     const std::string value {
         jsonAspectProperties.find("value") != jsonAspectProperties.end()?
             jsonAspectProperties.at("value").get<std::string>():
@@ -52,6 +62,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::create(const nlo
     buttonAspect->mTextScaleOverride = scale;
     buttonAspect->mTextOverride = text;
     buttonAspect->mTextFontOverride = fontResourceName;
+    buttonAspect->mTextColorOverride = color;
     buttonAspect->mValue = value;
 
     return buttonAspect;
@@ -59,21 +70,24 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::create(const nlo
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::clone() const {
     std::shared_ptr<UIButton> buttonAspect { std::make_shared<UIButton>() };
+    buttonAspect->mStatePanels = mStatePanels;
     buttonAspect->mAnchor = mAnchor;
     buttonAspect->mTextScaleOverride = mTextScaleOverride;
     buttonAspect->mTextOverride = mTextOverride;
     buttonAspect->mTextFontOverride = mTextFontOverride;
+    buttonAspect->mTextColorOverride = mTextColorOverride;
     buttonAspect->mValue = mValue;
-    buttonAspect->mStatePanels = mStatePanels;
+
     return buttonAspect;
 }
 
 void UIButton::onActivated() {
     std::shared_ptr<ToyMakersEngine::SimObject> textNode {getTextObject()};
     UIText& textAspect { textNode->getAspect<UIText>() };
+    textAspect.updateText(mTextOverride);
     textAspect.updateFont(mTextFontOverride);
     textAspect.updateScale(mTextScaleOverride);
-    textAspect.updateText(mTextOverride);
+    textAspect.updateColor(mTextColorOverride);
     recomputeTexture();
     fireStateEvent();
 }
@@ -112,6 +126,11 @@ void UIButton::updateTextScale(float scale) {
 
 void UIButton::updateTextFont(const std::string& textResourceName) {
     getTextObject()->getAspect<UIText>().updateFont(textResourceName);
+    recomputeTexture();
+}
+
+void UIButton::updateTextColor(glm::u8vec4 textColor) {
+    getTextObject()->getAspect<UIText>().updateColor(textColor);
     recomputeTexture();
 }
 

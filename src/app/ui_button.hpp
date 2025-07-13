@@ -33,6 +33,7 @@ public:
     void updateText(const std::string& newText);
     void updateTextScale(float scale);
     void updateTextFont(const std::string& textResourceName);
+    void updateTextColor(glm::u8vec4 textColor);
 
     void updateButtonAnchor(glm::vec2 newAnchor);
 
@@ -44,6 +45,7 @@ private:
     std::string mTextOverride {""};
     float mTextScaleOverride {1.f};
     std::string mTextFontOverride {""};
+    glm::u8vec4 mTextColorOverride { 0x00, 0x00, 0x00, 0xFF };
 
     void recomputeTexture();
     void updateButtonState(UIButton::State newState);
