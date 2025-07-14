@@ -287,13 +287,14 @@
                 "resize_mode": "fixed-dimensions",
                 "render_type": "basic-3d",
                 "fps_cap": 60,
-                "render_scale": 0.85
+                "render_scale": 1.0
             }
         },
 
         {
             "aspects": [
-                { "type": "QueryClick" }
+                { "type": "QueryClick" }, 
+                { "type": "UrLookAtBoard", "offset": [0.0, 1.0, 6.0] }
             ],
             "components": [
                 {
@@ -312,9 +313,9 @@
                         -0.214287385 
                     ],
                     "position": [
-                        -4.87555504,
-                        3.94099879,
-                        -5.59419203,
+                        -7.0,
+                        6.4,
+                        5.0,
                         1.0
                     ],
                     "scale": [
