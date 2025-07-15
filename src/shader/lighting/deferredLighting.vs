@@ -11,9 +11,10 @@ Include:
 
 void main() {
     // Light volume calculations
-    gl_Position = attrModelMatrix * attrPosition;
     if(attrLightEmission.mType != 0) { // Lights which are not directional require perspective transformations
-        gl_Position = projectionMatrix * viewMatrix * gl_Position;
+        gl_Position = projectionMatrix * viewMatrix * attrModelMatrix * attrPosition;
+    } else { // pass vertices as is, light covers the whole screen
+        gl_Position = mat4(1.f) * attrPosition;
     }
 
     // Light placement calculations

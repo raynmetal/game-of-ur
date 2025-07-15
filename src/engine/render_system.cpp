@@ -329,13 +329,14 @@ void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float sim
     for(EntityID entity: getEnabledEntities()) {
         const Transform entityTransform { getComponent<Transform>(entity, simulationProgress)};
         const LightEmissionData lightEmissionData { getComponent<LightEmissionData>(entity, simulationProgress) };
+
         renderStage.submitToRenderQueue(LightRenderUnit {
             (lightEmissionData.mType==LightEmissionData::LightType::directional)?
                 screenRectangleMesh:
                 mSphereMesh,
             lightEmissionData,
             (lightEmissionData.mType==LightEmissionData::LightType::directional)?
-                glm::mat4{1.f}:
+                glm::inverse(glm::transpose(entityTransform.mModelMatrix)):
                 entityTransform.mModelMatrix
         });
     }
