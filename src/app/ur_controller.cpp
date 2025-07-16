@@ -26,7 +26,7 @@ std::unique_ptr<UrPlayerControls> UrController::createControls() {
 }
 
 void UrController::onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, glm::u8vec2 launchLocation) {
-    if(!mModel.canLaunchPiece(piece, launchLocation, player)) return;
+    if(!mModel.canLaunchPieceTo(piece, launchLocation, player)) return;
 
     const MoveResultData moveResults { mModel.getLaunchMoveData(piece, launchLocation) };
     mModel.movePiece(piece, launchLocation, player);

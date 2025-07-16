@@ -253,7 +253,8 @@ bool GameOfUrModel::canMoveBoardPiece(PieceIdentity pieceIdentity, PlayerID requ
         ) && getPiece(pieceIdentity).getState() == Piece::State::ON_BOARD
     );
 }
-bool GameOfUrModel::canLaunchPiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const  {
+
+bool GameOfUrModel::canLaunchPieceTo(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const  {
     assert(pieceIdentity.mOwner != RoleID::NA && "A piece without an owner role is invalid");
     return (
         canMovePiece(
@@ -262,6 +263,24 @@ bool GameOfUrModel::canLaunchPiece(PieceIdentity pieceIdentity, glm::u8vec2 toLo
             requester
         ) && getPiece(pieceIdentity).getState() == Piece::State::UNLAUNCHED
     );
+}
+
+bool GameOfUrModel::canLaunchPiece(PieceIdentity pieceIdentity, PlayerID requester) const {
+    if(mGamePhase == GamePhase::INITIATIVE) return false;
+
+    assert(pieceIdentity.mOwner != RoleID::NA && "A piece without an owner role is invalid");
+    if(
+        mCurrentPlayer != requester
+        || getPiece(pieceIdentity).getState() != Piece::State::UNLAUNCHED
+    ) return false;
+
+    for(auto& movePair: getAllPossibleMoves()) {
+        if(movePair.first.mOwner == pieceIdentity.mOwner && movePair.first.mType == pieceIdentity.mType) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool GameOfUrModel::canAdvanceOneTurn(PlayerID requester) const {

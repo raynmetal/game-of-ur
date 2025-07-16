@@ -100,18 +100,31 @@ void UrUIView::onPhaseUpdated(GamePhaseData phase){
     // enable piece launch buttons only for pieces that are available
     std::vector<PieceTypeID> unlaunchedPieceTypes { getModel().getUnlaunchedPieceTypes(phase.mTurn) };
     for(uint8_t pieceType{ PieceTypeID::SWALLOW }; pieceType < PieceTypeID::TOTAL; ++pieceType) {
+        const PieceIdentity currentPlayerPieceIdentity {
+            .mType { static_cast<PieceTypeID>(pieceType) },
+            .mOwner { getModel().getPlayerData(phase.mTurn).mRole }
+        };
         UIButton& button { getLaunchButton(static_cast<PieceTypeID>(pieceType))->getAspect<UIButton>() };
-        if(
-            (
-                phase.mGamePhase != GamePhase::END
-            ) && (
-                std::find(unlaunchedPieceTypes.begin(), unlaunchedPieceTypes.end(), static_cast<PieceTypeID>(pieceType)) 
-                != unlaunchedPieceTypes.end()
-            )
-        ) {
+
+        if(getModel().canLaunchPiece(currentPlayerPieceIdentity, phase.mTurn)) {
             button.enableButton();
         } else {
             button.disableButton();
+        }
+
+        if(getModel().getCurrentPhase().mGamePhase != GamePhase::INITIATIVE) {
+            const GamePieceData currentPlayerPiece { getModel().getPieceData(currentPlayerPieceIdentity) };
+            switch(currentPlayerPiece.mState) {
+                case Piece::State::UNLAUNCHED:
+                    button.updateHighlightColor({1.f, 1.f, 0.f, 1.f});
+                    break;
+                case Piece::State::ON_BOARD:
+                    button.updateHighlightColor({0.f, 0.f, 1.f, 1.f});
+                    break;
+                case Piece::State::FINISHED:
+                    button.updateHighlightColor({0.f, 1.f, 0.f, 1.f});
+                    break;
+            }
         }
     }
 
@@ -152,7 +165,11 @@ void UrUIView::onDiceUpdated(DiceData dice) {
     }
 
     UIButton& buttonAspect { getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton") };
-    if(getModel().getCurrentPhase().mGamePhase == GamePhase::END || dice.mState == Dice::State::SECONDARY_ROLLED) {
+    if(
+        getModel().getCurrentPhase().mGamePhase == GamePhase::END 
+        || getModel().getCurrentPhase().mTurnPhase == TurnPhase::END
+        || dice.mState == Dice::State::SECONDARY_ROLLED
+    ) {
         buttonAspect.disableButton();
     } else {
         buttonAspect.enableButton();
@@ -178,7 +195,7 @@ std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getLaunchButton(PieceTypeI
             }
         )->first
     };
-    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>("/viewport_UI/launch_" + pieceString + "/");
+    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>("/viewport_UI/player_panel_a/launch_" + pieceString + "/");
 }
 
 std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getEndTurnButton() {

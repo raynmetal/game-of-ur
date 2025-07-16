@@ -1,22 +1,27 @@
 {
-    "resources": [
-
-    ],
+    "resources": [],
     "nodes": [
-        {
+        { 
             "name": "ur_button",
             "aspects": [
                 {
                     "type": "UIButton",
                     "anchor": [0.5, 0.5],
-                    "text": "Default Text",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
+
                     "scale": 1.0,
                     "value": "",
+
+                    "text": "Default Text",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+
                     "panel_active": "Bad_Panel",
                     "panel_inactive": "Bad_Panel",
                     "panel_hover": "Bad_Panel",
-                    "panel_pressed": "Bad_Panel"
+                    "panel_pressed": "Bad_Panel",
+
+                    "has_highlight": false,
+                    "highlight": "Bad_Panel",
+                    "highlight_color": [0, 0, 0, 0]
                 }
             ],
             "components": [
@@ -50,6 +55,20 @@
                     "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "anchor": [1.0, 1.0]
+                }
+            ]
+        },
+
+        {
+            "name": "highlight",
+            "parent": "/",
+            "type": "SceneNode",
+            "components": [
+                {
+                    "orientation": [1.0, 0.0, 0.0, 0.0],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
                 }
             ]
         }

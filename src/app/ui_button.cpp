@@ -52,18 +52,38 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::create(const nlo
     const std::string panelPressed {
         jsonAspectProperties.at("panel_pressed").get<std::string>()
     };
+    const bool hasHighlight {
+        jsonAspectProperties.at("has_highlight").get<bool>()
+    };
+    std::string highlight;
+    glm::vec4 highlightColor;
+    if(hasHighlight) {
+        highlight = jsonAspectProperties.at("highlight").get<std::string>();
+        highlightColor = glm::vec4{
+            jsonAspectProperties.at("highlight_color")[0].get<float>(),
+            jsonAspectProperties.at("highlight_color")[1].get<float>(),
+            jsonAspectProperties.at("highlight_color")[2].get<float>(),
+            jsonAspectProperties.at("highlight_color")[3].get<float>()
+        };
+    }
 
     std::shared_ptr<UIButton> buttonAspect { std::make_shared<UIButton>() };
     buttonAspect->mStatePanels[State::INACTIVE] = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelInactive);
     buttonAspect->mStatePanels[State::ACTIVE] = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelActive);
     buttonAspect->mStatePanels[State::PRESSED] = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelPressed);
     buttonAspect->mStatePanels[State::HOVER] = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelHover);
+    if(hasHighlight) {
+        buttonAspect->mHighlightPanel = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(highlight);
+    }
     buttonAspect->mAnchor = anchor;
     buttonAspect->mTextScaleOverride = scale;
     buttonAspect->mTextOverride = text;
     buttonAspect->mTextFontOverride = fontResourceName;
     buttonAspect->mTextColorOverride = color;
     buttonAspect->mValue = value;
+    if(hasHighlight) {
+        buttonAspect->mHighlightColor = highlightColor;
+    }
 
     return buttonAspect;
 }
@@ -71,12 +91,14 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::create(const nlo
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::clone() const {
     std::shared_ptr<UIButton> buttonAspect { std::make_shared<UIButton>() };
     buttonAspect->mStatePanels = mStatePanels;
+    buttonAspect->mHighlightPanel = mHighlightPanel;
     buttonAspect->mAnchor = mAnchor;
     buttonAspect->mTextScaleOverride = mTextScaleOverride;
     buttonAspect->mTextOverride = mTextOverride;
     buttonAspect->mTextFontOverride = mTextFontOverride;
     buttonAspect->mTextColorOverride = mTextColorOverride;
     buttonAspect->mValue = mValue;
+    buttonAspect->mHighlightColor = mHighlightColor;
 
     return buttonAspect;
 }
@@ -131,6 +153,12 @@ void UIButton::updateTextFont(const std::string& textResourceName) {
 
 void UIButton::updateTextColor(glm::u8vec4 textColor) {
     getTextObject()->getAspect<UIText>().updateColor(textColor);
+    recomputeTexture();
+}
+
+void UIButton::updateHighlightColor(glm::vec4 highlightColor) {
+    if(highlightColor == mHighlightColor) return;
+    mHighlightColor = highlightColor;
     recomputeTexture();
 }
 
@@ -215,15 +243,9 @@ void UIButton::recomputeTexture() {
         }}
     };
 
-    if(!hasComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()) {
-        addComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
+    getSimObject().addOrUpdateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
             ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
-        );
-    } else {
-        updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
-            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
-        );
-    }
+    );
 
     const glm::vec4 anchorPixelOffset {
         panelSize.x * (.5f - mAnchor.x), panelSize.y * (mAnchor.y - .5f),
@@ -239,6 +261,28 @@ void UIButton::recomputeTexture() {
     std::shared_ptr<ToyMakersEngine::Material> material { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()->getMaterialHandles()[0] };
     material->updateTextureProperty("textureAlbedo", panelTexture);
     material->updateIntProperty("usesTextureAlbedo", true);
+
+    if(mHighlightPanel) {
+        std::shared_ptr<ToyMakersEngine::SceneNode> highlightNode { getSimObject().getByPath("/highlight/") };
+        highlightNode->addOrUpdateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
+                ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
+        );
+        std::shared_ptr<ToyMakersEngine::StaticModel> highlightRectangle { highlightNode->getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>() };
+        std::shared_ptr<ToyMakersEngine::Material> highlightMaterial { highlightRectangle->getMaterialHandles()[0] };
+        for(auto mesh: highlightRectangle->getMeshHandles()) {
+            for(auto iVertex{ mesh->getVertexListBegin() }, end {mesh->getVertexListEnd()}; iVertex != end; ++iVertex) {
+                iVertex->mPosition += anchorPixelOffset;
+            }
+        }
+        std::shared_ptr<ToyMakersEngine::Texture> highlightTexture { mHighlightPanel->generateTexture(contentSize) };
+        highlightMaterial->updateTextureProperty("textureAlbedo", highlightTexture);
+        highlightMaterial->updateIntProperty("usesTextureAlbedo", true);
+        highlightMaterial->updateVec4Property("colorMultiplier", mHighlightColor);
+
+        ToyMakersEngine::Placement highlightPlacement {};
+        highlightPlacement.mPosition.z += 0.2f;
+        highlightNode->updateComponent<ToyMakersEngine::Placement>(highlightPlacement);
+    }
 
     // update text position accordingly
     const glm::vec4 contentCenter { 

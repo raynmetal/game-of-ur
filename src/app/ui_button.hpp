@@ -36,16 +36,21 @@ public:
     void updateTextColor(glm::u8vec4 textColor);
 
     void updateButtonAnchor(glm::vec2 newAnchor);
+    void updateHighlightColor(glm::vec4 newColor);
 
 private:
     State mCurrentState { State::ACTIVE };
     std::array<std::shared_ptr<NineSlicePanel>, State::TOTAL> mStatePanels {};
     glm::vec2 mAnchor {.5f, .5f};
     std::string mValue {""};
+
     std::string mTextOverride {""};
     float mTextScaleOverride {1.f};
     std::string mTextFontOverride {""};
     glm::u8vec4 mTextColorOverride { 0x00, 0x00, 0x00, 0xFF };
+
+    std::shared_ptr<NineSlicePanel> mHighlightPanel {};
+    glm::vec4 mHighlightColor {0.f, 0.f, 0.f, 0.f};
 
     void recomputeTexture();
     void updateButtonState(UIButton::State newState);

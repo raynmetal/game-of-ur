@@ -115,7 +115,8 @@ public:
     MoveResultData getLaunchMoveData(PieceIdentity piece, glm::u8vec2 launchLocation) const;
 
     bool canRollDice(PlayerID requester) const;
-    bool canLaunchPiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const;
+    bool canLaunchPieceTo(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const;
+    bool canLaunchPiece(PieceIdentity pieceIdentity, PlayerID requester) const;
     bool canMoveBoardPiece(PieceIdentity pieceIdentity, PlayerID requester) const;
     bool canAdvanceOneTurn(PlayerID requester) const;
     bool canStartPhasePlay() const;

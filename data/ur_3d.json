@@ -294,7 +294,7 @@
         {
             "aspects": [
                 { "type": "QueryClick" }, 
-                { "type": "UrLookAtBoard", "offset": [0.0, 1.0, 6.0] }
+                { "type": "UrLookAtBoard", "offset": [0.0, 1.0, 7.0] }
             ],
             "components": [
                 {
@@ -313,9 +313,9 @@
                         -0.214287385 
                     ],
                     "position": [
-                        -7.0,
-                        6.4,
-                        5.0,
+                        -6.0,
+                        8.4,
+                        6.0,
                         1.0
                     ],
                     "scale": [
@@ -335,28 +335,16 @@
             "aspects": [],
             "components": [
                 {
-                    "orientation": [
-                        -0.16043, 0.0664523, 0.9098437, 0.3768696
-                    ],
-                    "position": [
-                        0.0, 0.0, 0.0, 1.0
-                    ],
-                    "scale": [
-                        1.4142135381698608, 1.4142135381698608, 1.0
-                    ],
+                    "orientation": [ 0.579228, -0.4055798, -0.579228, -0.4055798 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
                     "type": "Placement"
                 },
                 {
-                    "ambient": [
-                        0.7300000059604645, 0.7300000059604645, 0.7300000059604645
-                    ],
-                    "diffuse": [
-                        2.5, 2.0, 2.0
-                    ],
+                    "ambient": [0.2, 0.2, 0.5],
+                    "diffuse": [1.7, 1.0, 0.9],
+                    "specular": [ 0.8, 0.7, 0.7],
                     "lightType": "directional",
-                    "specular": [
-                        1.0, 1.0, 1.0
-                    ],
                     "type": "LightEmissionData"
                 }
             ],

@@ -65,7 +65,7 @@ void PlayerCPURandom::onMovePrompted(GamePhaseData phaseData) {
     const std::pair<PieceIdentity, glm::u8vec2>& selectedMove {
         possibleMoves[selectedMoveIndex - (canRollDice? 1: 0)]
     };
-    if(urModel.canLaunchPiece(selectedMove.first, selectedMove.second, mControls->getPlayer())) {
+    if(urModel.canLaunchPieceTo(selectedMove.first, selectedMove.second, mControls->getPlayer())) {
         std::cout << "CPU: launches piece\n";
         mControls->attemptLaunchPiece(selectedMove.first.mType, selectedMove.second);
         return;
