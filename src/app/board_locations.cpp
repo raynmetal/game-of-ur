@@ -15,19 +15,6 @@ bool BoardLocations::onPointerLeftClick(glm::vec4 clickLocation) {
     return true;
 }
 
-bool BoardLocations::onPointerRightClick(glm::vec4 clickLocation) {
-    std::cout << "Right click: " << glm::to_string(clickLocation) << "\n";
-    if(clickLocation.y >= -0.1) {
-        const glm::u8vec2 boardLocation{ boardPointToGridIndices({clickLocation.x, clickLocation.z}) };
-        if(boardLocation.x >= mRowLengths.size() || boardLocation.y >= mRowLengths[boardLocation.x]) {
-            return false;
-        }
-
-        mSigBoardClicked.emit(boardLocation);
-    }
-    return true;
-}
-
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> BoardLocations::create(const nlohmann::json& jsonAspectProperties) {
     return std::shared_ptr<BoardLocations>{ new BoardLocations{} };
 }

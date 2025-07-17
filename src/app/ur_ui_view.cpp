@@ -1,10 +1,12 @@
+#include <algorithm>
 #include <sstream>
 #include <nlohmann/json.hpp>
 
 #include "game_of_ur_data/model.hpp"
 
 #include "ur_controller.hpp"
-#include "test_text.hpp"
+#include "ui_text.hpp"
+#include "ui_button.hpp"
 
 #include "ur_ui_view.hpp"
 
@@ -56,11 +58,11 @@ void UrUIView::onButtonClicked(const std::string& button) {
             break;
         case DICE:
             std::cout << "dice roll attempted\n";
-            mSigDiceRollAttempted.emit(getModel().getCurrentPlayer().mPlayer);
+            mSigDiceRollAttempted.emit();
             break;
         case NEXT_TURN:
             std::cout << "next turn clicked\n";
-            mSigNextTurnAttempted.emit(getModel().getCurrentPlayer().mPlayer);
+            mSigNextTurnAttempted.emit();
             break;
     }
 }
@@ -92,15 +94,91 @@ void UrUIView::onPhaseUpdated(GamePhaseData phase){
             phaseText << "end";
             break;
     }
-    getSimObject().getByPath<TestText&>("/viewport_UI/current_turn/@TestText").updateText(playerText);
-    getSimObject().getByPath<TestText&>("/viewport_UI/phase/@TestText").updateText(phaseText.str());
+    getSimObject().getByPath<UIText&>("/viewport_UI/current_turn/@UIText").updateText(playerText);
+    getSimObject().getByPath<UIText&>("/viewport_UI/phase/@UIText").updateText(phaseText.str());
+
+    // disable all piece launch buttons while changing their highlight color
+    // to represent their current state (unlaunched, on board, finished)
+    for(uint8_t playerIndex { PlayerID::PLAYER_A }; playerIndex <= PlayerID::PLAYER_B; ++playerIndex) {
+        const PlayerID player { playerIndex };
+        for(uint8_t pieceType{ PieceTypeID::SWALLOW }; pieceType < PieceTypeID::TOTAL; ++pieceType) {
+            const PieceIdentity currentPlayerPieceIdentity {
+                .mType { static_cast<PieceTypeID>(pieceType) },
+                .mOwner { getModel().getPlayerData(player).mRole }
+            };
+            UIButton& button { getLaunchButton(static_cast<PieceTypeID>(pieceType), player)->getAspect<UIButton>() };
+            button.disableButton();
+            if(getModel().getCurrentPhase().mGamePhase != GamePhase::INITIATIVE) {
+                const GamePieceData currentPlayerPiece { getModel().getPieceData(currentPlayerPieceIdentity) };
+                switch(currentPlayerPiece.mState) {
+                    case Piece::State::UNLAUNCHED:
+                        button.updateHighlightColor({1.f, 1.f, 0.f, 1.f});
+                        break;
+                    case Piece::State::ON_BOARD:
+                        button.updateHighlightColor({0.f, 0.f, 1.f, 1.f});
+                        break;
+                    case Piece::State::FINISHED:
+                        button.updateHighlightColor({0.f, 1.f, 0.f, 1.f});
+                        break;
+                }
+            }
+        }
+    }
+
+    UIButton& endTurnButton { getEndTurnButton()->getAspect<UIButton>() };
+    endTurnButton.disableButton();
+}
+
+void UrUIView::onControlInterface(PlayerID player) {
+    std::cout << "UrUIView: on UI control requested\n";
+    mControlledBy = player;
+    const GamePhaseData phase{ getModel().getCurrentPhase() };
+    const DiceData dice { getModel().getDiceData() };
+
+    // enable piece launch buttons only for pieces that are available
+    for(uint8_t pieceType{ PieceTypeID::SWALLOW }; pieceType < PieceTypeID::TOTAL; ++pieceType) {
+        const PieceIdentity currentPlayerPieceIdentity {
+            .mType { static_cast<PieceTypeID>(pieceType) },
+            .mOwner { getModel().getPlayerData(phase.mTurn).mRole }
+        };
+
+        if(getModel().canLaunchPiece(currentPlayerPieceIdentity, mControlledBy)) {
+            UIButton& button {
+                getLaunchButton(static_cast<PieceTypeID>(pieceType),
+                mControlledBy)->getAspect<UIButton>()
+            };
+            button.enableButton();
+        }
+    }
+
+    // enable the end turn button only at the end of a turn and
+    // only during initiative and play phases
+    UIButton& endTurnButton { getEndTurnButton()->getAspect<UIButton>() };
+    if(
+        phase.mTurnPhase == TurnPhase::END 
+        && phase.mGamePhase != GamePhase::END
+        && phase.mTurn == player
+    ) {
+        endTurnButton.enableButton();
+    }
+
+    // enable the dice button if a die can be rolled
+    UIButton& diceButton { getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton") };
+    if(
+        getModel().getCurrentPhase().mGamePhase != GamePhase::END 
+        && getModel().getCurrentPhase().mTurnPhase != TurnPhase::END
+        && getModel().getCurrentPlayer().mPlayer == mControlledBy
+        && dice.mState != Dice::State::SECONDARY_ROLLED
+    ) {
+        diceButton.enableButton();
+    }
 }
 
 void UrUIView::onScoreUpdated(GameScoreData score) {
     std::cout << "UrUIView: on score updated\n";
-    getSimObject().getByPath<TestText&>("/viewport_UI/common_pile/@TestText").updateText("common: " + std::to_string(static_cast<int>(score.mCommonPoolCounters)));
-    getSimObject().getByPath<TestText&>("/viewport_UI/one_pile/@TestText").updateText("one: " + std::to_string(static_cast<int>(score.mPlayerOneCounters)));
-    getSimObject().getByPath<TestText&>("/viewport_UI/two_pile/@TestText").updateText("two: " + std::to_string(static_cast<int>(score.mPlayerTwoCounters)));
+    getSimObject().getByPath<UIText&>("/viewport_UI/common_pile/@UIText").updateText("common: " + std::to_string(static_cast<int>(score.mCommonPoolCounters)));
+    getSimObject().getByPath<UIText&>("/viewport_UI/one_pile/@UIText").updateText("one: " + std::to_string(static_cast<int>(score.mPlayerOneCounters)));
+    getSimObject().getByPath<UIText&>("/viewport_UI/two_pile/@UIText").updateText("two: " + std::to_string(static_cast<int>(score.mPlayerTwoCounters)));
 }
 
 void UrUIView::onPlayerUpdated(PlayerData player) {
@@ -121,7 +199,10 @@ void UrUIView::onDiceUpdated(DiceData dice) {
             displayString = "final roll " + std::to_string(static_cast<int>(dice.mResultScore));
             break;
     }
-    getSimObject().getByPath<TestText&>("/viewport_UI/dice_roll/@TestText").updateText(displayString);
+
+    UIButton& buttonAspect { getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton") };
+    buttonAspect.disableButton();
+    buttonAspect.updateText(displayString);
 }
 
 void UrUIView::onMoveMade(MoveResultData moveData) {
@@ -132,4 +213,26 @@ bool UrUIView::onCancel(const ToyMakersEngine::ActionData& actionData, const Toy
     std::cout << "UrUIView: cancel attempted\n";
     mSigLaunchPieceCanceled.emit();
     return true;
+}
+
+std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getLaunchButton(PieceTypeID pieceType, PlayerID player) {
+    const std::string playerPanelString {
+        "player_panel_" + static_cast<std::string>((player == PlayerID::PLAYER_A)? "a": "b")
+    };
+    const std::string pieceString {
+        "launch_" + std::find_if(kButtonEnumMap.begin(), kButtonEnumMap.end(),
+            [pieceType](std::pair<std::string, UrUIView::Buttons> item){
+                return static_cast<UrUIView::Buttons>(pieceType) == item.second;
+            }
+        )->first
+    };
+    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>(
+        "/viewport_UI/" 
+        + playerPanelString + "/" 
+        + pieceString + "/"
+    );
+}
+
+std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getEndTurnButton() {
+    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>("/viewport_UI/next_turn/");
 }

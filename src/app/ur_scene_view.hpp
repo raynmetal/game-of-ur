@@ -31,13 +31,17 @@ private:
     std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrBoard {};
     std::string mControllerPath {};
     Mode mMode { Mode::GENERAL };
+    PlayerID mControlledBy {};
 
     void onBoardClicked(glm::u8vec2 boardLocation);
     void onLaunchPieceInitiated(PieceTypeID piece);
     void onLaunchPieceCanceled();
     void onMoveMade(const MoveResultData& moveResultData);
 
+    void onControlInterface(PlayerID player);
+
     void onActivated() override;
+
 public:
     ToyMakersEngine::SignalObserver<glm::u8vec2> mObserveBoardClicked { 
         *this, "BoardClickedObserved",
@@ -55,11 +59,15 @@ public:
         *this, "MoveMadeObserved",
         [this](const MoveResultData& moveResultData) { this->onMoveMade(moveResultData); }
     };
+    ToyMakersEngine::SignalObserver<PlayerID> mObserveControlInterface {
+        *this, "ControlInterfaceObserved",
+        [this](PlayerID playerID) { this->onControlInterface(playerID); }
+    };
 
-    ToyMakersEngine::Signal<PlayerID, PieceIdentity, glm::u8vec2> mSigLaunchPieceAttempted {
+    ToyMakersEngine::Signal<PieceTypeID, glm::u8vec2> mSigLaunchPieceAttempted {
         *this, "LaunchPieceAttempted"
     };
-    ToyMakersEngine::Signal<PlayerID, PieceIdentity> mSigMovePieceAttempted {
+    ToyMakersEngine::Signal<PieceIdentity> mSigMovePieceAttempted {
         *this, "MovePieceAttempted"
     };
 };

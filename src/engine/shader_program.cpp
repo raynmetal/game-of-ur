@@ -178,6 +178,16 @@ void ShaderProgram::setUFloat(const std::string& name, float value) const {
         static_cast<GLfloat>(value)
     );
 }
+void ShaderProgram::setUVec2(const std::string& name, const glm::vec2& value) const {
+    GLint loc { getLocationUniform(name) };
+    if(loc<0) return;
+    glUniform2fv(
+        loc,
+        1,
+        glm::value_ptr(value)
+    );
+}
+
 void ShaderProgram::setUVec3(const std::string& name, const glm::vec3& value) const {
     GLint loc {getLocationUniform(name)};
     if(loc<0) return;

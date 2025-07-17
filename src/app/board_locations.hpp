@@ -7,13 +7,13 @@
 #include "game_of_ur_data/house.hpp"
 
 
-class BoardLocations: public ToyMakersEngine::SimObjectAspect<BoardLocations>, public ILeftClickable, public IRightClickable {
+class BoardLocations: public ToyMakersEngine::SimObjectAspect<BoardLocations>, public ILeftClickable {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "BoardLocations"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
     bool onPointerLeftClick(glm::vec4 clickLocation)  override;
-    bool onPointerRightClick(glm::vec4 clickLocation) override;
+    inline bool onPointerLeftRelease(glm::vec4 clickLocation) override { return false; }
 
     ToyMakersEngine::Signal<glm::u8vec2> mSigBoardClicked { *this, "BoardClicked" };
 

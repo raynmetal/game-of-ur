@@ -14,9 +14,19 @@ public:
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
 
 protected:
+    bool onPointerMove(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
     bool onLeftClick(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
-    bool onRightClick(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
+    bool onLeftRelease(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
 
+    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerPointerMove {
+        declareFixedActionBinding(
+            "UI",
+            "PointerMove",
+            [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+                return this->onPointerMove(actionData, actionDefinition);
+            }
+        )
+    };
     std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerLeftClick {
         declareFixedActionBinding(
             "UI",
@@ -26,13 +36,12 @@ protected:
             }
         )
     };
-
-    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerRightClick {
+    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerLeftRelease {
         declareFixedActionBinding(
             "UI",
-            "RightTap",
+            "Untap",
             [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
-                return this->onRightClick(actionData, actionDefinition);
+                return this->onLeftRelease(actionData, actionDefinition);
             }
         )
     };
@@ -42,6 +51,10 @@ private:
 
     ToyMakersEngine::Ray rayFromClickCoordinates(glm::vec2 clickCoordinates);
 
+    // TODO: We're storing shared pointers to nodes in the scene tree here.  There's a bug in 
+    // waiting if we have a reference to a node that was taken off the scene tree between 
+    // queries.  I don't really know how to think about the problem just now
+    std::vector<std::shared_ptr<ToyMakersEngine::SceneNodeCore>> mPreviousQueryResults {};
 };
 
 #endif

@@ -4,9 +4,9 @@
 #include "../engine/core/resource_database.hpp"
 #include "../engine/shapegen.hpp"
 
-#include "test_text.hpp"
+#include "ui_text.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> TestText::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIText::create(const nlohmann::json& jsonAspectProperties) {
     const std::string text { 
         jsonAspectProperties.find("text") != jsonAspectProperties.end()?
             jsonAspectProperties.at("text").get<std::string>():
@@ -30,48 +30,71 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> TestText::create(const nlo
         }:
         glm::vec2{.5f, .5f}
     };
+    const glm::u8vec4 color {
+        jsonAspectProperties.find("color") != jsonAspectProperties.end()?
+        glm::u8vec4 {
+            jsonAspectProperties.at("color")[0].get<float>(),
+            jsonAspectProperties.at("color")[1].get<float>(),
+            jsonAspectProperties.at("color")[2].get<float>(),
+            jsonAspectProperties.at("color")[3].get<float>(),
+        }:
+        glm::u8vec4 { 0x00, 0x00, 0x00, 0xFF }
+    };
     std::shared_ptr<ToyMakersEngine::TextFont> font { ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName) };
-    std::shared_ptr<TestText> testTextAspect { std::make_shared<TestText>() };
+    std::shared_ptr<UIText> testTextAspect { std::make_shared<UIText>() };
     testTextAspect->mFont = font;
     testTextAspect->mText = text;
     testTextAspect->mScale = scale;
     testTextAspect->mAnchor = anchor;
+    testTextAspect->mColor = color;
     return testTextAspect;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> TestText::clone() const {
-    std::shared_ptr<TestText> testTextAspect { std::make_shared<TestText>() };
+std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIText::clone() const {
+    std::shared_ptr<UIText> testTextAspect { std::make_shared<UIText>() };
     testTextAspect->mFont = mFont;
     testTextAspect->mText = mText;
     testTextAspect->mScale = mScale;
+    testTextAspect->mAnchor = mAnchor;
+    testTextAspect->mColor = mColor;
     return testTextAspect;
 }
 
-void TestText::onActivated() {
+void UIText::onActivated() {
     recomputeTexture();
 }
 
-void TestText::updateScale(float scale) {
+void UIText::updateScale(float scale) {
     if(mScale == scale) return;
     mScale = scale;
     recomputeTexture();
 }
-
-void TestText::updateText(const std::string& text) {
+void UIText::updateText(const std::string& text) {
     if(mText == text) return;
     mText = text;
     recomputeTexture();
 }
-
-void TestText::updateFont(const std::string& fontResourceName) {
-    std::shared_ptr<ToyMakersEngine::TextFont> font { ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName) };
+void UIText::updateFont(const std::string& fontResourceName) {
+    std::shared_ptr<ToyMakersEngine::TextFont> font {
+        ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName)
+    };
     if(font == mFont) return;
     mFont = font;
     recomputeTexture();
 }
+void UIText::updateAnchor(glm::vec2 anchor) {
+    if(anchor == mAnchor) return;
+    mAnchor = anchor;
+    recomputeTexture();
+}
+void UIText::updateColor(glm::u8vec4 color) {
+    if(color == mColor) return;
+    mColor = color;
+    recomputeTexture();
+}
 
-void TestText::recomputeTexture() {
-    std::shared_ptr<ToyMakersEngine::Texture> textTexture { mFont->renderText(mText, glm::u8vec3 {0x0}, glm::u8vec3 {0xFF}) };
+void UIText::recomputeTexture() {
+    std::shared_ptr<ToyMakersEngine::Texture> textTexture { mFont->renderText(mText, mColor) };
     const glm::vec2 textDimensions { textTexture->getWidth() * mScale, textTexture->getHeight() * mScale };
     const nlohmann::json rectangleParameters = { 
         {"type", ToyMakersEngine::StaticModel::getResourceTypeName()},

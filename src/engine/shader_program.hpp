@@ -47,6 +47,7 @@ namespace ToyMakersEngine {
         void setUBool(const std::string& name, bool value) const;
         void setUInt(const std::string& name, int value) const;
         void setUFloat(const std::string& name, float value) const;
+        void setUVec2(const std::string& name, const glm::vec2& value) const;
         void setUVec3(const std::string& name, const glm::vec3& value) const;
         void setUVec4(const std::string& name, const glm::vec4& value) const;
         void setUMat4(const std::string& name, const glm::mat4& value) const;

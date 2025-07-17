@@ -83,7 +83,7 @@ bool Board::movePassesRosette(const Piece& gamePiece, glm::u8vec2 toLocation) co
     assert(isValidHouse(currentLocation));
 
     currentLocation += mGrid[currentLocation.x][currentLocation.y].getNextCellDirection();
-    while(isValidHouse(currentLocation)) {
+    while(isValidHouse(currentLocation) && currentLocation != toLocation) {
         if(
             currentLocation != toLocation &&
             mGrid[currentLocation.x][currentLocation.y].isRosette()
@@ -91,6 +91,7 @@ bool Board::movePassesRosette(const Piece& gamePiece, glm::u8vec2 toLocation) co
 
         currentLocation += mGrid[currentLocation.x][currentLocation.y].getNextCellDirection();
     }
+
     return false;
 }
 

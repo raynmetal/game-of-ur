@@ -11,13 +11,10 @@ Include:
 
 void main() {
     // Light volume calculations
-    gl_Position = projectionMatrix * viewMatrix * attrModelMatrix * attrPosition;
-    if(attrLightEmission.mType == 0) { // directional lights, ignore matrices and pass attrPosition as is
-        // TODO: hack upon hack. scale the sphere so that it covers the entire screen
-        mat4 modelMatrix = mat4(1.f);
-        modelMatrix[0][0] = sqrt(2.f);
-        modelMatrix[1][1] = sqrt(2.f);
-        gl_Position = modelMatrix * attrPosition;
+    if(attrLightEmission.mType != 0) { // Lights which are not directional require perspective transformations
+        gl_Position = projectionMatrix * viewMatrix * attrModelMatrix * attrPosition;
+    } else { // pass vertices as is, light covers the whole screen
+        gl_Position = mat4(1.f) * attrPosition;
     }
 
     // Light placement calculations
