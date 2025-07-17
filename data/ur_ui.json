@@ -9,7 +9,6 @@
                 "cubemap_layout": "row"
             }
         },
-
         {
             "name": "Bad_Button_Active_Texture",
             "type": "Texture",
@@ -51,7 +50,6 @@
                 "cubemap_layout": "row"
             }
         },
-
         {
             "name": "Bad_Panel",
             "type": "NineSlicePanel",
@@ -61,7 +59,6 @@
                 "content_region": [ 0.0235, 0.0235, 0.953, 0.953]
             }
         },
-
         {
             "name": "Bad_Button_Active_Panel",
             "type": "NineSlicePanel",
@@ -107,7 +104,6 @@
                 "content_region": [0.109375, 0.109375, 0.78125, 0.78125]
             }
         },
-
         {
             "name": "Ur_Button",
             "type": "SimObject",
@@ -125,6 +121,7 @@
             }
         }
     ],
+
     "nodes": [
         {
             "name": "ui_root",
@@ -250,7 +247,26 @@
                     {
                         "type": "Placement",
                         "orientation": [1.0, 0.0, 0.0, 0.0],
-                        "position": [234, 0, 0, 0],
+                        "position": [234, 0, 0, 1],
+                        "scale": [1, 1, 1]
+                    }
+                ],
+                "aspects": []
+            }
+        },
+
+        {
+            "name":"Ur_Player_Panel",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "player_panel_b",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [1.0, 0.0, 0.0, 0.0],
+                        "position": [234, -64, 0, 1],
                         "scale": [1, 1, 1]
                     }
                 ],
@@ -458,6 +474,7 @@
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
+
         {
             "from": "/viewport_UI/player_panel_a/launch_swallow/@UIButton",
             "signal": "ButtonReleased",
@@ -488,6 +505,42 @@
         },
         {
             "from": "/viewport_UI/player_panel_a/launch_eagle/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/player_panel_b/launch_swallow/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/player_panel_b/launch_storm_bird/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/player_panel_b/launch_raven/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/player_panel_b/launch_rooster/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/player_panel_b/launch_eagle/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",

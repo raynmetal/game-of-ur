@@ -31,11 +31,14 @@ private:
     std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrBoard {};
     std::string mControllerPath {};
     Mode mMode { Mode::GENERAL };
+    PlayerID mControlledBy {};
 
     void onBoardClicked(glm::u8vec2 boardLocation);
     void onLaunchPieceInitiated(PieceTypeID piece);
     void onLaunchPieceCanceled();
     void onMoveMade(const MoveResultData& moveResultData);
+
+    void onControlInterface(PlayerID player);
 
     void onActivated() override;
 
@@ -55,6 +58,10 @@ public:
     ToyMakersEngine::SignalObserver<MoveResultData> mObserveMoveMade {
         *this, "MoveMadeObserved",
         [this](const MoveResultData& moveResultData) { this->onMoveMade(moveResultData); }
+    };
+    ToyMakersEngine::SignalObserver<PlayerID> mObserveControlInterface {
+        *this, "ControlInterfaceObserved",
+        [this](PlayerID playerID) { this->onControlInterface(playerID); }
     };
 
     ToyMakersEngine::Signal<PieceTypeID, glm::u8vec2> mSigLaunchPieceAttempted {

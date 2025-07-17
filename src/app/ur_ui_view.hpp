@@ -31,6 +31,7 @@ private:
     };
     std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrController {};
     std::string mControllerPath {};
+    PlayerID mControlledBy {};
 
     static const std::map<std::string, Buttons> kButtonEnumMap;
 
@@ -40,8 +41,10 @@ private:
     void onPlayerUpdated(PlayerData player);
     void onDiceUpdated(DiceData dice);
     void onMoveMade(MoveResultData moveData);
+    void onControlInterface(PlayerID playerID);
     bool onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
-    std::shared_ptr<ToyMakersEngine::SimObject> getLaunchButton(PieceTypeID pieceType);
+
+    std::shared_ptr<ToyMakersEngine::SimObject> getLaunchButton(PieceTypeID pieceTypeID, PlayerID player);
     std::shared_ptr<ToyMakersEngine::SimObject> getEndTurnButton();
 
     std::weak_ptr<ToyMakersEngine::FixedActionBinding> handleCancel { declareFixedActionBinding(
@@ -74,6 +77,11 @@ public:
     ToyMakersEngine::SignalObserver<MoveResultData> mObserveMoveMade {
         *this, "MoveMadeObserved",
         [this](MoveResultData moveData) { this->onMoveMade(moveData); }
+    };
+
+    ToyMakersEngine::SignalObserver<PlayerID> mObserveControlInterface {
+        *this, "ControlInterfaceObserved",
+        [this](PlayerID playerID) { this->onControlInterface(playerID); }
     };
 
     ToyMakersEngine::Signal<> mSigDiceRollAttempted { *this, "DiceRollAttempted" };

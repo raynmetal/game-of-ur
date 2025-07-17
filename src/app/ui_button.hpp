@@ -40,6 +40,7 @@ public:
 
 private:
     State mCurrentState { State::ACTIVE };
+    bool mHovered { false };
     std::array<std::shared_ptr<NineSlicePanel>, State::TOTAL> mStatePanels {};
     glm::vec2 mAnchor {.5f, .5f};
     std::string mValue {""};

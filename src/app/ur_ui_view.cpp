@@ -97,44 +97,80 @@ void UrUIView::onPhaseUpdated(GamePhaseData phase){
     getSimObject().getByPath<UIText&>("/viewport_UI/current_turn/@UIText").updateText(playerText);
     getSimObject().getByPath<UIText&>("/viewport_UI/phase/@UIText").updateText(phaseText.str());
 
+    // disable all piece launch buttons while changing their highlight color
+    // to represent their current state (unlaunched, on board, finished)
+    for(uint8_t playerIndex { PlayerID::PLAYER_A }; playerIndex <= PlayerID::PLAYER_B; ++playerIndex) {
+        const PlayerID player { playerIndex };
+        for(uint8_t pieceType{ PieceTypeID::SWALLOW }; pieceType < PieceTypeID::TOTAL; ++pieceType) {
+            const PieceIdentity currentPlayerPieceIdentity {
+                .mType { static_cast<PieceTypeID>(pieceType) },
+                .mOwner { getModel().getPlayerData(player).mRole }
+            };
+            UIButton& button { getLaunchButton(static_cast<PieceTypeID>(pieceType), player)->getAspect<UIButton>() };
+            button.disableButton();
+            if(getModel().getCurrentPhase().mGamePhase != GamePhase::INITIATIVE) {
+                const GamePieceData currentPlayerPiece { getModel().getPieceData(currentPlayerPieceIdentity) };
+                switch(currentPlayerPiece.mState) {
+                    case Piece::State::UNLAUNCHED:
+                        button.updateHighlightColor({1.f, 1.f, 0.f, 1.f});
+                        break;
+                    case Piece::State::ON_BOARD:
+                        button.updateHighlightColor({0.f, 0.f, 1.f, 1.f});
+                        break;
+                    case Piece::State::FINISHED:
+                        button.updateHighlightColor({0.f, 1.f, 0.f, 1.f});
+                        break;
+                }
+            }
+        }
+    }
+
+    UIButton& endTurnButton { getEndTurnButton()->getAspect<UIButton>() };
+    endTurnButton.disableButton();
+}
+
+void UrUIView::onControlInterface(PlayerID player) {
+    std::cout << "UrUIView: on UI control requested\n";
+    mControlledBy = player;
+    const GamePhaseData phase{ getModel().getCurrentPhase() };
+    const DiceData dice { getModel().getDiceData() };
+
     // enable piece launch buttons only for pieces that are available
-    std::vector<PieceTypeID> unlaunchedPieceTypes { getModel().getUnlaunchedPieceTypes(phase.mTurn) };
     for(uint8_t pieceType{ PieceTypeID::SWALLOW }; pieceType < PieceTypeID::TOTAL; ++pieceType) {
         const PieceIdentity currentPlayerPieceIdentity {
             .mType { static_cast<PieceTypeID>(pieceType) },
             .mOwner { getModel().getPlayerData(phase.mTurn).mRole }
         };
-        UIButton& button { getLaunchButton(static_cast<PieceTypeID>(pieceType))->getAspect<UIButton>() };
 
-        if(getModel().canLaunchPiece(currentPlayerPieceIdentity, phase.mTurn)) {
+        if(getModel().canLaunchPiece(currentPlayerPieceIdentity, mControlledBy)) {
+            UIButton& button {
+                getLaunchButton(static_cast<PieceTypeID>(pieceType),
+                mControlledBy)->getAspect<UIButton>()
+            };
             button.enableButton();
-        } else {
-            button.disableButton();
-        }
-
-        if(getModel().getCurrentPhase().mGamePhase != GamePhase::INITIATIVE) {
-            const GamePieceData currentPlayerPiece { getModel().getPieceData(currentPlayerPieceIdentity) };
-            switch(currentPlayerPiece.mState) {
-                case Piece::State::UNLAUNCHED:
-                    button.updateHighlightColor({1.f, 1.f, 0.f, 1.f});
-                    break;
-                case Piece::State::ON_BOARD:
-                    button.updateHighlightColor({0.f, 0.f, 1.f, 1.f});
-                    break;
-                case Piece::State::FINISHED:
-                    button.updateHighlightColor({0.f, 1.f, 0.f, 1.f});
-                    break;
-            }
         }
     }
 
     // enable the end turn button only at the end of a turn and
     // only during initiative and play phases
     UIButton& endTurnButton { getEndTurnButton()->getAspect<UIButton>() };
-    if(phase.mTurnPhase == TurnPhase::END && phase.mGamePhase != GamePhase::END) {
+    if(
+        phase.mTurnPhase == TurnPhase::END 
+        && phase.mGamePhase != GamePhase::END
+        && phase.mTurn == player
+    ) {
         endTurnButton.enableButton();
-    } else {
-        endTurnButton.disableButton();
+    }
+
+    // enable the dice button if a die can be rolled
+    UIButton& diceButton { getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton") };
+    if(
+        getModel().getCurrentPhase().mGamePhase != GamePhase::END 
+        && getModel().getCurrentPhase().mTurnPhase != TurnPhase::END
+        && getModel().getCurrentPlayer().mPlayer == mControlledBy
+        && dice.mState != Dice::State::SECONDARY_ROLLED
+    ) {
+        diceButton.enableButton();
     }
 }
 
@@ -165,15 +201,7 @@ void UrUIView::onDiceUpdated(DiceData dice) {
     }
 
     UIButton& buttonAspect { getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton") };
-    if(
-        getModel().getCurrentPhase().mGamePhase == GamePhase::END 
-        || getModel().getCurrentPhase().mTurnPhase == TurnPhase::END
-        || dice.mState == Dice::State::SECONDARY_ROLLED
-    ) {
-        buttonAspect.disableButton();
-    } else {
-        buttonAspect.enableButton();
-    }
+    buttonAspect.disableButton();
     buttonAspect.updateText(displayString);
 }
 
@@ -187,15 +215,22 @@ bool UrUIView::onCancel(const ToyMakersEngine::ActionData& actionData, const Toy
     return true;
 }
 
-std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getLaunchButton(PieceTypeID pieceType) {
-    std::string pieceString { 
-        std::find_if(kButtonEnumMap.begin(), kButtonEnumMap.end(),
+std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getLaunchButton(PieceTypeID pieceType, PlayerID player) {
+    const std::string playerPanelString {
+        "player_panel_" + static_cast<std::string>((player == PlayerID::PLAYER_A)? "a": "b")
+    };
+    const std::string pieceString {
+        "launch_" + std::find_if(kButtonEnumMap.begin(), kButtonEnumMap.end(),
             [pieceType](std::pair<std::string, UrUIView::Buttons> item){
                 return static_cast<UrUIView::Buttons>(pieceType) == item.second;
             }
         )->first
     };
-    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>("/viewport_UI/player_panel_a/launch_" + pieceString + "/");
+    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>(
+        "/viewport_UI/" 
+        + playerPanelString + "/" 
+        + pieceString + "/"
+    );
 }
 
 std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getEndTurnButton() {

@@ -116,7 +116,7 @@ void UIButton::onActivated() {
 
 void UIButton::enableButton() {
     if(mCurrentState != State::INACTIVE) return;
-    updateButtonState(State::ACTIVE);
+    updateButtonState(mHovered? State::HOVER: State::ACTIVE);
 }
 void UIButton::disableButton() {
     if(mCurrentState == State::INACTIVE) return;
@@ -184,20 +184,23 @@ void UIButton::fireStateEvent() {
 }
 
 bool UIButton::onPointerEnter(glm::vec4 pointerLocation) {
+    mHovered=true;
     if(mCurrentState == State::INACTIVE) return false;
+
     updateButtonState(State::HOVER);
     return true;
 }
 
 bool UIButton::onPointerLeave() {
+    mHovered=false;
     if(mCurrentState == State::INACTIVE) return false;
+
     updateButtonState(State::ACTIVE);
     return true;
 }
 
 bool UIButton::onPointerLeftClick(glm::vec4 pointerLocation) {
     if(mCurrentState == State::INACTIVE) return false;
-    assert(mCurrentState == State::HOVER && "Button must be hovered over before it can be clicked");
     updateButtonState(State::PRESSED);
     return true;
 }

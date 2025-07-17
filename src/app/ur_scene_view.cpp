@@ -169,3 +169,7 @@ void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
     };
     mPieceNodeMap[movedPieceIdentity]->updateComponent<ToyMakersEngine::Placement>(piecePlacement);
 }
+
+void UrSceneView::onControlInterface(PlayerID player) {
+    mControlledBy = player;
+}

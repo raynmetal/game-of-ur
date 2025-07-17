@@ -35,3 +35,8 @@ void PlayerLocal::onDiceRollAttempted() {
 void PlayerLocal::onMoveBoardPieceAttempted(PieceIdentity piece) {
     mControls->attemptMoveBoardPiece(piece);
 }
+
+void PlayerLocal::onMovePrompted(GamePhaseData phaseData) {
+    if(phaseData.mTurn != mControls->getPlayer()) return;
+    mSigControlInterface.emit(mControls->getPlayer());
+}

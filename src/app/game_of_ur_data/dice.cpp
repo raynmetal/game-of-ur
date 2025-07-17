@@ -20,7 +20,7 @@ uint8_t Dice::getResult(GamePhase currentPhase) const {
             return mPrimaryRoll;
 
         case GamePhase::END:
-            assert(false && "Dice rolls are invalid for the last game phase");
+            return 0;
     }
 
     return 0;

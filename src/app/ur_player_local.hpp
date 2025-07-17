@@ -22,8 +22,14 @@ private:
     void onNextTurnAttempted();
     void onDiceRollAttempted();
     void onMoveBoardPieceAttempted(PieceIdentity piece);
+    void onMovePrompted(GamePhaseData phaseData);
 
 public:
+    ToyMakersEngine::SignalObserver<GamePhaseData> mObserveMovePrompted {
+        *this, "MovePromptedObserved",
+        [this](GamePhaseData phaseData) {this->onMovePrompted(phaseData);}
+    };
+
     ToyMakersEngine::SignalObserver<PieceTypeID, glm::u8vec2> mObservePieceLaunchAttempted {
         *this, "LaunchPieceAttemptedObserved",
         [this](PieceTypeID pieceType, glm::u8vec2 location) { this->onLaunchPieceAttempted(pieceType, location); }
@@ -40,6 +46,8 @@ public:
         *this, "DiceRollAttemptedObserved",
         [this]() { this->onDiceRollAttempted(); }
     };
+
+    ToyMakersEngine::Signal<PlayerID> mSigControlInterface {*this, "ControlInterface"};
 };
 
 #endif

@@ -146,6 +146,14 @@
             "to": "/ui_root/@UrUIView", "observer": "PhaseUpdatedObserved"
         },
         {
+            "from": "/@UrController", "signal": "MovePrompted",
+            "to": "/player_local_a/@UrPlayerLocal", "observer": "MovePromptedObserved"
+        },
+        {
+            "from": "/@UrController", "signal": "MovePrompted",
+            "to": "/player_local_b/@UrPlayerLocal", "observer": "MovePromptedObserved"
+        },
+        {
             "from": "/@UrController", "signal": "ScoreUpdated",
             "to": "/ui_root/@UrUIView", "observer": "ScoreUpdatedObserved"
         },
@@ -189,6 +197,23 @@
         {
             "to": "/player_local_b/@UrPlayerLocal", "observer": "LaunchPieceAttemptedObserved",
             "from": "/scene_root_3D/@UrSceneView", "signal": "LaunchPieceAttempted"
+        },
+
+        {
+            "from": "/player_local_a/@UrPlayerLocal", "signal": "ControlInterface",
+            "to": "/scene_root_3D/@UrSceneView", "observer": "ControlInterfaceObserved"
+        },
+        {
+            "from": "/player_local_a/@UrPlayerLocal", "signal": "ControlInterface",
+            "to": "/ui_root/@UrUIView", "observer": "ControlInterfaceObserved"
+        },
+        {
+            "from": "/player_local_b/@UrPlayerLocal", "signal": "ControlInterface",
+            "to": "/scene_root_3D/@UrSceneView", "observer": "ControlInterfaceObserved"
+        },
+        {
+            "from": "/player_local_b/@UrPlayerLocal", "signal": "ControlInterface",
+            "to": "/ui_root/@UrUIView", "observer": "ControlInterfaceObserved"
         },
 
         {
