@@ -17,8 +17,70 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "player",
             "parent": "/",
+            "type": "SimObject",
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Player NA",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "color": [255, 255, 255, 255],
+                    "scale": 1.1,
+                    "anchor": [0.0, 0.0]
+                }
+            ],
+            "components":[
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ]
+        },
+
+        {
+            "name": "counters",
+            "parent": "/",
+            "type": "SimObject",
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Counters: 0",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "color": [255, 255, 255, 255],
+                    "scale": 1.0,
+                    "anchor": [0.0, 0.0]
+                }
+            ],
+            "components":[
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, -35.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ]
+        },
+
+        {
+            "name": "buttons",
+            "parent": "/",
+            "type": "SceneNode",
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, -76.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ]
+        },
+
+        {
+            "name": "Ur_Button",
+            "parent": "/buttons/",
             "type": "Scene",
             "copy": true,
             "overrides": {
@@ -54,10 +116,9 @@
                 ]
             }
         },
-
         {
             "name": "Ur_Button",
-            "parent": "/",
+            "parent": "/buttons/",
             "type": "Scene",
             "copy": true,
             "overrides": {
@@ -95,7 +156,7 @@
         },
         {
             "name": "Ur_Button",
-            "parent": "/",
+            "parent": "/buttons/",
             "type": "Scene",
             "copy": true,
             "overrides": {
@@ -133,7 +194,7 @@
         },
         {
             "name": "Ur_Button",
-            "parent": "/",
+            "parent": "/buttons/",
             "type": "Scene",
             "copy": true,
             "overrides": {
@@ -172,7 +233,7 @@
         },
         {
             "name": "Ur_Button",
-            "parent": "/",
+            "parent": "/buttons/",
             "type": "Scene",
             "copy": true,
             "overrides": {

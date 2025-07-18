@@ -177,8 +177,6 @@ void UrUIView::onControlInterface(PlayerID player) {
 void UrUIView::onScoreUpdated(GameScoreData score) {
     std::cout << "UrUIView: on score updated\n";
     getSimObject().getByPath<UIText&>("/viewport_UI/common_pile/@UIText").updateText("common: " + std::to_string(static_cast<int>(score.mCommonPoolCounters)));
-    getSimObject().getByPath<UIText&>("/viewport_UI/one_pile/@UIText").updateText("one: " + std::to_string(static_cast<int>(score.mPlayerOneCounters)));
-    getSimObject().getByPath<UIText&>("/viewport_UI/two_pile/@UIText").updateText("two: " + std::to_string(static_cast<int>(score.mPlayerTwoCounters)));
 }
 
 void UrUIView::onPlayerUpdated(PlayerData player) {
@@ -228,8 +226,8 @@ std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getLaunchButton(PieceTypeI
     };
     return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>(
         "/viewport_UI/" 
-        + playerPanelString + "/" 
-        + pieceString + "/"
+        + playerPanelString 
+        + "/buttons/" + pieceString  + "/"
     );
 }
 
