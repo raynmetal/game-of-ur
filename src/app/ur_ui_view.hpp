@@ -45,6 +45,7 @@ private:
     bool onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
 
     std::shared_ptr<ToyMakersEngine::SimObject> getLaunchButton(PieceTypeID pieceTypeID, PlayerID player);
+    std::shared_ptr<ToyMakersEngine::SceneNode> getPlayerPanel(PlayerID player);
     std::shared_ptr<ToyMakersEngine::SimObject> getEndTurnButton();
 
     std::weak_ptr<ToyMakersEngine::FixedActionBinding> handleCancel { declareFixedActionBinding(

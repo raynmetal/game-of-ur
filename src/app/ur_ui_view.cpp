@@ -69,29 +69,29 @@ void UrUIView::onButtonClicked(const std::string& button) {
 
 void UrUIView::onPhaseUpdated(GamePhaseData phase){
     std::cout << "UrUIView: on phase updated\n";
-    const std::string playerText { ((phase.mTurn == PlayerID::PLAYER_A)? "player a's turn": "player b's turn") };
+    const std::string playerText { ((phase.mTurn == PlayerID::PLAYER_A)? "Player A's turn": "Player B's turn") };
     std::stringstream phaseText {};
     switch(phase.mGamePhase) {
         case GamePhase::INITIATIVE:
-            phaseText << "initiative ";
+            phaseText << "Initiative";
             break;
         case GamePhase::PLAY:
-            phaseText << "play ";
+            phaseText << "Play";
             break;
         case GamePhase::END:
-            phaseText << "end ";
+            phaseText << "End";
             break;
     }
-    phaseText << "phase; turn ";
+    phaseText << ": ";
     switch(phase.mTurnPhase) {
         case TurnPhase::ROLL_DICE:
-            phaseText << "roll dice";
+            phaseText << "Roll the dice.";
             break;
         case TurnPhase::MOVE_PIECE:
-            phaseText << "move piece";
+            phaseText << "Move a piece.";
             break;
         case TurnPhase::END:
-            phaseText << "end";
+            phaseText << "End turn.";
             break;
     }
     getSimObject().getByPath<UIText&>("/viewport_UI/current_turn/@UIText").updateText(playerText);
@@ -108,7 +108,7 @@ void UrUIView::onPhaseUpdated(GamePhaseData phase){
             };
             UIButton& button { getLaunchButton(static_cast<PieceTypeID>(pieceType), player)->getAspect<UIButton>() };
             button.disableButton();
-            if(getModel().getCurrentPhase().mGamePhase != GamePhase::INITIATIVE) {
+            if(phase.mGamePhase != GamePhase::INITIATIVE) {
                 const GamePieceData currentPlayerPiece { getModel().getPieceData(currentPlayerPieceIdentity) };
                 switch(currentPlayerPiece.mState) {
                     case Piece::State::UNLAUNCHED:
@@ -157,7 +157,7 @@ void UrUIView::onControlInterface(PlayerID player) {
     if(
         phase.mTurnPhase == TurnPhase::END 
         && phase.mGamePhase != GamePhase::END
-        && phase.mTurn == player
+        && phase.mTurn == mControlledBy
     ) {
         endTurnButton.enableButton();
     }
@@ -165,9 +165,9 @@ void UrUIView::onControlInterface(PlayerID player) {
     // enable the dice button if a die can be rolled
     UIButton& diceButton { getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton") };
     if(
-        getModel().getCurrentPhase().mGamePhase != GamePhase::END 
-        && getModel().getCurrentPhase().mTurnPhase != TurnPhase::END
-        && getModel().getCurrentPlayer().mPlayer == mControlledBy
+        phase.mGamePhase != GamePhase::END 
+        && phase.mTurnPhase != TurnPhase::END
+        && phase.mTurn == mControlledBy
         && dice.mState != Dice::State::SECONDARY_ROLLED
     ) {
         diceButton.enableButton();
@@ -176,35 +176,57 @@ void UrUIView::onControlInterface(PlayerID player) {
 
 void UrUIView::onScoreUpdated(GameScoreData score) {
     std::cout << "UrUIView: on score updated\n";
-    getSimObject().getByPath<UIText&>("/viewport_UI/common_pile/@UIText").updateText("common: " + std::to_string(static_cast<int>(score.mCommonPoolCounters)));
+    getSimObject().getByPath<UIText&>("/viewport_UI/common_pile/@UIText").updateText("Winning pile: " + std::to_string(static_cast<int>(score.mCommonPoolCounters)));
 }
 
 void UrUIView::onPlayerUpdated(PlayerData player) {
     std::cout << "UrUIView: on player updated\n";
+    std::shared_ptr<ToyMakersEngine::SceneNode> playerPanel { getPlayerPanel(player.mPlayer) };
+
+    std::string playerText { (player.mPlayer == PlayerID::PLAYER_A)? "Player A": "Player B"};
+    switch(player.mRole) {
+        case RoleID::ONE:
+            playerText += " (Black)";
+            break;
+        case RoleID::TWO:
+            playerText += " (White)";
+            break;
+
+        case RoleID::NA:
+            break;
+    }
+    const std::string countersText { "counters: " + std::to_string(static_cast<int>(player.mCounters)) };
+
+    playerPanel->getByPath<UIText&>("/player/@UIText").updateText(playerText);
+    playerPanel->getByPath<UIText&>("/counters/@UIText").updateText(countersText);
 }
 
 void UrUIView::onDiceUpdated(DiceData dice) {
     std::cout << "UrUIView: on dice updated\n";
-    std::string displayString;
-    switch (dice.mState) {
-        case Dice::State::UNROLLED:
-            displayString = "dice unrolled";
-            break;
-        case Dice::State::PRIMARY_ROLLED:
-            displayString = "primary roll " + std::to_string(static_cast<int>(dice.mResultScore));
-            break;
-        case Dice::State::SECONDARY_ROLLED:
-            displayString = "final roll " + std::to_string(static_cast<int>(dice.mResultScore));
-            break;
-    }
 
-    UIButton& buttonAspect { getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton") };
-    buttonAspect.disableButton();
-    buttonAspect.updateText(displayString);
+    getSimObject().getByPath<UIText&>("/viewport_UI/primary_roll/@UIText").updateText(
+        "Primary: " + ((dice.mState!=Dice::State::UNROLLED)? std::to_string(static_cast<int>(dice.mPrimaryRoll)): "NA")
+    );
+    getSimObject().getByPath<UIText&>("/viewport_UI/secondary_roll/@UIText").updateText(
+        std::string{"Double/Quit: "} + (
+            (dice.mState != Dice::State::SECONDARY_ROLLED)? 
+                "NA":
+                (dice.mSecondaryRoll? "D": "Q")
+        )
+    );
+    getSimObject().getByPath<UIText&>("/viewport_UI/final_roll/@UIText").updateText(
+        std::string("Final: ") 
+        + ((dice.mState != Dice::State::UNROLLED)? std::to_string(static_cast<int>(dice.mResultScore)): "NA")
+    );
+    getSimObject().getByPath<UIText&>("/viewport_UI/previous_roll/@UIText").updateText(
+        std::string("Previous: ") + std::to_string(static_cast<int>(dice.mPreviousResult))
+    );
+    getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
 }
 
 void UrUIView::onMoveMade(MoveResultData moveData) {
     std::cout << "UrUIView: on move made\n";
+    getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
 }
 
 bool UrUIView::onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
@@ -214,9 +236,6 @@ bool UrUIView::onCancel(const ToyMakersEngine::ActionData& actionData, const Toy
 }
 
 std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getLaunchButton(PieceTypeID pieceType, PlayerID player) {
-    const std::string playerPanelString {
-        "player_panel_" + static_cast<std::string>((player == PlayerID::PLAYER_A)? "a": "b")
-    };
     const std::string pieceString {
         "launch_" + std::find_if(kButtonEnumMap.begin(), kButtonEnumMap.end(),
             [pieceType](std::pair<std::string, UrUIView::Buttons> item){
@@ -224,10 +243,17 @@ std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getLaunchButton(PieceTypeI
             }
         )->first
     };
-    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>(
-        "/viewport_UI/" 
-        + playerPanelString 
-        + "/buttons/" + pieceString  + "/"
+    return getPlayerPanel(player)->getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>(
+            "/buttons/" + pieceString + "/"
+    );
+}
+
+std::shared_ptr<ToyMakersEngine::SceneNode> UrUIView::getPlayerPanel(PlayerID player) {
+    const std::string playerPanelString {
+        "player_panel_" + static_cast<std::string>((player == PlayerID::PLAYER_A)? "a": "b")
+    };
+    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SceneNode>>(
+        "/viewport_UI/" + playerPanelString + "/"
     );
 }
 

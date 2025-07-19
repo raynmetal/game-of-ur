@@ -14,6 +14,8 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrController::clone() cons
 
 void UrController::onActivated() {
     mSigScoreUpdated.emit(mModel.getScore());
+    mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_A));
+    mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_B));
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
     mSigDiceUpdated.emit(mModel.getDiceData());
 

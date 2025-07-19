@@ -34,7 +34,6 @@ void GameOfUrModel::startPhasePlay() {
     mTurnPhase = TurnPhase::ROLL_DICE;
     mRoundPhase = RoundPhase::IN_PROGRESS;
     mDice->reset();
-    mPreviousRoll = 0;
 
     // assign roles to each player
     mCurrentPlayer = playerAGoesFirst? PlayerID::PLAYER_A: PlayerID::PLAYER_B;
@@ -387,7 +386,7 @@ PlayerData GameOfUrModel::getPlayerData(RoleID role) const {
 DiceData GameOfUrModel::getDiceData() const {
     return {
         .mState { mDice->getState() },
-        .mPrimaryRoll { mDice->getSecondaryRoll() },
+        .mPrimaryRoll { mDice->getPrimaryRoll() },
         .mSecondaryRoll { mDice->getSecondaryRoll() },
         .mResultScore { mDice->getResult(mGamePhase) },
         .mPreviousResult { mPreviousRoll },
