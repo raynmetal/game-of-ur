@@ -134,6 +134,23 @@
 
     "connections": [
         {
+            "from": "/@UrController", "signal": "ControllerReady",
+            "to": "/scene_root_3D/@UrSceneView", "observer": "ControllerReadyObserved"
+        },
+        {
+            "from": "/@UrController", "signal": "ControllerReady",
+            "to": "/ui_root/@UrUIView", "observer": "ControllerReadyObserved"
+        },
+        {
+            "from": "/scene_root_3D/@UrSceneView", "signal": "ViewSubscribed",
+            "to": "/@UrController", "observer": "ViewSubscribedObserved"
+        },
+        {
+            "from": "/ui_root/@UrUIView", "signal": "ViewSubscribed",
+            "to": "/@UrController", "observer": "ViewSubscribedObserved"
+        },
+
+        {
             "from": "/@UrController", "signal": "MoveMade",
             "to": "/scene_root_3D/@UrSceneView", "observer": "MoveMadeObserved"
         },
@@ -199,6 +216,23 @@
         {
             "from": "/ui_root/@UrUIView", "signal": "LaunchPieceCanceled",
             "to": "/scene_root_3D/@UrSceneView", "observer": "LaunchPieceCanceledObserved"
+        },
+
+        {
+            "from": "/@UrController", "signal": "ViewUpdateStarted",
+            "to": "/ui_root/@UrUIView", "observer": "ViewUpdateStartedObserved"
+        },
+        {
+            "from": "/@UrController", "signal": "ViewUpdateStarted",
+            "to": "/scene_root_3D/@UrSceneView", "observer": "ViewUpdateStartedObserved"
+        },
+        {
+            "from": "/ui_root/@UrUIView", "signal": "ViewUpdateCompleted",
+            "to": "/@UrController", "observer": "ViewUpdateCompletedObserved"
+        },
+        {
+            "from": "/scene_root_3D/@UrSceneView", "signal": "ViewUpdateCompleted",
+            "to": "/@UrController", "observer": "ViewUpdateCompletedObserved"
         }
     ]
 }

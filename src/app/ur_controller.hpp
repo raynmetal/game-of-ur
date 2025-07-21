@@ -23,20 +23,39 @@ public:
 private:
     GameOfUrModel mModel {};
     uint8_t mControlsCreated {0};
+    std::map<std::string, bool> mViewUpdated {};
+
+    bool viewUpdatesComplete() const;
+
+    void onViewSubscribed(const std::string& subscriber);
 
     void onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, glm::u8vec2 launchLocation=glm::u8vec2{0,0});
     void onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piece);
     void onNextTurnAttempted(PlayerID player);
     void onDiceRollAttempted(PlayerID player);
 
+    void onViewUpdatesCompleted(const std::string& viewName);
+
     void onActivated() override;
 
 public:
+    ToyMakersEngine::Signal<> mSigControllerReady { *this, "ControllerReady" };
+    ToyMakersEngine::SignalObserver<const std::string&> mObserveViewSubscribed { 
+        *this, "ViewSubscribedObserved",
+        [this](const std::string& viewName) {this->onViewSubscribed(viewName);}
+    };
+
     ToyMakersEngine::Signal<GamePhaseData> mSigPhaseUpdated { *this, "PhaseUpdated" };
     ToyMakersEngine::Signal<GameScoreData> mSigScoreUpdated { *this, "ScoreUpdated" };
     ToyMakersEngine::Signal<PlayerData> mSigPlayerUpdated { *this, "PlayerUpdated" };
     ToyMakersEngine::Signal<DiceData> mSigDiceUpdated { *this, "DiceUpdated" };
     ToyMakersEngine::Signal<MoveResultData> mSigMoveMade { *this, "MoveMade" };
+
+    ToyMakersEngine::Signal<> mSigViewUpdateStarted { *this, "ViewUpdateStarted" };
+    ToyMakersEngine::SignalObserver<const std::string&> mObserveViewUpdateCompleted {
+        *this, "ViewUpdateCompletedObserved",
+        [this](const std::string& viewName) { this->onViewUpdatesCompleted(viewName); }
+    };
 
     ToyMakersEngine::Signal<GamePhaseData> mSigMovePrompted { *this, "MovePrompted" };
 friend class UrPlayerControls;

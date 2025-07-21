@@ -35,11 +35,14 @@ private:
 
     static const std::map<std::string, Buttons> kButtonEnumMap;
 
+    void onControllerReady();
+
     void onButtonClicked(const std::string& button);
     void onPhaseUpdated(GamePhaseData phase);
     void onScoreUpdated(GameScoreData score);
     void onPlayerUpdated(PlayerData player);
     void onDiceUpdated(DiceData dice);
+    void onViewUpdateStarted();
     void onMoveMade(MoveResultData moveData);
     void onControlInterface(PlayerID playerID);
     bool onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
@@ -89,6 +92,20 @@ public:
     ToyMakersEngine::Signal<> mSigNextTurnAttempted { *this, "NextTurnAttempted" };
     ToyMakersEngine::Signal<PieceTypeID> mSigLaunchPieceInitiated { *this, "LaunchPieceInitiated" };
     ToyMakersEngine::Signal<> mSigLaunchPieceCanceled { *this, "LaunchPieceCanceled" };
+
+    ToyMakersEngine::SignalObserver<> mObserveControllerReady { 
+        *this, "ControllerReadyObserved",
+        [this]() {this->onControllerReady();}
+    };
+    ToyMakersEngine::Signal<std::string> mSigViewSubscribed {*this, "ViewSubscribed"};
+
+    ToyMakersEngine::SignalObserver<> mObserveViewUpdateStarted { 
+        *this, "ViewUpdateStartedObserved",
+        [this](){ this->onViewUpdateStarted(); }
+    };
+    ToyMakersEngine::Signal<std::string> mSigViewUpdateCompleted {
+        *this, "ViewUpdateCompleted"
+    };
 };
 
 #endif

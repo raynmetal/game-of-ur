@@ -33,10 +33,14 @@ private:
     Mode mMode { Mode::GENERAL };
     PlayerID mControlledBy {};
 
+    void onControllerReady();
+
     void onBoardClicked(glm::u8vec2 boardLocation);
     void onLaunchPieceInitiated(PieceTypeID piece);
     void onLaunchPieceCanceled();
     void onMoveMade(const MoveResultData& moveResultData);
+
+    void onViewUpdateStarted();
 
     void onControlInterface(PlayerID player);
 
@@ -69,6 +73,20 @@ public:
     };
     ToyMakersEngine::Signal<PieceIdentity> mSigMovePieceAttempted {
         *this, "MovePieceAttempted"
+    };
+
+    ToyMakersEngine::SignalObserver<> mObserveControllerReady {
+        *this, "ControllerReadyObserved",
+        [this]() {this->onControllerReady();}
+    };
+    ToyMakersEngine::Signal<std::string> mSigViewSubscribed {*this, "ViewSubscribed"};
+
+    ToyMakersEngine::SignalObserver<> mObserveViewUpdateStarted { 
+        *this, "ViewUpdateStartedObserved",
+        [this](){ this->onViewUpdateStarted(); }
+    };
+    ToyMakersEngine::Signal<std::string> mSigViewUpdateCompleted {
+        *this, "ViewUpdateCompleted"
     };
 };
 

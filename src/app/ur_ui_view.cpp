@@ -260,3 +260,15 @@ std::shared_ptr<ToyMakersEngine::SceneNode> UrUIView::getPlayerPanel(PlayerID pl
 std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getEndTurnButton() {
     return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>("/viewport_UI/next_turn/");
 }
+
+void UrUIView::onControllerReady() {
+    const std::string viewPath { getSimObject().getPathFromAncestor(mGameOfUrController.lock()) };
+
+    mSigViewSubscribed.emit(viewPath);
+}
+
+void UrUIView::onViewUpdateStarted() {
+    const std::string viewPath { getSimObject().getPathFromAncestor(mGameOfUrController.lock()) };
+
+    mSigViewUpdateCompleted.emit(viewPath);
+}

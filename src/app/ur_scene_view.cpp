@@ -173,3 +173,15 @@ void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
 void UrSceneView::onControlInterface(PlayerID player) {
     mControlledBy = player;
 }
+
+void UrSceneView::onControllerReady() {
+    const std::string viewPath { getSimObject().getPathFromAncestor(mGameOfUrController.lock()) };
+
+    mSigViewSubscribed.emit(viewPath);
+}
+
+void UrSceneView::onViewUpdateStarted() {
+    const std::string viewPath { getSimObject().getPathFromAncestor(mGameOfUrController.lock()) };
+
+    mSigViewUpdateCompleted.emit(viewPath);
+}

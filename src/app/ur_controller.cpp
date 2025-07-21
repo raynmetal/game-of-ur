@@ -12,14 +12,34 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrController::clone() cons
     return std::shared_ptr<UrController>( new UrController {} );
 }
 
+bool UrController::viewUpdatesComplete() const {
+    for(auto viewUpdatePair: mViewUpdated) {
+        if(!viewUpdatePair.second) { return false; }
+    }
+    return true;
+}
+
+void UrController::onViewSubscribed(const std::string& subscriber) {
+    mViewUpdated[subscriber] = false;
+}
+
+void UrController::onViewUpdatesCompleted(const std::string& viewName) {
+    mViewUpdated.at(viewName) = true;
+    if(!viewUpdatesComplete()) { return; }
+
+    mSigMovePrompted.emit(mModel.getCurrentPhase());
+}
+
 void UrController::onActivated() {
+    mSigControllerReady.emit();
+
     mSigScoreUpdated.emit(mModel.getScore());
     mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_A));
     mSigPlayerUpdated.emit(mModel.getPlayerData(PlayerID::PLAYER_B));
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
     mSigDiceUpdated.emit(mModel.getDiceData());
 
-    mSigMovePrompted.emit(mModel.getCurrentPhase());
+    mSigViewUpdateStarted.emit();
 }
 
 std::unique_ptr<UrPlayerControls> UrController::createControls() {
@@ -41,7 +61,7 @@ void UrController::onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, 
     mSigMoveMade.emit(moveResults);
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
 
-    mSigMovePrompted.emit(mModel.getCurrentPhase());
+    mSigViewUpdateStarted.emit();
 }
 
 void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piece) {
@@ -60,7 +80,7 @@ void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piec
     mSigMoveMade.emit(moveResults);
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
 
-    mSigMovePrompted.emit(mModel.getCurrentPhase());
+    mSigViewUpdateStarted.emit();
 }
 
 void UrController::onNextTurnAttempted(PlayerID player) {
@@ -82,7 +102,7 @@ void UrController::onNextTurnAttempted(PlayerID player) {
         mSigScoreUpdated.emit(mModel.getScore());
     }
 
-    mSigMovePrompted.emit(mModel.getCurrentPhase());
+    mSigViewUpdateStarted.emit();
 }
 
 void UrController::onDiceRollAttempted(PlayerID player) {
@@ -91,7 +111,8 @@ void UrController::onDiceRollAttempted(PlayerID player) {
     mModel.rollDice(player);
     mSigDiceUpdated.emit(mModel.getDiceData());
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
-    mSigMovePrompted.emit(mModel.getCurrentPhase());
+
+    mSigViewUpdateStarted.emit();
 }
 
 void UrPlayerControls::attemptDiceRoll() {
