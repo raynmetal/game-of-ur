@@ -5,6 +5,15 @@
 #include "ur_controller.hpp"
 #include "ur_scene_view.hpp"
 
+bool operator<(const UrPieceAnimationKey& one, const UrPieceAnimationKey& two) {
+    return (
+        one.mTime > two.mTime
+        || (
+            one.mTime == two.mTime
+            && one.mPieceIdentity < two.mPieceIdentity
+        )
+    );
+}
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneView::clone() const {
     std::shared_ptr<UrSceneView> sceneView{ std::make_shared<UrSceneView>() };
@@ -135,39 +144,79 @@ void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
 
     const PieceIdentity& displacedPieceIdentity { moveResultData.mDisplacedPiece.mIdentity };
     const PieceIdentity& movedPieceIdentity { moveResultData.mMovedPiece.mIdentity };
+    uint32_t animationOffset { 0 };
 
     if(displacedPieceIdentity.mOwner != RoleID::NA) {
-        mPieceNodeMap.at(displacedPieceIdentity)->removeNode("/");
-        mPieceNodeMap.erase(displacedPieceIdentity);
-    }
-
-    if(moveResultData.mFlags & MoveResultData::COMPLETES_ROUTE) {
-        mPieceNodeMap.at(movedPieceIdentity)->removeNode("/");
-        mPieceNodeMap.erase(movedPieceIdentity);
-        return;
-    }
-
-    if(!mPieceNodeMap[movedPieceIdentity]) {
-        std::shared_ptr<ToyMakersEngine::StaticModel> model {
-            ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::StaticModel>(
-                mPieceModelMap.at(movedPieceIdentity)
-            )
+        // Schedule animation for this piece getting knocked off the board
+        ToyMakersEngine::Placement displacedPiecePlacement { 
+            mPieceNodeMap.at(displacedPieceIdentity)->getComponent<ToyMakersEngine::Placement>()
         };
-        mPieceNodeMap[movedPieceIdentity] = ToyMakersEngine::SceneNode::create(
-            ToyMakersEngine::Placement{},
-            mPieceModelMap.at(movedPieceIdentity),
-            model
+        mAnimationKeys.push(
+            UrPieceAnimationKey {
+                .mTime { animationOffset },
+                .mPieceIdentity { displacedPieceIdentity },
+                .mPlacement { displacedPiecePlacement },
+            }
         );
-        getSimObject().addNode(
-            mPieceNodeMap[movedPieceIdentity],
-            "/viewport_3D/"
+        displacedPiecePlacement.mPosition.y += 15.f;
+        animationOffset += 700;
+        mAnimationKeys.push(
+            UrPieceAnimationKey {
+                .mTime { animationOffset },
+                .mPieceIdentity{ displacedPieceIdentity },
+                .mPlacement { displacedPiecePlacement },
+                .mRemove { true }
+            }
         );
     }
 
-    const ToyMakersEngine::Placement piecePlacement {
-        .mPosition { getBoard().gridIndicesToBoardPoint(moveResultData.mMovedPiece.mLocation) }
-    };
-    mPieceNodeMap[movedPieceIdentity]->updateComponent<ToyMakersEngine::Placement>(piecePlacement);
+    ToyMakersEngine::Placement startPlacement;
+    ToyMakersEngine::Placement endPlacement;
+    if(!mPieceNodeMap[movedPieceIdentity]) {
+        // This piece has just been launched
+        endPlacement = ToyMakersEngine::Placement {
+            .mPosition {
+                getBoard().gridIndicesToBoardPoint(moveResultData.mMovedPiece.mLocation)
+            }
+        };
+        startPlacement = endPlacement;
+        startPlacement.mPosition.y += 15.f;
+
+    } else {
+        startPlacement = mPieceNodeMap[movedPieceIdentity]->getComponent<ToyMakersEngine::Placement>();
+
+        if(moveResultData.mFlags & MoveResultData::COMPLETES_ROUTE) {
+            endPlacement = startPlacement;
+            endPlacement.mPosition.z += 15.f;
+
+        } else {
+            endPlacement = ToyMakersEngine::Placement {
+                .mPosition {
+                    getBoard().gridIndicesToBoardPoint(
+                        moveResultData.mMovedPiece.mLocation
+                    )
+                }
+            };
+        }
+    }
+
+    // Schedule animation for the launch/board move
+    mAnimationKeys.push(
+        UrPieceAnimationKey {
+            .mTime { animationOffset },
+            .mPieceIdentity { movedPieceIdentity },
+            .mPlacement { startPlacement }
+        }
+    );
+    animationOffset += 700;
+    mAnimationKeys.push(
+        UrPieceAnimationKey {
+            .mTime { animationOffset },
+            .mPieceIdentity { movedPieceIdentity },
+            .mPlacement { endPlacement },
+            .mRemove { static_cast<bool>(moveResultData.mFlags&MoveResultData::COMPLETES_ROUTE) }
+        }
+    );
 }
 
 void UrSceneView::onControlInterface(PlayerID player) {
@@ -181,7 +230,97 @@ void UrSceneView::onControllerReady() {
 }
 
 void UrSceneView::onViewUpdateStarted() {
-    const std::string viewPath { getSimObject().getPathFromAncestor(mGameOfUrController.lock()) };
+    mAnimationTime = 0;
+    mMode = Mode::TRANSITION;
+}
 
+void UrSceneView::variableUpdate(uint32_t variableStepMillis) {
+    if(mMode != Mode::TRANSITION) return;
+
+    mAnimationTime += variableStepMillis;
+    std::map<PieceIdentity, UrPieceAnimationKey> currentKeys {};
+
+    // retrieve the latest key frame till now for each piece
+    while(
+        !mAnimationKeys.empty() 
+        && mAnimationKeys.top().mTime <= mAnimationTime
+    ) {
+        currentKeys[mAnimationKeys.top().mPieceIdentity] = mAnimationKeys.top();
+        mAnimationKeys.pop();
+    }
+
+
+    for(auto key: currentKeys) {
+
+        // Load the model and place it in the scene if it isn't already loaded 
+        if(!mPieceNodeMap[key.first]) {
+            std::shared_ptr<ToyMakersEngine::StaticModel> model {
+                ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::StaticModel>(
+                    mPieceModelMap.at(key.first)
+                )
+            };
+            mPieceNodeMap[key.first] = ToyMakersEngine::SceneNode::create(
+                ToyMakersEngine::Placement{},
+                mPieceModelMap.at(key.first),
+                model
+            );
+            getSimObject().addNode(
+                mPieceNodeMap[key.first],
+                "/viewport_3D/"
+            );
+        }
+
+        // see if there is a future keyframe for each of the pieces
+        // implicated in the current key
+        std::vector<UrPieceAnimationKey> temp {};
+        while(
+            !mAnimationKeys.empty()
+            && mAnimationKeys.top().mPieceIdentity != key.first
+        ) {
+            temp.push_back(mAnimationKeys.top());
+            mAnimationKeys.pop();
+        }
+        bool endsAnimation { mAnimationKeys.empty() };
+
+        // We've reached the end of the animation as far as this piece goes
+        if(endsAnimation) {
+            mPieceNodeMap[key.first]->updateComponent<ToyMakersEngine::Placement>(
+                key.second.mPlacement
+            );
+            if(key.second.mRemove) {
+                mPieceNodeMap.at(key.first)->removeNode("/");
+                mPieceNodeMap.erase(key.first);
+            }
+
+        // Otherwise, interpolate between the current frame and the next one
+        } else {
+            const float progress {
+                (mAnimationTime - key.second.mTime) * 1.f
+                / (mAnimationKeys.top().mTime - key.second.mTime)
+            };
+            const ToyMakersEngine::Placement currentPlacement { ToyMakersEngine::Interpolator<ToyMakersEngine::Placement>{}(
+                key.second.mPlacement, mAnimationKeys.top().mPlacement, progress
+            ) };
+            mPieceNodeMap[key.first]->updateComponent<ToyMakersEngine::Placement>(currentPlacement);
+        }
+
+        // push keyframes unrelated to this piece back into the queue
+        for(auto storedKey: temp) {
+            mAnimationKeys.push(storedKey);
+        }
+
+        // only remove the present keyframe if the current key ended the animation
+        if(!endsAnimation) {
+            mAnimationKeys.push(key.second);
+        }
+    }
+
+    // There's some animation left to go
+    if(!mAnimationKeys.empty()) return;
+
+    // We've performed all queued animations, and it's time to signal the game 
+    // controller
+    const std::string viewPath { getSimObject().getPathFromAncestor(mGameOfUrController.lock()) };
+    mMode = Mode::GENERAL;
     mSigViewUpdateCompleted.emit(viewPath);
 }

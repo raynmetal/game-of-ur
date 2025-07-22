@@ -14,6 +14,8 @@ struct PieceIdentity {
 };
 
 bool operator<(const PieceIdentity& one, const PieceIdentity& two);
+bool operator==(const PieceIdentity& one, const PieceIdentity& two);
+bool operator!=(const PieceIdentity& one, const PieceIdentity& two);
 
 class Piece {
 public:
