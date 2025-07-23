@@ -13,6 +13,8 @@ public:
 
     void onActivated() override;
 
+    inline std::string getText() const { return mText; }
+
     void updateText(const std::string& newText);
     void updateColor(glm::u8vec4 newColour);
     void updateScale(float scale);

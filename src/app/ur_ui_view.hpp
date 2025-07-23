@@ -16,6 +16,7 @@ public:
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
 
     void onActivated() override;
+    void variableUpdate(uint32_t timeStep) override;
     const GameOfUrModel& getModel() const;
 
 private:
@@ -29,13 +30,27 @@ private:
         NEXT_TURN,
         DICE,
     };
+
+    enum class Mode {
+        INTERACT,
+        TRANSITION,
+    };
+
     std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrController {};
     std::string mControllerPath {};
     PlayerID mControlledBy {};
+    Mode mMode { Mode::INTERACT };
+    std::vector<std::reference_wrapper<UIText>> mUpdatedTextElements {};
+    uint32_t mAnimationTimeMillis { 0 };
+    uint32_t mBlinkLengthMillis { 2500 };
+    uint32_t mBlinkPeriodMillis { 400 };
 
     static const std::map<std::string, Buttons> kButtonEnumMap;
 
     void onControllerReady();
+
+    void updateText(const std::string& path, const std::string& text);
+    void reactivateControls();
 
     void onButtonClicked(const std::string& button);
     void onPhaseUpdated(GamePhaseData phase);

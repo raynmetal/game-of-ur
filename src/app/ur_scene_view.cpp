@@ -64,6 +64,8 @@ const BoardLocations& UrSceneView::getBoard() const {
 
 void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
     std::cout << "UrSceneView: Board location clicked: \n";
+    if(mMode == Mode::TRANSITION) return;
+
     const GameOfUrModel& model { getModel() };
     const HouseData houseData { model.getHouseData(boardLocation) };
     std::cout << "\tregion: ";
@@ -230,20 +232,20 @@ void UrSceneView::onControllerReady() {
 }
 
 void UrSceneView::onViewUpdateStarted() {
-    mAnimationTime = 0;
+    mAnimationTimeMillis = 0;
     mMode = Mode::TRANSITION;
 }
 
 void UrSceneView::variableUpdate(uint32_t variableStepMillis) {
     if(mMode != Mode::TRANSITION) return;
 
-    mAnimationTime += variableStepMillis;
+    mAnimationTimeMillis += variableStepMillis;
     std::map<PieceIdentity, UrPieceAnimationKey> currentKeys {};
 
     // retrieve the latest key frame till now for each piece
     while(
         !mAnimationKeys.empty() 
-        && mAnimationKeys.top().mTime <= mAnimationTime
+        && mAnimationKeys.top().mTime <= mAnimationTimeMillis
     ) {
         currentKeys[mAnimationKeys.top().mPieceIdentity] = mAnimationKeys.top();
         mAnimationKeys.pop();
@@ -295,7 +297,7 @@ void UrSceneView::variableUpdate(uint32_t variableStepMillis) {
         // Otherwise, interpolate between the current frame and the next one
         } else {
             const float progress {
-                (mAnimationTime - key.second.mTime) * 1.f
+                (mAnimationTimeMillis - key.second.mTime) * 1.f
                 / (mAnimationKeys.top().mTime - key.second.mTime)
             };
             const ToyMakersEngine::Placement currentPlacement { ToyMakersEngine::Interpolator<ToyMakersEngine::Placement>{}(

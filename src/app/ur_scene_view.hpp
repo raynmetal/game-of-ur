@@ -35,7 +35,7 @@ private:
     std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrController {};
     std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrBoard {};
     std::priority_queue<UrPieceAnimationKey> mAnimationKeys {};
-    uint32_t mAnimationTime {};
+    uint32_t mAnimationTimeMillis {};
 
     std::string mControllerPath {};
     Mode mMode { Mode::GENERAL };

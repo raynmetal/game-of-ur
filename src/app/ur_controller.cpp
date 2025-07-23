@@ -39,6 +39,9 @@ void UrController::onActivated() {
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
     mSigDiceUpdated.emit(mModel.getDiceData());
 
+    for(const auto& view: mViewUpdated) {
+        mViewUpdated[view.first] = false;
+    }
     mSigViewUpdateStarted.emit();
 }
 
@@ -48,6 +51,7 @@ std::unique_ptr<UrPlayerControls> UrController::createControls() {
 }
 
 void UrController::onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, glm::u8vec2 launchLocation) {
+
     if(!mModel.canLaunchPieceTo(piece, launchLocation, player)) return;
 
     const MoveResultData moveResults { mModel.getLaunchMoveData(piece, launchLocation) };
@@ -61,6 +65,9 @@ void UrController::onLaunchPieceAttempted(PlayerID player, PieceIdentity piece, 
     mSigMoveMade.emit(moveResults);
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
 
+    for(const auto& view: mViewUpdated) {
+        mViewUpdated[view.first] = false;
+    }
     mSigViewUpdateStarted.emit();
 }
 
@@ -80,6 +87,9 @@ void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piec
     mSigMoveMade.emit(moveResults);
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
 
+    for(const auto& view: mViewUpdated) {
+        mViewUpdated[view.first] = false;
+    }
     mSigViewUpdateStarted.emit();
 }
 
@@ -102,6 +112,9 @@ void UrController::onNextTurnAttempted(PlayerID player) {
         mSigScoreUpdated.emit(mModel.getScore());
     }
 
+    for(const auto& view: mViewUpdated) {
+        mViewUpdated[view.first] = false;
+    }
     mSigViewUpdateStarted.emit();
 }
 
@@ -112,6 +125,9 @@ void UrController::onDiceRollAttempted(PlayerID player) {
     mSigDiceUpdated.emit(mModel.getDiceData());
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
 
+    for(const auto& view: mViewUpdated) {
+        mViewUpdated[view.first] = false;
+    }
     mSigViewUpdateStarted.emit();
 }
 
