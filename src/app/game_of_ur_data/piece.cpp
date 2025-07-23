@@ -26,3 +26,11 @@ bool operator<(const PieceIdentity& one, const PieceIdentity& two) {
         )
     );
 }
+
+bool operator==(const PieceIdentity& one, const PieceIdentity& two) {
+    return !(one<two) && !(two<one);
+}
+
+bool operator!=(const PieceIdentity& one, const PieceIdentity& two) {
+    return !(one==two);
+}

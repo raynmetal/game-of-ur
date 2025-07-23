@@ -323,13 +323,21 @@ void RenderSystem::OpaqueQueue::enqueueTo(BaseRenderStage& renderStage, float si
 }
 
 void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float simulationProgress) {
+    std::shared_ptr<StaticMesh> screenRectangleMesh { 
+        ResourceDatabase::GetRegisteredResource<StaticMesh>("screenRectangleMesh")
+    };
     for(EntityID entity: getEnabledEntities()) {
-        Transform entityTransform { getComponent<Transform>(entity, simulationProgress)};
-        LightEmissionData lightEmissionData { getComponent<LightEmissionData>(entity, simulationProgress) };
+        const Transform entityTransform { getComponent<Transform>(entity, simulationProgress)};
+        const LightEmissionData lightEmissionData { getComponent<LightEmissionData>(entity, simulationProgress) };
+
         renderStage.submitToRenderQueue(LightRenderUnit {
-            mSphereMesh,
+            (lightEmissionData.mType==LightEmissionData::LightType::directional)?
+                screenRectangleMesh:
+                mSphereMesh,
             lightEmissionData,
-            entityTransform.mModelMatrix
+            (lightEmissionData.mType==LightEmissionData::LightType::directional)?
+                glm::inverse(glm::transpose(entityTransform.mModelMatrix)):
+                entityTransform.mModelMatrix
         });
     }
 }

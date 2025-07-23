@@ -1,5 +1,127 @@
 {
-    "resources": [],
+    "resources": [
+        {
+            "name": "Bad_Panel_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_panel.png",
+                "cubemap_layout": "row"
+            }
+        },
+        {
+            "name": "Bad_Button_Active_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_active.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Hover_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_hover.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Inactive_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_inactive.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Pressed_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_pressed.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Highlight_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_highlight.png",
+                "cubemap_layout": "row"
+            }
+        },
+        {
+            "name": "Bad_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Panel_Texture",
+                "content_region": [ 0.0235, 0.0235, 0.953, 0.953]
+            }
+        },
+        {
+            "name": "Bad_Button_Active_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Active_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Hover_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Hover_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Inactive_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Inactive_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Pressed_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Pressed_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Highlight_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Highlight_Texture",
+                "content_region": [0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_button.json"
+            }
+        },
+        {
+            "name": "Ur_Player_Panel",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_ui_player_panel.json"
+            }
+        }
+    ],
+
     "nodes": [
         {
             "name": "ui_root",
@@ -48,11 +170,11 @@
                 {
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
                     "position": [ 0.0, 0.0, 0.0, 1.0 ],
-                    "scale": [ 1.4142135381698608, 1.4142135381698608, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
                     "type": "Placement"
                 },
                 {
-                    "ambient": [ 0.7, 0.7, 0.7 ],
+                    "ambient": [ 0.9, 0.9, 0.9 ],
                     "diffuse": [ 0.0, 0.0, 0.0 ],
                     "specular": [ 0.0, 0.0, 0.0 ],
                     "lightType": "directional",
@@ -63,7 +185,6 @@
             "parent": "/viewport_UI/",
             "type": "SceneNode"
         },
-
         {
             "name": "camera",
             "aspects":[{"type": "QueryClick" }],
@@ -94,163 +215,47 @@
         },
 
         {
-            "name": "dice_roll",
-            "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, 300.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
             "aspects": [
                 {
-                    "type": "TestText",
-                    "text": "Roll Dice!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "dice_roll"
-                }
-            ]
-        },
-
-        {
-            "name": "launch_swallow",
-            "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, 0.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
+                    "type": "UIPanel",
+                    "anchor": [1.0, 0.0],
+                    "content_size": [454.0, 764.0],
+                    "panel_resource_name": "Bad_Panel"
                 }
             ],
-            "aspects": [
+            "components": [
                 {
-                    "type": "TestText",
-                    "text": "Swallow!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "swallow"
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 683.0, 384.0, -1.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
                 }
-            ]
+            ],
+            "name": "ui_panel",
+            "parent": "/viewport_UI/",
+            "type": "SimObject"
         },
         {
-            "name": "launch_storm_bird",
-            "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, -32.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
             "aspects": [
                 {
-                    "type": "TestText",
-                    "text": "Storm Bird!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "storm_bird"
-                }
-            ]
-        },
-        {
-            "name": "launch_raven",
-            "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, -64.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
+                    "type": "UIPanel",
+                    "anchor": [0.5, 0.0],
+                    "content_size": [600.0, 100.0],
+                    "panel_resource_name": "Bad_Panel"
                 }
             ],
-            "aspects": [
-                {
-                    "type": "TestText",
-                    "text": "Raven!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "raven"
-                }
-            ]
-        },
-        {
-            "name": "launch_rooster",
-            "parent": "/viewport_UI/",
-            "type": "SimObject",
             "components": [
                 {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, -96.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ -227.0, 384.0, -1.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
                 }
             ],
-            "aspects": [
-                {
-                    "type": "TestText",
-                    "text": "Rooster!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "rooster"
-                }
-            ]
-        },
-        {
-            "name": "launch_eagle",
+            "name": "phase_panel",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -683.0, -128.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "TestText",
-                    "text": "Eagle!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.0, 0.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "eagle"
-                }
-            ]
+            "type": "SimObject"
         },
-
         {
             "name": "current_turn",
             "parent": "/viewport_UI/",
@@ -259,21 +264,21 @@
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 0.0, 384.0, 0.0, 1.0 ],
+                    "position": [ -227.0, 380.0, 0.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
             "aspects": [
                 {
-                    "type": "TestText",
+                    "type": "UIText",
                     "text": "Current Turn",
                     "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [0.5, 0.0]
+                    "scale": 1.7,
+                    "anchor": [0.5, 0.0],
+                    "color": [255, 255, 255, 255]
                 }
             ]
         },
-
         {
             "name": "phase",
             "parent": "/viewport_UI/",
@@ -282,17 +287,145 @@
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 0.0, 352.0, 0.0, 1.0 ],
+                    "position": [ -227.0, 315.0, 0.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
             "aspects": [
                 {
-                    "type": "TestText",
+                    "type": "UIText",
                     "text": "Phase: ",
                     "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
-                    "anchor": [0.5, 0.0]
+                    "anchor": [0.5, 0.0],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "dice_roll",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 238.0, 346.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Roll Dice!",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "dice_roll",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+
+        {
+            "name": "primary_roll",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 672.0, 378.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Primary: NA",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [1.0, 0.0],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+        {
+            "name": "secondary_roll",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 672.0, 346.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Double/Quit: NA",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [1.0, 0.0],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+        {
+            "name": "final_roll",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 672.0, 314.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Final: NA",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [1.0, 0.0],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+        {
+            "name": "previous_roll",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 672.0, 282.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Previous: NA",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [1.0, 0.0],
+                    "color": [255, 255, 255, 255]
                 }
             ]
         },
@@ -305,141 +438,180 @@
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 683.0, 352.0, 0.0, 1.0 ],
+                    "position": [ 455.0, 210.0, 0.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
             "aspects": [
                 {
-                    "type": "TestText",
+                    "type": "UIText",
                     "text": "Common pile: ",
                     "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [1.0, 0.0]
+                    "scale": 1.4,
+                    "anchor": [0.5, 0.0],
+                    "color": [255, 255, 255, 255]
                 }
             ]
         },
 
         {
-            "name": "one_pile",
+            "name":"Ur_Player_Panel",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 683.0, 320.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "TestText",
-                    "text": "player one: ",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [1.0, 0.0]
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "player_panel_a",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [1.0, 0.0, 0.0, 0.0],
+                        "position": [238, 120, 0, 1],
+                        "scale": [1, 1, 1]
+                    }
+                ],
+                "aspects": []
+            }
         },
 
         {
-            "name": "two_pile",
+            "name":"Ur_Player_Panel",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 683.0, 288.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "TestText",
-                    "text": "player two: ",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [1.0, 0.0]
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "player_panel_b",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [1.0, 0.0, 0.0, 0.0],
+                        "position": [238, -70, 0, 1],
+                        "scale": [1, 1, 1]
+                    }
+                ],
+                "aspects": []
+            }
         },
 
         {
-            "name": "next_turn",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 683.0, -352.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "TestText",
-                    "text": "Next Turn!",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "anchor": [1.0, 1.0]
-                },
-                {
-                    "type": "ValueOnClick",
-                    "return_value": "next_turn"
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "next_turn",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 455.0, -320.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Next Turn!",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.5, 0.5],
+                        "value": "next_turn",
+
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+
+                        "has_highlight": false
+                    }
+                ]
+            }
         }
     ],
 
     "connections": [
         {
-            "from": "/viewport_UI/dice_roll/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/dice_roll/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/next_turn/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/next_turn/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/player_panel_a/buttons/launch_swallow/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_swallow/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/player_panel_a/buttons/launch_storm_bird/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_storm_bird/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/player_panel_a/buttons/launch_raven/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_raven/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/player_panel_a/buttons/launch_rooster/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_rooster/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/player_panel_a/buttons/launch_eagle/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/player_panel_b/buttons/launch_swallow/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/launch_eagle/@ValueOnClick",
-            "signal": "Clicked",
+            "from": "/viewport_UI/player_panel_b/buttons/launch_storm_bird/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/player_panel_b/buttons/launch_raven/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/player_panel_b/buttons/launch_rooster/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/player_panel_b/buttons/launch_eagle/@UIButton",
+            "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"

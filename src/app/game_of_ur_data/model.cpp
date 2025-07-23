@@ -34,7 +34,6 @@ void GameOfUrModel::startPhasePlay() {
     mTurnPhase = TurnPhase::ROLL_DICE;
     mRoundPhase = RoundPhase::IN_PROGRESS;
     mDice->reset();
-    mPreviousRoll = 0;
 
     // assign roles to each player
     mCurrentPlayer = playerAGoesFirst? PlayerID::PLAYER_A: PlayerID::PLAYER_B;
@@ -253,7 +252,8 @@ bool GameOfUrModel::canMoveBoardPiece(PieceIdentity pieceIdentity, PlayerID requ
         ) && getPiece(pieceIdentity).getState() == Piece::State::ON_BOARD
     );
 }
-bool GameOfUrModel::canLaunchPiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const  {
+
+bool GameOfUrModel::canLaunchPieceTo(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const  {
     assert(pieceIdentity.mOwner != RoleID::NA && "A piece without an owner role is invalid");
     return (
         canMovePiece(
@@ -262,6 +262,24 @@ bool GameOfUrModel::canLaunchPiece(PieceIdentity pieceIdentity, glm::u8vec2 toLo
             requester
         ) && getPiece(pieceIdentity).getState() == Piece::State::UNLAUNCHED
     );
+}
+
+bool GameOfUrModel::canLaunchPiece(PieceIdentity pieceIdentity, PlayerID requester) const {
+    if(mGamePhase == GamePhase::INITIATIVE) return false;
+
+    assert(pieceIdentity.mOwner != RoleID::NA && "A piece without an owner role is invalid");
+    if(
+        mCurrentPlayer != requester
+        || getPiece(pieceIdentity).getState() != Piece::State::UNLAUNCHED
+    ) return false;
+
+    for(auto& movePair: getAllPossibleMoves()) {
+        if(movePair.first.mOwner == pieceIdentity.mOwner && movePair.first.mType == pieceIdentity.mType) {
+            return true;
+        }
+    }
+
+    return false;
 }
 
 bool GameOfUrModel::canAdvanceOneTurn(PlayerID requester) const {
@@ -368,7 +386,7 @@ PlayerData GameOfUrModel::getPlayerData(RoleID role) const {
 DiceData GameOfUrModel::getDiceData() const {
     return {
         .mState { mDice->getState() },
-        .mPrimaryRoll { mDice->getSecondaryRoll() },
+        .mPrimaryRoll { mDice->getPrimaryRoll() },
         .mSecondaryRoll { mDice->getSecondaryRoll() },
         .mResultScore { mDice->getResult(mGamePhase) },
         .mPreviousResult { mPreviousRoll },
@@ -500,4 +518,15 @@ std::vector<std::pair<PieceIdentity, glm::u8vec2>> GameOfUrModel::getAllPossible
 
 std::vector<glm::u8vec2> GameOfUrModel::getLaunchPositions(const PieceIdentity& pieceIdentity) const {
     return mBoard.getLaunchPositions(pieceIdentity);
+}
+
+std::vector<PieceTypeID> GameOfUrModel::getUnlaunchedPieceTypes(PlayerID player) const {
+    if(mGamePhase == GamePhase::INITIATIVE) return {};
+    std::vector<PieceTypeID> unlaunchedPieceTypes {};
+    for(uint8_t type {PieceTypeID::SWALLOW}; type < PieceTypeID::TOTAL; ++type) {
+        const Piece& piece { mPlayers[player].cGetPiece(static_cast<PieceTypeID>(type)) };
+        if(piece.getState() != Piece::State::UNLAUNCHED) { continue; }
+        unlaunchedPieceTypes.push_back(static_cast<PieceTypeID>(type));
+    }
+    return unlaunchedPieceTypes;
 }

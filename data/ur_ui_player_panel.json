@@ -1,0 +1,275 @@
+{
+    "resources":[],
+    "nodes": [
+        {
+            "name": "player_panel_root",
+            "aspects": [],
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ],
+            "parent": "",
+            "type": "SimObject"
+        },
+
+        {
+            "name": "player",
+            "parent": "/",
+            "type": "SimObject",
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Player NA",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "color": [255, 255, 255, 255],
+                    "scale": 1.1,
+                    "anchor": [0.0, 0.0]
+                }
+            ],
+            "components":[
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ]
+        },
+
+        {
+            "name": "counters",
+            "parent": "/",
+            "type": "SimObject",
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Counters: 0",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "color": [255, 255, 255, 255],
+                    "scale": 1.0,
+                    "anchor": [0.0, 0.0]
+                }
+            ],
+            "components":[
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, -35.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ]
+        },
+
+        {
+            "name": "buttons",
+            "parent": "/",
+            "type": "SceneNode",
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, -76.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ]
+        },
+
+        {
+            "name": "Ur_Button",
+            "parent": "/buttons/",
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_swallow",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Sw",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+
+                        "anchor": [0.0, 0.0],
+                        "value": "swallow",
+
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+
+                        "has_highlight": true,
+                        "highlight": "Bad_Button_Highlight_Panel",
+                        "highlight_color": [1.0, 0.0, 0.0, 1.0]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "parent": "/buttons/",
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_storm_bird",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 92.0, 0.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "St",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+
+                        "anchor": [0.0, 0.0],
+                        "value": "storm_bird",
+
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+
+                        "has_highlight": true,
+                        "highlight": "Bad_Button_Highlight_Panel",
+                        "highlight_color": [1.0, 0.0, 0.0, 1.0]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "parent": "/buttons/",
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_raven",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 184.0, 0.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Ra",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+
+                        "anchor": [0.0, 0.0],
+                        "value": "raven",
+
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+
+                        "has_highlight": true,
+                        "highlight": "Bad_Button_Highlight_Panel",
+                        "highlight_color": [1.0, 0.0, 0.0, 1.0]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "parent": "/buttons/",
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_rooster",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 276.0, 0.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+
+                        "text": "Ro",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+
+                        "anchor": [0.0, 0.0],
+                        "value": "rooster",
+
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+
+                        "has_highlight": true,
+                        "highlight": "Bad_Button_Highlight_Panel",
+                        "highlight_color": [1.0, 0.0, 0.0, 1.0]
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "parent": "/buttons/",
+            "type": "Scene",
+            "copy": true,
+            "overrides": {
+                "name": "launch_eagle",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 368.0, 0.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+
+                        "text": "Ea",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+
+                        "anchor": [0.0, 0.0],
+                        "value": "eagle",
+
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+
+                        "has_highlight": true,
+                        "highlight": "Bad_Button_Highlight_Panel",
+                        "highlight_color": [1.0, 0.0, 0.0, 1.0]
+                    }
+                ]
+            }
+        }
+    ],
+    "connections": []
+}

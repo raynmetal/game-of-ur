@@ -24,6 +24,11 @@ namespace ToyMakersEngine{
             glm::u8vec3 backgroundColor
         ) const;
 
+        std::shared_ptr<Texture> renderText(
+            const std::string& text,
+            glm::u8vec4 textColor
+        ) const;
+
 
     private:
         static TTF_Font* LoadFont(const std::string& fontPath, uint16_t pointSize);

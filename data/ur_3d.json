@@ -287,13 +287,14 @@
                 "resize_mode": "fixed-dimensions",
                 "render_type": "basic-3d",
                 "fps_cap": 60,
-                "render_scale": 0.85
+                "render_scale": 1.0
             }
         },
 
         {
             "aspects": [
-                { "type": "QueryClick" }
+                { "type": "QueryClick" }, 
+                { "type": "UrLookAtBoard", "offset": [0.0, 1.0, 7.0] }
             ],
             "components": [
                 {
@@ -312,9 +313,9 @@
                         -0.214287385 
                     ],
                     "position": [
-                        -4.87555504,
-                        3.94099879,
-                        -5.59419203,
+                        -6.0,
+                        8.4,
+                        6.0,
                         1.0
                     ],
                     "scale": [
@@ -334,28 +335,16 @@
             "aspects": [],
             "components": [
                 {
-                    "orientation": [
-                        1.0, 0.0, 0.0, 0.0
-                    ],
-                    "position": [
-                        0.0, 0.0, 0.0, 1.0
-                    ],
-                    "scale": [
-                        1.4142135381698608, 1.4142135381698608, 1.0
-                    ],
+                    "orientation": [ 0.579228, -0.4055798, -0.579228, -0.4055798 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
                     "type": "Placement"
                 },
                 {
-                    "ambient": [
-                        0.0300000059604645, 0.0300000059604645, 0.0300000059604645
-                    ],
-                    "diffuse": [
-                        0.3, 0.3, 0.3
-                    ],
+                    "ambient": [0.2, 0.2, 0.5],
+                    "diffuse": [1.7, 1.0, 0.9],
+                    "specular": [ 0.8, 0.7, 0.7],
                     "lightType": "directional",
-                    "specular": [
-                        0.3, 0.3, 0.3
-                    ],
                     "type": "LightEmissionData"
                 }
             ],
