@@ -18,5 +18,5 @@
     "simulation_step": 33,
 
     "input_map_path": "input_bindings.json",
-    "root_scene_path": "ur_prototype_cpu_vs.json"
+    "root_scene_path": "ur_main_menu.json"
 }

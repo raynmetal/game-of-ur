@@ -1,0 +1,340 @@
+{
+    "resources": [
+        {
+            "name": "Bad_Panel_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_panel.png",
+                "cubemap_layout": "row"
+            }
+        },
+        {
+            "name": "Bad_Button_Active_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_active.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Hover_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_hover.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Inactive_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_inactive.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Pressed_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_pressed.png"
+            }
+        },
+        {
+            "name": "Bad_Button_Highlight_Texture",
+            "type": "Texture",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/textures/bad_button_highlight.png",
+                "cubemap_layout": "row"
+            }
+        },
+        {
+            "name": "Bad_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Panel_Texture",
+                "content_region": [ 0.0235, 0.0235, 0.953, 0.953]
+            }
+        },
+        {
+            "name": "Bad_Button_Active_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Active_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Hover_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Hover_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Inactive_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Inactive_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Pressed_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Pressed_Texture",
+                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Bad_Button_Highlight_Panel",
+            "type": "NineSlicePanel",
+            "method": "fromDescription",
+            "parameters": {
+                "base_texture": "Bad_Button_Highlight_Texture",
+                "content_region": [0.109375, 0.109375, 0.78125, 0.78125]
+            }
+        },
+        {
+            "name": "Roboto_Mono_Regular_24",
+            "type": "TextFont",
+            "method": "fromFile",
+            "parameters": {
+                "path": "data/fonts/Roboto_Mono/static/RobotoMono-Regular.ttf",
+                "point_size": 24
+            }
+        },
+        {
+            "name": "Ur_Player_Panel",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_ui_player_panel.json"
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_button.json"
+            }
+        }
+    ],
+
+    "nodes": [
+        {
+            "name": "scene_root",
+            "aspects": [],
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ],
+            "parent": "",
+            "type": "SimObject"
+        },
+        {
+            "name": "viewport_UI",
+            "parent": "/",
+            "type": "ViewportNode",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "inherits_world": false,
+            "prevent_handled_action_propagation": true,
+            "render_configuration": {
+                "base_dimensions": [1366, 768],
+                "update_mode": "on-render-cap-fps",
+                "resize_type": "texture-dimensions",
+                "resize_mode": "fixed-dimensions",
+                "render_type": "basic-3d",
+                "fps_cap": 60,
+                "render_scale": 1.0
+            }
+        },
+
+        {
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [ 0.9, 0.9, 0.9 ],
+                    "diffuse": [ 0.0, 0.0, 0.0 ],
+                    "specular": [ 0.0, 0.0, 0.0 ],
+                    "lightType": "directional",
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "ui_light",
+            "parent": "/viewport_UI/",
+            "type": "SceneNode"
+        },
+
+        {
+            "name": "camera",
+            "aspects":[{"type": "QueryClick" }],
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "fov": 45.0,
+                    "aspect": 0.0,
+                    "orthographic_dimensions": {
+                        "horizontal": 1366,
+                        "vertical": 768
+                    },
+                    "near_far_planes": {
+                        "near": -1000,
+                        "far": 1000
+                    },
+                    "projection_mode": "orthographic",
+                    "type": "CameraProperties"
+                },
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ]
+        },
+
+        {
+            "name": "ui_panel",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "aspects": [
+                {
+                    "type": "UIPanel",
+                    "anchor": [0.5, 0.5],
+                    "content_size": [1366.0, 768.0],
+                    "panel_resource_name": "Bad_Panel"
+                }
+            ],
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 0.0, -1.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                }
+            ]
+        },
+
+        {
+            "name": "title",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 380.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "The Royal Game of Ur",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.7,
+                    "anchor": [0.5, 0.0],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "local_vs",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -640.0, 100.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Local VS",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "local_vs",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "cpu_vs",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -640.0, 0.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "CPU VS",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "cpu_vs",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        }
+    ],
+
+    "connections":[]
+}
