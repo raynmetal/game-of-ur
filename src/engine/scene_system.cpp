@@ -442,6 +442,8 @@ ViewportNode::~ViewportNode() {
     // Make sure all descendant nodes (and their respective entities) are deleted before
     // we destroy this node's world, if it has one.  Also remove our own entity from this 
     // world
+    mActiveCamera = nullptr;
+    mDomainCameras.clear();
     mChildViewports.clear();
     mChildren.clear();
     mChildNameToNode.clear();
@@ -1134,13 +1136,13 @@ void SceneSystem::updateHierarchyDataInsertion(std::shared_ptr<SceneNodeCore> in
     WorldID parentWorld { parentNode->getWorldID() };
     std::shared_ptr<SceneNodeCore> siblingNode { 
         parentNode->getComponent<SceneHierarchyData>().mChild != kMaxEntities? 
-        mEntityToNode[{parentWorld, parentNode->getComponent<SceneHierarchyData>().mChild}]:
+        mEntityToNode[{parentWorld, parentNode->getComponent<SceneHierarchyData>().mChild}].lock():
         nullptr
     };
 
     for(/*pass*/;
         siblingNode != nullptr && siblingNode->getComponent<SceneHierarchyData>().mSibling != kMaxEntities;
-        siblingNode = mEntityToNode[{parentWorld, siblingNode->getComponent<SceneHierarchyData>().mSibling}]
+        siblingNode = mEntityToNode[{parentWorld, siblingNode->getComponent<SceneHierarchyData>().mSibling}].lock()
     );
 
     // if current hierarchy node is that of a sibling, update the sibling link
@@ -1172,12 +1174,12 @@ void SceneSystem::updateHierarchyDataRemoval(std::shared_ptr<SceneNodeCore> remo
 
     // find the removed node's immediate sibling
     WorldID parentWorld { parentNode->getWorldID() };
-    std::shared_ptr<SceneNodeCore> siblingNode { mEntityToNode[{parentWorld, parentNode->getComponent<SceneHierarchyData>().mChild}] };
+    std::shared_ptr<SceneNodeCore> siblingNode { mEntityToNode[{parentWorld, parentNode->getComponent<SceneHierarchyData>().mChild}].lock() };
     EntityID removedNodeEntityID { removedNode->getEntityID() };
 
     for( /*pass*/;
         siblingNode->getComponent<SceneHierarchyData>().mSibling != removedNodeEntityID && siblingNode != removedNode;
-        siblingNode = mEntityToNode[ {parentWorld, siblingNode->getComponent<SceneHierarchyData>().mSibling} ]
+        siblingNode = mEntityToNode[ {parentWorld, siblingNode->getComponent<SceneHierarchyData>().mSibling} ].lock()
     );
 
     // if current hierarchy data is that of a sibling, update the sibling link
@@ -1301,8 +1303,8 @@ void SceneSystem::updateTransforms() {
     // covered by their ancestor's update
     std::set<std::pair<WorldID, EntityID>> entitiesToIgnore {};
     for(std::pair<WorldID, EntityID> entityWorldPair: mComputeTransformQueue) {
-        if(mEntityToNode.at(entityWorldPair) == mRootNode) continue;
-        std::shared_ptr<SceneNodeCore> sceneNode { mEntityToNode.at(entityWorldPair)->mParent };
+        if(mEntityToNode.at(entityWorldPair).lock() == mRootNode) continue;
+        std::shared_ptr<SceneNodeCore> sceneNode { mEntityToNode.at(entityWorldPair).lock()->mParent };
         while(sceneNode != nullptr) {
             if(mComputeTransformQueue.find(sceneNode->getUniversalEntityID()) != mComputeTransformQueue.end()) {
                 entitiesToIgnore.insert(entityWorldPair);
@@ -1318,7 +1320,7 @@ void SceneSystem::updateTransforms() {
 
     // Apply transform updates to all subtrees present in the queue
     for(std::pair<WorldID, EntityID> entityWorldPair: mComputeTransformQueue) {
-        std::vector<std::shared_ptr<SceneNodeCore>> toVisit { {mEntityToNode.at(entityWorldPair)} };
+        std::vector<std::shared_ptr<SceneNodeCore>> toVisit { {mEntityToNode.at(entityWorldPair).lock()} };
         while(!toVisit.empty()) {
             std::shared_ptr<SceneNodeCore> currentNode { toVisit.back() };
             toVisit.pop_back();
@@ -1384,7 +1386,7 @@ void SceneSystem::SceneSubworld::onEntityUpdated(EntityID entityID) {
 std::shared_ptr<SceneNodeCore> SceneSystem::getNodeByID(const UniversalEntityID& universalEntityID) {
     const auto& foundNode { mEntityToNode.find(universalEntityID) };
     assert(foundNode != mEntityToNode.end() && "Could not find a node with this ID present in the tree");
-    return foundNode->second;
+    return foundNode->second.lock();
 }
 
 std::vector<std::shared_ptr<SceneNodeCore>> SceneSystem::getNodesByID(const std::vector<UniversalEntityID>& universalEntityIDs) {
