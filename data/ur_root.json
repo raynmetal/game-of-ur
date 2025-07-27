@@ -373,6 +373,15 @@
             "parameters": {
                 "path": "data/ur_prototype_cpu_vs.json"
             }
+        },
+
+        {
+            "name": "Game_Of_Ur_Credits",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_credits.json"
+            }
         }
     ],
 

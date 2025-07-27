@@ -1,13 +1,13 @@
-#ifndef ZOAPPMAINMENU_H
-#define ZOAPPMAINMENU_H
+#ifndef ZOAPPUINAVIGATION_H
+#define ZOAPPUINAVIGATION_H
 
 #include <glm/gtx/string_cast.hpp>
 #include "../engine/sim_system.hpp"
 
-class UrMainMenu: public ToyMakersEngine::SimObjectAspect<UrMainMenu> {
+class UrUINavigation: public ToyMakersEngine::SimObjectAspect<UrUINavigation> {
 public:
-    UrMainMenu(): ToyMakersEngine::SimObjectAspect<UrMainMenu>{0} {}
-    inline static std::string getSimObjectAspectTypeName() { return "UrMainMenu"; }
+    UrUINavigation(): ToyMakersEngine::SimObjectAspect<UrUINavigation>{0} {}
+    inline static std::string getSimObjectAspectTypeName() { return "UrUINavigation"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
 

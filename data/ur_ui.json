@@ -5,7 +5,8 @@
         {
             "name": "ui_root",
             "aspects": [
-                {"type": "UrUIView", "controller_path": "/scene_root/game/"}
+                {"type": "UrUIView", "controller_path": "/scene_root/game/"},
+                {"type": "UrUINavigation", "scene_manager_path": "/scene_root/"}
             ],
             "components": [
                 {
@@ -135,6 +136,41 @@
             "parent": "/viewport_UI/",
             "type": "SimObject"
         },
+
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "return",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -683.0, -384.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "<- Main Menu",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 1.0],
+                        "value": "Game_Of_Ur_Main_Menu",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+
         {
             "name": "current_turn",
             "parent": "/viewport_UI/",
@@ -493,6 +529,14 @@
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/return/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUINavigation",
             "observer": "ButtonClickedObserved"
         }
     ]
