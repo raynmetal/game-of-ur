@@ -1,5 +1,6 @@
 #include <iostream>
 
+#include "ur_records.hpp"
 #include "ur_controller.hpp"
 
 
@@ -86,6 +87,20 @@ void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piec
     }
     mSigMoveMade.emit(moveResults);
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
+
+    if(mModel.getCurrentPhase().mGamePhase == GamePhase::END) {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMakersEngine::SceneSystem>()
+            ->getByPath<UrRecords&>(
+                "/ur_records/@UrRecords"
+            ).submitRecord(
+                GameRecord{
+                    .mSummary { mModel.getScore() },
+                    .mPlayerA { mModel.getPlayerData(PlayerID::PLAYER_A) },
+                    .mPlayerB { mModel.getPlayerData(PlayerID::PLAYER_B) },
+                }
+        );
+    }
 
     for(const auto& view: mViewUpdated) {
         mViewUpdated[view.first] = false;

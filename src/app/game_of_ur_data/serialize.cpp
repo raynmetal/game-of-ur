@@ -41,9 +41,9 @@ void to_json(nlohmann::json& json, const PlayerData& playerData) {
     json = {
         { "counters", static_cast<int>(playerData.mCounters) },
         { "is_winner", playerData.mIsWinner},
-        { "on_board_pieces", playerData.mNUnlaunchedPieces },
+        { "on_board_pieces", playerData.mNBoardPieces},
         { "victory_pieces", playerData.mNVictoryPieces },
-        { "unlaunched_pieces", playerData.mNVictoryPieces },
+        { "unlaunched_pieces", playerData.mNUnlaunchedPieces },
         { "role", playerData.mRole },
         { "player", playerData.mPlayer },
     };

@@ -25,7 +25,6 @@ public:
     inline GameRecord getLatestRecord() const { return mLoadedRecords.back(); }
     inline std::vector<GameRecord> getAllRecords() const { return mLoadedRecords; }
 
-
 private:
     static void ApplyInvariants(const GameRecord& gameRecord);
     void onActivated() override;

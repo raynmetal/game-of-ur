@@ -1,3 +1,4 @@
+#include "nlohmann/json.hpp"
 #include "ur_records.hpp"
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrRecords::create(const nlohmann::json& jsonAspectProperties) {
@@ -12,16 +13,53 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrRecords::clone() const {
 }
 
 void UrRecords::ApplyInvariants(const GameRecord& gameRecord) {
+    assert(gameRecord.mSummary.mCommonPoolCounters == 0 && "There should be no counters in the local pool at the \
+        end of a game");
+    assert(
+        ((gameRecord.mSummary.mPlayerOneCounters + gameRecord.mSummary.mPlayerTwoCounters) == 50)
+        && "There should be a total of 50 counters distributed amongst the players at the end of the game"
+    );
+    assert(
+        (
+            (
+                gameRecord.mSummary.mPlayerOneVictoryPieces == 5
+                && gameRecord.mSummary.mPlayerTwoVictoryPieces < 5
+            ) || (
+                gameRecord.mSummary.mPlayerTwoVictoryPieces == 5
+                && gameRecord.mSummary.mPlayerOneVictoryPieces < 5
+            )
+        ) && "Only one player should have had all 5 of their pieces reach the end of the board"
+    );
+    assert(
+        (
+            gameRecord.mSummary.mPlayerOneCounters == (
+                (gameRecord.mPlayerA.mRole == RoleID::ONE)?
+                gameRecord.mPlayerA.mCounters:
+                gameRecord.mPlayerB.mCounters
+            ) && gameRecord.mSummary.mPlayerTwoCounters == (
+                (gameRecord.mPlayerA.mRole == RoleID::TWO)?
+                gameRecord.mPlayerA.mCounters:
+                gameRecord.mPlayerB.mCounters
+            )
+        ) && "Game record summary counters should correspond to detailed game counters"
+    );
+    assert(
+        (
+            (gameRecord.mPlayerA.mIsWinner  && !gameRecord.mPlayerB.mIsWinner)
+            || (gameRecord.mPlayerB.mIsWinner && !gameRecord.mPlayerA.mIsWinner)
+        ) && "There can only be one winner according to the detailed game summary"
+    );
     return;
 }
 
 void UrRecords::submitRecord(const GameRecord& gameRecord) {
     ApplyInvariants(gameRecord);
     mLoadedRecords.push_back(gameRecord);
+    std::cout << "Ur Records: current records: \n" << nlohmann::to_string(nlohmann::json{mLoadedRecords}) << "\n";
 }
 
 void UrRecords::onActivated() {
-    std::cout << "Ur Records has been loaded successfully!\n";
+    std::cout << "Ur Records: loaded successfully!\n";
 }
 
 void from_json(const nlohmann::json& json, GameRecord& gameRecord) {
