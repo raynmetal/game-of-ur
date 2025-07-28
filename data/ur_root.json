@@ -382,6 +382,15 @@
             "parameters": {
                 "path": "data/ur_credits.json"
             }
+        },
+
+        {
+            "name": "Game_Of_Ur_Records",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_records.json"
+            }
         }
     ],
 
@@ -391,7 +400,8 @@
             "aspects": [
                 {
                     "type": "UrSceneManager",
-                    "initial_scene": "Game_Of_Ur_Main_Menu"
+                    "initial_scene": "Game_Of_Ur_Main_Menu",
+                    "autoloads": ["Game_Of_Ur_Records"]
                 }
             ],
             "components": [

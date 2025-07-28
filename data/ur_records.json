@@ -1,0 +1,20 @@
+{
+    "resources":[],
+    "nodes": [
+        {
+            "components": [
+                {
+                    "orientation": [1.0, 0.0, 0.0, 0.0],
+                    "position": [0.0, 0.0, 0.0, 1.0],
+                    "scale": [1.0, 1.0, 1.0],
+                    "type": "Placement"
+                }
+            ],
+            "aspects": [{ "type": "UrRecords" }],
+            "name": "ur_records",
+            "parent": "",
+            "type": "SimObject"
+        }
+    ],
+    "connections":[]
+}

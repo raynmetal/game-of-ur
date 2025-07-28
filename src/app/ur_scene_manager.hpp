@@ -18,9 +18,13 @@ private:
     void variableUpdate(uint32_t timeStepMillis) override;
 
     void loadScene_();
+    void loadAutoloads();
+    void activateAutoloads();
 
     std::string mNextScene {};
+    std::vector<std::string> mAutoloads {};
     bool mSwitchScenesThisFrame { false };
+    bool mAutoloadsActivated { false };
 
     std::vector<std::shared_ptr<ToyMakersEngine::SceneNodeCore>> mRemovedScene {};
 };
