@@ -60,7 +60,7 @@ ENGINE_TARGET := $(ENGINE_STATIC_LIB_TARGETS)
 ENGINE_LIB := $(patsubst lib%.a,%,$(notdir $(filter %.a,$(ENGINE_TARGET))))
 ENGINE_HEADERS := \
 	$(patsubst $(SRC_DIR)/$(ENGINE_SRC_DIR)/%,$(TARGET_INCLUDE_DIR)/$(ENGINE_SRC_DIR)/%, \
-		$(call rwildcard,$(SRC_DIR),$(ENGINE_SRC_DIR),*.hpp) \
+		$(call rwildcard,$(SRC_DIR)/$(ENGINE_SRC_DIR),*.hpp) \
 	)
 ENGINE_SOURCES := $(call rwildcard,$(SRC_DIR)/$(ENGINE_SRC_DIR),*.cpp)
 ENGINE_OBJS := $(patsubst $(SRC_DIR)/$(ENGINE_SRC_DIR)/%.cpp,$(OBJ_DIR)/$(ENGINE_SRC_DIR)/%.o,$(ENGINE_SOURCES))
