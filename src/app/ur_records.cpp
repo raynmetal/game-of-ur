@@ -1,14 +1,19 @@
+#include <filesystem>
+#include <fstream>
+
 #include "nlohmann/json.hpp"
 #include "ur_records.hpp"
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrRecords::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<UrRecords> records { std::make_shared<UrRecords>() };
+    records->mRecordsPath = jsonAspectProperties.at("records_path").get<std::string>();
     return records;
 }
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrRecords::clone() const {
     std::shared_ptr<UrRecords> records { std::make_shared<UrRecords>() };
     records->mLoadedRecords = mLoadedRecords;
+    records->mRecordsPath = mRecordsPath;
     return records;
 }
 
@@ -59,7 +64,33 @@ void UrRecords::submitRecord(const GameRecord& gameRecord) {
 }
 
 void UrRecords::onActivated() {
-    std::cout << "Ur Records: loaded successfully!\n";
+    if(!std::filesystem::exists(mRecordsPath)) { return; }
+
+    std::ifstream jsonFileStream;
+    jsonFileStream.open(mRecordsPath);
+    nlohmann::json recordsJSON = nlohmann::json::parse(jsonFileStream);
+    jsonFileStream.close();
+
+    for(
+        auto record {recordsJSON.cbegin()}, end{recordsJSON.cend()};
+        record != end;
+        record++
+    ) {
+        submitRecord(*record);
+    }
+
+    std::cout << "Ur Records: records loaded successfully!\n";
+}
+
+void UrRecords::onDeactivated() {
+    std::ofstream jsonFileStream;
+    jsonFileStream.open(mRecordsPath);
+    const nlohmann::json recordsJson = mLoadedRecords;
+    const std::string recordsSerialized { recordsJson.dump() };
+    jsonFileStream.write(recordsSerialized.c_str(), recordsSerialized.size());
+    jsonFileStream.close();
+
+    std::cout << "Ur Records: records saved successfully\n";
 }
 
 void from_json(const nlohmann::json& json, GameRecord& gameRecord) {

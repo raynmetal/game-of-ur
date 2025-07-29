@@ -28,8 +28,10 @@ public:
 private:
     static void ApplyInvariants(const GameRecord& gameRecord);
     void onActivated() override;
+    void onDeactivated() override;
 
     std::vector<GameRecord> mLoadedRecords {};
+    std::string mRecordsPath {};
 };
 
 void from_json(const nlohmann::json& json, GameRecord& gameRecord);
