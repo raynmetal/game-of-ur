@@ -3,12 +3,13 @@
 
     "nodes": [
         {
-            "name": "main_menu",
+            "name": "records_browser",
             "aspects": [
                 {
                     "type": "UrUINavigation",
                     "scene_manager_path": "/scene_root/"
-                }
+                }, 
+                { "type": "UrUIRecordsBrowser" }
             ],
             "components": [
                 {
@@ -149,24 +150,57 @@
             "type": "Scene",
             "copy": true,
             "overrides":  {
-                "name": "local_vs",
+                "name": "previous",
                 "components": [
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, 100.0, 0.0, 1.0 ],
+                        "position": [ -400.0, 200.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
                 "aspects": [
                     {
                         "type": "UIButton",
-                        "text": "Local VS",
+                        "text": "<",
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
-                        "value": "Game_Of_Ur_Local_VS",
+                        "anchor": [1.0, 1.0],
+                        "value": "previous",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "next",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 400.0, 200.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": ">",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 1.0],
+                        "value": "next",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
                         "panel_hover": "Bad_Button_Hover_Panel",
@@ -183,24 +217,156 @@
             "type": "Scene",
             "copy": true,
             "overrides":  {
-                "name": "cpu_vs",
+                "name": "record_0",
                 "components": [
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, 0.0, 0.0, 1.0 ],
+                        "position": [ 0.0, 140.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
                 "aspects": [
                     {
                         "type": "UIButton",
-                        "text": "CPU VS",
+                        "text": "Record Default Text",
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
-                        "value": "Game_Of_Ur_CPU_VS",
+                        "anchor": [0.5, 0.0],
+                        "value": "0",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "record_1",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 0.0, 60.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Record Default Text",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.5, 0.0],
+                        "value": "1",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "record_2",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 0.0, -20.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Record Default Text",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.5, 0.0],
+                        "value": "2",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "record_3",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 0.0, -100.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Record Default Text",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.5, 0.0],
+                        "value": "3",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "record_4",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 0.0, -180.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "Record Default Text",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.5, 0.0],
+                        "value": "4",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
                         "panel_hover": "Bad_Button_Hover_Panel",
@@ -217,24 +383,24 @@
             "type": "Scene",
             "copy": true,
             "overrides":  {
-                "name": "credits",
+                "name": "return",
                 "components": [
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, -100.0, 0.0, 1.0 ],
+                        "position": [ -683.0, 384.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
                 "aspects": [
                     {
                         "type": "UIButton",
-                        "text": "Credits",
+                        "text": "<- Main Menu",
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 0.0],
-                        "value": "Game_Of_Ur_Credits",
+                        "value": "Game_Of_Ur_Main_Menu",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
                         "panel_hover": "Bad_Button_Hover_Panel",
@@ -243,95 +409,66 @@
                     }
                 ]
             }
-        },
-
-        {
-            "name": "Ur_Button",
-            "parent": "/viewport_UI/",
-            "type": "Scene",
-            "copy": true,
-            "overrides":  {
-                "name": "records",
-                "components": [
-                    {
-                        "type": "Placement",
-                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, -200.0, 0.0, 1.0 ],
-                        "scale": [ 1.0, 1.0, 1.0 ]
-                    }
-                ],
-                "aspects": [
-                    {
-                        "type": "UIButton",
-                        "text": "Records",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
-                        "color": [255, 255, 255, 255],
-                        "scale": 1.0,
-                        "anchor": [0.0, 0.0],
-                        "value": "Game_Of_Ur_Records_Browser",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
-                        "has_highlight": false
-                    }
-                ]
-            }
-        },
-
-        {
-            "name": "silly_text",
-            "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 341.5, 300.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla nisi lectus, varius nec lacus quis, congue feugiat erat. Nullam molestie vitae metus sit amet egestas. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed posuere enim odio, quis elementum diam cursus quis. Sed scelerisque a enim id vulputate. Mauris eu odio non diam fermentum pellentesque eget a lacus. In hac habitasse platea dictumst. ",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "max_width": 341.5,
-                    "anchor": [0.5, 0.0],
-                    "color": [255, 255, 255, 255]
-                }
-            ]
         }
     ],
 
     "connections":[
         {
-            "from": "/viewport_UI/local_vs/@UIButton",
+            "from": "/viewport_UI/return/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUINavigation",
             "observer": "ButtonClickedObserved"
         },
+
         {
-            "from": "/viewport_UI/cpu_vs/@UIButton",
+            "from": "/viewport_UI/next/@UIButton",
             "signal": "ButtonReleased",
 
-            "to": "/@UrUINavigation",
+            "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/credits/@UIButton",
+            "from": "/viewport_UI/previous/@UIButton",
             "signal": "ButtonReleased",
 
-            "to": "/@UrUINavigation",
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/record_0/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/records/@UIButton",
+            "from": "/viewport_UI/record_1/@UIButton",
             "signal": "ButtonReleased",
 
-            "to": "/@UrUINavigation",
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/record_2/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/record_3/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/record_4/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         }
     ]

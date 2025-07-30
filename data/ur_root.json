@@ -391,6 +391,15 @@
             "parameters": {
                 "path": "data/ur_records.json"
             }
+        },
+
+        {
+            "name": "Game_Of_Ur_Records_Browser",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_records_browser.json"
+            }
         }
     ],
 
