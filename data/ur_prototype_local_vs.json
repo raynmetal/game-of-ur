@@ -25,7 +25,7 @@
                     "type": "Placement"
                 }
             ],
-            "aspects": [ { "type": "UrController" } ],
+            "aspects": [ { "type": "UrController", "scene_manager_path": "/scene_root/" } ],
             "name": "game",
             "parent": "",
             "type": "SimObject"

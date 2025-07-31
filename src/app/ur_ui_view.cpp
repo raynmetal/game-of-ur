@@ -156,10 +156,10 @@ void UrUIView::onPlayerUpdated(PlayerData player) {
 
     std::string playerText { (player.mPlayer == PlayerID::PLAYER_A)? "Player A": "Player B"};
     switch(player.mRole) {
-        case RoleID::ONE:
+        case RoleID::BLACK:
             playerText += " (Black)";
             break;
-        case RoleID::TWO:
+        case RoleID::WHITE:
             playerText += " (White)";
             break;
 

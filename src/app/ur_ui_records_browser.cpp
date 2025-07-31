@@ -1,4 +1,7 @@
+#include <string>
+
 #include "ui_button.hpp"
+#include "ui_text.hpp"
 #include "ur_scene_manager.hpp"
 #include "ur_records.hpp"
 
@@ -22,15 +25,15 @@ void UrUIRecordsBrowser::onActivated() {
 void UrUIRecordsBrowser::onButtonClicked(const std::string& button) {
     if(button == "next") {
         openPage(mPage + 1);
-
+        return;
     }
-    else if(button == "previous") {
+
+    if(button == "previous") {
         openPage(mPage - 1);
+        return;
+    } 
 
-    } else {
-        std::cout << "Button " << button << " was pressed!\n";
-        /** TODO: open the details page for the record that was clicked */
-    }
+    openDetailedRecord(std::stoi(button));
 }
 
 void UrUIRecordsBrowser::openPage(uint32_t page) {
@@ -101,4 +104,109 @@ void UrUIRecordsBrowser::refreshRecords() {
         ->getByPath<UrRecords&>(
             "/ur_records/@UrRecords"
         ).getAllRecords();
+}
+
+
+bool UrUIRecordsBrowser::onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    if(mMode == Mode::BROWSE) { return false; };
+
+    closeDetailedRecord();
+    return true;
+}
+
+void UrUIRecordsBrowser::openDetailedRecord(uint32_t entry) {
+    // Disable all the buttons on the records browser
+    UIButton& next {
+        getSimObject().getByPath<UIButton&>(
+            "/viewport_UI/next/@UIButton"
+        )
+    };
+    UIButton& prev {
+        getSimObject().getByPath<UIButton&>(
+            "/viewport_UI/previous/@UIButton"
+        )
+    };
+    for(uint32_t entryIndex{0}; entryIndex < 5; ++entryIndex) {
+        UIButton& recordButton { getSimObject().getByPath<UIButton&>(
+                "/viewport_UI/record_" 
+                + std::to_string(entryIndex)
+                + "/@UIButton"
+            )
+        };
+        recordButton.disableButton();
+    }
+    next.disableButton();
+    prev.disableButton();
+
+    // update record details
+    std::shared_ptr<ToyMakersEngine::SceneNode> recordDetails {
+        getSimObject().getByPath("/viewport_UI/record_details/")
+    };
+    const std::size_t selectedEntryIndex { mFetchedRecords.size() - (mPage*5 + entry) };
+    UIText& recordTitle {
+        recordDetails->getByPath<UIText&>("/title/@UIText")
+    };
+    recordTitle.updateText(
+        std::string{"Game "} + std::to_string(selectedEntryIndex)
+    );
+    auto selectedRecord { mFetchedRecords.rbegin() + 5*mPage + entry };
+    for(uint8_t player {0}; player < 2; ++player) {
+        const char playerChar { static_cast<char>('a' + player) };
+        const std::string playerDetailPath { std::string{"/player_"} + playerChar + "/" };
+        const PlayerData& playerData {
+            (playerChar == 'a')? selectedRecord->mPlayerA: selectedRecord->mPlayerB
+        };
+        std::shared_ptr<ToyMakersEngine::SceneNode> playerSection {
+            recordDetails->getByPath(playerDetailPath)
+        };
+        UIText& name { playerSection->getByPath<UIText&>("/name/@UIText") };
+        UIText& role { playerSection->getByPath<UIText&>("/role/@UIText") };
+        UIText& counters { playerSection->getByPath<UIText&>("/counters/@UIText") };
+        UIText& victoryPieces { playerSection->getByPath<UIText&>("/victory_pieces/@UIText") };
+        UIText& onBoardPieces { playerSection->getByPath<UIText&>("/on_board_pieces/@UIText") };
+        UIText& unlaunchedPieces { playerSection->getByPath<UIText&>("/unlaunched_pieces/@UIText") };
+
+        name.updateText(
+            std::string{"Player "} 
+            + static_cast<char>(toupper(playerChar))
+            + ((playerData.mIsWinner)? " (Winner)": "")
+        );
+        role.updateText(
+            (playerData.mRole== RoleID::BLACK)? "Black": "White"
+        );
+        counters.updateText(
+            std::string{"Counters: "}
+            + std::to_string(static_cast<int>(playerData.mCounters))
+        );
+        victoryPieces.updateText(
+            std::string{"Victory Pieces: "}
+            + std::to_string(static_cast<int>(playerData.mNVictoryPieces))
+        );
+        onBoardPieces.updateText(
+            std::string{"Pieces On Board: "}
+            + std::to_string(static_cast<int>(playerData.mNBoardPieces))
+        );
+        unlaunchedPieces.updateText(
+            std::string{"Pieces Unlaunched: "}
+            + std::to_string(static_cast<int>(playerData.mNUnlaunchedPieces))
+        );
+    }
+
+    ToyMakersEngine::Placement recordDetailPlacement {
+        recordDetails->getComponent<ToyMakersEngine::Placement>()
+    };
+    recordDetailPlacement.mPosition.z = 10.f;
+    recordDetails->updateComponent(recordDetailPlacement);
+
+    mMode = Mode::DETAIL;
+}
+
+void UrUIRecordsBrowser::closeDetailedRecord() {
+    std::shared_ptr<ToyMakersEngine::SceneNode> recordDetails { getSimObject().getByPath("/viewport_UI/record_details/") };
+    ToyMakersEngine::Placement recordDetailsPlacement { recordDetails->getComponent<ToyMakersEngine::Placement>() };
+    recordDetailsPlacement.mPosition.z = -10.f;
+    recordDetails->updateComponent<ToyMakersEngine::Placement>(recordDetailsPlacement);
+
+    openPage(mPage);
+    mMode = Mode::BROWSE;
 }

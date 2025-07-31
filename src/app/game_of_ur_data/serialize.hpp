@@ -14,8 +14,8 @@ NLOHMANN_JSON_SERIALIZE_ENUM(PieceTypeID, {
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(RoleID, {
-    {RoleID::ONE, "black"},
-    {RoleID::TWO, "white"},
+    {RoleID::BLACK, "black"},
+    {RoleID::WHITE, "white"},
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(PlayerID, {

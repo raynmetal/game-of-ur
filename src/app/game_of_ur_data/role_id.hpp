@@ -3,8 +3,8 @@
 
 enum RoleID {
     NA,
-    ONE,
-    TWO,
+    BLACK,
+    WHITE,
 };
 
 #endif

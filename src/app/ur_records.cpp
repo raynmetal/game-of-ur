@@ -38,11 +38,11 @@ void UrRecords::ApplyInvariants(const GameRecord& gameRecord) {
     assert(
         (
             gameRecord.mSummary.mPlayerOneCounters == (
-                (gameRecord.mPlayerA.mRole == RoleID::ONE)?
+                (gameRecord.mPlayerA.mRole == RoleID::BLACK)?
                 gameRecord.mPlayerA.mCounters:
                 gameRecord.mPlayerB.mCounters
             ) && gameRecord.mSummary.mPlayerTwoCounters == (
-                (gameRecord.mPlayerA.mRole == RoleID::TWO)?
+                (gameRecord.mPlayerA.mRole == RoleID::WHITE)?
                 gameRecord.mPlayerA.mCounters:
                 gameRecord.mPlayerB.mCounters
             )
