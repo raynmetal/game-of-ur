@@ -28,13 +28,17 @@ DEBUG_OPTS := -fdiagnostics-color=always -g
 COMPILER_FLAGS_DBG := -Wall -DZO_DUMB_DELAY
 COMPILER_FLAGS := $(COMPILER_FLAGS_DBG) -Wl,-subsystem,windows 
 
+EXTERNAL_LIB_DIR := external_libs
+PROJECT_DATA_DIR := data
+USER_DIR := user_data 
+
 TARGET_LIB_DIR := build/lib
 TARGET_INCLUDE_DIR := build/include
 TARGET_BIN_DIR := build/bin
 
 OBJ_DIR := build/temp
-
 SRC_DIR := src
+
 ENGINE_SRC_DIR := engine
 ENGINE_TARGET_BASE := engine
 APP_TARGET := application
@@ -69,11 +73,19 @@ APP_HEADERS := $(filter-out $(ENGINE_HEADERS), $(call rwildcard,$(SRC_DIR),*.hpp
 APP_SOURCES := $(filter-out $(ENGINE_SOURCES), $(call rwildcard,$(SRC_DIR),*.cpp))
 APP_OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(APP_SOURCES))
 
-REQUIRED_SUBDIRS := $(dir $(ENGINE_HEADERS) $(ENGINE_OBJS) $(APP_OBJS))
+EXTERNAL_LIB_SOURCES := $(call rwildcard,$(EXTERNAL_LIB_DIR),*)
+EXTERNAL_LIB_TARGETS := $(patsubst $(EXTERNAL_LIB_DIR)/%,$(TARGET_BIN_DIR)/%,$(EXTERNAL_LIB_SOURCES))
+
+PROJECT_DATA_SOURCES := $(call rwildcard,$(PROJECT_DATA_DIR),*)
+PROJECT_DATA_TARGETS := $(patsubst $(PROJECT_DATA_DIR)/%,$(TARGET_BIN_DIR)/$(PROJECT_DATA_DIR)/%,$(PROJECT_DATA_SOURCES))
+
+USER_TARGET_DIR := $(TARGET_BIN_DIR)/$(USER_DIR)
+
+REQUIRED_SUBDIRS := $(dir $(ENGINE_HEADERS) $(ENGINE_OBJS) $(APP_OBJS) $(EXTERNAL_LIB_TARGETS) $(PROJECT_DATA_TARGETS)) $(USER_TARGET_DIR)
 
 .PHONY: all clean
 
-all: $(APP_EXECUTABLE)
+all: $(APP_EXECUTABLE) $(EXTERNAL_LIB_TARGETS) $(PROJECT_DATA_TARGETS) | $(USER_TARGET_DIR)/
 
 $(APP_EXECUTABLE): $(ENGINE_TARGET) $(APP_OBJS)
 	$(CC) $(APP_OBJS) \
@@ -100,6 +112,12 @@ $(ENGINE_OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(ENGINE_HEADERS) | $$(dir $$@
 		$(addprefix -I,$(INCLUDE_PATHS)) \
 		$(COMPILER_FLAGS_DBG) \
 		$(DEBUG_OPTS) \
+
+$(EXTERNAL_LIB_TARGETS): $(TARGET_BIN_DIR)/% : $(EXTERNAL_LIB_DIR)/% | $$(dir $$@)
+	$(CP) "$(subst /,\,$^)" "$(subst /,\,$@)"
+
+$(PROJECT_DATA_TARGETS): $(TARGET_BIN_DIR)/$(PROJECT_DATA_DIR)/% : $(PROJECT_DATA_DIR)/% | $$(dir $$@)
+	$(CP) "$(subst /,\,$^)" "$(subst /,\,$@)"
 
 $(TARGET_INCLUDE_DIR)/%.hpp: $(SRC_DIR)/%.hpp | $$(dir $$@)
 	$(CP) "$(subst /,\,$(patsubst $(TARGET_INCLUDE_DIR)/%.hpp,$(SRC_DIR)/%.hpp,$@))" "$(dir $(subst /,\,$@))"

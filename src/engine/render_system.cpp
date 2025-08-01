@@ -158,14 +158,14 @@ RenderSetID RenderSystem::createRenderSet(glm::u16vec2 renderDimensions, glm::u1
     }
 
     RenderSet&& newRenderSet {};
-    newRenderSet.mGeometryRenderStage = std::make_shared<GeometryRenderStage>("src/shader/geometryShader.json" );
-    newRenderSet.mLightingRenderStage = std::make_shared<LightingRenderStage>("src/shader/lightingShader.json");
-    newRenderSet.mSkyboxRenderStage = std::make_shared<SkyboxRenderStage>("src/shader/skyboxShader.json");
-    newRenderSet.mBlurRenderStage = std::make_shared<BlurRenderStage>("src/shader/gaussianblurShader.json");
-    newRenderSet.mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>("src/shader/tonemappingShader.json");
-    newRenderSet.mResizeRenderStage = std::make_shared<ResizeRenderStage>("src/shader/basicShader.json");
-    newRenderSet.mScreenRenderStage = std::make_shared<ScreenRenderStage>("src/shader/basicShader.json");
-    newRenderSet.mAdditionRenderStage = std::make_shared<AdditionRenderStage>("src/shader/combineShader.json");
+    newRenderSet.mGeometryRenderStage = std::make_shared<GeometryRenderStage>("data/shader/geometryShader.json" );
+    newRenderSet.mLightingRenderStage = std::make_shared<LightingRenderStage>("data/shader/lightingShader.json");
+    newRenderSet.mSkyboxRenderStage = std::make_shared<SkyboxRenderStage>("data/shader/skyboxShader.json");
+    newRenderSet.mBlurRenderStage = std::make_shared<BlurRenderStage>("data/shader/gaussianblurShader.json");
+    newRenderSet.mTonemappingRenderStage = std::make_shared<TonemappingRenderStage>("data/shader/tonemappingShader.json");
+    newRenderSet.mResizeRenderStage = std::make_shared<ResizeRenderStage>("data/shader/basicShader.json");
+    newRenderSet.mScreenRenderStage = std::make_shared<ScreenRenderStage>("data/shader/basicShader.json");
+    newRenderSet.mAdditionRenderStage = std::make_shared<AdditionRenderStage>("data/shader/combineShader.json");
 
     newRenderSet.mLightMaterialHandle = ResourceDatabase::ConstructAnonymousResource<Material>({
         {"type", Material::getResourceTypeName()},
