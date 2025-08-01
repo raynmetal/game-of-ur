@@ -25,8 +25,13 @@ LIBRARY_PATHS := D:\MyDev\MinGW64\Lib
 DYNAMIC_LIBS := mingw32 SDL2main SDL2 OpenGL32 glew32 SDL2_image SDL2_image.dll assimp.dll SDL2_ttf SDL2_ttf.dll
 
 DEBUG_OPTS := -fdiagnostics-color=always -g
-COMPILER_FLAGS_DBG := -Wall -DZO_DUMB_DELAY
-COMPILER_FLAGS := $(COMPILER_FLAGS_DBG) -Wl,-subsystem,windows 
+
+########################
+# DO NOT EDIT
+COMPILER_FLAGS_DEBUG := -Wall -DZO_DUMB_DELAY
+COMPILER_FLAGS_RELEASE := $(COMPILER_FLAGS_DEBUG) -Wl,-subsystem,windows 
+########################
+COMPILER_FLAGS := $(COMPILER_FLAGS_RELEASE)
 
 EXTERNAL_LIB_DIR := external_libs
 PROJECT_DATA_DIR := data
@@ -81,18 +86,18 @@ PROJECT_DATA_TARGETS := $(patsubst $(PROJECT_DATA_DIR)/%,$(TARGET_BIN_DIR)/$(PRO
 
 USER_TARGET_DIR := $(TARGET_BIN_DIR)/$(USER_DIR)
 
-REQUIRED_SUBDIRS := $(dir $(ENGINE_HEADERS) $(ENGINE_OBJS) $(APP_OBJS) $(EXTERNAL_LIB_TARGETS) $(PROJECT_DATA_TARGETS)) $(USER_TARGET_DIR)
+REQUIRED_SUBDIRS := $(sort $(dir $(ENGINE_HEADERS) $(ENGINE_OBJS) $(APP_OBJS) $(EXTERNAL_LIB_TARGETS) $(PROJECT_DATA_TARGETS)) $(USER_TARGET_DIR)/)
 
 .PHONY: all clean
 
-all: $(APP_EXECUTABLE) $(EXTERNAL_LIB_TARGETS) $(PROJECT_DATA_TARGETS) | $(USER_TARGET_DIR)/
+all: $(APP_EXECUTABLE) $(EXTERNAL_LIB_TARGETS) $(PROJECT_DATA_TARGETS) | $(USER_TARGET_DIR)
 
 $(APP_EXECUTABLE): $(ENGINE_TARGET) $(APP_OBJS)
 	$(CC) $(APP_OBJS) \
 		-o $(APP_EXECUTABLE) \
 		$(addprefix -I,$(INCLUDE_PATHS) $(TARGET_INCLUDE_DIR)) \
 		$(addprefix -L,$(LIBRARY_PATHS) $(TARGET_LIB_DIR)) \
-		$(COMPILER_FLAGS_DBG) \
+		$(COMPILER_FLAGS) \
 		$(DEBUG_OPTS) \
 		$(addprefix -l,$(ENGINE_LIB) $(DYNAMIC_LIBS))
 
@@ -104,29 +109,38 @@ $(ENGINE_TARGET): $(ENGINE_OBJS)
 $(APP_OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(APP_HEADERS) $(ENGINE_HEADERS) | $$(dir $$@)
 	$(CC) -c $< -o $@ \
 		$(addprefix -I,$(INCLUDE_PATHS) $(TARGET_INCLUDE_DIR)) \
-		$(COMPILER_FLAGS_DBG) \
+		$(COMPILER_FLAGS) \
 		$(DEBUG_OPTS) \
 
 $(ENGINE_OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(ENGINE_HEADERS) | $$(dir $$@)
 	$(CC) -r -c $< -o $@ \
 		$(addprefix -I,$(INCLUDE_PATHS)) \
-		$(COMPILER_FLAGS_DBG) \
+		$(COMPILER_FLAGS) \
 		$(DEBUG_OPTS) \
 
 $(EXTERNAL_LIB_TARGETS): $(TARGET_BIN_DIR)/% : $(EXTERNAL_LIB_DIR)/% | $$(dir $$@)
+ifeq ($(OS), Windows_NT)
 	$(CP) "$(subst /,\,$^)" "$(subst /,\,$@)"
+else
+	$(CP) "$^" "$@"
+endif
 
 $(PROJECT_DATA_TARGETS): $(TARGET_BIN_DIR)/$(PROJECT_DATA_DIR)/% : $(PROJECT_DATA_DIR)/% | $$(dir $$@)
+ifeq ($(OS), Windows_NT)
 	$(CP) "$(subst /,\,$^)" "$(subst /,\,$@)"
+else
+	$(CP) "$^" "$@"
+endif
 
 $(TARGET_INCLUDE_DIR)/%.hpp: $(SRC_DIR)/%.hpp | $$(dir $$@)
 	$(CP) "$(subst /,\,$(patsubst $(TARGET_INCLUDE_DIR)/%.hpp,$(SRC_DIR)/%.hpp,$@))" "$(dir $(subst /,\,$@))"
 
-$(sort $(REQUIRED_SUBDIRS)):
+$(REQUIRED_SUBDIRS):
 ifeq ($(OS), Windows_NT)
-	$(MKDIR) $(subst /,\,$@)
+# see answer: https://superuser.com/questions/541534/check-whether-a-file-folder-exists-with-cmd-command-line-not-batch-script
+	IF NOT EXIST $(subst /,\,$@)NUL $(MKDIR) $(subst /,\,$@)
 else
-	$(MKDIR) $@
+	$(MKDIR) -p $@
 endif
 
 _TO_CLEAN := $(TARGET_BIN_DIR)/* $(TARGET_LIB_DIR)/* $(TARGET_INCLUDE_DIR)/* $(OBJ_DIR)/*
