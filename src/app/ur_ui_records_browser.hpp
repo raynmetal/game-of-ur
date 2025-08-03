@@ -1,6 +1,7 @@
 #ifndef ZOAPPUIRECORDSBROWSER_H
 #define ZOAPPUIRECORDSBROWSER_H
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include "ur_records.hpp"
 

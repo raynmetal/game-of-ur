@@ -1,6 +1,7 @@
 #ifndef ZOAPPSCENEMANAGER_H
 #define ZOAPPSCENEMANAGER_H
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 #include "../engine/sim_system.hpp"
 

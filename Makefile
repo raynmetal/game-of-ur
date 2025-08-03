@@ -1,27 +1,30 @@
-# delete and copy shell commands in windows
-ifeq ($(OS), Windows_NT)
-RM := rd /s /q
-CP := copy
-MKDIR := mkdir
-ifdef ComSpec
-SHELL :=$(ComSpec)
-endif
-ifdef COMSPEC
-SHELL := $(COMSPEC)
-endif
+# # delete and copy shell commands in windows
+# ifeq ($(OS), Windows_NT)
+# RM := rd /s /q
+# CP := copy
+# MKDIR := mkdir
+# ifdef ComSpec
+# SHELL :=$(ComSpec)
+# endif
+# ifdef COMSPEC
+# SHELL := $(COMSPEC)
+# endif
+
 # delete and copy shell commands in posix shells
-else
+# else
 RM := rm -rf
-CP := cp -f
+CP := cp -r
 MKDIR := mkdir -p
-endif
+# endif
 
 
 CC := g++
 
 
-INCLUDE_PATHS := D:\MyDev\MinGW64\Include
-LIBRARY_PATHS := D:\MyDev\MinGW64\Lib
+# INCLUDE_PATHS := D:\MyDev\MinGW64\Include
+INCLUDE_PATHS :=
+# LIBRARY_PATHS := D:\MyDev\MinGW64\Lib
+LIBRARY_PATHS :=
 DYNAMIC_LIBS := mingw32 SDL2main SDL2 OpenGL32 glew32 SDL2_image SDL2_image.dll assimp.dll SDL2_ttf SDL2_ttf.dll
 
 DEBUG_OPTS := -fdiagnostics-color=always -g
@@ -29,11 +32,11 @@ DEBUG_OPTS := -fdiagnostics-color=always -g
 ########################
 # DO NOT EDIT
 COMPILER_FLAGS_DEBUG := -Wall -DZO_DUMB_DELAY
-COMPILER_FLAGS_RELEASE := $(COMPILER_FLAGS_DEBUG) -Wl,-subsystem,windows 
+COMPILER_FLAGS_RELEASE := $(COMPILER_FLAGS_DEBUG) -Wl,-subsystem,windows
 ########################
-COMPILER_FLAGS := $(COMPILER_FLAGS_RELEASE)
+COMPILER_FLAGS := $(COMPILER_FLAGS_DEBUG)
 
-EXTERNAL_LIB_DIR := external_libs
+# EXTERNAL_LIB_DIR := external_libs
 PROJECT_DATA_DIR := data
 USER_DIR := user_data 
 
@@ -78,8 +81,8 @@ APP_HEADERS := $(filter-out $(ENGINE_HEADERS), $(call rwildcard,$(SRC_DIR),*.hpp
 APP_SOURCES := $(filter-out $(ENGINE_SOURCES), $(call rwildcard,$(SRC_DIR),*.cpp))
 APP_OBJS := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(APP_SOURCES))
 
-EXTERNAL_LIB_SOURCES := $(call rwildcard,$(EXTERNAL_LIB_DIR),*)
-EXTERNAL_LIB_TARGETS := $(patsubst $(EXTERNAL_LIB_DIR)/%,$(TARGET_BIN_DIR)/%,$(EXTERNAL_LIB_SOURCES))
+# EXTERNAL_LIB_SOURCES := $(call rwildcard,$(EXTERNAL_LIB_DIR),*)
+# EXTERNAL_LIB_TARGETS := $(patsubst $(EXTERNAL_LIB_DIR)/%,$(TARGET_BIN_DIR)/%,$(EXTERNAL_LIB_SOURCES))
 
 PROJECT_DATA_SOURCES := $(call rwildcard,$(PROJECT_DATA_DIR),*)
 PROJECT_DATA_TARGETS := $(patsubst $(PROJECT_DATA_DIR)/%,$(TARGET_BIN_DIR)/$(PROJECT_DATA_DIR)/%,$(PROJECT_DATA_SOURCES))
@@ -90,7 +93,8 @@ REQUIRED_SUBDIRS := $(sort $(dir $(ENGINE_HEADERS) $(ENGINE_OBJS) $(APP_OBJS) $(
 
 .PHONY: all clean
 
-all: $(APP_EXECUTABLE) $(EXTERNAL_LIB_TARGETS) $(PROJECT_DATA_TARGETS) | $(USER_TARGET_DIR)
+# all: $(APP_EXECUTABLE) $(EXTERNAL_LIB_TARGETS) $(PROJECT_DATA_TARGETS) | $(USER_TARGET_DIR)
+all: $(APP_EXECUTABLE) $(PROJECT_DATA_TARGETS) | $(USER_TARGET_DIR)
 
 $(APP_EXECUTABLE): $(ENGINE_TARGET) $(APP_OBJS)
 	$(CC) $(APP_OBJS) \
@@ -118,37 +122,38 @@ $(ENGINE_OBJS): $(OBJ_DIR)/%.o : $(SRC_DIR)/%.cpp $(ENGINE_HEADERS) | $$(dir $$@
 		$(COMPILER_FLAGS) \
 		$(DEBUG_OPTS) \
 
-$(EXTERNAL_LIB_TARGETS): $(TARGET_BIN_DIR)/% : $(EXTERNAL_LIB_DIR)/% | $$(dir $$@)
-ifeq ($(OS), Windows_NT)
-	$(CP) "$(subst /,\,$^)" "$(subst /,\,$@)"
-else
-	$(CP) "$^" "$@"
-endif
+# $(EXTERNAL_LIB_TARGETS): $(TARGET_BIN_DIR)/% : $(EXTERNAL_LIB_DIR)/% | $$(dir $$@)
+# # ifeq ($(OS), Windows_NT)
+# # 	$(CP) "$(subst /,\,$^)" "$(subst /,\,$@)"
+# # else
+# 	$(CP) "$^" "$@"
+# # endif
 
 $(PROJECT_DATA_TARGETS): $(TARGET_BIN_DIR)/$(PROJECT_DATA_DIR)/% : $(PROJECT_DATA_DIR)/% | $$(dir $$@)
-ifeq ($(OS), Windows_NT)
-	$(CP) "$(subst /,\,$^)" "$(subst /,\,$@)"
-else
+# ifeq ($(OS), Windows_NT)
+# 	$(CP) "$(subst /,\,$^)" "$(subst /,\,$@)"
+# else
 	$(CP) "$^" "$@"
-endif
+# endif
 
 $(TARGET_INCLUDE_DIR)/%.hpp: $(SRC_DIR)/%.hpp | $$(dir $$@)
-	$(CP) "$(subst /,\,$(patsubst $(TARGET_INCLUDE_DIR)/%.hpp,$(SRC_DIR)/%.hpp,$@))" "$(dir $(subst /,\,$@))"
+# 	$(CP) "$(subst /,\,$(patsubst $(TARGET_INCLUDE_DIR)/%.hpp,$(SRC_DIR)/%.hpp,$@))" "$(dir $(subst /,\,$@))"
+	$(CP) "$(patsubst $(TARGET_INCLUDE_DIR)/%.hpp,$(SRC_DIR)/%.hpp,$@)" "$(dir $@)"
 
 $(REQUIRED_SUBDIRS):
-ifeq ($(OS), Windows_NT)
-# see answer: https://superuser.com/questions/541534/check-whether-a-file-folder-exists-with-cmd-command-line-not-batch-script
-	IF NOT EXIST $(subst /,\,$@)NUL $(MKDIR) $(subst /,\,$@)
-else
-	$(MKDIR) -p $@
-endif
+# ifeq ($(OS), Windows_NT)
+# # see answer: https://superuser.com/questions/541534/check-whether-a-file-folder-exists-with-cmd-command-line-not-batch-script
+# 	IF NOT EXIST $(subst /,\,$@)NUL $(MKDIR) $(subst /,\,$@)
+# else
+	$(MKDIR) $@
+# endif
 
 _TO_CLEAN := $(TARGET_BIN_DIR)/* $(TARGET_LIB_DIR)/* $(TARGET_INCLUDE_DIR)/* $(OBJ_DIR)/*
 
 clean:
-ifeq ($(OS), Windows_NT)
-	del /q $(subst /,\,$(_TO_CLEAN))
-	for /D %%f in ($(subst /,\,$(_TO_CLEAN))) do $(RM) "%%f"
-else
+# ifeq ($(OS), Windows_NT)
+# 	del /q $(subst /,\,$(_TO_CLEAN))
+# 	for /D %%f in ($(subst /,\,$(_TO_CLEAN))) do $(RM) "%%f"
+# else
 	$(RM) $(_TO_CLEAN)
-endif
+# endif

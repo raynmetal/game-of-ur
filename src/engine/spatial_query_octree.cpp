@@ -2,6 +2,7 @@
 #include <limits>
 #include <queue>
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
 #include "spatial_query_octree.hpp"

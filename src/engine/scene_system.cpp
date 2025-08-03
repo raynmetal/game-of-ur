@@ -967,7 +967,8 @@ std::vector<std::weak_ptr<ECSWorld>> ViewportNode::getActiveDescendantWorlds() {
 
 void SceneSystem::simulationStep(uint32_t simStepMillis, std::vector<std::pair<ActionDefinition, ActionData>> triggeredActions) {
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
-    while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
+    while(!viewportsToVisit.empty()) {
+        std::shared_ptr<ViewportNode> viewport { viewportsToVisit.front() };
         viewportsToVisit.pop();
         if(!viewport->isActive()) continue;
 
@@ -985,7 +986,8 @@ void SceneSystem::simulationStep(uint32_t simStepMillis, std::vector<std::pair<A
     }
 
     viewportsToVisit.push(mRootNode);
-    while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
+    while(!viewportsToVisit.empty()) {
+        std::shared_ptr<ViewportNode> viewport { viewportsToVisit.front() };
         viewportsToVisit.pop();
         if(!viewport->isActive()) continue;
 
@@ -1000,7 +1002,8 @@ void SceneSystem::simulationStep(uint32_t simStepMillis, std::vector<std::pair<A
 
     updateTransforms();
     viewportsToVisit.push(mRootNode);
-    while(std::shared_ptr<ViewportNode> viewport=viewportsToVisit.front()) {
+    while(!viewportsToVisit.empty()) {
+        std::shared_ptr<ViewportNode> viewport { viewportsToVisit.front() };
         viewportsToVisit.pop();
 
         if(!viewport->isActive()) continue;
@@ -1023,7 +1026,8 @@ void SceneSystem::variableStep(float simulationProgress, uint32_t simulationLagM
     }
 
     std::queue<std::shared_ptr<ViewportNode>> viewportsToVisit { {mRootNode} };
-    while(std::shared_ptr<ViewportNode> viewport = viewportsToVisit.front()) {
+    while(!viewportsToVisit.empty()) {
+        std::shared_ptr<ViewportNode> viewport { viewportsToVisit.front() };
         viewportsToVisit.pop();
         if(!viewport->isActive()) continue;
 
@@ -1039,7 +1043,8 @@ void SceneSystem::variableStep(float simulationProgress, uint32_t simulationLagM
     updateTransforms();
 
     viewportsToVisit.push({mRootNode});
-    while(std::shared_ptr<ViewportNode> viewport=viewportsToVisit.front()) {
+    while(!viewportsToVisit.empty()) {
+        std::shared_ptr<ViewportNode> viewport { viewportsToVisit.front() };
         viewportsToVisit.pop();
 
         if(!viewport->isActive()) continue;
