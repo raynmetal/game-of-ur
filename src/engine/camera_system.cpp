@@ -64,6 +64,7 @@ void CameraSystem::onEntityUpdated(EntityID entity)  {
 }
 
 void CameraSystem::onPreRenderStep(float simulationProgress) {
+    (void)simulationProgress; // prevent unused parameter warnings
     updateActiveCameraMatrices();
 }
 

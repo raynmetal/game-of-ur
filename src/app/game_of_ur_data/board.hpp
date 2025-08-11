@@ -34,10 +34,10 @@ public:
 private:
     std::array<std::vector<House>, 3> mGrid {{
         {
-            House{{1, 0}, House::ROSETTE, House::ONE},
-            House{{0, -1}, House::REGULAR, House::ONE},
-            House{{0, -1}, House::REGULAR, House::ONE},
-            House{{0, -1}, House::REGULAR, House::ONE},
+            House{{1, 0}, House::ROSETTE, House::BLACK},
+            House{{0, -1}, House::REGULAR, House::BLACK},
+            House{{0, -1}, House::REGULAR, House::BLACK},
+            House{{0, -1}, House::REGULAR, House::BLACK},
         },
         {
             House{{0, 1}, House::REGULAR, House::BATTLEFIELD},
@@ -54,10 +54,10 @@ private:
             House{{0, 1}, House::ROSETTE, House::BATTLEFIELD},
         },
         {
-            House{{-1, 0}, House::ROSETTE, House::TWO},
-            House{{0, -1}, House::REGULAR, House::TWO},
-            House{{0, -1}, House::REGULAR, House::TWO},
-            House{{0, -1}, House::REGULAR, House::TWO},
+            House{{-1, 0}, House::ROSETTE, House::WHITE},
+            House{{0, -1}, House::REGULAR, House::WHITE},
+            House{{0, -1}, House::REGULAR, House::WHITE},
+            House{{0, -1}, House::REGULAR, House::WHITE},
         },
     }};
 

@@ -8,6 +8,9 @@
 /**/*.exe
 build/**/*
 
+#Local files
+user_data/
+
 #Media files
 # /**/*.png
 /**/*.jpg

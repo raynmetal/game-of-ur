@@ -29,7 +29,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneView::create(const 
         const PieceIdentity pieceIdentity { pieceDescription.at("piece").get<PieceIdentity>() };
         sceneView->mPieceModelMap.insert_or_assign(pieceIdentity, pieceDescription.at("model").get<std::string>());
     }
-    for(uint8_t role { RoleID::ONE }; role <= RoleID::TWO; ++role) {
+    for(uint8_t role { RoleID::BLACK }; role <= RoleID::WHITE; ++role) {
         for(uint8_t piece { PieceTypeID::SWALLOW }; piece < PieceTypeID::TOTAL; ++piece) {
             const PieceIdentity pieceIdentity { .mType=static_cast<PieceTypeID>(piece), .mOwner=static_cast<RoleID>(role) };
             assert(
@@ -71,15 +71,15 @@ void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
     std::cout << "\tregion: ";
     switch(houseData.mRegion) {
         case House::Region::BATTLEFIELD: std::cout << "battlefield\n"; break;
-        case House::Region::ONE: std::cout << "player one\n"; break;
-        case House::Region::TWO: std::cout << "player two\n"; break;
+        case House::Region::BLACK: std::cout << "player one\n"; break;
+        case House::Region::WHITE: std::cout << "player two\n"; break;
     }
     std::cout << "\tnext cell direction: " << glm::to_string(houseData.mNextCellDirection) << "\n";
     std::cout << "\tlocation: " << glm::to_string(houseData.mLocation) << "\n";
     std::cout << "\toccupant: ";
     if(houseData.mOccupant.mOwner == RoleID::NA) { std::cout << "NA\n"; }
     else {
-        std::cout << ((houseData.mOccupant.mOwner==RoleID::ONE)? "p1 ": "p2 ");
+        std::cout << ((houseData.mOccupant.mOwner==RoleID::BLACK)? "p1 ": "p2 ");
         switch(houseData.mOccupant.mType) {
             case PieceTypeID::SWALLOW: std::cout << "swallow\n"; break;
             case PieceTypeID::STORMBIRD: std::cout << "storm bird\n"; break;

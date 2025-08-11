@@ -1,3 +1,4 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
 #include "../engine/window_context_manager.hpp"
@@ -7,6 +8,7 @@
 
 
 bool RenderDebugViewer::onUpdateGamma(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    (void)actionDefinition; // prevent unused parameter warning
     getLocalViewport().updateGamma(
         getLocalViewport().getGamma() 
         + actionData.mOneAxisActionData.mValue*mGammaStep
@@ -14,6 +16,7 @@ bool RenderDebugViewer::onUpdateGamma(const ToyMakersEngine::ActionData& actionD
     return true;
 }
 bool RenderDebugViewer::onUpdateExposure(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    (void)actionDefinition; // prevent unused parameter warning
     getLocalViewport().updateExposure(
         getLocalViewport().getExposure()
         + actionData.mOneAxisActionData.mValue*mExposureStep
@@ -21,6 +24,8 @@ bool RenderDebugViewer::onUpdateExposure(const ToyMakersEngine::ActionData& acti
     return true;
 }
 bool RenderDebugViewer::onRenderNextTexture(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    (void)actionData; // prevent unused parameter warning
+    (void)actionDefinition; // prevent unused parameter warning
     getLocalViewport().viewNextDebugTexture();
     return true;
 }
@@ -30,6 +35,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> RenderDebugViewer::clone()
 }
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> RenderDebugViewer::create(const nlohmann::json& jsonAspectProperties) {
+    (void)jsonAspectProperties; // prevent unused parameter warning
     return std::shared_ptr<RenderDebugViewer>(new RenderDebugViewer {});
 }
 

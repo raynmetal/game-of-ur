@@ -13,7 +13,7 @@ public:
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
     bool onPointerLeftClick(glm::vec4 clickLocation)  override;
-    inline bool onPointerLeftRelease(glm::vec4 clickLocation) override { return false; }
+    inline bool onPointerLeftRelease(glm::vec4 clickLocation) override { (void)clickLocation;/*prevent unused parameter warnings*/ return false; }
 
     ToyMakersEngine::Signal<glm::u8vec2> mSigBoardClicked { *this, "BoardClicked" };
 

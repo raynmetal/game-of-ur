@@ -156,10 +156,10 @@ void UrUIView::onPlayerUpdated(PlayerData player) {
 
     std::string playerText { (player.mPlayer == PlayerID::PLAYER_A)? "Player A": "Player B"};
     switch(player.mRole) {
-        case RoleID::ONE:
+        case RoleID::BLACK:
             playerText += " (Black)";
             break;
-        case RoleID::TWO:
+        case RoleID::WHITE:
             playerText += " (White)";
             break;
 
@@ -207,11 +207,14 @@ void UrUIView::onDiceUpdated(DiceData dice) {
 }
 
 void UrUIView::onMoveMade(MoveResultData moveData) {
+    (void)moveData; // prevent unused parameter warnings
     std::cout << "UrUIView: on move made\n";
     getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
 }
 
 bool UrUIView::onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    (void)actionData; // prevent unused parameter warnings
+    (void)actionDefinition; // prevent unused parameter warnings
     std::cout << "UrUIView: cancel attempted\n";
     if(mMode == Mode::TRANSITION) { return false; }
 

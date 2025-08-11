@@ -31,10 +31,16 @@ namespace ToyMakersEngine{
     };
 
     // never used, so make empty definitions for these
-    inline void from_json(const nlohmann::json& json, SimCore& simCore) {}
+    inline void from_json(const nlohmann::json& json, SimCore& simCore) {
+        (void)json; // prevent unused parameter warnings
+        (void)simCore; // prevent unused parameter warnings
+    }
 
     // never used, so make empty definitions for these
-    inline void to_json(nlohmann::json& json, const SimCore& simCore) {}
+    inline void to_json(nlohmann::json& json, const SimCore& simCore) {
+        (void)json; // prevent unused parameter warnings
+        (void)simCore; // prevent unused parameter warnings
+    }
 
     class SimSystem: public System<SimSystem, std::tuple<>, std::tuple<SimCore>> {
     public:
@@ -142,8 +148,8 @@ namespace ToyMakersEngine{
     class BaseSimObjectAspect : public std::enable_shared_from_this<BaseSimObjectAspect>, public SignalTracker, public IActionHandler {
     public:
         virtual ~BaseSimObjectAspect()=default;
-        virtual void simulationUpdate(uint32_t simStepMillis) {}
-        virtual void variableUpdate(uint32_t variableStepMillis) {}
+        virtual void simulationUpdate(uint32_t simStepMillis) { (void)simStepMillis; /*prevent unused parameter warnings*/}
+        virtual void variableUpdate(uint32_t variableStepMillis) {(void)variableStepMillis; /*prevent unused parameter warnings*/}
 
         bool handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) override final;
         ViewportNode& getLocalViewport();
@@ -240,6 +246,7 @@ namespace ToyMakersEngine{
     class SimObjectAspect: public BaseSimObjectAspect {
     protected:
         SimObjectAspect(int explicitlyInitializeMe){
+            (void)explicitlyInitializeMe; // prevent unused parameter warnings
             s_registrator.emptyFunc();
         }
     private:

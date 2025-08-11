@@ -186,7 +186,9 @@ std::shared_ptr<StaticMesh> buildMesh(aiMesh* pAiMesh) {
             .mUV1 {
                 pAiMesh->mTextureCoords[0][i].x,
                 pAiMesh->mTextureCoords[0][i].y
-            }
+            },
+            .mUV2{},
+            .mUV3{},
         });
     }
 
@@ -209,47 +211,45 @@ void processAssimpMesh(aiMesh* pAiMesh, const aiScene* pAiScene, std::vector<std
     );
 
     // Load textures
-    if(pAiMesh->mMaterialIndex >= 0) {
-        aiMaterial* pAiMaterial {
-            pAiScene->mMaterials[pAiMesh->mMaterialIndex]
-        };
+    aiMaterial* pAiMaterial {
+        pAiScene->mMaterials[pAiMesh->mMaterialIndex]
+    };
 
-        // TODO: Make associating textures with their respective material
-        // props more elegant somehow?
-        std::vector<std::shared_ptr<Texture>> textureHandlesAlbedo {
-            loadAssimpTextures(pAiMaterial, aiTextureType_DIFFUSE)
-        };
-        std::vector<std::shared_ptr<Texture>> textureHandlesNormal {
-            loadAssimpTextures(pAiMaterial, aiTextureType_NORMALS)
-        };
-        std::vector<std::shared_ptr<Texture>> textureHandlesSpecular {
-            loadAssimpTextures(pAiMaterial, aiTextureType_SPECULAR)
-        };
+    // TODO: Make associating textures with their respective material
+    // props more elegant somehow?
+    std::vector<std::shared_ptr<Texture>> textureHandlesAlbedo {
+        loadAssimpTextures(pAiMaterial, aiTextureType_DIFFUSE)
+    };
+    std::vector<std::shared_ptr<Texture>> textureHandlesNormal {
+        loadAssimpTextures(pAiMaterial, aiTextureType_NORMALS)
+    };
+    std::vector<std::shared_ptr<Texture>> textureHandlesSpecular {
+        loadAssimpTextures(pAiMaterial, aiTextureType_SPECULAR)
+    };
 
-        if(!textureHandlesAlbedo.empty()) {
-            materialHandles.back()->updateTextureProperty(
-                "textureAlbedo", textureHandlesAlbedo.back()
-            );
-            materialHandles.back()->updateIntProperty(
-                "usesTextureAlbedo", true
-            );
-        }
-        if(!textureHandlesNormal.empty()) {
-            materialHandles.back()->updateTextureProperty(
-                "textureNormal", textureHandlesNormal.back()
-            );
-            materialHandles.back()->updateIntProperty(
-                "usesTextureNormal", true
-            );
-        }
-        if(!textureHandlesSpecular.empty()) {
-            materialHandles.back()->updateTextureProperty(
-                "textureSpecular", textureHandlesSpecular.back()
-            );
-            materialHandles.back()->updateIntProperty(
-                "usesTextureSpecular", true
-            );
-        }
+    if(!textureHandlesAlbedo.empty()) {
+        materialHandles.back()->updateTextureProperty(
+            "textureAlbedo", textureHandlesAlbedo.back()
+        );
+        materialHandles.back()->updateIntProperty(
+            "usesTextureAlbedo", true
+        );
+    }
+    if(!textureHandlesNormal.empty()) {
+        materialHandles.back()->updateTextureProperty(
+            "textureNormal", textureHandlesNormal.back()
+        );
+        materialHandles.back()->updateIntProperty(
+            "usesTextureNormal", true
+        );
+    }
+    if(!textureHandlesSpecular.empty()) {
+        materialHandles.back()->updateTextureProperty(
+            "textureSpecular", textureHandlesSpecular.back()
+        );
+        materialHandles.back()->updateIntProperty(
+            "usesTextureSpecular", true
+        );
     }
 }
 

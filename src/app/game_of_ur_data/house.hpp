@@ -16,8 +16,8 @@ public:
     };
     enum Region: uint8_t {
         BATTLEFIELD,
-        ONE=RoleID::ONE,
-        TWO=RoleID::TWO,
+        BLACK=RoleID::BLACK,
+        WHITE=RoleID::WHITE,
     };
     House(glm::i8vec2 nextCell, Type houseType, Region region):
     mNextCell { nextCell },

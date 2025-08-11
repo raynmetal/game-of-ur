@@ -42,7 +42,14 @@ void BaseInstanceAllocator::setAttributePointers(const InstanceLayout& shaderIns
     std::size_t currentOffset {0};
     std::size_t shaderInstanceAttributeIndex {0};
 
-    for(std::size_t i{0}; i < attributeDescList.size(); ++i) {
+    for(
+        std::size_t i{0};
+        (
+            i < attributeDescList.size() 
+            && shaderInstanceAttributeIndex < shaderAttributeDescList.size()
+        );
+        ++i
+    ) {
         const InstanceAttributeDescriptor& attributeDesc = attributeDescList[i];
         const InstanceAttributeDescriptor& shaderAttributeDesc = shaderAttributeDescList[shaderInstanceAttributeIndex];
 

@@ -26,8 +26,8 @@ const Piece& Player::cGetPiece(PieceTypeID pieceType) const {
 void Player::initializeWithRole(RoleID role) {
     mRole = role;
     switch(role) {
-        case RoleID::ONE:
-        case RoleID::TWO:
+        case RoleID::BLACK:
+        case RoleID::WHITE:
             for(uint8_t type { 0 }; type < PieceTypeID::TOTAL; ++type) {
                 mPieces[type] = std::make_shared<Piece>(static_cast<PieceTypeID>(type), mRole);
             }

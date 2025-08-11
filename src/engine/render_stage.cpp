@@ -368,17 +368,17 @@ void LightingRenderStage::execute() {
                 LightInstanceAllocator lightInstanceAllocator{ lightEmissionList, modelMatrices };
                 modelMatrixAllocator.bind(BuiltinModelMatrixLayout);
                 lightInstanceAllocator.bind({{
-                    {"attrLightPlacement.mPosition", RUNTIME, 4, GL_FLOAT},
-                    {"attrLightPlacement.mDirection", RUNTIME, 4, GL_FLOAT},
+                    {"attrLightPlacement_mPosition", RUNTIME, 4, GL_FLOAT},
+                    {"attrLightPlacement_mDirection", RUNTIME, 4, GL_FLOAT},
 
-                    {"attrLightEmission.mType", RUNTIME, 1, GL_INT},
-                    {"attrLightEmission.mDiffuseColor", RUNTIME, 4, GL_FLOAT},
-                    {"attrLightEmission.mSpecularColor", RUNTIME, 4, GL_FLOAT},
-                    {"attrLightEmission.mAmbientColor", RUNTIME, 4, GL_FLOAT},
-                    {"attrLightEmission.mDecayLinear", RUNTIME, 1, GL_FLOAT},
-                    {"attrLightEmission.mDecayQuadratic", RUNTIME, 1, GL_FLOAT},
-                    {"attrLightEmission.mCosCutoffInner", RUNTIME, 1, GL_FLOAT},
-                    {"attrLightEmission.mCosCutoffOuter", RUNTIME, 1, GL_FLOAT}
+                    {"attrLightEmission_mType", RUNTIME, 1, GL_INT},
+                    {"attrLightEmission_mDiffuseColor", RUNTIME, 4, GL_FLOAT},
+                    {"attrLightEmission_mSpecularColor", RUNTIME, 4, GL_FLOAT},
+                    {"attrLightEmission_mAmbientColor", RUNTIME, 4, GL_FLOAT},
+                    {"attrLightEmission_mDecayLinear", RUNTIME, 1, GL_FLOAT},
+                    {"attrLightEmission_mDecayQuadratic", RUNTIME, 1, GL_FLOAT},
+                    {"attrLightEmission_mCosCutoffInner", RUNTIME, 1, GL_FLOAT},
+                    {"attrLightEmission_mCosCutoffOuter", RUNTIME, 1, GL_FLOAT}
                 }});
                 glDrawElementsInstanced(
                     GL_TRIANGLES, first.mMeshHandle->getElementCount(),
@@ -570,9 +570,10 @@ void TonemappingRenderStage::execute() {
     mFramebufferHandle->bind();
         glClear(GL_COLOR_BUFFER_BIT);
         mTextureAttachments.at("litScene")->bind(0);
-        mTextureAttachments.at("bloomEffect")->bind(1);
+        /** TODO: Implement proper bloom some time in the future */
+        // mTextureAttachments.at("bloomEffect")->bind(1);
         mShaderHandle->setUInt("uGenericTexture", 0);
-        mShaderHandle->setUInt("uGenericTexture1", 1);
+        // mShaderHandle->setUInt("uGenericTexture1", 1);
         mShaderHandle->setUFloat("uExposure", 
             screenMaterial->getFloatProperty("exposure")
         );

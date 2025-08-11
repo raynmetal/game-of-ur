@@ -8,11 +8,14 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
 #include "engine/application.hpp"
 
 int main(int argc, char* argv[]) {
+    (void)argc; // prevent unused parameter warnings
+    (void)argv; // prevent unused parameter warnings
 
     if(std::shared_ptr<ToyMakersEngine::Application> app { ToyMakersEngine::Application::instantiate("data/project.json") }) {
         app->execute();

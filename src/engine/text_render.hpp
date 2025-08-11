@@ -15,13 +15,19 @@ namespace ToyMakersEngine{
         explicit TextFont(const std::string& fontPath, uint16_t pointSize);
         inline static std::string getResourceTypeName() { return "TextFont"; }
 
-        inline std::string getFontPath() { return mFontPath; }
-        inline uint16_t getPointSize() { return mPointSize; }
+        inline std::string getFontPath() const { return mFontPath; }
+        inline uint16_t getPointSize() const { return mPointSize; }
 
         std::shared_ptr<Texture> renderText(
             const std::string& text,
             glm::u8vec3 textColor,
             glm::u8vec3 backgroundColor
+        ) const;
+
+        std::shared_ptr<Texture> renderTextArea(
+            const std::string& text,
+            glm::u8vec4 textColor,
+            uint32_t wrapLength=0
         ) const;
 
         std::shared_ptr<Texture> renderText(
@@ -32,6 +38,7 @@ namespace ToyMakersEngine{
 
     private:
         static TTF_Font* LoadFont(const std::string& fontPath, uint16_t pointSize);
+        static std::shared_ptr<Texture> MakeTexture(SDL_Surface* surface);
 
         TTF_Font* mFont;
         std::string mFontPath;

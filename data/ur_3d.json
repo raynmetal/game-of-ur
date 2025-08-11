@@ -1,185 +1,5 @@
 {
-    "resources": [
-        {
-            "method": "fromFile",
-            "name": "SwallowModel_One",
-            "parameters": {
-                "path": "data/models/PrototypeSwallow.obj",
-                "material_overrides": {
-                    "0": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ],
-                    "1": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ]
-                }
-            },
-            "type": "StaticModel"
-        },
-        {
-            "method": "fromFile",
-            "name": "StormbirdModel_One",
-            "parameters": {
-                "path": "data/models/PrototypeStormbird.obj",
-                "material_overrides": {
-                    "0": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ],
-                    "1": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ]
-                }
-            },
-            "type": "StaticModel"
-        },
-        {
-            "method": "fromFile",
-            "name": "RavenModel_One",
-            "parameters": {
-                "path": "data/models/PrototypeRaven.obj",
-                "material_overrides": {
-                    "0": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ],
-                    "1": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ]
-                }
-            },
-            "type": "StaticModel"
-        },
-        {
-            "method": "fromFile",
-            "name": "RoosterModel_One",
-            "parameters": {
-                "path": "data/models/PrototypeRooster.obj",
-                "material_overrides": {
-                    "0": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ],
-                    "1": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ]
-                }
-            },
-            "type": "StaticModel"
-        },
-        {
-            "method": "fromFile",
-            "name": "EagleModel_One",
-            "parameters": {
-                "path": "data/models/PrototypeEagle.obj",
-                "material_overrides": {
-                    "0": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ],
-                    "1": [
-                        {
-                            "name": "colorMultiplier",
-                            "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
-                        }
-                    ]
-                }
-            },
-            "type": "StaticModel"
-        },
-
-        {
-            "method": "fromFile",
-            "name": "SwallowModel_Two",
-            "parameters": {
-                "path": "data/models/PrototypeSwallow.obj"
-            },
-            "type": "StaticModel"
-        },
-        {
-            "method": "fromFile",
-            "name": "StormbirdModel_Two",
-            "parameters": {
-                "path": "data/models/PrototypeStormbird.obj"
-            },
-            "type": "StaticModel"
-        },
-        {
-            "method": "fromFile",
-            "name": "RavenModel_Two",
-            "parameters": {
-                "path": "data/models/PrototypeRaven.obj"
-            },
-            "type": "StaticModel"
-        },
-        {
-            "method": "fromFile",
-            "name": "RoosterModel_Two",
-            "parameters": {
-                "path": "data/models/PrototypeRooster.obj"
-            },
-            "type": "StaticModel"
-        },
-        {
-            "method": "fromFile",
-            "name": "EagleModel_Two",
-            "parameters": {
-                "path": "data/models/PrototypeEagle.obj"
-            },
-            "type": "StaticModel"
-        },
-
-        {
-            "method": "fromFile",
-            "name": "GameboardModel",
-            "parameters": {
-                "path": "data/models/PrototypeGameboard.obj"
-            },
-            "type": "StaticModel"
-        },
-        {
-            "name": "Skybox_Texture",
-            "type": "Texture",
-            "method": "fromFile",
-            "parameters": {
-                "path": "data/textures/test_cubemap.png",
-                "cubemap_layout": "row"
-            }
-        }
-    ],
+    "resources": [],
 
     "nodes": [
         {
@@ -208,47 +28,47 @@
             "aspects": [
                 {
                     "type": "UrSceneView",
-                    "controller_path": "/scene_root/",
+                    "controller_path": "/scene_root/game/",
                     "piece_to_model": [
                         {
-                            "piece": {"owner": "player-one", "type": "swallow"},
+                            "piece": {"owner": "black", "type": "swallow"},
                             "model": "SwallowModel_One"
                         },
                         {
-                            "piece": {"owner": "player-one", "type": "storm-bird"},
+                            "piece": {"owner": "black", "type": "storm-bird"},
                             "model": "StormbirdModel_One"
                         },
                         {
-                            "piece": {"owner": "player-one", "type": "raven"},
+                            "piece": {"owner": "black", "type": "raven"},
                             "model": "RavenModel_One"
                         },
                         {
-                            "piece": {"owner": "player-one", "type": "rooster"},
+                            "piece": {"owner": "black", "type": "rooster"},
                             "model": "RoosterModel_One"
                         },
                         {
-                            "piece": {"owner": "player-one", "type": "eagle"},
+                            "piece": {"owner": "black", "type": "eagle"},
                             "model": "EagleModel_One"
                         },
 
                         {
-                            "piece": {"owner": "player-two", "type": "swallow"},
+                            "piece": {"owner": "white", "type": "swallow"},
                             "model": "SwallowModel_Two"
                         },
                         {
-                            "piece": {"owner": "player-two", "type": "storm-bird"},
+                            "piece": {"owner": "white", "type": "storm-bird"},
                             "model": "StormbirdModel_Two"
                         },
                         {
-                            "piece": {"owner": "player-two", "type": "raven"},
+                            "piece": {"owner": "white", "type": "raven"},
                             "model": "RavenModel_Two"
                         },
                         {
-                            "piece": {"owner": "player-two", "type": "rooster"},
+                            "piece": {"owner": "white", "type": "rooster"},
                             "model": "RoosterModel_Two"
                         },
                         {
-                            "piece": {"owner": "player-two", "type": "eagle"},
+                            "piece": {"owner": "white", "type": "eagle"},
                             "model": "EagleModel_Two"
                         }
                     ]

@@ -24,7 +24,7 @@ mContentRegion { contentRegionUV }
         && contentRegionUV.h >= 0.f && contentRegionUV.y + contentRegionUV.h <= 1.f
         && "Content region's end must be within the bounds of the texture"
     );
-    const std::string nineSliceShaderPath { "src/shader/nineSliceShader.json" };
+    const std::string nineSliceShaderPath { "data/shader/nineSliceShader.json" };
     if(!ToyMakersEngine::ResourceDatabase::HasResourceDescription(nineSliceShaderPath)){
         nlohmann::json shaderDescription {
             {"name", nineSliceShaderPath},

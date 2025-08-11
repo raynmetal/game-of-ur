@@ -1,3 +1,4 @@
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
 #include "board_locations.hpp"
@@ -16,6 +17,7 @@ bool BoardLocations::onPointerLeftClick(glm::vec4 clickLocation) {
 }
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> BoardLocations::create(const nlohmann::json& jsonAspectProperties) {
+    (void)jsonAspectProperties; // prevent unused parameter warnings
     return std::shared_ptr<BoardLocations>{ new BoardLocations{} };
 }
 

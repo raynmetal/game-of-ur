@@ -91,6 +91,7 @@ void SimSystem::onSimulationStep(uint32_t simulationStepMillis) {
     }
 }
 void SimSystem::onVariableStep(float simulationProgress, uint32_t variableStepMillis) {
+    (void)simulationProgress; // prevent unused parameter warning
     for(EntityID entity: getEnabledEntities()) {
         getComponent<SimCore>(entity).mSimObject->variableUpdate(variableStepMillis);
     }
@@ -221,11 +222,12 @@ std::weak_ptr<FixedActionBinding> BaseSimObjectAspect::declareFixedActionBinding
     std::function<bool(const ActionData&, const ActionDefinition&)> handler
 ) {
     assert(!(mState & AspectState::ACTIVE) && "Cannot add or remove fixed action bindings while aspect is active.");
-    assert(mFixedActionBindings.emplace(
+    const auto emplaceResult {mFixedActionBindings.emplace(
         std::piecewise_construct,
         std::forward_as_tuple(context, action),
         std::forward_as_tuple(new FixedActionBinding{context, action, handler})
-    ).second == true && "Could not create this binding; perhaps a similar binding has already been registered");
+    )}; // no assertion with side effects
+    assert(emplaceResult.second && "Could not create this binding; perhaps a similar binding has already been registered");
     return mFixedActionBindings.at({context, action});
 }
 

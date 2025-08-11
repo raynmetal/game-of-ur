@@ -3,8 +3,7 @@
 
 #include <nlohmann/json.hpp>
 
-#include "piece.hpp"
-#include "role_id.hpp"
+#include "model.hpp"
 
 NLOHMANN_JSON_SERIALIZE_ENUM(PieceTypeID, {
     {PieceTypeID::EAGLE, "eagle"},
@@ -15,11 +14,22 @@ NLOHMANN_JSON_SERIALIZE_ENUM(PieceTypeID, {
 });
 
 NLOHMANN_JSON_SERIALIZE_ENUM(RoleID, {
-    {RoleID::ONE, "player-one"},
-    {RoleID::TWO, "player-two"},
+    {RoleID::BLACK, "black"},
+    {RoleID::WHITE, "white"},
+});
+
+NLOHMANN_JSON_SERIALIZE_ENUM(PlayerID, {
+    {PlayerID::PLAYER_A, "player-a"},
+    {PlayerID::PLAYER_B, "player-b"},
 });
 
 void from_json(const nlohmann::json& json, PieceIdentity& pieceIdentity);
 void to_json(nlohmann::json& json, const PieceIdentity& pieceIdentity);
+
+void from_json(const nlohmann::json& json, GameScoreData& gameScoreData);
+void to_json(nlohmann::json& json, const GameScoreData& gameScoreData);
+
+void from_json(const nlohmann::json& json, PlayerData& playerData);
+void to_json(nlohmann::json& json, const PlayerData& playerData);
 
 #endif

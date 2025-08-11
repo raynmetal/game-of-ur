@@ -14,10 +14,23 @@
 using namespace ToyMakersEngine;
 
 WindowContext::WindowContext(const nlohmann::json& initialWindowConfiguration) {
-    assert(SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1") && "Could not enable DPI awareness for this SDL app");
-    assert(SDL_Init(SDL_INIT_VIDEO) >= 0 && "Could not initialise SDL2 library");
-    assert(IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) >= -1 && "Could not initialise SDL_image library");
-    assert(TTF_Init() >= 0 && "Could not initialise SDL_ttf library");
+    const int setHint{
+        SDL_SetHint(SDL_HINT_WINDOWS_DPI_SCALING, "1")
+    };
+    const int init{
+        SDL_Init(SDL_INIT_VIDEO) 
+    };
+    const int imgInit {
+        IMG_Init(IMG_INIT_JPG | IMG_INIT_PNG) >= -1 
+    };
+    const int ttfInit {
+        TTF_Init() >= 0 
+    };
+
+    assert(setHint && "Could not enable DPI awareness for this SDL app");
+    assert(init  >= 0 && "Could not initialise SDL2 library");
+    assert(imgInit && "Could not initialise SDL_image library");
+    assert(ttfInit && "Could not initialise SDL_ttf library");
 
     const std::string& applicationTitle { initialWindowConfiguration.at("application_title") };
     const uint32_t windowWidth { initialWindowConfiguration.at("window_width") };

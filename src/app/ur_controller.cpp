@@ -1,15 +1,21 @@
 #include <iostream>
 
+
+#include "ur_scene_manager.hpp"
+#include "ur_records.hpp"
 #include "ur_controller.hpp"
 
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrController::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<UrController> controller { new UrController{} };
+    controller->mSceneManagerPath = jsonAspectProperties.at("scene_manager_path");
     return controller;
 }
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrController::clone() const {
-    return std::shared_ptr<UrController>( new UrController {} );
+    std::shared_ptr<UrController> controller { new UrController {} };
+    controller->mSceneManagerPath = mSceneManagerPath;
+    return controller;
 }
 
 bool UrController::viewUpdatesComplete() const {
@@ -26,6 +32,18 @@ void UrController::onViewSubscribed(const std::string& subscriber) {
 void UrController::onViewUpdatesCompleted(const std::string& viewName) {
     mViewUpdated.at(viewName) = true;
     if(!viewUpdatesComplete()) { return; }
+
+    if(mModel.getCurrentPhase().mGamePhase == GamePhase::END) {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMakersEngine::SceneSystem>()
+            ->getByPath<UrSceneManager&>(
+                mSceneManagerPath 
+                + "@"
+                + UrSceneManager::getSimObjectAspectTypeName()
+            ).loadScene("Game_Of_Ur_Records_Browser");
+
+        return;
+    }
 
     mSigMovePrompted.emit(mModel.getCurrentPhase());
 }
@@ -86,6 +104,20 @@ void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piec
     }
     mSigMoveMade.emit(moveResults);
     mSigPhaseUpdated.emit(mModel.getCurrentPhase());
+
+    if(mModel.getCurrentPhase().mGamePhase == GamePhase::END) {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMakersEngine::SceneSystem>()
+            ->getByPath<UrRecords&>(
+                "/ur_records/@UrRecords"
+            ).submitRecord(
+                GameRecord{
+                    .mSummary { mModel.getScore() },
+                    .mPlayerA { mModel.getPlayerData(PlayerID::PLAYER_A) },
+                    .mPlayerB { mModel.getPlayerData(PlayerID::PLAYER_B) },
+                }
+        );
+    }
 
     for(const auto& view: mViewUpdated) {
         mViewUpdated[view.first] = false;

@@ -184,6 +184,7 @@ void UIButton::fireStateEvent() {
 }
 
 bool UIButton::onPointerEnter(glm::vec4 pointerLocation) {
+    (void)pointerLocation; // prevent unused parameter warning
     mHovered=true;
     if(mCurrentState == State::INACTIVE) return false;
 
@@ -200,12 +201,14 @@ bool UIButton::onPointerLeave() {
 }
 
 bool UIButton::onPointerLeftClick(glm::vec4 pointerLocation) {
+    (void)pointerLocation; // prevent unused parameter warning
     if(mCurrentState == State::INACTIVE) return false;
     updateButtonState(State::PRESSED);
     return true;
 }
 
 bool UIButton::onPointerLeftRelease(glm::vec4 pointerLocation) {
+    (void)pointerLocation; // prevent unused parameter warnings
     if(mCurrentState == State::INACTIVE) return false;
 
     assert(

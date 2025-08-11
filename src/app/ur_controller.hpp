@@ -1,6 +1,7 @@
 #ifndef ZOAPPURCONTROLLER_H
 #define ZOAPPURCONTROLLER_H
 
+#define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
 #include "../engine/sim_system.hpp"
@@ -23,6 +24,7 @@ public:
 private:
     GameOfUrModel mModel {};
     uint8_t mControlsCreated {0};
+    std::string mSceneManagerPath {};
     std::map<std::string, bool> mViewUpdated {};
 
     bool viewUpdatesComplete() const;

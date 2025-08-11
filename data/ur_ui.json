@@ -1,132 +1,12 @@
 {
-    "resources": [
-        {
-            "name": "Bad_Panel_Texture",
-            "type": "Texture",
-            "method": "fromFile",
-            "parameters": {
-                "path": "data/textures/bad_panel.png",
-                "cubemap_layout": "row"
-            }
-        },
-        {
-            "name": "Bad_Button_Active_Texture",
-            "type": "Texture",
-            "method": "fromFile",
-            "parameters": {
-                "path": "data/textures/bad_button_active.png"
-            }
-        },
-        {
-            "name": "Bad_Button_Hover_Texture",
-            "type": "Texture",
-            "method": "fromFile",
-            "parameters": {
-                "path": "data/textures/bad_button_hover.png"
-            }
-        },
-        {
-            "name": "Bad_Button_Inactive_Texture",
-            "type": "Texture",
-            "method": "fromFile",
-            "parameters": {
-                "path": "data/textures/bad_button_inactive.png"
-            }
-        },
-        {
-            "name": "Bad_Button_Pressed_Texture",
-            "type": "Texture",
-            "method": "fromFile",
-            "parameters": {
-                "path": "data/textures/bad_button_pressed.png"
-            }
-        },
-        {
-            "name": "Bad_Button_Highlight_Texture",
-            "type": "Texture",
-            "method": "fromFile",
-            "parameters": {
-                "path": "data/textures/bad_button_highlight.png",
-                "cubemap_layout": "row"
-            }
-        },
-        {
-            "name": "Bad_Panel",
-            "type": "NineSlicePanel",
-            "method": "fromDescription",
-            "parameters": {
-                "base_texture": "Bad_Panel_Texture",
-                "content_region": [ 0.0235, 0.0235, 0.953, 0.953]
-            }
-        },
-        {
-            "name": "Bad_Button_Active_Panel",
-            "type": "NineSlicePanel",
-            "method": "fromDescription",
-            "parameters": {
-                "base_texture": "Bad_Button_Active_Texture",
-                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
-            }
-        },
-        {
-            "name": "Bad_Button_Hover_Panel",
-            "type": "NineSlicePanel",
-            "method": "fromDescription",
-            "parameters": {
-                "base_texture": "Bad_Button_Hover_Texture",
-                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
-            }
-        },
-        {
-            "name": "Bad_Button_Inactive_Panel",
-            "type": "NineSlicePanel",
-            "method": "fromDescription",
-            "parameters": {
-                "base_texture": "Bad_Button_Inactive_Texture",
-                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
-            }
-        },
-        {
-            "name": "Bad_Button_Pressed_Panel",
-            "type": "NineSlicePanel",
-            "method": "fromDescription",
-            "parameters": {
-                "base_texture": "Bad_Button_Pressed_Texture",
-                "content_region": [ 0.109375, 0.109375, 0.78125, 0.78125]
-            }
-        },
-        {
-            "name": "Bad_Button_Highlight_Panel",
-            "type": "NineSlicePanel",
-            "method": "fromDescription",
-            "parameters": {
-                "base_texture": "Bad_Button_Highlight_Texture",
-                "content_region": [0.109375, 0.109375, 0.78125, 0.78125]
-            }
-        },
-        {
-            "name": "Ur_Button",
-            "type": "SimObject",
-            "method": "fromSceneFile",
-            "parameters": {
-                "path": "data/ur_button.json"
-            }
-        },
-        {
-            "name": "Ur_Player_Panel",
-            "type": "SimObject",
-            "method": "fromSceneFile",
-            "parameters": {
-                "path": "data/ur_ui_player_panel.json"
-            }
-        }
-    ],
+    "resources": [],
 
     "nodes": [
         {
             "name": "ui_root",
             "aspects": [
-                {"type": "UrUIView", "controller_path": "/scene_root/"}
+                {"type": "UrUIView", "controller_path": "/scene_root/game/"},
+                {"type": "UrUINavigation", "scene_manager_path": "/scene_root/"}
             ],
             "components": [
                 {
@@ -256,6 +136,41 @@
             "parent": "/viewport_UI/",
             "type": "SimObject"
         },
+
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "return",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -683.0, -384.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "<- Main Menu",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 1.0],
+                        "value": "Game_Of_Ur_Main_Menu",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+
         {
             "name": "current_turn",
             "parent": "/viewport_UI/",
@@ -272,8 +187,8 @@
                 {
                     "type": "UIText",
                     "text": "Current Turn",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.7,
+                    "font_resource_name": "Roboto_Mono_Regular_42",
+                    "scale": 1.0,
                     "anchor": [0.5, 0.0],
                     "color": [255, 255, 255, 255]
                 }
@@ -446,8 +361,8 @@
                 {
                     "type": "UIText",
                     "text": "Common pile: ",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.4,
+                    "font_resource_name": "Roboto_Mono_Regular_36",
+                    "scale": 1.0,
                     "anchor": [0.5, 0.0],
                     "color": [255, 255, 255, 255]
                 }
@@ -614,6 +529,14 @@
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/return/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUINavigation",
             "observer": "ButtonClickedObserved"
         }
     ]

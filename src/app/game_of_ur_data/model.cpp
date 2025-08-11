@@ -16,7 +16,7 @@ void GameOfUrModel::endTurn() {
     // and see if the round has ended as well
     if(
         (mGamePhase == GamePhase::INITIATIVE && mCurrentPlayer == PlayerID::PLAYER_B)
-        || (mGamePhase == GamePhase::PLAY && getRole(mCurrentPlayer) == RoleID::TWO)
+        || (mGamePhase == GamePhase::PLAY && getRole(mCurrentPlayer) == RoleID::WHITE)
     ) {
         mRoundPhase = RoundPhase::END;
     } else {
@@ -37,8 +37,8 @@ void GameOfUrModel::startPhasePlay() {
 
     // assign roles to each player
     mCurrentPlayer = playerAGoesFirst? PlayerID::PLAYER_A: PlayerID::PLAYER_B;
-    mPlayers[PlayerID::PLAYER_A].initializeWithRole(playerAGoesFirst? RoleID::ONE: RoleID::TWO);
-    mPlayers[PlayerID::PLAYER_B].initializeWithRole(playerAGoesFirst? RoleID::TWO: RoleID::ONE);
+    mPlayers[PlayerID::PLAYER_A].initializeWithRole(playerAGoesFirst? RoleID::BLACK: RoleID::WHITE);
+    mPlayers[PlayerID::PLAYER_B].initializeWithRole(playerAGoesFirst? RoleID::WHITE: RoleID::BLACK);
 
     // collect 10 counters from each player and place them in the common pool
     deductCounters(10, PlayerID::PLAYER_A);
@@ -228,6 +228,7 @@ PlayerID GameOfUrModel::getPlayer(RoleID role) const {
         }
     }
     assert(false && "After the initiative phase, both players should have roles assigned");
+    return PlayerID::PLAYER_A;
 }
 
 bool GameOfUrModel::canMovePiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const {
@@ -330,10 +331,10 @@ GamePhaseData GameOfUrModel::getCurrentPhase() const {
 GameScoreData GameOfUrModel::getScore() const {
     return {
         .mCommonPoolCounters { mCounters },
-        .mPlayerOneCounters { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::ONE)].getNCounters(): 0) },
-        .mPlayerTwoCounters { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::TWO)].getNCounters(): 0) },
-        .mPlayerOneVictoryPieces { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::ONE)].getNPieces(Piece::State::FINISHED): 0) },
-        .mPlayerTwoVictoryPieces { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::TWO)].getNPieces(Piece::State::FINISHED): 0) },
+        .mPlayerOneCounters { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::BLACK)].getNCounters(): 0) },
+        .mPlayerTwoCounters { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::WHITE)].getNCounters(): 0) },
+        .mPlayerOneVictoryPieces { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::BLACK)].getNPieces(Piece::State::FINISHED): 0) },
+        .mPlayerTwoVictoryPieces { static_cast<uint8_t>(mGamePhase != GamePhase::INITIATIVE? mPlayers[getPlayer(RoleID::WHITE)].getNPieces(Piece::State::FINISHED): 0) },
     };
 }
 
@@ -427,7 +428,7 @@ MoveResultData GameOfUrModel::getMoveData(PieceIdentity pieceID, glm::u8vec2 mov
         MoveResultData::IS_POSSIBLE
     };
 
-    GamePieceData displacedPieceData { .mIdentity{ .mOwner=RoleID::NA } };
+    GamePieceData displacedPieceData {.mIdentity{.mType{PieceTypeID::SWALLOW},.mOwner{RoleID::NA},}, .mState{}, .mLocation{},};
     if(mBoard.houseIsOccupied(moveLocation)) {
         displacedPieceData.mIdentity = mBoard.getOccupant(moveLocation);
         displacedPieceData.mState = Piece::State::UNLAUNCHED;

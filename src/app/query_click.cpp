@@ -58,10 +58,12 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> QueryClick::clone() const 
 }
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> QueryClick::create(const nlohmann::json& jsonAspectProperties) {
+    (void)jsonAspectProperties; // prevent unused parameter warning
     return std::shared_ptr<QueryClick>(new QueryClick{});
 }
 
 bool QueryClick::onLeftClick(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    (void)actionDefinition; // prevent unused parameter warning
     if(
         (actionData.mTwoAxisActionData.mValue.x < 0.f || actionData.mTwoAxisActionData.mValue.y < 0.f)
         || (actionData.mTwoAxisActionData.mValue.x > 1.f || actionData.mTwoAxisActionData.mValue.y > 1.f)
@@ -96,6 +98,7 @@ bool QueryClick::onLeftClick(const ToyMakersEngine::ActionData& actionData, cons
 }
 
 bool QueryClick::onLeftRelease(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    (void)actionDefinition; // prevent unused parameter warning
     if(
         (actionData.mTwoAxisActionData.mValue.x < 0.f || actionData.mTwoAxisActionData.mValue.y < 0.f)
         || (actionData.mTwoAxisActionData.mValue.x > 1.f || actionData.mTwoAxisActionData.mValue.y > 1.f)
@@ -129,6 +132,7 @@ bool QueryClick::onLeftRelease(const ToyMakersEngine::ActionData& actionData, co
 }
 
 bool QueryClick::onPointerMove(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    (void)actionDefinition; // prevent unused parameter warning
     if(
         (actionData.mTwoAxisActionData.mValue.x < 0.f || actionData.mTwoAxisActionData.mValue.y < 0.f)
         || (actionData.mTwoAxisActionData.mValue.x > 1.f || actionData.mTwoAxisActionData.mValue.y > 1.f)

@@ -103,7 +103,7 @@ namespace ToyMakersEngine {
     public:
         inline std::string getResourceTypeName_() const override { return TDerived::getResourceTypeName(); }
     protected:
-        explicit Resource(int explicitlyInitializeMe) { s_registrator.emptyFunc(); }
+        explicit Resource(int explicitlyInitializeMe) { (void)explicitlyInitializeMe/* prevent unused parameter warnings */; s_registrator.emptyFunc(); }
     private:
 
         static void registerSelf();
@@ -126,6 +126,7 @@ namespace ToyMakersEngine {
         inline std::string getResourceConstructorName_() const override { return TResourceFactoryMethod::getResourceConstructorName(); }
     protected:
         explicit ResourceConstructor(int explicitlyInitializeMe) {
+            (void)explicitlyInitializeMe; // prevent unused parameter warnings
             s_registrator.emptyFunc();
         }
 
