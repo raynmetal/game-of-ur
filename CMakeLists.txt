@@ -75,6 +75,10 @@ install(
     DESTINATION .
 )
 install(
+    DIRECTORY ${PROJECT_SOURCE_DIR}/docs
+    DESTINATION .
+)
+install(
     DIRECTORY
     DESTINATION user_data
 )
