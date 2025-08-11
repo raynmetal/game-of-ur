@@ -348,7 +348,7 @@ namespace ToyMakersEngine {
         ViewportNode(const Key& key, const Placement& placement, const std::string& name):
         BaseSceneNode<ViewportNode>{key, Placement{}, name},
         Resource<ViewportNode>{0}
-        {}
+        {(void)placement; /*prevent unused parameter warnings*/}
 
         std::shared_ptr<SceneNodeCore> clone() const override;
 

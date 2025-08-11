@@ -12,6 +12,8 @@
 #include "input_system/input_system.hpp"
 #include "window_context_manager.hpp"
 
+#cmakedefine ZO_DUMB_DELAY
+
 namespace ToyMakersEngine {
     class Application {
         template <typename TObject, typename=void>

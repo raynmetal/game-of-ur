@@ -98,7 +98,8 @@ void RenderSystem::execute(float simulationProgress) {
             if(mSkyboxTexture) {
                 mRenderSets.at(mActiveRenderSetID).mSkyboxRenderStage->execute();
             }
-            mRenderSets.at(mActiveRenderSetID).mBlurRenderStage->execute();
+            /** Implement a proper bloom some time in the future */
+            // mRenderSets.at(mActiveRenderSetID).mBlurRenderStage->execute();
             mRenderSets.at(mActiveRenderSetID).mTonemappingRenderStage->execute();
         break;
 

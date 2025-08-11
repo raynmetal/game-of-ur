@@ -77,9 +77,14 @@ namespace ToyMakersEngine {
             }}
         };
     }
-    inline void to_json(nlohmann::json& json, const SceneHierarchyData& sceneHierarchyData) {}
-    inline void from_json(const nlohmann::json& json, SceneHierarchyData& sceneHierarchyData) {}
+    inline void to_json(nlohmann::json& json, const SceneHierarchyData& sceneHierarchyData) {
+        (void)json; (void)sceneHierarchyData; // prevent unused parameter warnings
+    }
+    inline void from_json(const nlohmann::json& json, SceneHierarchyData& sceneHierarchyData) {
+        (void)json; (void)sceneHierarchyData; // prevent unused parameter warnings
+    }
     inline void to_json(nlohmann::json& json, const Transform& transform) {
+        (void)transform; // prevent unused parameter warnings
         json = {
             {"type", Transform::getComponentTypeName()},
         };
@@ -119,6 +124,8 @@ namespace ToyMakersEngine {
         const SceneHierarchyData& previousState, const SceneHierarchyData& nextState,
         float simulationProgress
     ) const {
+        (void)previousState; // prevent unused parameter warnings
+        (void)simulationProgress; // prevent unused parameter warnings
         return nextState;
     }
 

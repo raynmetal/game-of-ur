@@ -64,7 +64,7 @@ SceneNodeCore::SceneNodeCore(const nlohmann::json& sceneNodeDescription) {
     assert(hasComponent<Placement>() && "scene nodes must define a placement component");
 }
 
-SceneNodeCore::SceneNodeCore(const SceneNodeCore& other)
+SceneNodeCore::SceneNodeCore(const SceneNodeCore& other): enable_shared_from_this{}
 {
     mEntity = std::make_shared<Entity>(
         ECSWorld::createEntityPrototype()
@@ -791,14 +791,17 @@ std::shared_ptr<Texture> ViewportNode::fetchRenderResult(float simulationProgres
             mRenderConfiguration.mUpdateMode = RenderConfiguration::UpdateMode::NEVER;
             renderOnce = true;
 
+            // fall through
         case RenderConfiguration::UpdateMode::ON_FETCH_CAP_FPS:
             if(!renderOnce && mTimeSinceLastRender < thresholdTime) {
                 break;
             }
 
+            // fall through
         case RenderConfiguration::UpdateMode::ON_FETCH:
             render_(simulationProgress);
 
+            // fall through
         case RenderConfiguration::UpdateMode::ON_RENDER_CAP_FPS:
         case RenderConfiguration::UpdateMode::ON_RENDER:
         case RenderConfiguration::UpdateMode::NEVER:
@@ -832,13 +835,17 @@ uint32_t ViewportNode::render(float simulationProgress, uint32_t variableStep) {
             mRenderConfiguration.mUpdateMode = RenderConfiguration::UpdateMode::NEVER;
             renderOnce = true;
 
+            // fall through
         case RenderConfiguration::UpdateMode::ON_RENDER_CAP_FPS:
-            if(!renderOnce && mTimeSinceLastRender < thresholdTime)
+            if(!renderOnce && mTimeSinceLastRender < thresholdTime) {
                 break;
+            }
 
+            // fall through
         case RenderConfiguration::UpdateMode::ON_RENDER:
             render_(simulationProgress);
 
+            // fall through
         case RenderConfiguration::UpdateMode::ON_FETCH:
         case RenderConfiguration::UpdateMode::ON_FETCH_CAP_FPS:
         case RenderConfiguration::UpdateMode::NEVER:

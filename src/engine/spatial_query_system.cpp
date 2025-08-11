@@ -195,6 +195,7 @@ void SpatialQuerySystem::onSimulationActivated() {
 }
 
 void SpatialQuerySystem::onSimulationStep(uint32_t timestepMillis) {
+    (void)timestepMillis; // prevent unused parameter warning
     if(mRequiresInitialization)  {
         mComputeQueue.clear();
         rebuildOctree();

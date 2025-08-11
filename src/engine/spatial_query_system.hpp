@@ -74,10 +74,12 @@ namespace ToyMakersEngine {
 
     template <>
     inline void SceneNodeCore::updateComponent<AxisAlignedBounds>(const AxisAlignedBounds& axisAlignedBoxBounds) {
+        (void)axisAlignedBoxBounds; // prevent unused parameter warnings
         assert(false && "Cannot update a scene node's WorldBounds component");
     }
     template<>
     inline void SceneNodeCore::updateComponent<ObjectBounds>(const ObjectBounds& objectBounds) {
+        (void)objectBounds; // prevent unused parameter warnings
         assert(false && "Cannot update a scene node's ObjectBounds component");
     }
     template <>

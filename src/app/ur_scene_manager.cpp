@@ -29,7 +29,8 @@ void UrSceneManager::loadScene(const std::string& sceneResourceName) {
 }
 
 void UrSceneManager::variableUpdate(uint32_t timeStepMillis) {
-    if(!mAutoloadsActivated) { activateAutoloads(); }
+    (void)timeStepMillis; // prevent unused parameter warnings
+    if(!mAutoloadsActivated) { activateAutoloads(); return; }
     if(!mSwitchScenesThisFrame) { return; }
 
     loadScene_();

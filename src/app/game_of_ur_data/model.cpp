@@ -228,6 +228,7 @@ PlayerID GameOfUrModel::getPlayer(RoleID role) const {
         }
     }
     assert(false && "After the initiative phase, both players should have roles assigned");
+    return PlayerID::PLAYER_A;
 }
 
 bool GameOfUrModel::canMovePiece(PieceIdentity pieceIdentity, glm::u8vec2 toLocation, PlayerID requester) const {
@@ -427,7 +428,7 @@ MoveResultData GameOfUrModel::getMoveData(PieceIdentity pieceID, glm::u8vec2 mov
         MoveResultData::IS_POSSIBLE
     };
 
-    GamePieceData displacedPieceData { .mIdentity{ .mOwner=RoleID::NA } };
+    GamePieceData displacedPieceData {.mIdentity{.mType{PieceTypeID::SWALLOW},.mOwner{RoleID::NA},}, .mState{}, .mLocation{},};
     if(mBoard.houseIsOccupied(moveLocation)) {
         displacedPieceData.mIdentity = mBoard.getOccupant(moveLocation);
         displacedPieceData.mState = Piece::State::UNLAUNCHED;

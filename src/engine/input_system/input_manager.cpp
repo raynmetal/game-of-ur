@@ -326,11 +326,13 @@ double InputManager::getRawValue(const InputFilter& inputFilter, const SDL_Event
                             const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
                             axisValue = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.tfinger.dx);
                         }
+                        break;
                         case AxisFilter::Y_CHANGE_POS:
                         case AxisFilter::Y_CHANGE_NEG: {
                             const float sign { inputFilter.mAxisFilter&AxisFilterMask::SIGN? -1.f: 1.f };
                             axisValue = RangeMapperLinear{0.f, 1.f, 0.f, 1.f}(sign * inputEvent.tfinger.dy);
                         }
+                        break;
                         default:
                             assert(false && "invalid axis filter type for touch");
                         break;
@@ -918,7 +920,7 @@ void ToyMakersEngine::from_json(const nlohmann::json& json, ToyMakersEngine::Inp
 }
 
 void ToyMakersEngine::to_json(nlohmann::json& json, const ToyMakersEngine::ActionDefinition& actionDefinition) {
-    nlohmann::json actionDefinitionParameters {
+    json = {
         {"name", actionDefinition.mName},
         {"attributes", actionDefinition.mAttributes},
         {"value_type", actionDefinition.mValueType},

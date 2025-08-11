@@ -256,19 +256,19 @@ namespace ToyMakersEngine {
         void enableEntity(EntityID entityID);
         void disableEntity(EntityID entityID);
 
-        virtual void onEntityEnabled(EntityID entityID) {}
-        virtual void onEntityDisabled(EntityID entityID) {}
-        virtual void onEntityUpdated(EntityID entityID) { assert(false && "The base class version of onEntityUpdated should never be called"); }
+        virtual void onEntityEnabled(EntityID entityID) {(void)entityID; /*prevent unused parameter warnings*/}
+        virtual void onEntityDisabled(EntityID entityID) { (void)entityID; /*prevent unused parameter warnings*/}
+        virtual void onEntityUpdated(EntityID entityID) { (void)entityID; /*prevent unused parameter warnings*/assert(false && "The base class version of onEntityUpdated should never be called"); }
 
         virtual void onInitialize() {}
         virtual void onSimulationActivated() {}
-        virtual void onSimulationPreStep(uint32_t simStepMillis) {}
-        virtual void onSimulationStep(uint32_t simStepMillis) {}
-        virtual void onSimulationPostStep(uint32_t simStepMillis) {}
-        virtual void onPostTransformUpdate(uint32_t timeStepMillis) {}
-        virtual void onVariableStep(float simulationProgress, uint32_t variableStepMillis) {}
-        virtual void onPreRenderStep(float simulationProgress) {}
-        virtual void onPostRenderStep(float simulationProgress) {}
+        virtual void onSimulationPreStep(uint32_t simStepMillis) {(void)simStepMillis;/*prevent unused parameter warnings*/}
+        virtual void onSimulationStep(uint32_t simStepMillis) {(void)simStepMillis;/*prevent unused parameter warnings*/}
+        virtual void onSimulationPostStep(uint32_t simStepMillis) {(void)simStepMillis;/*prevent unused parameter warnings*/}
+        virtual void onPostTransformUpdate(uint32_t timeStepMillis) {(void)timeStepMillis;/*prevent unused parameter warnings*/}
+        virtual void onVariableStep(float simulationProgress, uint32_t variableStepMillis) {(void)simulationProgress; (void)variableStepMillis;/*prevent unused parameter warnings*/}
+        virtual void onPreRenderStep(float simulationProgress) {(void)simulationProgress;/*prevent unused parameter warnings*/}
+        virtual void onPostRenderStep(float simulationProgress) {(void)simulationProgress;/*prevent unused parameter warnings*/}
         virtual void onSimulationDeactivated() {}
         virtual void onDestroyed()  {}
 

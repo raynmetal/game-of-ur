@@ -137,7 +137,11 @@ namespace ToyMakersEngine {
         */
 
     private:
-        virtual bool handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {return false;};
+        virtual bool handleAction(const ActionData& actionData, const ActionDefinition& actionDefinition) {
+            (void)actionData; // prevent unused parameter warnings
+            (void)actionDefinition; // prevent unused parameter warnings
+            return false;
+        };
 
     friend class ActionDispatch;
     };
@@ -203,7 +207,7 @@ namespace ToyMakersEngine {
         /*
         * The name of this action context
         */
-        const ContextName& mName;
+        const ContextName mName;
 
         /**
          * Determines whether this action context is active and allowed to

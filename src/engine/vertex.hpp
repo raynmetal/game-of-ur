@@ -73,7 +73,7 @@ namespace ToyMakersEngine {
         }
 
         std::size_t computeRelativeOffset(std::size_t attributeIndex) const {
-            assert(attributeIndex < mAttributeList.size() && attributeIndex >= 0);
+            assert(attributeIndex < mAttributeList.size());
             std::size_t baseOffset {0};
             for(std::size_t i {0}; i < attributeIndex; ++i) {
                 baseOffset += mAttributeList[i].mSize;

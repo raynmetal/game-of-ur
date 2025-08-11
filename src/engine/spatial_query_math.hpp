@@ -240,8 +240,14 @@ namespace ToyMakersEngine {
         }
     }
 
-    inline void to_json(nlohmann::json& json, const AxisAlignedBounds& axisAlignedBounds) { /* never used, so pass */ }
-    inline void from_json(const nlohmann::json& json, AxisAlignedBounds& objectBounds) { /* never used, so pass */ }
+    inline void to_json(nlohmann::json& json, const AxisAlignedBounds& axisAlignedBounds) { /* never used, so pass */
+        (void)json; // prevent unused parameter warnings
+        (void)axisAlignedBounds; // prevent unused parameter warnings
+    }
+    inline void from_json(const nlohmann::json& json, AxisAlignedBounds& objectBounds) { /* never used, so pass */ 
+        (void)json; // prevent unused parameter warnings
+        (void)objectBounds; // prevent unused parameter warnings
+    }
 
 }
 

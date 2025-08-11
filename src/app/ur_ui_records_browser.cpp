@@ -8,6 +8,7 @@
 #include "ur_ui_records_browser.hpp"
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUIRecordsBrowser::create(const nlohmann::json& jsonAspectProperties) {
+    (void)jsonAspectProperties; // prevent unused parameter warnings
     std::shared_ptr<UrUIRecordsBrowser> recordsBrowser { std::make_shared<UrUIRecordsBrowser>() };
     return recordsBrowser;
 }
@@ -108,6 +109,8 @@ void UrUIRecordsBrowser::refreshRecords() {
 
 
 bool UrUIRecordsBrowser::onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    (void)actionDefinition; // prevent unused parameter warnings
+    (void)actionData; // prevent unused parameter warnings
     if(mMode == Mode::BROWSE) { return false; };
 
     closeDetailedRecord();

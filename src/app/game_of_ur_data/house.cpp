@@ -39,6 +39,7 @@ void House::move(std::shared_ptr<Piece> gamePiece) {
 PieceIdentity House::getOccupant() const {
     if(mOccupant.expired()) {
         return PieceIdentity {
+            .mType { PieceTypeID::SWALLOW },
             .mOwner { RoleID::NA },
         };
     }

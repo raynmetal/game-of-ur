@@ -17,6 +17,7 @@ bool BoardLocations::onPointerLeftClick(glm::vec4 clickLocation) {
 }
 
 std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> BoardLocations::create(const nlohmann::json& jsonAspectProperties) {
+    (void)jsonAspectProperties; // prevent unused parameter warnings
     return std::shared_ptr<BoardLocations>{ new BoardLocations{} };
 }
 

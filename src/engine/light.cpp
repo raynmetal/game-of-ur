@@ -25,6 +25,7 @@ float LightEmissionData::CalculateRadius(const glm::vec4& diffuseColor, float de
 
 LightEmissionData LightEmissionData::MakeDirectionalLight(const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient){
     return LightEmissionData{
+        .mType{ LightEmissionData::directional },
         .mDiffuseColor { diffuse, 1.f },
         .mSpecularColor { specular, 1.f },
         .mAmbientColor{ ambient, 1.f },
