@@ -152,20 +152,20 @@
             "method": "fromFile",
             "name": "SwallowModel_One",
             "parameters": {
-                "path": "data/models/PrototypeSwallow.obj",
+                "path": "data/models/UrSwallow.obj",
                 "material_overrides": {
                     "0": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ],
                     "1": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ]
                 }
@@ -176,20 +176,20 @@
             "method": "fromFile",
             "name": "StormbirdModel_One",
             "parameters": {
-                "path": "data/models/PrototypeStormbird.obj",
+                "path": "data/models/UrStormbird.obj",
                 "material_overrides": {
                     "0": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ],
                     "1": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ]
                 }
@@ -200,20 +200,20 @@
             "method": "fromFile",
             "name": "RavenModel_One",
             "parameters": {
-                "path": "data/models/PrototypeRaven.obj",
+                "path": "data/models/UrRaven.obj",
                 "material_overrides": {
                     "0": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ],
                     "1": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ]
                 }
@@ -224,20 +224,20 @@
             "method": "fromFile",
             "name": "RoosterModel_One",
             "parameters": {
-                "path": "data/models/PrototypeRooster.obj",
+                "path": "data/models/UrRooster.obj",
                 "material_overrides": {
                     "0": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ],
                     "1": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ]
                 }
@@ -248,20 +248,20 @@
             "method": "fromFile",
             "name": "EagleModel_One",
             "parameters": {
-                "path": "data/models/PrototypeEagle.obj",
+                "path": "data/models/UrEagle.obj",
                 "material_overrides": {
                     "0": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ],
                     "1": [
                         {
                             "name": "colorMultiplier",
                             "type": "vec4",
-                            "value": [0.1, 0.1, 0.1, 1.0]
+                            "value": [0.05, 0.05, 0.05, 1.0]
                         }
                     ]
                 }
@@ -273,7 +273,7 @@
             "method": "fromFile",
             "name": "SwallowModel_Two",
             "parameters": {
-                "path": "data/models/PrototypeSwallow.obj"
+                "path": "data/models/UrSwallow.obj"
             },
             "type": "StaticModel"
         },
@@ -281,7 +281,7 @@
             "method": "fromFile",
             "name": "StormbirdModel_Two",
             "parameters": {
-                "path": "data/models/PrototypeStormbird.obj"
+                "path": "data/models/UrStormbird.obj"
             },
             "type": "StaticModel"
         },
@@ -289,7 +289,7 @@
             "method": "fromFile",
             "name": "RavenModel_Two",
             "parameters": {
-                "path": "data/models/PrototypeRaven.obj"
+                "path": "data/models/UrRaven.obj"
             },
             "type": "StaticModel"
         },
@@ -297,7 +297,7 @@
             "method": "fromFile",
             "name": "RoosterModel_Two",
             "parameters": {
-                "path": "data/models/PrototypeRooster.obj"
+                "path": "data/models/UrRooster.obj"
             },
             "type": "StaticModel"
         },
@@ -305,7 +305,7 @@
             "method": "fromFile",
             "name": "EagleModel_Two",
             "parameters": {
-                "path": "data/models/PrototypeEagle.obj"
+                "path": "data/models/UrEagle.obj"
             },
             "type": "StaticModel"
         },
@@ -314,7 +314,7 @@
             "method": "fromFile",
             "name": "GameboardModel",
             "parameters": {
-                "path": "data/models/PrototypeGameboard.obj"
+                "path": "data/models/UrGameBoard.obj"
             },
             "type": "StaticModel"
         },

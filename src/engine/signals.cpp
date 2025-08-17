@@ -5,10 +5,10 @@ using namespace ToyMakersEngine;
 SignalTracker::SignalTracker() = default;
 
 // let copy constructor just create its own signal list
-SignalTracker::SignalTracker(const SignalTracker& other): SignalTracker{} {}
+SignalTracker::SignalTracker(const SignalTracker& other): SignalTracker{} { (void)other; /* prevent unused parameter warnings */ }
 
 // move constructor creates own signal list as well
-SignalTracker::SignalTracker(SignalTracker&& other): SignalTracker{} {}
+SignalTracker::SignalTracker(SignalTracker&& other): SignalTracker{} { (void)other; /* prevent unused parameter warnings */}
 
 SignalTracker& SignalTracker::operator=(const SignalTracker& other) {
     // Note: There is no point doing any work in this
@@ -16,10 +16,12 @@ SignalTracker& SignalTracker::operator=(const SignalTracker& other) {
     // to make sure signals and connections are correctly
     // reconstructed. Dead signals and observers will 
     // automatically be cleaned up
+    (void)other; // prevent unused parameter warnings
     return *this;
 }
 SignalTracker& SignalTracker::operator=(SignalTracker&& other) {
     // Note: same as in copy assignment
+    (void)other; // prevent unused parameter warnings
     return *this;
 }
 
