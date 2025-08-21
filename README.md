@@ -19,12 +19,12 @@ I decided against making an original game because I wanted to focus on the techn
 - [x] Stylized 3D graphics
 - [x] Offline multiplayer
 - [x] AI opponent
-- ~~[ ] Music and sound effects~~ (I'm tired)
-- ~~[ ] Tutorialization~~ (I'm very very tired)
+- ~~Music and sound effects~~ (I'm tired)
+- ~~Tutorialization~~ (I'm very very tired)
 - [x] Playable on Windows
-- ~~[ ] Playable on Android~~ (Maybe some day)
+- ~~Playable on Android~~ (Maybe some day)
 - [ ] Itch.io release
-- ~~[ ] Play Store release~~ (Maybe a day long after the other days)
+- ~~Play Store release~~ (Maybe a day long after the other days)
 - [ ] Code Documentation
 
 ## LICENSE

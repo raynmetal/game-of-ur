@@ -192,7 +192,7 @@
             "aspects": [
                 {
                     "type": "UIText",
-                    "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla nisi lectus, varius nec lacus quis, congue feugiat erat. Nullam molestie vitae metus sit amet egestas. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed posuere enim odio, quis elementum diam cursus quis. Sed scelerisque a enim id vulputate. Mauris eu odio non diam fermentum pellentesque eget a lacus. In hac habitasse platea dictumst. ",
+                    "text": "Thank you for playing:\n\n\t The Royal Game of Ur\n\n\nBased on:\n\n\t\"On the Royal Game of Ur\" by Irving Finkel, in Ancient Board Games in Perspective (2007)\n\n\nDeveloped by:\n\n\tZoheb Shujauddin",
                     "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "max_width": 683,
