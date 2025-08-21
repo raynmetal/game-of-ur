@@ -5,7 +5,7 @@
             "type": "Texture",
             "method": "fromFile",
             "parameters": {
-                "path": "data/textures/bad_panel.png",
+                "path": "data/textures/panel.png",
                 "cubemap_layout": "row"
             }
         },
@@ -14,7 +14,7 @@
             "type": "Texture",
             "method": "fromFile",
             "parameters": {
-                "path": "data/textures/bad_button_active.png"
+                "path": "data/textures/button_active.png"
             }
         },
         {
@@ -22,7 +22,7 @@
             "type": "Texture",
             "method": "fromFile",
             "parameters": {
-                "path": "data/textures/bad_button_hover.png"
+                "path": "data/textures/button_hover.png"
             }
         },
         {
@@ -30,7 +30,7 @@
             "type": "Texture",
             "method": "fromFile",
             "parameters": {
-                "path": "data/textures/bad_button_inactive.png"
+                "path": "data/textures/button_inactive.png"
             }
         },
         {
@@ -38,7 +38,7 @@
             "type": "Texture",
             "method": "fromFile",
             "parameters": {
-                "path": "data/textures/bad_button_pressed.png"
+                "path": "data/textures/button_pressed.png"
             }
         },
         {
@@ -46,7 +46,7 @@
             "type": "Texture",
             "method": "fromFile",
             "parameters": {
-                "path": "data/textures/bad_button_highlight.png",
+                "path": "data/textures/button_highlight.png",
                 "cubemap_layout": "row"
             }
         },
@@ -324,7 +324,7 @@
             "type": "Texture",
             "method": "fromFile",
             "parameters": {
-                "path": "data/textures/test_cubemap.png",
+                "path": "data/textures/skybox.png",
                 "cubemap_layout": "row"
             }
         },

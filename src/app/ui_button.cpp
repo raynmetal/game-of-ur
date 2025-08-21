@@ -244,7 +244,7 @@ void UIButton::recomputeTexture() {
         {"method", ToyMakersEngine::StaticModelRectangleDimensions::getResourceConstructorName()},
         {"parameters", {
             {"width", panelSize.x}, {"height", panelSize.y},
-            {"flip_texture_y", false},
+            {"flip_texture_y", true},
             {"material_properties", nlohmann::json::array()}
         }}
     };
