@@ -7,6 +7,12 @@
                 {
                     "type": "UrUINavigation",
                     "scene_manager_path": "/scene_root/"
+                },
+                {
+                    "type": "UrUITutorialsBrowser",
+                    "tutorials_filepath": "data/ur_tutorials.json",
+                    "text_node_aspect": "/viewport_UI/tutorial_text/@UIText",
+                    "image_node_aspect": "/viewport_UI/tutorial_image/@UIImage"
                 }
             ],
             "components": [
@@ -266,7 +272,7 @@
                 {
                     "type": "Placement",
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
-                    "position": [ 341.5, -142.0, 0.0, 1.0 ],
+                    "position": [ 341.5, -125.0, 0.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
@@ -321,6 +327,21 @@
             "signal": "ButtonReleased",
 
             "to": "/@UrUINavigation",
+            "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/next/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUITutorialsBrowser",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/previous/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUITutorialsBrowser",
             "observer": "ButtonClickedObserved"
         }
     ]

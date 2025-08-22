@@ -1,5 +1,5 @@
-#ifndef ZOAPPUITEXT_H
-#define ZOAPPUITEXT_H
+#ifndef ZOAPPUIIMAGE_H
+#define ZOAPPUIIMAGE_H
 
 #include "../engine/sim_system.hpp"
 #include "../engine/texture.hpp"
