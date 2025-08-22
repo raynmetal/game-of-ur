@@ -1,9 +1,8 @@
 {
     "resources": [],
-
     "nodes": [
         {
-            "name": "main_menu",
+            "name": "tutorials_browser",
             "aspects": [
                 {
                     "type": "UrUINavigation",
@@ -21,7 +20,6 @@
             "parent": "",
             "type": "SimObject"
         },
-
         {
             "name": "viewport_UI",
             "parent": "/",
@@ -70,7 +68,7 @@
 
         {
             "name": "camera",
-            "aspects":[{"type": "QueryClick" }],
+            "aspects":[{ "type": "QueryClick" }],
             "parent": "/viewport_UI/",
             "type": "SimObject",
             "components": [
@@ -144,29 +142,53 @@
         },
 
         {
+            "name": "heading",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 200.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Tutorial Heading",
+                    "font_resource_name": "Roboto_Mono_Regular_36",
+                    "scale": 1.0,
+                    "anchor": [0.5, 1.0],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+
+        {
             "name": "Ur_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
-                "name": "local_vs",
+                "name": "previous",
                 "components": [
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, 100.0, 0.0, 1.0 ],
+                        "position": [ -400.0, 200.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
                 "aspects": [
                     {
                         "type": "UIButton",
-                        "text": "Local VS",
+                        "text": "<",
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
-                        "value": "Game_Of_Ur_Local_VS",
+                        "anchor": [1.0, 1.0],
+                        "value": "previous",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
                         "panel_hover": "Bad_Button_Hover_Panel",
@@ -183,24 +205,24 @@
             "type": "Scene",
             "copy": true,
             "overrides":  {
-                "name": "cpu_vs",
+                "name": "next",
                 "components": [
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, 0.0, 0.0, 1.0 ],
+                        "position": [ 400.0, 200.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
                 "aspects": [
                     {
                         "type": "UIButton",
-                        "text": "CPU VS",
+                        "text": ">",
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
-                        "value": "Game_Of_Ur_CPU_VS",
+                        "anchor": [0.0, 1.0],
+                        "value": "next",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
                         "panel_hover": "Bad_Button_Hover_Panel",
@@ -212,37 +234,50 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "tutorial_text",
             "parent": "/viewport_UI/",
-            "type": "Scene",
-            "copy": true,
-            "overrides":  {
-                "name": "credits",
-                "components": [
-                    {
-                        "type": "Placement",
-                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, -100.0, 0.0, 1.0 ],
-                        "scale": [ 1.0, 1.0, 1.0 ]
-                    }
-                ],
-                "aspects": [
-                    {
-                        "type": "UIButton",
-                        "text": "Credits",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
-                        "color": [255, 255, 255, 255],
-                        "scale": 1.0,
-                        "anchor": [0.0, 0.0],
-                        "value": "Game_Of_Ur_Credits",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
-                        "has_highlight": false
-                    }
-                ]
-            }
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -341.5, 100.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Some nonsense text goes in here without particular regard to its content as it's just for testing purposes or so I hope.",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "max_width": 620.0,
+                    "anchor": [0.5, 0.0],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+
+        {
+            "name": "tutorial_image",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 341.5, -142.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIImage",
+                    "image_filepath": "data/textures/button_active.png",
+                    "dimensions": [620, 440],
+                    "anchor": [0.5, 0.5]
+                }
+            ]
         },
 
         {
@@ -251,58 +286,24 @@
             "type": "Scene",
             "copy": true,
             "overrides":  {
-                "name": "records",
+                "name": "return",
                 "components": [
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, -200.0, 0.0, 1.0 ],
+                        "position": [ -683.0, 384.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
                 "aspects": [
                     {
                         "type": "UIButton",
-                        "text": "Records",
+                        "text": "<- Main Menu",
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 0.0],
-                        "value": "Game_Of_Ur_Records_Browser",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
-                        "has_highlight": false
-                    }
-                ]
-            }
-        },
-
-        {
-            "name": "Ur_Button",
-            "parent": "/viewport_UI/",
-            "type": "Scene",
-            "copy": true,
-            "overrides":  {
-                "name": "tutorials",
-                "components": [
-                    {
-                        "type": "Placement",
-                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, -300.0, 0.0, 1.0 ],
-                        "scale": [ 1.0, 1.0, 1.0 ]
-                    }
-                ],
-                "aspects": [
-                    {
-                        "type": "UIButton",
-                        "text": "How to Play",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
-                        "color": [255, 255, 255, 255],
-                        "scale": 1.0,
-                        "anchor": [0.0, 0.0],
-                        "value": "Game_Of_Ur_Tutorials_Browser",
+                        "value": "Game_Of_Ur_Main_Menu",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
                         "panel_hover": "Bad_Button_Hover_Panel",
@@ -314,37 +315,9 @@
         }
     ],
 
-    "connections":[
+    "connections": [
         {
-            "from": "/viewport_UI/local_vs/@UIButton",
-            "signal": "ButtonReleased",
-
-            "to": "/@UrUINavigation",
-            "observer": "ButtonClickedObserved"
-        },
-        {
-            "from": "/viewport_UI/cpu_vs/@UIButton",
-            "signal": "ButtonReleased",
-
-            "to": "/@UrUINavigation",
-            "observer": "ButtonClickedObserved"
-        },
-        {
-            "from": "/viewport_UI/credits/@UIButton",
-            "signal": "ButtonReleased",
-
-            "to": "/@UrUINavigation",
-            "observer": "ButtonClickedObserved"
-        },
-        {
-            "from": "/viewport_UI/records/@UIButton",
-            "signal": "ButtonReleased",
-
-            "to": "/@UrUINavigation",
-            "observer": "ButtonClickedObserved"
-        },
-        {
-            "from": "/viewport_UI/tutorials/@UIButton",
+            "from": "/viewport_UI/return/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUINavigation",

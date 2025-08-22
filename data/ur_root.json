@@ -347,7 +347,6 @@
             }
         },
 
-
         {
             "name": "Game_Of_Ur_Main_Menu",
             "type": "SimObject",
@@ -399,6 +398,15 @@
             "method": "fromSceneFile",
             "parameters": {
                 "path": "data/ur_records_browser.json"
+            }
+        },
+
+        {
+            "name": "Game_Of_Ur_Tutorials_Browser",
+            "type": "SimObject",
+            "method": "fromSceneFile",
+            "parameters": {
+                "path": "data/ur_tutorials_browser.json"
             }
         }
     ],

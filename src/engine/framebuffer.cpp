@@ -161,7 +161,7 @@ void Framebuffer::copyResource(const Framebuffer& other) {
                 ResourceDatabase::ConstructAnonymousResource<Texture>(nlohmann::json{
                     {"type", Texture::getResourceTypeName()},
                     {"method", TextureFromColorBufferDefinition::getResourceConstructorName()},
-                    {"params", textureHandle->getColorBufferDefinition()}
+                    {"parameters", textureHandle->getColorBufferDefinition()}
                 })
             );
             if(count < mNColorAttachments){
