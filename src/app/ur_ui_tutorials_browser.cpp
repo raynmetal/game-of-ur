@@ -14,6 +14,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUITutorialsBrowser::crea
     std::shared_ptr<UrUITutorialsBrowser> tutorialsBrowser { std::make_shared<UrUITutorialsBrowser>() };
     tutorialsBrowser->mTutorialsFilepath = jsonAspectProperties.at("tutorials_filepath").get<std::string>();
     tutorialsBrowser->mTutorialTextAspect = jsonAspectProperties.at("text_node_aspect").get<std::string>();
+    tutorialsBrowser->mTutorialHeadingAspect = jsonAspectProperties.at("heading_node_aspect").get<std::string>();
     tutorialsBrowser->mTutorialImageAspect = jsonAspectProperties.at("image_node_aspect").get<std::string>();
 
     return tutorialsBrowser;
@@ -25,6 +26,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUITutorialsBrowser::clon
     tutorialsBrowser->mTutorialsFilepath = mTutorialsFilepath;
     tutorialsBrowser->mTutorialTextAspect = mTutorialTextAspect;
     tutorialsBrowser->mTutorialImageAspect = mTutorialImageAspect;
+    tutorialsBrowser->mTutorialHeadingAspect = mTutorialHeadingAspect;
 
     return tutorialsBrowser;
 }
@@ -71,12 +73,21 @@ void UrUITutorialsBrowser::openPage(uint32_t page) {
     assert(hasPage(page) && "No such page exists");
     mPage = page;
 
+    UIText& heading {
+        getSimObject().getByPath<UIText&>(mTutorialHeadingAspect)
+    };
     UIText& text {
         getSimObject().getByPath<UIText&>(mTutorialTextAspect)
     };
     UIImage& image {
         getSimObject().getByPath<UIImage&>(mTutorialImageAspect)
     };
+    heading.updateText(
+        mTutorials[mPage].mHeading 
+        + " (" 
+        + std::to_string(page + 1) + "/" + std::to_string(mTutorials.size())
+        + ")"
+    );
     text.updateText(mTutorials[mPage].mText);
     image.updateImage(mTutorials[mPage].mImageFilepath);
 
@@ -107,12 +118,14 @@ bool UrUITutorialsBrowser::hasPage(uint32_t page) const {
 }
 
 void from_json(const nlohmann::json& json, TutorialContent& tutorialContent) {
+    tutorialContent.mHeading = json.at("heading").get<std::string>();
     tutorialContent.mText = json.at("text").get<std::string>();
     tutorialContent.mImageFilepath = json.at("image_filepath").get<std::string>();
 }
 
 void to_json(nlohmann::json& json, const TutorialContent& tutorialContent) {
     json = {
+        { "heading", tutorialContent.mHeading },
         { "text", tutorialContent.mText },
         { "image_filepath", tutorialContent.mImageFilepath },
     };

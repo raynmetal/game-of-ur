@@ -1,9 +1,11 @@
 [
     {
+        "heading": "The first heading",
         "text": "This is some tutorial example text which does not matter in the grand scheme of things hence I am filling it with garbage",
         "image_filepath": "data/textures/checkerboard.png"
     },
     {
+        "heading": "The second heading",
         "text": "This is another bullshit tutorial page which does not matter.  I am going to fill this also with just about whatever.",
         "image_filepath": "data/textures/skybox.png"
     }

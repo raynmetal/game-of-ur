@@ -11,6 +11,7 @@
                 {
                     "type": "UrUITutorialsBrowser",
                     "tutorials_filepath": "data/ur_tutorials.json",
+                    "heading_node_aspect": "/viewport_UI/tutorial_heading/@UIText",
                     "text_node_aspect": "/viewport_UI/tutorial_text/@UIText",
                     "image_node_aspect": "/viewport_UI/tutorial_image/@UIImage"
                 }
@@ -148,7 +149,7 @@
         },
 
         {
-            "name": "heading",
+            "name": "tutorial_heading",
             "parent": "/viewport_UI/",
             "type": "SimObject",
             "components": [

@@ -10,6 +10,7 @@
 
 
 struct TutorialContent {
+    std::string mHeading {};
     std::string mText {};
     std::string mImageFilepath {};
 };
@@ -28,6 +29,7 @@ private:
     uint32_t mPage {0};
     std::string mTutorialsFilepath {};
     std::string mTutorialTextAspect {};
+    std::string mTutorialHeadingAspect {};
     std::string mTutorialImageAspect {};
     std::vector<TutorialContent> mTutorials {};
 
