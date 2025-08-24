@@ -152,25 +152,95 @@
         },
 
         {
-            "aspects": [],
             "components": [
                 {
-                    "orientation": [ 0.579228, -0.4055798, -0.579228, -0.4055798 ],
-                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0],
+                    "position": [0.0, 3.0, 1.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ],
                     "type": "Placement"
                 },
                 {
-                    "ambient": [0.2, 0.2, 0.5],
-                    "diffuse": [1.7, 1.0, 0.9],
-                    "specular": [ 0.8, 0.7, 0.7],
-                    "lightType": "directional",
+                    "ambient": [0.1, 0.04, 0.04],
+                    "diffuse": [8.7, 2.4, 2.4],
+                    "specular": [2.0, 2.0, 2.0],
+                    "linearConst": 0.10,
+                    "quadraticConst": 0.10,
+                    "lightType": "point",
                     "type": "LightEmissionData"
                 }
             ],
-            "name": "sunlight",
+            "name": "lamp_1",
             "parent": "/viewport_3D/",
-            "type": "SimObject"
+            "type": "SceneNode"
+        },
+
+        {
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0],
+                    "position": [0.0, 3.0, 13.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [0.04, 0.1, 0.04],
+                    "diffuse": [2.4, 8.7, 2.4],
+                    "specular": [ 2.0, 2.0, 2.0],
+                    "linearConst": 0.10,
+                    "quadraticConst": 0.10,
+                    "lightType": "point",
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "lamp_2",
+            "parent": "/viewport_3D/",
+            "type": "SceneNode"
+        },
+
+        {
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0],
+                    "position": [6.0, 3.0, 7.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [0.04, 0.04, 0.1],
+                    "diffuse": [2.4, 2.4, 8.7],
+                    "specular": [ 2.0, 2.0, 2.0],
+                    "linearConst": 0.10,
+                    "quadraticConst": 0.10,
+                    "lightType": "point",
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "lamp_3",
+            "parent": "/viewport_3D/",
+            "type": "SceneNode"
+        },
+
+        {
+            "components": [
+                {
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0],
+                    "position": [-6.0, 3.0, 7.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ],
+                    "type": "Placement"
+                },
+                {
+                    "ambient": [0.1, 0.04, 0.1],
+                    "diffuse": [5.2, 2.4, 5.2],
+                    "specular": [ 2.0, 2.0, 2.0],
+                    "linearConst": 0.10,
+                    "quadraticConst": 0.10,
+                    "lightType": "point",
+                    "type": "LightEmissionData"
+                }
+            ],
+            "name": "lamp_4",
+            "parent": "/viewport_3D/",
+            "type": "SceneNode"
         },
 
         {
@@ -189,6 +259,7 @@
             "type": "SimObject"
         }
     ],
+
 
     "connections": [
         {

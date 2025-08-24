@@ -280,28 +280,37 @@
         },
 
         {
-            "name": "silly_text",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 341.5, 300.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla nisi lectus, varius nec lacus quis, congue feugiat erat. Nullam molestie vitae metus sit amet egestas. Interdum et malesuada fames ac ante ipsum primis in faucibus. Sed posuere enim odio, quis elementum diam cursus quis. Sed scelerisque a enim id vulputate. Mauris eu odio non diam fermentum pellentesque eget a lacus. In hac habitasse platea dictumst. ",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "max_width": 341.5,
-                    "anchor": [0.5, 0.0],
-                    "color": [255, 255, 255, 255]
-                }
-            ]
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "tutorials",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -640.0, -300.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "How to Play",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 0.0],
+                        "value": "Game_Of_Ur_Tutorials_Browser",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
         }
     ],
 
@@ -329,6 +338,13 @@
         },
         {
             "from": "/viewport_UI/records/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUINavigation",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/tutorials/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUINavigation",

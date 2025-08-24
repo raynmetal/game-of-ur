@@ -338,7 +338,7 @@ void RenderSystem::LightQueue::enqueueTo(BaseRenderStage& renderStage, float sim
             lightEmissionData,
             (lightEmissionData.mType==LightEmissionData::LightType::directional)?
                 glm::inverse(glm::transpose(entityTransform.mModelMatrix)):
-                entityTransform.mModelMatrix
+                glm::scale(entityTransform.mModelMatrix, glm::vec3{lightEmissionData.mRadius})
         });
     }
 }

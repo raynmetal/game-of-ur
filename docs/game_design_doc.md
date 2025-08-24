@@ -140,11 +140,11 @@ The results of moving a piece depend on the house the piece lands on, and the pi
 
       | Piece         | No. of counters |
       | :------------ | --------------: |
-      | Swallow       | 3               |
-      | Storm-bird    | 4               |
-      | Raven         | 4               |
-      | Rooster       | 4               |
-      | Eagle         | 5               |
+      | Swallow       | `3`             |
+      | Storm-bird    | `4`             |
+      | Raven         | `4`             |
+      | Rooster       | `4`             |
+      | Eagle         | `5`             |
 
     - If the piece passes over a rosette before landing on a non-rosette house, the player must pay into the common pool the same number of counters as shown in the table above
     - If the piece does not pass over a rosette before landing on a non-rosette house, no counters are exchanged

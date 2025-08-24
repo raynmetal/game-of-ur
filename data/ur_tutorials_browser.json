@@ -1,13 +1,19 @@
 {
     "resources": [],
-
     "nodes": [
         {
-            "name": "credits",
+            "name": "tutorials_browser",
             "aspects": [
                 {
                     "type": "UrUINavigation",
                     "scene_manager_path": "/scene_root/"
+                },
+                {
+                    "type": "UrUITutorialsBrowser",
+                    "tutorials_filepath": "data/ur_tutorials.json",
+                    "heading_node_aspect": "/viewport_UI/tutorial_heading/@UIText",
+                    "text_node_aspect": "/viewport_UI/tutorial_text/@UIText",
+                    "image_node_aspect": "/viewport_UI/tutorial_image/@UIImage"
                 }
             ],
             "components": [
@@ -21,7 +27,6 @@
             "parent": "",
             "type": "SimObject"
         },
-
         {
             "name": "viewport_UI",
             "parent": "/",
@@ -70,7 +75,7 @@
 
         {
             "name": "camera",
-            "aspects":[{"type": "QueryClick" }],
+            "aspects":[{ "type": "QueryClick" }],
             "parent": "/viewport_UI/",
             "type": "SimObject",
             "components": [
@@ -144,6 +149,145 @@
         },
 
         {
+            "name": "tutorial_heading",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ 0.0, 200.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Tutorial Heading",
+                    "font_resource_name": "Roboto_Mono_Regular_36",
+                    "scale": 1.0,
+                    "anchor": [0.5, 1.0],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "previous",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ -400.0, 200.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "<",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [1.0, 1.0],
+                        "value": "previous",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+
+        {
+            "name": "Ur_Button",
+            "parent": "/viewport_UI/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "next",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 400.0, 200.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": ">",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 1.0],
+                        "value": "next",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+
+        {
+            "name": "tutorial_text",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -300, 150.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Some nonsense text goes in here without particular regard to its content as it's just for testing purposes or so I hope.",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "max_width": 640.0,
+                    "anchor": [0.5, 0.0],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+
+        {
+            "name": "tutorial_image",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
+                    "position": [ 341.5, -125.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIImage",
+                    "image_filepath": "data/textures/button_active.png",
+                    "dimensions": [620, 440],
+                    "anchor": [0.5, 0.5]
+                }
+            ]
+        },
+
+        {
             "name": "Ur_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
@@ -175,40 +319,30 @@
                     }
                 ]
             }
-        },
-
-        {
-            "name": "credits_text",
-            "parent": "/viewport_UI/",
-            "type": "SimObject",
-            "components": [
-                {
-                    "type": "Placement",
-                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 0.0, 200.0, 0.0, 1.0 ],
-                    "scale": [ 1.0, 1.0, 1.0 ]
-                }
-            ],
-            "aspects": [
-                {
-                    "type": "UIText",
-                    "text": "Thank you for playing:\n\n\t The Royal Game of Ur\n\n\nBased on:\n\n\t\"On the Royal Game of Ur\" by Irving Finkel, in Ancient Board Games in Perspective (2007)\n\n\nDeveloped by:\n\n\tZoheb Shujauddin",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
-                    "scale": 1.0,
-                    "max_width": 683,
-                    "anchor": [0.5, 0.0],
-                    "color": [255, 255, 255, 255]
-                }
-            ]
         }
     ],
 
-    "connections":[
+    "connections": [
         {
             "from": "/viewport_UI/return/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUINavigation",
+            "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/next/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUITutorialsBrowser",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/previous/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUITutorialsBrowser",
             "observer": "ButtonClickedObserved"
         }
     ]
