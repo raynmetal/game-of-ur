@@ -248,7 +248,7 @@
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -341.5, 100.0, 0.0, 1.0 ],
+                    "position": [ -300, 150.0, 0.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
@@ -258,7 +258,7 @@
                     "text": "Some nonsense text goes in here without particular regard to its content as it's just for testing purposes or so I hope.",
                     "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
-                    "max_width": 620.0,
+                    "max_width": 640.0,
                     "anchor": [0.5, 0.0],
                     "color": [255, 255, 255, 255]
                 }
