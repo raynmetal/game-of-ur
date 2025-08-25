@@ -147,7 +147,8 @@ bool Board::isValidLaunchHouse(glm::u8vec2 location, const Piece& gamePiece) con
                 )
             )
         ) || (
-            location.x == 1 && location.y == (pieceType.mLaunchRoll - 1)
+            location 
+            == getLaunchPosition(gamePiece.getIdentity().mType)
         )
     );
 }
@@ -204,5 +205,5 @@ glm::i8vec2 Board::getNextCellDirection(glm::u8vec2 location) const {
 
 glm::u8vec2 Board::getLaunchPosition(PieceTypeID pieceType) const {
     assert(kGamePieceTypes[pieceType].mLaunchType == PieceType::LaunchType::SAME_AS_LAUNCH_ROLL && "This must be a piece whose launch roll corresponds to its launch house");
-    return { 1, static_cast<uint8_t>(kGamePieceTypes[pieceType].mLaunchRoll) - 1 };
+    return { 1, static_cast<uint8_t>(kGamePieceTypes[pieceType].mLaunchRoll) - 5 };
 }
