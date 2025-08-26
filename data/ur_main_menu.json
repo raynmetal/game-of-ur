@@ -154,7 +154,7 @@
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, 100.0, 0.0, 1.0 ],
+                        "position": [ 0.0, 200.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
@@ -165,7 +165,7 @@
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
+                        "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_Local_VS",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
@@ -188,7 +188,7 @@
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, 0.0, 0.0, 1.0 ],
+                        "position": [ 0.0, 100.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
@@ -199,7 +199,7 @@
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
+                        "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_CPU_VS",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
@@ -222,7 +222,7 @@
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, -100.0, 0.0, 1.0 ],
+                        "position": [ 0.0, 0.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
@@ -233,7 +233,7 @@
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
+                        "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_Credits",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
@@ -256,7 +256,7 @@
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, -200.0, 0.0, 1.0 ],
+                        "position": [ 0.0, -100.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
@@ -267,7 +267,7 @@
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
+                        "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_Records_Browser",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
@@ -290,7 +290,7 @@
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ -640.0, -300.0, 0.0, 1.0 ],
+                        "position": [ 0.0, -200.0, 0.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
@@ -301,7 +301,7 @@
                         "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
+                        "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_Tutorials_Browser",
                         "panel_active": "Bad_Button_Active_Panel",
                         "panel_inactive": "Bad_Button_Inactive_Panel",
@@ -311,6 +311,31 @@
                     }
                 ]
             }
+        },
+
+        {
+            "name": "version",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -673.0, -380.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "Game of Ur alpha x.x.x",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "scale": 1.0,
+                    "anchor": [0.0, 1.0],
+                    "color": [255, 255, 255, 255]
+                },
+                { "type": "UrUIVersion" }
+            ]
         }
     ],
 

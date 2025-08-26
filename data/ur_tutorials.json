@@ -37,7 +37,7 @@
 
     {
         "heading": "The Route",
-        "text": "\tThis shows the route the players playing white and black respectively must take to win the game.  Marked also are the houses corresponding to the launch locations of all pieces except the Swallow.",
+        "text": "\tThis diagram shows the route the players playing white and black respectively must take to win the game.\n\n\tMarked also are the houses corresponding to the launch locations of all pieces except the Swallow.",
         "image_filepath": "data/textures/tutorial/board_route.png"
     },
 
