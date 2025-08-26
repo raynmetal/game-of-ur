@@ -185,14 +185,14 @@
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 0.0, 200.0, 0.0, 1.0 ],
+                    "position": [ 0.0, 230.0, 0.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
             "aspects": [
                 {
                     "type": "UIText",
-                    "text": "Thank you for playing:\n\n\t The Royal Game of Ur\n\n\nBased on:\n\n\t\"On the Royal Game of Ur\" by Irving Finkel, in Ancient Board Games in Perspective (2007)\n\n\nDeveloped by:\n\n\tZoheb Shujauddin",
+                    "text": "Thank you for playing:\n\n\t The Royal Game of Ur\n\n\nBased on:\n\n\t\"On the Royal Game of Ur\" by Irving Finkel, in Ancient Board Games in Perspective (2007)\n\n\nDeveloped by:\n\n\t- Zoheb Shujauddin <zoheb2424@gmail.com> (art & programming)\n\n\t- aankajhoka@gmail.com (tutorial diagrams, early UI mockups)",
                     "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "max_width": 683,

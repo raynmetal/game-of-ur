@@ -1,0 +1,8 @@
+#ifndef ZOAPPVERSION_H
+#define ZOAPPVERSION_H
+
+#define Game_Of_Ur_VERSION_MAJOR @Game_Of_Ur_VERSION_MAJOR@
+#define Game_Of_Ur_VERSION_MINOR @Game_Of_Ur_VERSION_MINOR@
+#define Game_Of_Ur_VERSION_PATCH @Game_Of_Ur_VERSION_PATCH@
+
+#endif
