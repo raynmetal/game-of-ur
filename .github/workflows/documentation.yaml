@@ -21,6 +21,8 @@ jobs:
     # Deploy the HTML documentation to GitHub Pages
     - name: GH Pages Deployment
       uses: peaceiris/actions-gh-pages@v3
+      permissions:
+        contents: write
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         publish_dir: ./docs/technical/
