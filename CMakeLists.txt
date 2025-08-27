@@ -80,7 +80,7 @@ install(
     DESTINATION .
 )
 install(
-    DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/docs
+    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs/game-of-ur
     DESTINATION .
 )
 install(
