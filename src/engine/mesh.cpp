@@ -10,7 +10,7 @@
 #include "vertex.hpp"
 #include "mesh.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 StaticMesh::StaticMesh(
     const std::vector<BuiltinVertexData>& vertices,

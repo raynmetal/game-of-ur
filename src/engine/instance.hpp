@@ -7,7 +7,7 @@
 #include <glm/glm.hpp>
 #include <GL/glew.h>
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     enum DefaultInstanceAttributeLocations : int {
         FIXED_MATRIXMODEL=7,
         RUNTIME=-8,

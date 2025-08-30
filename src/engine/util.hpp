@@ -3,7 +3,7 @@
 
 #include <glm/glm.hpp>
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     glm::mat4 buildModelMatrix(glm::vec4 position, glm::quat orientation, glm::vec3 scale = glm::vec3{1.f, 1.f, 1.f}); 
 
     class RangeMapperLinear {

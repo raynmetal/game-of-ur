@@ -2,7 +2,7 @@
 #include <GL/glew.h>
 #include "instance.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 BaseInstanceAllocator::~BaseInstanceAllocator() {
     if(!mUploaded) return;

@@ -17,7 +17,7 @@
 #include "light.hpp"
 #include "util.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     /*
         Creates a simple sort key with the following priority:
             Mesh > Material Texture > Material Everything Else

@@ -5,7 +5,7 @@
 #include <array>
 #include <glm/glm.hpp>
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     using BoxCorner = uint8_t;
     enum BoxCornerSpecifier: BoxCorner {
         RIGHT=0x1,

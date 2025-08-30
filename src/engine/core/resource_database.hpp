@@ -13,7 +13,7 @@
 
 #include "../registrator.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     // ##########################################################################################
     // DECLARATIONS

@@ -9,7 +9,7 @@
 #include <nlohmann/json.hpp>
 #include <glm/glm.hpp>
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     using ActionName = ::std::string;
     using ContextName = ::std::string;
@@ -375,26 +375,26 @@ namespace ToyMakersEngine {
         {ActionValueType::CHANGE, "change"},
     });
 
-    void to_json(nlohmann::json& json, const ToyMakersEngine::InputAttributesType& inputAttributes);
-    void from_json(const nlohmann::json& json, ToyMakersEngine::InputAttributesType& inputAttributes);
+    void to_json(nlohmann::json& json, const ToyMaker::InputAttributesType& inputAttributes);
+    void from_json(const nlohmann::json& json, ToyMaker::InputAttributesType& inputAttributes);
 
-    void to_json(nlohmann::json& json, const ToyMakersEngine::InputSourceDescription& inputSourceDescription);
-    void from_json(const nlohmann::json& json, ToyMakersEngine::InputSourceDescription& inputSourceDescription);
+    void to_json(nlohmann::json& json, const ToyMaker::InputSourceDescription& inputSourceDescription);
+    void from_json(const nlohmann::json& json, ToyMaker::InputSourceDescription& inputSourceDescription);
 
-    void to_json(nlohmann::json& json, const ToyMakersEngine::InputFilter& inputFilter);
-    void from_json(const nlohmann::json& json, ToyMakersEngine::InputFilter& inputFilter);
+    void to_json(nlohmann::json& json, const ToyMaker::InputFilter& inputFilter);
+    void from_json(const nlohmann::json& json, ToyMaker::InputFilter& inputFilter);
 
-    void to_json(nlohmann::json& json, const ToyMakersEngine::InputCombo& inputCombo);
-    void from_json(const nlohmann::json& json, ToyMakersEngine::InputCombo& inputCombo);
+    void to_json(nlohmann::json& json, const ToyMaker::InputCombo& inputCombo);
+    void from_json(const nlohmann::json& json, ToyMaker::InputCombo& inputCombo);
 
-    void to_json(nlohmann::json& json, const ToyMakersEngine::ActionDefinition& actionDefinition);
-    void from_json(const nlohmann::json& json, ToyMakersEngine::ActionDefinition& actionDefinition);
+    void to_json(nlohmann::json& json, const ToyMaker::ActionDefinition& actionDefinition);
+    void from_json(const nlohmann::json& json, ToyMaker::ActionDefinition& actionDefinition);
 }
 
 namespace std {
     template<>
-    struct hash<ToyMakersEngine::InputSourceDescription> {
-        size_t operator() (const ToyMakersEngine::InputSourceDescription& definition) const {
+    struct hash<ToyMaker::InputSourceDescription> {
+        size_t operator() (const ToyMaker::InputSourceDescription& definition) const {
             return (
                 (( (hash<uint32_t>{}(definition.mControl))
                 ^ (hash<uint8_t>{}(definition.mDevice) << 1) >> 1)
@@ -405,30 +405,30 @@ namespace std {
     };
 
     template<>
-    struct hash<ToyMakersEngine::ActionDefinition> {
-        size_t operator() (const ToyMakersEngine::ActionDefinition& definition) const {
+    struct hash<ToyMaker::ActionDefinition> {
+        size_t operator() (const ToyMaker::ActionDefinition& definition) const {
             return hash<std::string>{}(definition.mName);
         }
     };
 
     template<>
-    struct hash<ToyMakersEngine::InputFilter> {
-        size_t operator() (const ToyMakersEngine::InputFilter& inputFilter) const {
+    struct hash<ToyMaker::InputFilter> {
+        size_t operator() (const ToyMaker::InputFilter& inputFilter) const {
             return (
-                (hash<ToyMakersEngine::InputSourceDescription>{}(inputFilter.mControl)
+                (hash<ToyMaker::InputSourceDescription>{}(inputFilter.mControl)
                 ^ (hash<uint8_t>{}(inputFilter.mAxisFilter) << 1))
             );
         }
     };
 
     template<>
-    struct hash<ToyMakersEngine::InputCombo> {
-        size_t operator() (const ToyMakersEngine::InputCombo& inputBind) const {
+    struct hash<ToyMaker::InputCombo> {
+        size_t operator() (const ToyMaker::InputCombo& inputBind) const {
             return (
-                (((hash<ToyMakersEngine::InputFilter>{}(inputBind.mMainControl)
-                ^ (hash<ToyMakersEngine::InputFilter>{}(inputBind.mModifier1) << 1) >> 1)
-                ^ (hash<ToyMakersEngine::InputFilter>{}(inputBind.mModifier2) << 1) >> 1)
-                ^ (hash<ToyMakersEngine::InputCombo::Trigger>{}(inputBind.mTrigger) << 1) >> 1)
+                (((hash<ToyMaker::InputFilter>{}(inputBind.mMainControl)
+                ^ (hash<ToyMaker::InputFilter>{}(inputBind.mModifier1) << 1) >> 1)
+                ^ (hash<ToyMaker::InputFilter>{}(inputBind.mModifier2) << 1) >> 1)
+                ^ (hash<ToyMaker::InputCombo::Trigger>{}(inputBind.mTrigger) << 1) >> 1)
                 ^ (hash<float>{}(inputBind.mThreshold) << 1)
             );
         }

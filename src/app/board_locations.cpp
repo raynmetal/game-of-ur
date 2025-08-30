@@ -16,17 +16,17 @@ bool BoardLocations::onPointerLeftClick(glm::vec4 clickLocation) {
     return true;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> BoardLocations::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> BoardLocations::create(const nlohmann::json& jsonAspectProperties) {
     (void)jsonAspectProperties; // prevent unused parameter warnings
     return std::shared_ptr<BoardLocations>{ new BoardLocations{} };
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> BoardLocations::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> BoardLocations::clone() const {
     return std::shared_ptr<BoardLocations>{ new BoardLocations{} };
 }
 
 glm::uvec2 BoardLocations::boardPointToGridIndices(glm::vec2 point) const {
-    const ToyMakersEngine::AxisAlignedBounds::Extents boardExtents { getComponent<ToyMakersEngine::AxisAlignedBounds>().getAxisAlignedBoxExtents() };
+    const ToyMaker::AxisAlignedBounds::Extents boardExtents { getComponent<ToyMaker::AxisAlignedBounds>().getAxisAlignedBoxExtents() };
     glm::vec2 normalizedPoint {
         (point.x - boardExtents.second.x) / (boardExtents.first.x - boardExtents.second.x),
         (point.y - boardExtents.second.z) / (boardExtents.first.z - boardExtents.second.z),
@@ -40,8 +40,8 @@ glm::uvec2 BoardLocations::boardPointToGridIndices(glm::vec2 point) const {
 }
 
 glm::vec4 BoardLocations::gridIndicesToBoardPoint(glm::u8vec2 gridIndices) const {
-    const ToyMakersEngine::AxisAlignedBounds::Extents boardExtents {
-        getComponent<ToyMakersEngine::AxisAlignedBounds>().getAxisAlignedBoxExtents()
+    const ToyMaker::AxisAlignedBounds::Extents boardExtents {
+        getComponent<ToyMaker::AxisAlignedBounds>().getAxisAlignedBoxExtents()
     };
     const glm::vec4 centerOffset {
         (boardExtents.first.x - boardExtents.second.x) / (2.f * mRowLengths.size()),

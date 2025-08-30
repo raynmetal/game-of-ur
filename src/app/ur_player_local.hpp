@@ -1,11 +1,11 @@
 #ifndef ZOAPPPLAYERLOCAL_H
 #define ZOAPPPLAYERLOCAL_H
 
-#include "../engine/sim_system.hpp"
+#include "toymaker/sim_system.hpp"
 
 #include "ur_controller.hpp"
 
-class PlayerLocal: public ToyMakersEngine::SimObjectAspect<PlayerLocal> {
+class PlayerLocal: public ToyMaker::SimObjectAspect<PlayerLocal> {
 public:
     PlayerLocal(): SimObjectAspect<PlayerLocal>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "UrPlayerLocal"; }
@@ -25,29 +25,29 @@ private:
     void onMovePrompted(GamePhaseData phaseData);
 
 public:
-    ToyMakersEngine::SignalObserver<GamePhaseData> mObserveMovePrompted {
+    ToyMaker::SignalObserver<GamePhaseData> mObserveMovePrompted {
         *this, "MovePromptedObserved",
         [this](GamePhaseData phaseData) {this->onMovePrompted(phaseData);}
     };
 
-    ToyMakersEngine::SignalObserver<PieceTypeID, glm::u8vec2> mObservePieceLaunchAttempted {
+    ToyMaker::SignalObserver<PieceTypeID, glm::u8vec2> mObservePieceLaunchAttempted {
         *this, "LaunchPieceAttemptedObserved",
         [this](PieceTypeID pieceType, glm::u8vec2 location) { this->onLaunchPieceAttempted(pieceType, location); }
     };
-    ToyMakersEngine::SignalObserver<PieceIdentity> mObserveMovePieceAttempted {
+    ToyMaker::SignalObserver<PieceIdentity> mObserveMovePieceAttempted {
         *this, "MovePieceAttemptedObserved",
         [this](PieceIdentity piece) { this->onMoveBoardPieceAttempted(piece); }
     };
-    ToyMakersEngine::SignalObserver<> mObserveEndTurnAttempted {
+    ToyMaker::SignalObserver<> mObserveEndTurnAttempted {
         *this, "NextTurnAttemptedObserved",
         [this]() { this->onNextTurnAttempted(); }
     };
-    ToyMakersEngine::SignalObserver<> mObserveDiceRollAttempted {
+    ToyMaker::SignalObserver<> mObserveDiceRollAttempted {
         *this, "DiceRollAttemptedObserved",
         [this]() { this->onDiceRollAttempted(); }
     };
 
-    ToyMakersEngine::Signal<PlayerID> mSigControlInterface {*this, "ControlInterface"};
+    ToyMaker::Signal<PlayerID> mSigControlInterface {*this, "ControlInterface"};
 };
 
 #endif

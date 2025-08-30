@@ -8,7 +8,7 @@
 #include "mesh.hpp"
 #include "model.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     class StaticMeshSphereLatLong: public ResourceConstructor<StaticMesh, StaticMeshSphereLatLong> {
     public:

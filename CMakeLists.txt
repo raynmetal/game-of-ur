@@ -47,6 +47,8 @@ add_custom_target(build_time_make_directory ALL
 )
 add_custom_target(data_file_dependencies DEPENDS "$<LIST:TRANSFORM,${DATA_FILES},PREPEND,${CMAKE_CURRENT_BINARY_DIR}/>")
 
+add_subdirectory(src/engine)
+
 target_sources(
     Game_Of_Ur
     # Ur application sources
@@ -55,7 +57,6 @@ target_sources(
         src/main.cpp
 )
 
-add_subdirectory(src/engine)
 
 find_package(SDL2 REQUIRED CONFIG REQUIRED COMPONENTS SDL2)
 find_package(SDL2 REQUIRED CONFIG COMPONENTS SDL2main)
@@ -71,7 +72,7 @@ target_link_libraries(Game_Of_Ur PRIVATE nlohmann_json::nlohmann_json)
 target_link_libraries(Game_Of_Ur PRIVATE glm::glm)
 target_link_libraries(Game_Of_Ur PRIVATE assimp::assimp)
 target_link_libraries(Game_Of_Ur PRIVATE project_compiler_flags)
-target_link_libraries(Game_Of_Ur PRIVATE ToyMakersEngine)
+target_link_libraries(Game_Of_Ur PRIVATE ToyMaker)
 
 add_dependencies(Game_Of_Ur data_file_dependencies build_time_make_directory)
 

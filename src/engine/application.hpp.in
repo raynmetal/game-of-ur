@@ -14,7 +14,7 @@
 
 #cmakedefine ZO_DUMB_DELAY
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     class Application {
         template <typename TObject, typename=void>
         class getByPath_Helper;

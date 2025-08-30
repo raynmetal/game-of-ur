@@ -2,7 +2,7 @@
 
 #include "text_render.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 TextFont::TextFont(const std::string& fontPath, uint16_t pointSize):
 Resource<TextFont>{0},

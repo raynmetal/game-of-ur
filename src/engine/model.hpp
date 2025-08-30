@@ -27,7 +27,7 @@
  *  c) Stores the hierarchical relationship between the meshes
  *  d) Stores material properties used by shaders for each mesh
  */
-namespace ToyMakersEngine {
+namespace ToyMaker {
     class StaticModel : public Resource<StaticModel>{
     public:
         inline static std::string getResourceTypeName() { return "StaticModel"; }

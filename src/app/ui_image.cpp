@@ -1,12 +1,12 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../engine/core/resource_database.hpp"
-#include "../engine/shapegen.hpp"
+#include "toymaker/core/resource_database.hpp"
+#include "toymaker/shapegen.hpp"
 
 #include "ui_image.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIImage::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UIImage::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<UIImage> imageAspect { std::make_shared<UIImage>() };
     const std::string imageFilepath { 
         jsonAspectProperties.at("image_filepath").get<std::string>()
@@ -33,7 +33,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIImage::create(const nloh
     return imageAspect;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIImage::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UIImage::clone() const {
     std::shared_ptr<UIImage> imageAspect { std::make_shared<UIImage>() };
     imageAspect->mImageFilepath = mImageFilepath;
     imageAspect->mAnchor = mAnchor;
@@ -66,17 +66,17 @@ void UIImage::updateImage(const std::string& imageFilepath) {
 void UIImage::recomputeTexture() {
     // if no image or dimensions specified, remove associated model
     if(mImageFilepath.empty() || (mDimensions.length() == 0)) {
-        if(hasComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()) {
-            removeComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>();
+        if(hasComponent<std::shared_ptr<ToyMaker::StaticModel>>()) {
+            removeComponent<std::shared_ptr<ToyMaker::StaticModel>>();
         }
         return;
     }
 
     // load the image texture
-    std::shared_ptr<ToyMakersEngine::Texture> imageTexture {
-        ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::Texture>({
-            {"type", ToyMakersEngine::Texture::getResourceTypeName()},
-            {"method", ToyMakersEngine::TextureFromFile::getResourceConstructorName()},
+    std::shared_ptr<ToyMaker::Texture> imageTexture {
+        ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::Texture>({
+            {"type", ToyMaker::Texture::getResourceTypeName()},
+            {"method", ToyMaker::TextureFromFile::getResourceConstructorName()},
             {"parameters", {
                 {"path", mImageFilepath},
             }},
@@ -100,26 +100,26 @@ void UIImage::recomputeTexture() {
     // create a rectangle model for the texture to be displayed on, and attach
     // it to this node
     const nlohmann::json rectangleParameters = { 
-        {"type", ToyMakersEngine::StaticModel::getResourceTypeName()},
-        {"method", ToyMakersEngine::StaticModelRectangleDimensions::getResourceConstructorName()},
+        {"type", ToyMaker::StaticModel::getResourceTypeName()},
+        {"method", ToyMaker::StaticModelRectangleDimensions::getResourceConstructorName()},
         {"parameters", {
             {"width", finalRectangleDimensions.x }, {"height", finalRectangleDimensions.y },
             {"flip_texture_y", true},
             {"material_properties", nlohmann::json::array()},
         }}
     };
-    if(!hasComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()) {
-        addComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
-            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
+    if(!hasComponent<std::shared_ptr<ToyMaker::StaticModel>>()) {
+        addComponent<std::shared_ptr<ToyMaker::StaticModel>>(
+            ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::StaticModel>(rectangleParameters)
         );
     } else {
-        updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
-            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
+        updateComponent<std::shared_ptr<ToyMaker::StaticModel>>(
+            ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::StaticModel>(rectangleParameters)
         );
     }
 
     // shift vertices as specified by the anchors
-    std::shared_ptr<ToyMakersEngine::StaticModel>  rectangle { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>() };
+    std::shared_ptr<ToyMaker::StaticModel>  rectangle { getComponent<std::shared_ptr<ToyMaker::StaticModel>>() };
     for(auto mesh: rectangle->getMeshHandles()) {
         for(auto iVertex{ mesh->getVertexListBegin() }, end {mesh->getVertexListEnd()}; iVertex != end; ++iVertex) {
             iVertex->mPosition += glm::vec4{
@@ -130,10 +130,10 @@ void UIImage::recomputeTexture() {
             };
         }
     }
-    updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(rectangle);
+    updateComponent<std::shared_ptr<ToyMaker::StaticModel>>(rectangle);
 
     // apply the texture to the rectangle
-    std::shared_ptr<ToyMakersEngine::Material> material { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()->getMaterialHandles()[0] };
+    std::shared_ptr<ToyMaker::Material> material { getComponent<std::shared_ptr<ToyMaker::StaticModel>>()->getMaterialHandles()[0] };
     material->updateTextureProperty(
         "textureAlbedo",
         imageTexture 

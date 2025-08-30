@@ -1,6 +1,6 @@
 #include "game_of_ur_data/serialize.hpp"
 
-#include "../engine/core/resource_database.hpp"
+#include "toymaker/core/resource_database.hpp"
 
 #include "ur_controller.hpp"
 #include "ur_scene_view.hpp"
@@ -15,14 +15,14 @@ bool operator<(const UrPieceAnimationKey& one, const UrPieceAnimationKey& two) {
     );
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneView::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrSceneView::clone() const {
     std::shared_ptr<UrSceneView> sceneView{ std::make_shared<UrSceneView>() };
     sceneView->mControllerPath = mControllerPath;
     sceneView->mPieceModelMap = mPieceModelMap;
     return sceneView;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneView::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrSceneView::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<UrSceneView> sceneView { std::make_shared<UrSceneView>() };
     sceneView->mControllerPath = jsonAspectProperties.at("controller_path").get<std::string>();
     for(const auto& pieceDescription: jsonAspectProperties.at("piece_to_model")) {
@@ -37,7 +37,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneView::create(const 
                     && "A certain piece type does not have a corresponding model assigned."
             );
             assert(
-                ToyMakersEngine::ResourceDatabase::HasResourceDescription(
+                ToyMaker::ResourceDatabase::HasResourceDescription(
                     sceneView->mPieceModelMap.at(pieceIdentity)
                 ) && "There is no static model corresponding to the resource name specified in the piece-model map"
             );
@@ -48,10 +48,10 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneView::create(const 
 
 void UrSceneView::onActivated() {
     mGameOfUrController = (
-        ToyMakersEngine::ECSWorld::getSingletonSystem<ToyMakersEngine::SceneSystem>()
-        ->getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>(mControllerPath)
+        ToyMaker::ECSWorld::getSingletonSystem<ToyMaker::SceneSystem>()
+        ->getByPath<std::shared_ptr<ToyMaker::SimObject>>(mControllerPath)
     );
-    mGameOfUrBoard = getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>("/viewport_3D/gameboard/");
+    mGameOfUrBoard = getSimObject().getByPath<std::shared_ptr<ToyMaker::SimObject>>("/viewport_3D/gameboard/");
 }
 
 const GameOfUrModel& UrSceneView::getModel() const {
@@ -150,8 +150,8 @@ void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
 
     if(displacedPieceIdentity.mOwner != RoleID::NA) {
         // Schedule animation for this piece getting knocked off the board
-        ToyMakersEngine::Placement displacedPiecePlacement { 
-            mPieceNodeMap.at(displacedPieceIdentity)->getComponent<ToyMakersEngine::Placement>()
+        ToyMaker::Placement displacedPiecePlacement { 
+            mPieceNodeMap.at(displacedPieceIdentity)->getComponent<ToyMaker::Placement>()
         };
         mAnimationKeys.push(
             UrPieceAnimationKey {
@@ -172,11 +172,11 @@ void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
         );
     }
 
-    ToyMakersEngine::Placement startPlacement;
-    ToyMakersEngine::Placement endPlacement;
+    ToyMaker::Placement startPlacement;
+    ToyMaker::Placement endPlacement;
     if(!mPieceNodeMap[movedPieceIdentity]) {
         // This piece has just been launched
-        endPlacement = ToyMakersEngine::Placement {
+        endPlacement = ToyMaker::Placement {
             .mPosition {
                 getBoard().gridIndicesToBoardPoint(moveResultData.mMovedPiece.mLocation)
             }
@@ -185,14 +185,14 @@ void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
         startPlacement.mPosition.y += 15.f;
 
     } else {
-        startPlacement = mPieceNodeMap[movedPieceIdentity]->getComponent<ToyMakersEngine::Placement>();
+        startPlacement = mPieceNodeMap[movedPieceIdentity]->getComponent<ToyMaker::Placement>();
 
         if(moveResultData.mFlags & MoveResultData::COMPLETES_ROUTE) {
             endPlacement = startPlacement;
             endPlacement.mPosition.z += 15.f;
 
         } else {
-            endPlacement = ToyMakersEngine::Placement {
+            endPlacement = ToyMaker::Placement {
                 .mPosition {
                     getBoard().gridIndicesToBoardPoint(
                         moveResultData.mMovedPiece.mLocation
@@ -256,13 +256,13 @@ void UrSceneView::variableUpdate(uint32_t variableStepMillis) {
 
         // Load the model and place it in the scene if it isn't already loaded 
         if(!mPieceNodeMap[key.first]) {
-            std::shared_ptr<ToyMakersEngine::StaticModel> model {
-                ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::StaticModel>(
+            std::shared_ptr<ToyMaker::StaticModel> model {
+                ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::StaticModel>(
                     mPieceModelMap.at(key.first)
                 )
             };
-            mPieceNodeMap[key.first] = ToyMakersEngine::SceneNode::create(
-                ToyMakersEngine::Placement{},
+            mPieceNodeMap[key.first] = ToyMaker::SceneNode::create(
+                ToyMaker::Placement{},
                 mPieceModelMap.at(key.first),
                 model
             );
@@ -286,7 +286,7 @@ void UrSceneView::variableUpdate(uint32_t variableStepMillis) {
 
         // We've reached the end of the animation as far as this piece goes
         if(endsAnimation) {
-            mPieceNodeMap[key.first]->updateComponent<ToyMakersEngine::Placement>(
+            mPieceNodeMap[key.first]->updateComponent<ToyMaker::Placement>(
                 key.second.mPlacement
             );
             if(key.second.mRemove) {
@@ -300,10 +300,10 @@ void UrSceneView::variableUpdate(uint32_t variableStepMillis) {
                 (mAnimationTimeMillis - key.second.mTime) * 1.f
                 / (mAnimationKeys.top().mTime - key.second.mTime)
             };
-            const ToyMakersEngine::Placement currentPlacement { ToyMakersEngine::Interpolator<ToyMakersEngine::Placement>{}(
+            const ToyMaker::Placement currentPlacement { ToyMaker::Interpolator<ToyMaker::Placement>{}(
                 key.second.mPlacement, mAnimationKeys.top().mPlacement, progress
             ) };
-            mPieceNodeMap[key.first]->updateComponent<ToyMakersEngine::Placement>(currentPlacement);
+            mPieceNodeMap[key.first]->updateComponent<ToyMaker::Placement>(currentPlacement);
         }
 
         // push keyframes unrelated to this piece back into the queue

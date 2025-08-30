@@ -9,7 +9,7 @@
 
 #include "core/resource_database.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     struct ColorBufferDefinition {
         enum class Type {

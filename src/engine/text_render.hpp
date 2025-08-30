@@ -6,7 +6,7 @@
 #include "core/resource_database.hpp"
 #include "texture.hpp"
 
-namespace ToyMakersEngine{
+namespace ToyMaker{
     class TextFont;
 
     class TextFont: public Resource<TextFont> {

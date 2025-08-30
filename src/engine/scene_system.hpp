@@ -20,7 +20,7 @@
 #include "texture.hpp"
 #include "input_system/input_system.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     class SceneNodeCore;
     class SceneNode;

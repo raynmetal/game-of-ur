@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 #include <nlohmann/json.hpp>
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     enum DefaultAttributeLocation {
         LOCATION_POSITION=0,

@@ -10,7 +10,7 @@
 
 #include "texture.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 // TODO: rewrite these through the JSON_SERIALIZE_ENUM 
 // macro provided by nlohmann json
@@ -291,7 +291,7 @@ std::shared_ptr<IResource> TextureFromColorBufferDefinition::createResource(cons
     return std::make_shared<Texture>(texture, colorBufferDefinition);
 };
 
-void ToyMakersEngine::from_json(const nlohmann::json& json, ColorBufferDefinition& colorBufferDefinition) {
+void ToyMaker::from_json(const nlohmann::json& json, ColorBufferDefinition& colorBufferDefinition) {
     json.at("dimensions").at(0).get_to(colorBufferDefinition.mDimensions.x);
     json.at("dimensions").at(1).get_to(colorBufferDefinition.mDimensions.y);
     if(json.find("cubemap_layout") != json.end()) {
@@ -309,7 +309,7 @@ void ToyMakersEngine::from_json(const nlohmann::json& json, ColorBufferDefinitio
     assert(colorBufferDefinition.mComponentCount == 1 || colorBufferDefinition.mComponentCount == 4);
 }
 
-void ToyMakersEngine::to_json(nlohmann::json& json, const ColorBufferDefinition& colorBufferDefinition) {
+void ToyMaker::to_json(nlohmann::json& json, const ColorBufferDefinition& colorBufferDefinition) {
     json = {
         {"dimensions", { colorBufferDefinition.mDimensions.x, colorBufferDefinition.mDimensions.y }},
         {"mag_filter", kFilterToString.at(colorBufferDefinition.mMagFilter)},

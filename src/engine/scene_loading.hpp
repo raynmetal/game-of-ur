@@ -6,7 +6,7 @@
 #include "sim_system.hpp"
 #include "scene_system.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     class SceneFromDescription;
     class SceneNodeFromDescription;
     class SimObjectFromDescription;

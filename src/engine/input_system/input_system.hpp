@@ -11,7 +11,7 @@
 
 #include "input_data.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     class ActionContext;
     class ActionDispatch;
     class InputManager;

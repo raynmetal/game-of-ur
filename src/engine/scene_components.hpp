@@ -7,7 +7,7 @@
 
 #include "core/ecs_world.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     struct Placement {
         glm::vec4 mPosition {glm::vec3{ 0.f }, 1.f};

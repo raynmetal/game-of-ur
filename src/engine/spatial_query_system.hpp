@@ -10,7 +10,7 @@
 #include "model.hpp"
 #include "light.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     class SpatialQuerySystem: public System<SpatialQuerySystem, std::tuple<Transform, ObjectBounds>, std::tuple<SceneHierarchyData, AxisAlignedBounds>> {
     public:
         explicit SpatialQuerySystem(std::weak_ptr<ECSWorld> world):

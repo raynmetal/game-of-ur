@@ -13,7 +13,7 @@
 #include "core/resource_database.hpp"
 #include "vertex.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     /**
      *  A class whose current main purpose is to store geometry related info, and to
      * upload it to GPU memory when requested

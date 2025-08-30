@@ -1,7 +1,7 @@
 #ifndef FOOLSENGINE_REGISTRATOR_H
 #define FOOLSENGINE_REGISTRATOR_H
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     /**  
      *  Forces implementation of static function `registerSelf()` using CRTP, called here.

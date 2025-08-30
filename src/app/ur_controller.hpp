@@ -4,13 +4,13 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
-#include "../engine/sim_system.hpp"
+#include "toymaker/sim_system.hpp"
 
 #include "game_of_ur_data/model.hpp"
 
 class UrPlayerControls;
 
-class UrController: public ToyMakersEngine::SimObjectAspect<UrController> {
+class UrController: public ToyMaker::SimObjectAspect<UrController> {
 public:
     UrController(): SimObjectAspect<UrController>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "UrController"; }
@@ -41,25 +41,25 @@ private:
     void onActivated() override;
 
 public:
-    ToyMakersEngine::Signal<> mSigControllerReady { *this, "ControllerReady" };
-    ToyMakersEngine::SignalObserver<const std::string&> mObserveViewSubscribed { 
+    ToyMaker::Signal<> mSigControllerReady { *this, "ControllerReady" };
+    ToyMaker::SignalObserver<const std::string&> mObserveViewSubscribed { 
         *this, "ViewSubscribedObserved",
         [this](const std::string& viewName) {this->onViewSubscribed(viewName);}
     };
 
-    ToyMakersEngine::Signal<GamePhaseData> mSigPhaseUpdated { *this, "PhaseUpdated" };
-    ToyMakersEngine::Signal<GameScoreData> mSigScoreUpdated { *this, "ScoreUpdated" };
-    ToyMakersEngine::Signal<PlayerData> mSigPlayerUpdated { *this, "PlayerUpdated" };
-    ToyMakersEngine::Signal<DiceData> mSigDiceUpdated { *this, "DiceUpdated" };
-    ToyMakersEngine::Signal<MoveResultData> mSigMoveMade { *this, "MoveMade" };
+    ToyMaker::Signal<GamePhaseData> mSigPhaseUpdated { *this, "PhaseUpdated" };
+    ToyMaker::Signal<GameScoreData> mSigScoreUpdated { *this, "ScoreUpdated" };
+    ToyMaker::Signal<PlayerData> mSigPlayerUpdated { *this, "PlayerUpdated" };
+    ToyMaker::Signal<DiceData> mSigDiceUpdated { *this, "DiceUpdated" };
+    ToyMaker::Signal<MoveResultData> mSigMoveMade { *this, "MoveMade" };
 
-    ToyMakersEngine::Signal<> mSigViewUpdateStarted { *this, "ViewUpdateStarted" };
-    ToyMakersEngine::SignalObserver<const std::string&> mObserveViewUpdateCompleted {
+    ToyMaker::Signal<> mSigViewUpdateStarted { *this, "ViewUpdateStarted" };
+    ToyMaker::SignalObserver<const std::string&> mObserveViewUpdateCompleted {
         *this, "ViewUpdateCompletedObserved",
         [this](const std::string& viewName) { this->onViewUpdatesCompleted(viewName); }
     };
 
-    ToyMakersEngine::Signal<GamePhaseData> mSigMovePrompted { *this, "MovePrompted" };
+    ToyMaker::Signal<GamePhaseData> mSigMovePrompted { *this, "MovePrompted" };
 friend class UrPlayerControls;
 };
 

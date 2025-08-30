@@ -7,7 +7,7 @@
 
 #include "spatial_query_octree.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 void printAABBExtents(const AxisAlignedBounds& bounds) {
     std::cout << "Extents: (right top front " << glm::to_string(bounds.getAxisAlignedBoxExtents().first) 

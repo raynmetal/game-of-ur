@@ -7,7 +7,7 @@
 #include "spatial_query_basic_types.hpp"
 #include "core/ecs_world.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     struct ObjectBounds;
     class AxisAlignedBounds;
 

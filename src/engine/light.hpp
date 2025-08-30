@@ -18,7 +18,7 @@
 #include "instance.hpp"
 #include "scene_components.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     struct LightEmissionData;
 
     using LightPackedData = std::pair<std::pair<glm::vec4, glm::vec4>, LightEmissionData>;

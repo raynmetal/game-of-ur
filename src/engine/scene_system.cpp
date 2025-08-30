@@ -8,9 +8,9 @@
 #include "core/ecs_world.hpp"
 #include "scene_system.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
-const std::string ToyMakersEngine::kSceneRootName { "" };
+const std::string ToyMaker::kSceneRootName { "" };
 
 void SceneNodeCore::SceneNodeCore_del_(SceneNodeCore* sceneNode) {
     if(!sceneNode) return;

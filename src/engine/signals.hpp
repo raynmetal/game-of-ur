@@ -8,7 +8,7 @@
 #include <map>
 #include <set>
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     class SignalTracker;
     class ISignalObserver;
     class ISignal;

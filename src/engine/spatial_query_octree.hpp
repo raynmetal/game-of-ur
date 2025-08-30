@@ -9,7 +9,7 @@
 #include "spatial_query_basic_types.hpp"
 #include "core/ecs_world.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     class Octree;
     class OctreeNode: public std::enable_shared_from_this<OctreeNode> {
     public:

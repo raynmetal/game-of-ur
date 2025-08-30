@@ -1,12 +1,12 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../engine/core/resource_database.hpp"
-#include "../engine/shapegen.hpp"
+#include "toymaker/core/resource_database.hpp"
+#include "toymaker/shapegen.hpp"
 
 #include "ui_text.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIText::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UIText::create(const nlohmann::json& jsonAspectProperties) {
     const std::string text { 
         jsonAspectProperties.find("text") != jsonAspectProperties.end()?
             jsonAspectProperties.at("text").get<std::string>():
@@ -45,7 +45,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIText::create(const nlohm
         jsonAspectProperties.at("max_width").get<uint32_t>():
         0
     };
-    std::shared_ptr<ToyMakersEngine::TextFont> font { ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName) };
+    std::shared_ptr<ToyMaker::TextFont> font { ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::TextFont>(fontResourceName) };
     std::shared_ptr<UIText> testTextAspect { std::make_shared<UIText>() };
     testTextAspect->mFont = font;
     testTextAspect->mText = text;
@@ -56,7 +56,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIText::create(const nlohm
     return testTextAspect;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIText::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UIText::clone() const {
     std::shared_ptr<UIText> testTextAspect { std::make_shared<UIText>() };
     testTextAspect->mFont = mFont;
     testTextAspect->mText = mText;
@@ -84,8 +84,8 @@ void UIText::updateText(const std::string& text) {
 }
 
 void UIText::updateFont(const std::string& fontResourceName) {
-    std::shared_ptr<ToyMakersEngine::TextFont> font {
-        ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::TextFont>(fontResourceName)
+    std::shared_ptr<ToyMaker::TextFont> font {
+        ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::TextFont>(fontResourceName)
     };
     if(font == mFont) return;
     mFont = font;
@@ -105,27 +105,27 @@ void UIText::updateColor(glm::u8vec4 color) {
 }
 
 void UIText::recomputeTexture() {
-    std::shared_ptr<ToyMakersEngine::Texture> textTexture { mFont->renderTextArea(mText, mColor, mMaxWidthPixels) };
+    std::shared_ptr<ToyMaker::Texture> textTexture { mFont->renderTextArea(mText, mColor, mMaxWidthPixels) };
     const glm::vec2 textDimensions { textTexture->getWidth() * mScale, textTexture->getHeight() * mScale };
     const nlohmann::json rectangleParameters = { 
-        {"type", ToyMakersEngine::StaticModel::getResourceTypeName()},
-        {"method", ToyMakersEngine::StaticModelRectangleDimensions::getResourceConstructorName()},
+        {"type", ToyMaker::StaticModel::getResourceTypeName()},
+        {"method", ToyMaker::StaticModelRectangleDimensions::getResourceConstructorName()},
         {"parameters", {
             {"width", textDimensions.x }, {"height", textDimensions.y },
             {"flip_texture_y", true},
             {"material_properties", nlohmann::json::array()},
         }}
     };
-    if(!hasComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()) {
-        addComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
-            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
+    if(!hasComponent<std::shared_ptr<ToyMaker::StaticModel>>()) {
+        addComponent<std::shared_ptr<ToyMaker::StaticModel>>(
+            ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::StaticModel>(rectangleParameters)
         );
     } else {
-        updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
-            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
+        updateComponent<std::shared_ptr<ToyMaker::StaticModel>>(
+            ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::StaticModel>(rectangleParameters)
         );
     }
-    std::shared_ptr<ToyMakersEngine::StaticModel>  rectangle { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>() };
+    std::shared_ptr<ToyMaker::StaticModel>  rectangle { getComponent<std::shared_ptr<ToyMaker::StaticModel>>() };
     for(auto mesh: rectangle->getMeshHandles()) {
         for(auto iVertex{ mesh->getVertexListBegin() }, end {mesh->getVertexListEnd()}; iVertex != end; ++iVertex) {
             iVertex->mPosition += glm::vec4{
@@ -136,8 +136,8 @@ void UIText::recomputeTexture() {
             };
         }
     }
-    updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(rectangle);
-    std::shared_ptr<ToyMakersEngine::Material> material { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()->getMaterialHandles()[0] };
+    updateComponent<std::shared_ptr<ToyMaker::StaticModel>>(rectangle);
+    std::shared_ptr<ToyMaker::Material> material { getComponent<std::shared_ptr<ToyMaker::StaticModel>>()->getMaterialHandles()[0] };
     material->updateTextureProperty(
         "textureAlbedo",
         textTexture

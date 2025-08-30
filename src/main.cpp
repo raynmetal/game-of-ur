@@ -11,13 +11,13 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
-#include "engine/application.hpp"
+#include "toymaker/application.hpp"
 
 int main(int argc, char* argv[]) {
     (void)argc; // prevent unused parameter warnings
     (void)argv; // prevent unused parameter warnings
 
-    if(std::shared_ptr<ToyMakersEngine::Application> app { ToyMakersEngine::Application::instantiate("data/project.json") }) {
+    if(std::shared_ptr<ToyMaker::Application> app { ToyMaker::Application::instantiate("data/project.json") }) {
         app->execute();
 
     } else return 1;

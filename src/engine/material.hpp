@@ -11,7 +11,7 @@
 #include "texture.hpp"
 #include "core/resource_database.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     class Material : public Resource<Material> {
     public:

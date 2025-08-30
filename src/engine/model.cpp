@@ -18,7 +18,7 @@
 #include "vertex.hpp"
 #include "model.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 void processAssimpNode(aiNode* node, const aiScene* pAiScene, std::vector<std::shared_ptr<StaticMesh>>& meshHandles, std::vector<std::shared_ptr<Material>>& materialHandles);
 std::vector<std::shared_ptr<Texture>> loadAssimpTextures(aiMaterial* pAiMaterial, aiTextureType textureType);

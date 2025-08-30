@@ -1,15 +1,15 @@
-#include "../engine/core/resource_database.hpp"
+#include "toymaker/core/resource_database.hpp"
 
-#include "../engine/shapegen.hpp"
-#include "../engine/framebuffer.hpp"
+#include "toymaker/shapegen.hpp"
+#include "toymaker/framebuffer.hpp"
 
 #include "nine_slice_panel.hpp"
 
 NineSlicePanel::NineSlicePanel(
-    std::shared_ptr<ToyMakersEngine::Texture> baseTexture,
+    std::shared_ptr<ToyMaker::Texture> baseTexture,
     SDL_FRect contentRegionUV
 ):
-ToyMakersEngine::Resource<NineSlicePanel>{0},
+ToyMaker::Resource<NineSlicePanel>{0},
 mTexture { baseTexture },
 mContentRegion { contentRegionUV }
 {
@@ -25,30 +25,30 @@ mContentRegion { contentRegionUV }
         && "Content region's end must be within the bounds of the texture"
     );
     const std::string nineSliceShaderPath { "data/shader/nineSliceShader.json" };
-    if(!ToyMakersEngine::ResourceDatabase::HasResourceDescription(nineSliceShaderPath)){
+    if(!ToyMaker::ResourceDatabase::HasResourceDescription(nineSliceShaderPath)){
         nlohmann::json shaderDescription {
             {"name", nineSliceShaderPath},
-            {"type", ToyMakersEngine::ShaderProgram::getResourceTypeName()},
-            {"method", ToyMakersEngine::ShaderProgramFromFile::getResourceConstructorName()},
+            {"type", ToyMaker::ShaderProgram::getResourceTypeName()},
+            {"method", ToyMaker::ShaderProgramFromFile::getResourceConstructorName()},
             {"parameters", {
                 {"path", nineSliceShaderPath}
             }}
         };
-        ToyMakersEngine::ResourceDatabase::AddResourceDescription(shaderDescription);
+        ToyMaker::ResourceDatabase::AddResourceDescription(shaderDescription);
     }
-    mShaderHandle = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::ShaderProgram>(nineSliceShaderPath);
+    mShaderHandle = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::ShaderProgram>(nineSliceShaderPath);
     glGenVertexArrays(1, &mVertexArrayObject);
-    if(!ToyMakersEngine::ResourceDatabase::HasResourceDescription("screenRectangleMesh")) {
+    if(!ToyMaker::ResourceDatabase::HasResourceDescription("screenRectangleMesh")) {
         const nlohmann::json rectangleMeshDefinition {
             {"name", "screenRectangleMesh"},
-            {"type", ToyMakersEngine::StaticMesh::getResourceTypeName()},
-            {"method", ToyMakersEngine::StaticMeshRectangleDimensions::getResourceConstructorName()},
+            {"type", ToyMaker::StaticMesh::getResourceTypeName()},
+            {"method", ToyMaker::StaticMeshRectangleDimensions::getResourceConstructorName()},
             {"parameters", {
                 {"width", 2.f},
                 {"height", 2.f},
             }}
         };
-        ToyMakersEngine::ResourceDatabase::AddResourceDescription(rectangleMeshDefinition);
+        ToyMaker::ResourceDatabase::AddResourceDescription(rectangleMeshDefinition);
     }
 }
 
@@ -58,7 +58,7 @@ NineSlicePanel::~NineSlicePanel() {
     }
 }
 
-std::shared_ptr<ToyMakersEngine::Texture> NineSlicePanel::generateTexture(glm::uvec2 contentDimensions) const {
+std::shared_ptr<ToyMaker::Texture> NineSlicePanel::generateTexture(glm::uvec2 contentDimensions) const {
     const glm::uvec2 targetDimensions {
         contentDimensions + glm::uvec2 {
             getOffsetPixelLeft() + getOffsetPixelRight(),
@@ -66,14 +66,14 @@ std::shared_ptr<ToyMakersEngine::Texture> NineSlicePanel::generateTexture(glm::u
         }
     };
     const nlohmann::json framebufferDescription {
-        {"type", ToyMakersEngine::Framebuffer::getResourceTypeName()},
-        {"method", ToyMakersEngine::FramebufferFromDescription::getResourceConstructorName()},
+        {"type", ToyMaker::Framebuffer::getResourceTypeName()},
+        {"method", ToyMaker::FramebufferFromDescription::getResourceConstructorName()},
         {"parameters", {
             {"nColorAttachments", 1},
             {"dimensions", {targetDimensions.x, targetDimensions.y}},
             {"ownsRBO", false},
             {"colorBufferDefinitions", {
-                ToyMakersEngine::ColorBufferDefinition {
+                ToyMaker::ColorBufferDefinition {
                     .mDimensions{targetDimensions.x, targetDimensions.y},
                     .mDataType=GL_FLOAT,
                     .mComponentCount=4,
@@ -81,13 +81,13 @@ std::shared_ptr<ToyMakersEngine::Texture> NineSlicePanel::generateTexture(glm::u
             }}
         }},
     };
-    std::shared_ptr<ToyMakersEngine::Framebuffer> framebuffer {
-        ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::Framebuffer>(
+    std::shared_ptr<ToyMaker::Framebuffer> framebuffer {
+        ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::Framebuffer>(
             framebufferDescription
         )
     };
-    std::shared_ptr<ToyMakersEngine::StaticMesh> rectangleMesh {
-        ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::StaticMesh>(
+    std::shared_ptr<ToyMaker::StaticMesh> rectangleMesh {
+        ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::StaticMesh>(
             "screenRectangleMesh"
         )
     };
@@ -113,8 +113,8 @@ std::shared_ptr<ToyMakersEngine::Texture> NineSlicePanel::generateTexture(glm::u
 
         glBindVertexArray(mVertexArrayObject);
             rectangleMesh->bind({{
-                {"position", ToyMakersEngine::LOCATION_POSITION, 4, GL_FLOAT},
-                {"UV1", ToyMakersEngine::LOCATION_UV1, 2, GL_FLOAT},
+                {"position", ToyMaker::LOCATION_POSITION, 4, GL_FLOAT},
+                {"UV1", ToyMaker::LOCATION_UV1, 2, GL_FLOAT},
             }});
             glDrawElementsInstanced(
                 GL_TRIANGLES,
@@ -160,9 +160,9 @@ uint32_t NineSlicePanel::getOffsetPixelTop() const {
     );
 }
 
-std::shared_ptr<ToyMakersEngine::IResource> NineSlicePanelFromDescription::createResource(const nlohmann::json& methodParameters) {
+std::shared_ptr<ToyMaker::IResource> NineSlicePanelFromDescription::createResource(const nlohmann::json& methodParameters) {
     return std::make_shared<NineSlicePanel>(
-        ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::Texture>(methodParameters.at("base_texture")),
+        ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Texture>(methodParameters.at("base_texture")),
         SDL_FRect {
             .x { methodParameters.at("content_region")[0] },
             .y { methodParameters.at("content_region")[1] },

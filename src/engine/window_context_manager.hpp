@@ -13,7 +13,7 @@
 
 #include "signals.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     class WindowContext {
         SignalTracker mSignalTracker {};
     public:

@@ -1,7 +1,7 @@
 #ifndef ZOAPPRECORDS_H
 #define ZOAPPRECORDS_H
 
-#include "../engine/sim_system.hpp"
+#include "toymaker/sim_system.hpp"
 
 #include "game_of_ur_data/model.hpp"
 #include "game_of_ur_data/serialize.hpp"
@@ -13,7 +13,7 @@ struct GameRecord {
     PlayerData mPlayerB;
 };
 
-class UrRecords: public ToyMakersEngine::SimObjectAspect<UrRecords> {
+class UrRecords: public ToyMaker::SimObjectAspect<UrRecords> {
 public:
     UrRecords(): SimObjectAspect<UrRecords>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "UrRecords"; }

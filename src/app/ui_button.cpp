@@ -1,7 +1,7 @@
 #include "ui_text.hpp"
 #include "ui_button.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UIButton::create(const nlohmann::json& jsonAspectProperties) {
     const glm::vec2 anchor {
         jsonAspectProperties.find("anchor") != jsonAspectProperties.end()?
         glm::vec2{
@@ -68,12 +68,12 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::create(const nlo
     }
 
     std::shared_ptr<UIButton> buttonAspect { std::make_shared<UIButton>() };
-    buttonAspect->mStatePanels[State::INACTIVE] = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelInactive);
-    buttonAspect->mStatePanels[State::ACTIVE] = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelActive);
-    buttonAspect->mStatePanels[State::PRESSED] = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelPressed);
-    buttonAspect->mStatePanels[State::HOVER] = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelHover);
+    buttonAspect->mStatePanels[State::INACTIVE] = ToyMaker::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelInactive);
+    buttonAspect->mStatePanels[State::ACTIVE] = ToyMaker::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelActive);
+    buttonAspect->mStatePanels[State::PRESSED] = ToyMaker::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelPressed);
+    buttonAspect->mStatePanels[State::HOVER] = ToyMaker::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelHover);
     if(hasHighlight) {
-        buttonAspect->mHighlightPanel = ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(highlight);
+        buttonAspect->mHighlightPanel = ToyMaker::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(highlight);
     }
     buttonAspect->mAnchor = anchor;
     buttonAspect->mTextScaleOverride = scale;
@@ -88,7 +88,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::create(const nlo
     return buttonAspect;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UIButton::clone() const {
     std::shared_ptr<UIButton> buttonAspect { std::make_shared<UIButton>() };
     buttonAspect->mStatePanels = mStatePanels;
     buttonAspect->mHighlightPanel = mHighlightPanel;
@@ -104,7 +104,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIButton::clone() const {
 }
 
 void UIButton::onActivated() {
-    std::shared_ptr<ToyMakersEngine::SimObject> textNode {getTextObject()};
+    std::shared_ptr<ToyMaker::SimObject> textNode {getTextObject()};
     UIText& textAspect { textNode->getAspect<UIText>() };
     textAspect.updateText(mTextOverride);
     textAspect.updateFont(mTextFontOverride);
@@ -228,20 +228,20 @@ void UIButton::recomputeTexture() {
     std::shared_ptr<NineSlicePanel>& basePanel { mStatePanels[mCurrentState] };
 
     // see how large the button text is
-    std::shared_ptr<ToyMakersEngine::SimObject> textObject { getTextObject() };
-    const std::shared_ptr<ToyMakersEngine::Texture> textTexture {
-        textObject->getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()->getMaterialHandles()[0]
+    std::shared_ptr<ToyMaker::SimObject> textObject { getTextObject() };
+    const std::shared_ptr<ToyMaker::Texture> textTexture {
+        textObject->getComponent<std::shared_ptr<ToyMaker::StaticModel>>()->getMaterialHandles()[0]
             ->getTextureProperty("textureAlbedo")
     };
     const glm::vec2 contentSize { textTexture->getWidth(), textTexture->getHeight() };
 
     // compute a new texture for our button panel based on the size of the text
-    std::shared_ptr<ToyMakersEngine::Texture> panelTexture{basePanel->generateTexture(contentSize)};
+    std::shared_ptr<ToyMaker::Texture> panelTexture{basePanel->generateTexture(contentSize)};
     const glm::vec2 panelSize { panelTexture->getWidth(), panelTexture->getHeight() };
     // update panel mesh as well
     const nlohmann::json rectangleParameters = {
-        {"type", ToyMakersEngine::StaticModel::getResourceTypeName()},
-        {"method", ToyMakersEngine::StaticModelRectangleDimensions::getResourceConstructorName()},
+        {"type", ToyMaker::StaticModel::getResourceTypeName()},
+        {"method", ToyMaker::StaticModelRectangleDimensions::getResourceConstructorName()},
         {"parameters", {
             {"width", panelSize.x}, {"height", panelSize.y},
             {"flip_texture_y", true},
@@ -249,45 +249,45 @@ void UIButton::recomputeTexture() {
         }}
     };
 
-    getSimObject().addOrUpdateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
-            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
+    getSimObject().addOrUpdateComponent<std::shared_ptr<ToyMaker::StaticModel>>(
+            ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::StaticModel>(rectangleParameters)
     );
 
     const glm::vec4 anchorPixelOffset {
         panelSize.x * (.5f - mAnchor.x), panelSize.y * (mAnchor.y - .5f),
         0.f, 0.f
     };
-    std::shared_ptr<ToyMakersEngine::StaticModel>  rectangle { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>() };
+    std::shared_ptr<ToyMaker::StaticModel>  rectangle { getComponent<std::shared_ptr<ToyMaker::StaticModel>>() };
     for(auto mesh: rectangle->getMeshHandles()) {
         for(auto iVertex{ mesh->getVertexListBegin() }, end {mesh->getVertexListEnd()}; iVertex != end; ++iVertex) {
             iVertex->mPosition += anchorPixelOffset;
         }
     }
-    updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(rectangle);
-    std::shared_ptr<ToyMakersEngine::Material> material { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()->getMaterialHandles()[0] };
+    updateComponent<std::shared_ptr<ToyMaker::StaticModel>>(rectangle);
+    std::shared_ptr<ToyMaker::Material> material { getComponent<std::shared_ptr<ToyMaker::StaticModel>>()->getMaterialHandles()[0] };
     material->updateTextureProperty("textureAlbedo", panelTexture);
     material->updateIntProperty("usesTextureAlbedo", true);
 
     if(mHighlightPanel) {
-        std::shared_ptr<ToyMakersEngine::SceneNode> highlightNode { getSimObject().getByPath("/highlight/") };
-        highlightNode->addOrUpdateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
-                ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
+        std::shared_ptr<ToyMaker::SceneNode> highlightNode { getSimObject().getByPath("/highlight/") };
+        highlightNode->addOrUpdateComponent<std::shared_ptr<ToyMaker::StaticModel>>(
+                ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::StaticModel>(rectangleParameters)
         );
-        std::shared_ptr<ToyMakersEngine::StaticModel> highlightRectangle { highlightNode->getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>() };
-        std::shared_ptr<ToyMakersEngine::Material> highlightMaterial { highlightRectangle->getMaterialHandles()[0] };
+        std::shared_ptr<ToyMaker::StaticModel> highlightRectangle { highlightNode->getComponent<std::shared_ptr<ToyMaker::StaticModel>>() };
+        std::shared_ptr<ToyMaker::Material> highlightMaterial { highlightRectangle->getMaterialHandles()[0] };
         for(auto mesh: highlightRectangle->getMeshHandles()) {
             for(auto iVertex{ mesh->getVertexListBegin() }, end {mesh->getVertexListEnd()}; iVertex != end; ++iVertex) {
                 iVertex->mPosition += anchorPixelOffset;
             }
         }
-        std::shared_ptr<ToyMakersEngine::Texture> highlightTexture { mHighlightPanel->generateTexture(contentSize) };
+        std::shared_ptr<ToyMaker::Texture> highlightTexture { mHighlightPanel->generateTexture(contentSize) };
         highlightMaterial->updateTextureProperty("textureAlbedo", highlightTexture);
         highlightMaterial->updateIntProperty("usesTextureAlbedo", true);
         highlightMaterial->updateVec4Property("colorMultiplier", mHighlightColor);
 
-        ToyMakersEngine::Placement highlightPlacement {};
+        ToyMaker::Placement highlightPlacement {};
         highlightPlacement.mPosition.z += 0.2f;
-        highlightNode->updateComponent<ToyMakersEngine::Placement>(highlightPlacement);
+        highlightNode->updateComponent<ToyMaker::Placement>(highlightPlacement);
     }
 
     // update text position accordingly
@@ -297,15 +297,15 @@ void UIButton::recomputeTexture() {
         .1f,
         1.f
     };
-    ToyMakersEngine::Placement textPlacement { textObject->getComponent<ToyMakersEngine::Placement>() };
+    ToyMaker::Placement textPlacement { textObject->getComponent<ToyMaker::Placement>() };
     textPlacement.mPosition = contentCenter;
     textObject->getAspect<UIText>().updateAnchor({.5f, .5f});
-    textObject->updateComponent<ToyMakersEngine::Placement>(textPlacement);
+    textObject->updateComponent<ToyMaker::Placement>(textPlacement);
 }
 
-std::shared_ptr<ToyMakersEngine::SimObject> UIButton::getTextObject() {
-    std::shared_ptr<ToyMakersEngine::SimObject> textNode {
-        getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>("/button_text/")
+std::shared_ptr<ToyMaker::SimObject> UIButton::getTextObject() {
+    std::shared_ptr<ToyMaker::SimObject> textNode {
+        getSimObject().getByPath<std::shared_ptr<ToyMaker::SimObject>>("/button_text/")
     };
     assert(textNode && textNode->hasAspect<UIText>() && "A node with the UIButton aspect requires a child node with a UIText aspect");
     return textNode;

@@ -13,7 +13,7 @@
 #include "render_stage.hpp"
 #include "camera_system.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
     struct RenderSet;
     using RenderSetID = uint32_t;
 

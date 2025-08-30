@@ -5,15 +5,15 @@
 #include <glm/gtx/string_cast.hpp>
 #include "ur_records.hpp"
 
-#include "../engine/sim_system.hpp"
+#include "toymaker/sim_system.hpp"
 
-class UrUIRecordsBrowser: public ToyMakersEngine::SimObjectAspect<UrUIRecordsBrowser> {
+class UrUIRecordsBrowser: public ToyMaker::SimObjectAspect<UrUIRecordsBrowser> {
 public:
     enum class Mode {
         BROWSE,
         DETAIL,
     };
-    UrUIRecordsBrowser(): ToyMakersEngine::SimObjectAspect<UrUIRecordsBrowser>{0} {}
+    UrUIRecordsBrowser(): ToyMaker::SimObjectAspect<UrUIRecordsBrowser>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "UrUIRecordsBrowser"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
@@ -36,22 +36,22 @@ private:
     void openDetailedRecord(uint32_t entry);
     void closeDetailedRecord();
 
-    bool onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
+    bool onCancel(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition);
 
-    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handleCancel { declareFixedActionBinding(
-        "General", "Cancel", [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    std::weak_ptr<ToyMaker::FixedActionBinding> handleCancel { declareFixedActionBinding(
+        "General", "Cancel", [this](const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
             return this->onCancel(actionData, actionDefinition);
         }
     )};
-    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handlerLeftRelease {
+    std::weak_ptr<ToyMaker::FixedActionBinding> handlerLeftRelease {
         declareFixedActionBinding(
-            "UI", "Untap", [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+            "UI", "Untap", [this](const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
                 return this->onCancel(actionData, actionDefinition);
             }
         )
     };
 public:
-    ToyMakersEngine::SignalObserver<const std::string&> mObserveButtonClicked {
+    ToyMaker::SignalObserver<const std::string&> mObserveButtonClicked {
         *this, "ButtonClickedObserved",
         [this](const std::string& button) { this->onButtonClicked(button); }
     };

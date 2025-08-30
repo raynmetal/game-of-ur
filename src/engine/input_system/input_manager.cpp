@@ -8,9 +8,9 @@
 #include "../window_context_manager.hpp"
 #include "input_system.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
-const std::map<InputSourceType, InputAttributesType> ToyMakersEngine::kInputSourceTypeAttributes {
+const std::map<InputSourceType, InputAttributesType> ToyMaker::kInputSourceTypeAttributes {
     {{DeviceType::MOUSE, ControlType::POINT}, {
         (2&InputAttributes::N_AXES)
         | InputAttributes::HAS_STATE_VALUE
@@ -846,7 +846,7 @@ void InputManager::unregisterInputCombos() {
     }
 }
 
-void ToyMakersEngine::to_json(nlohmann::json& json, const ToyMakersEngine::InputAttributesType& inputAttributes) {
+void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputAttributesType& inputAttributes) {
     json = {
         {"n_axes", (inputAttributes&InputAttributes::N_AXES)},
         {"has_negative", (inputAttributes&InputAttributes::HAS_NEGATIVE) > 0},
@@ -856,7 +856,7 @@ void ToyMakersEngine::to_json(nlohmann::json& json, const ToyMakersEngine::Input
         {"state_is_location", (inputAttributes&InputAttributes::STATE_IS_LOCATION) > 0},
     };
 }
-void ToyMakersEngine::from_json(const nlohmann::json& json, ToyMakersEngine::InputAttributesType& inputAttributes) {
+void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputAttributesType& inputAttributes) {
     inputAttributes = (
         json.at("n_axes").get<uint8_t>()
         | (json.at("has_negative").get<bool>()?
@@ -872,7 +872,7 @@ void ToyMakersEngine::from_json(const nlohmann::json& json, ToyMakersEngine::Inp
     );
 }
 
-void ToyMakersEngine::to_json(nlohmann::json& json, const ToyMakersEngine::InputSourceDescription& inputSourceDescription) {
+void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputSourceDescription& inputSourceDescription) {
     json = {
         {"device_type", inputSourceDescription.mDeviceType},
         {"control_type", inputSourceDescription.mControlType},
@@ -880,7 +880,7 @@ void ToyMakersEngine::to_json(nlohmann::json& json, const ToyMakersEngine::Input
         {"control", inputSourceDescription.mControl},
     };
 }
-void ToyMakersEngine::from_json(const nlohmann::json& json, ToyMakersEngine::InputSourceDescription& inputSourceDescription) {
+void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputSourceDescription& inputSourceDescription) {
     json.at("device_type").get_to(inputSourceDescription.mDeviceType);
     json.at("device").get_to(inputSourceDescription.mDevice);
     json.at("control_type").get_to(inputSourceDescription.mControlType);
@@ -889,18 +889,18 @@ void ToyMakersEngine::from_json(const nlohmann::json& json, ToyMakersEngine::Inp
     inputSourceDescription.mAttributes = kInputSourceTypeAttributes.at(inputSourceType);
 }
 
-void ToyMakersEngine::to_json(nlohmann::json& json, const ToyMakersEngine::InputFilter& inputFilter) {
+void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputFilter& inputFilter) {
     json = {
         {"input_source", inputFilter.mControl},
         {"filter", inputFilter.mAxisFilter},
     };
 }
-void ToyMakersEngine::from_json(const nlohmann::json& json, ToyMakersEngine::InputFilter& inputFilter) {
+void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputFilter& inputFilter) {
     json.at("input_source").get_to(inputFilter.mControl);
     json.at("filter").get_to(inputFilter.mAxisFilter);
 }
 
-void ToyMakersEngine::to_json(nlohmann::json& json, const ToyMakersEngine::InputCombo& inputCombo) {
+void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputCombo& inputCombo) {
     json = {
         {"trigger", inputCombo.mTrigger},
         {"main_control", inputCombo.mMainControl},
@@ -910,7 +910,7 @@ void ToyMakersEngine::to_json(nlohmann::json& json, const ToyMakersEngine::Input
         {"threshold", inputCombo.mThreshold},
     };
 }
-void ToyMakersEngine::from_json(const nlohmann::json& json, ToyMakersEngine::InputCombo& inputCombo) {
+void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputCombo& inputCombo) {
     json.at("main_control").get_to(inputCombo.mMainControl);
     json.at("modifier_1").get_to(inputCombo.mModifier1);
     json.at("modifier_2").get_to(inputCombo.mModifier2);
@@ -919,14 +919,14 @@ void ToyMakersEngine::from_json(const nlohmann::json& json, ToyMakersEngine::Inp
     json.at("threshold").get_to(inputCombo.mThreshold);
 }
 
-void ToyMakersEngine::to_json(nlohmann::json& json, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::ActionDefinition& actionDefinition) {
     json = {
         {"name", actionDefinition.mName},
         {"attributes", actionDefinition.mAttributes},
         {"value_type", actionDefinition.mValueType},
     };
 }
-void ToyMakersEngine::from_json(const nlohmann::json& json, ToyMakersEngine::ActionDefinition& actionDefinition) {
+void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::ActionDefinition& actionDefinition) {
     json.at("name").get_to(actionDefinition.mName);
     json.at("attributes").get_to(actionDefinition.mAttributes);
     json.at("value_type").get_to(actionDefinition.mValueType);

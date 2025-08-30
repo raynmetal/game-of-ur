@@ -1,7 +1,7 @@
 #include "nine_slice_panel.hpp"
 #include "ui_panel.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIPanel::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UIPanel::create(const nlohmann::json& jsonAspectProperties) {
     const std::string panelResourceName {
         jsonAspectProperties.at("panel_resource_name").get<std::string>()
     };
@@ -18,7 +18,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIPanel::create(const nloh
         jsonAspectProperties.at("content_size")[1].get<float>(),
     };
 
-    std::shared_ptr<NineSlicePanel> panel { ToyMakersEngine::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelResourceName) };
+    std::shared_ptr<NineSlicePanel> panel { ToyMaker::ResourceDatabase::GetRegisteredResource<NineSlicePanel>(panelResourceName) };
     std::shared_ptr<UIPanel> panelAspect { std::make_shared<UIPanel>() };
 
     panelAspect->mBasePanel = panel;
@@ -44,7 +44,7 @@ void UIPanel::updateBasePanel(std::shared_ptr<NineSlicePanel> newPanel) {
     recomputeTexture();
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UIPanel::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UIPanel::clone() const {
     std::shared_ptr<UIPanel> panelAspect { std::make_shared<UIPanel>() };
 
     panelAspect->mBasePanel = mBasePanel;
@@ -59,11 +59,11 @@ void UIPanel::onActivated() {
 }
 
 void UIPanel::recomputeTexture() {
-    std::shared_ptr<ToyMakersEngine::Texture> panelTexture { mBasePanel->generateTexture(mContentSize) };
+    std::shared_ptr<ToyMaker::Texture> panelTexture { mBasePanel->generateTexture(mContentSize) };
     const glm::vec2 panelDimensions { panelTexture->getWidth(), panelTexture->getHeight() };
     const nlohmann::json rectangleParameters = {
-        {"type", ToyMakersEngine::StaticModel::getResourceTypeName()},
-        {"method", ToyMakersEngine::StaticModelRectangleDimensions::getResourceConstructorName()},
+        {"type", ToyMaker::StaticModel::getResourceTypeName()},
+        {"method", ToyMaker::StaticModelRectangleDimensions::getResourceConstructorName()},
         {"parameters", {
             {"width", panelDimensions.x}, {"height", panelDimensions.y},
             {"flip_texture_y", true},
@@ -71,16 +71,16 @@ void UIPanel::recomputeTexture() {
         }}
     };
 
-    if(!hasComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()) {
-        addComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
-            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
+    if(!hasComponent<std::shared_ptr<ToyMaker::StaticModel>>()) {
+        addComponent<std::shared_ptr<ToyMaker::StaticModel>>(
+            ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::StaticModel>(rectangleParameters)
         );
     } else {
-        updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(
-            ToyMakersEngine::ResourceDatabase::ConstructAnonymousResource<ToyMakersEngine::StaticModel>(rectangleParameters)
+        updateComponent<std::shared_ptr<ToyMaker::StaticModel>>(
+            ToyMaker::ResourceDatabase::ConstructAnonymousResource<ToyMaker::StaticModel>(rectangleParameters)
         );
     }
-    std::shared_ptr<ToyMakersEngine::StaticModel> rectangle { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>() };
+    std::shared_ptr<ToyMaker::StaticModel> rectangle { getComponent<std::shared_ptr<ToyMaker::StaticModel>>() };
     for(auto mesh: rectangle->getMeshHandles()) {
         for(auto iVertex{ mesh->getVertexListBegin() }, end {mesh->getVertexListEnd()}; iVertex != end; ++iVertex) {
             iVertex->mPosition += glm::vec4{
@@ -91,8 +91,8 @@ void UIPanel::recomputeTexture() {
             };
         }
     }
-    updateComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>(rectangle);
-    std::shared_ptr<ToyMakersEngine::Material> material { getComponent<std::shared_ptr<ToyMakersEngine::StaticModel>>()->getMaterialHandles()[0] };
+    updateComponent<std::shared_ptr<ToyMaker::StaticModel>>(rectangle);
+    std::shared_ptr<ToyMaker::Material> material { getComponent<std::shared_ptr<ToyMaker::StaticModel>>()->getMaterialHandles()[0] };
     material->updateTextureProperty(
         "textureAlbedo",
         panelTexture

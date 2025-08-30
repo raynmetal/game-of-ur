@@ -7,7 +7,7 @@
 #include "core/ecs_world.hpp"
 #include "scene_components.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
     struct CameraProperties {
         enum class ProjectionType: uint8_t {

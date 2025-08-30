@@ -1,13 +1,13 @@
 #include "ur_scene_manager.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneManager::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrSceneManager::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<UrSceneManager> sceneManager { std::make_shared<UrSceneManager>() };
     sceneManager->mNextScene = jsonAspectProperties.at("initial_scene").get<std::string>();
     sceneManager->mAutoloads = jsonAspectProperties.at("autoloads").get<std::vector<std::string>>();
     return sceneManager;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrSceneManager::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrSceneManager::clone() const {
     std::shared_ptr<UrSceneManager> sceneManager { std::make_shared<UrSceneManager>() };
     sceneManager->mNextScene = mNextScene;
     sceneManager->mAutoloads = mAutoloads;
@@ -46,7 +46,7 @@ void UrSceneManager::loadScene_() {
 
     // as far as non-singleton scenes are concerned, this node is itself the root of the scene tree
     getSimObject().addNode(
-        ToyMakersEngine::ResourceDatabase::GetRegisteredResource<ToyMakersEngine::SimObject>(
+        ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::SimObject>(
             mNextScene
         ),
         "/"
@@ -62,15 +62,15 @@ void UrSceneManager::loadAutoloads() {
      */
     for(auto& autoload: mAutoloads) {
         // add autoloaded components to the (actual) root of the scene tree
-        std::shared_ptr<ToyMakersEngine::SimObject> autoloadedNode {
-            ToyMakersEngine
+        std::shared_ptr<ToyMaker::SimObject> autoloadedNode {
+            ToyMaker
                 ::ResourceDatabase
-                ::GetRegisteredResource<ToyMakersEngine::SimObject>(autoload)
+                ::GetRegisteredResource<ToyMaker::SimObject>(autoload)
         };
         getSimObject()
             .getWorld()
             .lock()
-            ->getSingletonSystem<ToyMakersEngine::SceneSystem>()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
             ->addNode(
                 autoloadedNode,"/"
         );
@@ -83,12 +83,12 @@ void UrSceneManager::activateAutoloads() {
      * get activated when they're attached to the real root
      */
     for(auto& autoload: mAutoloads) {
-        std::shared_ptr<ToyMakersEngine::SimObject> autoloadedNode {
-            ToyMakersEngine
+        std::shared_ptr<ToyMaker::SimObject> autoloadedNode {
+            ToyMaker
                 ::ResourceDatabase
-                ::GetRegisteredResource<ToyMakersEngine::SimObject>(autoload)
+                ::GetRegisteredResource<ToyMaker::SimObject>(autoload)
         };
-        autoloadedNode->setEnabled<ToyMakersEngine::SceneSystem>(true);
+        autoloadedNode->setEnabled<ToyMaker::SceneSystem>(true);
     }
     mAutoloadsActivated = true;
 }

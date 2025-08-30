@@ -3,7 +3,7 @@
 
 #include "spatial_query_system.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 std::vector<std::shared_ptr<SceneNodeCore>> SpatialQuerySystem::findNodesOverlapping(const Ray& searchRay) {
     const std::vector<std::pair<EntityID, AxisAlignedBounds>> intersectingEntityIDs { findEntitiesOverlapping(searchRay) };

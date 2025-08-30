@@ -19,7 +19,7 @@
 #include "scene_system.hpp"
 #include "signals.hpp"
 
-namespace ToyMakersEngine{
+namespace ToyMaker{
 
     class BaseSimObjectAspect;
     class SimObject;

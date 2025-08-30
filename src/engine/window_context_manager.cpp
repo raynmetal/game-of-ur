@@ -11,7 +11,7 @@
 
 #include "window_context_manager.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 WindowContext::WindowContext(const nlohmann::json& initialWindowConfiguration) {
     const int setHint{
