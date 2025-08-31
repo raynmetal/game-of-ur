@@ -92,8 +92,9 @@ namespace ToyMaker {
             GLuint textureID,
             const ColorBufferDefinition& colorBufferDefinition,
             const std::string& filepath=""
-        );    /*Copy construction*/
+        );
 
+        /*Copy construction*/
         Texture(const Texture& other);
         /*Copy assignment*/
         Texture& operator=(const Texture& other);
