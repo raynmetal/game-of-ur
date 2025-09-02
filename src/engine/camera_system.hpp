@@ -9,19 +9,72 @@
 
 namespace ToyMaker {
 
+    /**
+     * @brief Struct that encapsulates properties which define the (geometric) aspects of a scene camera.
+     * 
+     */
     struct CameraProperties {
+        /**
+         * @brief The type of projection used by this camera.
+         * 
+         */
         enum class ProjectionType: uint8_t {
-            FRUSTUM,
-            ORTHOGRAPHIC,
+
+            FRUSTUM, //< A frustum camera, or a camera whose view looks like a pyramid.  Objects further off appear smaller than objects close by.
+
+            ORTHOGRAPHIC, //< A camera where measurements along a dimension are the same regardless of how close or far an object is, where the view space looks like a cuboid.
         };
+
+        /**
+         * @brief The type of projection used by the camera.
+         * 
+         */
         ProjectionType mProjectionType { ProjectionType::FRUSTUM };
+
+        /**
+         * @brief (If ProjectionType::FRUSTUM) The vertical Field of View described by the camera, used to calculate mProjectMatrix
+         * 
+         */
         float mFov {45.f};
+
+        /**
+         * @brief The ratio of the x dimension to the y dimension of the screen or image associated with the camera.
+         * 
+         */
         float mAspect { 16.f/9.f };
+
+        /**
+         * @brief (If ProjectionType::ORTHOGRAPHIC) The dimensions, in scene units, of the screen face of the viewing volume of an orthographic camera.
+         * 
+         */
         glm::vec2 mOrthographicDimensions { 19.f, 12.f };
+
+        /**
+         * @brief The distance, in scene units, at which the near and far planes of the viewing volume of are located relative to the camera's origin.
+         * 
+         */
         glm::vec2 mNearFarPlanes { 100.f, -100.f };
+
+        /**
+         * @brief The projection matrix of the camera, computed based on its other properties.
+         * 
+         */
         glm::mat4 mProjectionMatrix {};
+
+        /**
+         * @brief The view matrix of the camera, which transforms all vertices from their world coordinates to their coordinates relative to the origin of the camera, where the camera faces down the -Z axis.
+         * 
+         */
         glm::mat4 mViewMatrix {};
 
+        /**
+         * @brief The component type string of the camera properties component.
+         * 
+         * @return std::string This object's component type string.
+         * 
+         * @see ECSWorld::registerComponentTypes()
+         * 
+         */
         inline static std::string getComponentTypeName() { return "CameraProperties"; }
     };
 
@@ -30,24 +83,96 @@ namespace ToyMaker {
         {CameraProperties::ProjectionType::ORTHOGRAPHIC, "orthographic"},
     });
 
+    /**
+     * @brief System responsible for managing all active cameras belonging to this world, tracking and updating associated projection and view matrices.
+     * 
+     */
     class CameraSystem: public System<CameraSystem, std::tuple<Transform, CameraProperties>, std::tuple<>> {
     public:
+        /**
+         * @brief Construct a new CameraSystem object
+         * 
+         * @param world The world to which this system belongs.
+         */
         explicit CameraSystem(std::weak_ptr<ECSWorld> world):
         System<CameraSystem, std::tuple<Transform, CameraProperties>, std::tuple<>>{world}
         {}
+
+        /**
+         * @brief Updates all matrices associated with active cameras in this world per their properties and positions.
+         *
+         */
         void updateActiveCameraMatrices();
+
+        /**
+         * @brief Returns the ECS system type string for this object.
+         * 
+         * @return std::string This system's ECS system type string.
+         * 
+         * @see ECSWorld::registerSystem()
+         */
         static std::string getSystemTypeName() { return "CameraSystem"; }
+
     private:
+        /**
+         * @brief Adds enabled entity to the projection update and view update queues.
+         * 
+         * @param entityID The enabled entity.
+         * 
+         * @see mProjectionUpdateQueue
+         * @see mViewUpdateQueue
+         */
         void onEntityEnabled(EntityID entityID) override;
+
+        /**
+         * @brief Removes extra entity related structures from system bookkeeping, if necessary.
+         * 
+         * @param entityID Entity being removed.
+         */
         void onEntityDisabled(EntityID entityID) override;
+
+        /**
+         * @brief Adds entity to projection and view update queues.
+         * 
+         * @param entityID The entity that was updated
+         */
         void onEntityUpdated(EntityID entityID) override;
+
+        /**
+         * @brief Initializes the CameraSystem, querying and adding all eligible entities to update queues.
+         * 
+         */
         void onSimulationActivated() override;
+
+        /**
+         * @brief The step in which new projection and view matrices are actually computed for all active cameras.
+         * 
+         * @param simulationProgress The progress since the end of the last simulation update to the start of the next one, as a number between 0 and 1.
+         */
         void onPreRenderStep(float simulationProgress) override;
 
+        /**
+         * @brief Entities whose camera properties were updated this frame, whose projection matrix should be recomputed as soon as possible.
+         * 
+         */
         std::set<EntityID> mProjectionUpdateQueue {};
+
+        /**
+         * @brief Entities whose position or rotation were updated this frame, whose view matrix should be recomputed as soon as possible.
+         * 
+         */
         std::set<EntityID> mViewUpdateQueue {};
     };
 
+    /**
+     * @brief Interpolation override for the camera properties struct, mainly using linear interpolation for each member
+     * 
+     * @tparam CameraProperties Specialization for the CameraProperties component.
+     * @param previousState The state of the component after the last simulation update.
+     * @param nextState The state of the component at the end of this simulation update.
+     * @param simulationProgress The progress towards the next simulation update state.
+     * @return CameraProperties The interpolated CameraProperties value.
+     */
     template<>
     inline CameraProperties Interpolator<CameraProperties>::operator() (
         const CameraProperties& previousState, const CameraProperties& nextState,

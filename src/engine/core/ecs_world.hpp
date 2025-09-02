@@ -316,6 +316,8 @@ namespace ToyMaker {
      * @brief A class that implements BaseComponentArray specializing it for a component of type `TComponent`.
      * 
      * @tparam TComponent The type of component the array is being made for.
+     * 
+     * @see ECSWorld::registerComponentTypes()
      */
     template<typename TComponent>
     class ComponentArray : public BaseComponentArray {
@@ -1018,6 +1020,8 @@ namespace ToyMaker {
      * @tparam TSystemDerived The derived class to this base class, as in CRTP.
      * @tparam TListenedForComponents A tuple of components that this system will listen for updates on for its active entities.
      * @tparam TRequiredComponents A tuple of components that indicate what an entity must have in order to be eligible for this system.
+     * 
+     * @see ECSWorld::registerSystem()
      */
     template <typename TSystemDerived, typename ...TListenedForComponents, typename ...TRequiredComponents>
     class System<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>: public BaseSystem {
@@ -1408,6 +1412,58 @@ namespace ToyMaker {
          * @brief Registers ComponentArrays for each type of component present in the component type list, if required.
          * 
          * @tparam TComponent The component type(s) being registered.
+         * 
+         * ## Usage:
+         * 
+         * ```c++
+         * 
+         * struct CameraProperties {
+         *     // ...
+         * 
+         *     // NOTE: Static method returning the name of this component.
+         *     static std::string getComponentTypeName() { return "CameraProperties"; }
+         * 
+         *     // ...
+         * };
+         * 
+         * // ...
+         * 
+         * // NOTE: methods for converting this component to and from JSON, so that the component can be used/defined in a scene file.
+         * inline void from_json(const nlohmann::json& json, CameraProperties& cameraProperties) {
+         *     assert(json.at("type").get<std::string>() == CameraProperties::getComponentTypeName() && "Type mismatch, json must be of camera properties type");
+         *     json.at("projection_mode").get_to(cameraProperties.mProjectionType);
+         *     json.at("fov").get_to(cameraProperties.mFov);
+         *     json.at("aspect").get_to(cameraProperties.mAspect);
+         *     json.at("orthographic_dimensions")
+         *         .at("horizontal")
+         *         .get_to(cameraProperties.mOrthographicDimensions.x);
+         *     json.at("orthographic_dimensions")
+         *         .at("vertical")
+         *         .get_to(cameraProperties.mOrthographicDimensions.y);
+         *     json.at("near_far_planes").at("near").get_to(cameraProperties.mNearFarPlanes.x);
+         *     json.at("near_far_planes").at("far").get_to(cameraProperties.mNearFarPlanes.y);
+         * }
+         * inline void to_json(nlohmann::json& json, const CameraProperties& cameraProperties) {
+         *     json = {
+         *         {"type", CameraProperties::getComponentTypeName()},
+         *         {"projection_mode", cameraProperties.mProjectionType},
+         *         {"fov", cameraProperties.mFov},
+         *         {"aspect", cameraProperties.mAspect},
+         *         {"orthographic_dimensions", {
+         *             {"horizontal", cameraProperties.mOrthographicDimensions.x},
+         *             {"vertical", cameraProperties.mOrthographicDimensions.y},
+         *         }},
+         *         {"near_far_planes", {
+         *             {"near", cameraProperties.mNearFarPlanes.x},
+         *             {"far", cameraProperties.mNearFarPlanes.y},
+         *         }}
+         *     };
+         * }
+         * 
+         * ```
+         * 
+         * @see ComponentArray<TComponent>
+         * 
          */
         template<typename ...TComponent>
         static void registerComponentTypes();
@@ -1426,8 +1482,11 @@ namespace ToyMaker {
          * @brief The partially specialized version of SystemRegistrationArgs, with its latter 2 template parameters being tuples of components.
          * 
          * @tparam TSystemDerived The new system which will derive System<TSystemDerived> as in CRTP.
+         * 
          * @tparam TListenedForComponents A tuple of component types which establish what component updates a system is interested in.
+         * 
          * @tparam TRequiredComponents A tuple of component types that an entity is required to have in order to be eligible for membership with a particular system.
+         * 
          */
         template <typename TSystemDerived, typename ...TListenedForComponents, typename ...TRequiredComponents>
         struct SystemRegistrationArgs<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>> {};
@@ -1440,9 +1499,43 @@ namespace ToyMaker {
          * 
          * Such a system has access to the project's ECS callbacks, and will be notified when any update to one of the entities it manages occurs.
          * 
+         * ## Usage:
+         * 
+         * ```c++
+         * 
+         * // NOTE: TSystem inherits from System<TSystem, std::tuple<TListenedForComponent_1, TListenedForComponent_2, ...>, std::tuple<TOtherRequiredComponent_1, TOtherRequiredComponent_2, ...>>
+         * class CameraSystem: public System<CameraSystem, std::tuple<Transform, CameraProperties>, std::tuple<>> {
+         * public:
+         *     // NOTE: implements static std::string getSystemTypeName()
+         *     static std::string getSystemTypeName() { return "CameraSystem"; }
+         *     
+         *     // ...
+         * 
+         * private:
+         * 
+         *     // ...
+         * 
+         *     // NOTE: (optional) may override base class virtual functions
+         *     void onEntityEnabled(EntityID entityID) override;
+         *     void onEntityDisabled(EntityID entityID) override;
+         *     void onEntityUpdated(EntityID entityID) override;
+         *     void onSimulationActivated() override;
+         *     void onPreRenderStep(float simulationProgress) override;
+         * 
+         *     // ...
+         * 
+         * };
+         * 
+         * ```
+         * 
          * @tparam TSystemDerived The new System being registered.
+         * 
          * @tparam TListenedForComponents A tuple of component types, indicating which component updates the system wants callbacks for.
+         * 
          * @tparam TRequiredComponents A tuple of component types, indicating what components an entity needs to be eligible for management by this system.
+         * 
+         * @see template <typename TSystemDerived, typename ...TListenedForComponents, typename ...TRequiredComponents> class System<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>
+         * 
          */
         template <typename TSystemDerived, typename ...TListenedForComponents, typename ...TRequiredComponents>
         static void registerSystem(SystemRegistrationArgs<TSystemDerived, std::tuple<TListenedForComponents...>, std::tuple<TRequiredComponents...>>);
