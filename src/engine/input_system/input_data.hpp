@@ -166,8 +166,8 @@ namespace ToyMaker {
          * Used mainly to ensure that when used in containers like maps, that different input sources are seen as unique.
          * 
          * @param other The other input source description, being compared to this one.
-         * @return true The input sources are different;
-         * @return false The input sources are the same;
+         * @retval true The input sources are different;
+         * @retval false The input sources are the same;
          */
         bool operator==(const InputSourceDescription& other) const {
             return !(*this < other) && !(other < *this);
@@ -179,8 +179,8 @@ namespace ToyMaker {
          * Also used for sorting.
          * 
          * @param other The input source description being compared to this one.
-         * @return true This input source is "less than";
-         * @return false The input source is not "less than"
+         * @retval true This input source is "less than";
+         * @retval false The input source is not "less than"
          */
         bool operator<(const InputSourceDescription& other) const {
             return (
@@ -203,8 +203,8 @@ namespace ToyMaker {
         /**
          * @brief Explicitly defines what are considered truthy and falsey values for this type.
          * 
-         * @return true At least one of mDeviceType or mControlType is defined;
-         * @return false Neither of mDeviceType or mControlType are defined;
+         * @retval true At least one of mDeviceType or mControlType is defined;
+         * @retval false Neither of mDeviceType or mControlType are defined;
          */
         operator bool() const {
             // Must have both a device type and a control type
@@ -272,8 +272,8 @@ namespace ToyMaker {
          * Mainly used in special containers (like maps), and for sorting algorithms.
          * 
          * @param other The input filter this one is being compared to.
-         * @return true If the filters are the same.
-         * @return false If the filters are not the same.
+         * @retval true If the filters are the same.
+         * @retval false If the filters are not the same.
          */
         bool operator==(const InputFilter& other) const {
             return !(*this < other) && !(other < *this);
@@ -283,8 +283,8 @@ namespace ToyMaker {
          * @brief A less than operator, mainly used for sorting and the equality operator.
          * 
          * @param other The filter this one is being compared to.
-         * @return true If this filter is "less than"
-         * @return false If this filter is not "less than"
+         * @retval true If this filter is "less than"
+         * @retval false If this filter is not "less than"
          */
         bool operator<(const InputFilter& other) const {
             return (
@@ -301,8 +301,8 @@ namespace ToyMaker {
         /**
          * @brief Provides explicit truthy-falsey mapping for this struct
          * 
-         * @return true If this object describes a valid input;
-         * @return false If this object does not describe a valid input
+         * @retval true If this object describes a valid input;
+         * @retval false If this object does not describe a valid input
          * 
          * @see InputSourceDescription::operator bool()
          */
@@ -314,7 +314,7 @@ namespace ToyMaker {
     /**
      * @brief An input combo that whose value is recorded and mapped to an (axis of an) action value of some kind.
      * 
-     * These objects are used to inform the InputSystem what inputs are being listened for, how these inputs relate to each other, and what event should trigger an Action update.
+     * These objects are used to inform the InputManager what inputs are being listened for, how these inputs relate to each other, and what event should trigger an Action update.
      * 
      * At the time of writing, each combo supports one "main control" and two "modifier controls", each of which is taken to be one axis of one control of one device.
      * 
@@ -376,8 +376,8 @@ namespace ToyMaker {
         /**
          * @brief An explicit definition for what set of InputCombo values are considered truthy and which ones are falsey.
          * 
-         * @return true An input combo corresponding to a real input source;
-         * @return false An input combo which is invalid, and therefore "falsey";
+         * @retval true An input combo corresponding to a real input source;
+         * @retval false An input combo which is invalid, and therefore "falsey";
          */
         operator bool() const {
             return mMainControl;
@@ -387,8 +387,8 @@ namespace ToyMaker {
          * @brief Compares to InputCombos for equality, for use in certain containers like maps.
          * 
          * @param other The combo this one is being compared to.
-         * @return true The combos are equivalent.
-         * @return false The combos are not equivalent.
+         * @retval true The combos are equivalent.
+         * @retval false The combos are not equivalent.
          */
         bool operator==(const InputCombo& other) const {
             return !(*this < other) && !(other < *this);
@@ -398,8 +398,8 @@ namespace ToyMaker {
          * @brief Mainly supports the equality operator, and allows sorting for InputCombos to work.
          * 
          * @param other The combo this one is being compared to.
-         * @return true The combos are equivalent;
-         * @return false The combos are not equivalent;
+         * @retval true The combos are equivalent;
+         * @retval false The combos are not equivalent;
          */
         bool operator<(const InputCombo& other) const {
             return (
@@ -480,7 +480,7 @@ namespace ToyMaker {
     /**
     * @brief The definition of a single action, including whether it represents state or change, whether it supports negative values, and the number of axes it has.
     * 
-    * The only parts of the definition used for comparisons is the action's name and context;  its input attributes are mainly used internally, by the InputSystem itself.
+    * The only parts of the definition used for comparisons is the action's name and context;  its input attributes are mainly used internally, by the InputManager itself.
     */
     struct ActionDefinition {
         /**
@@ -532,8 +532,8 @@ namespace ToyMaker {
          * ... Just on the basis of their action and context names.  Mainly in order to make them a unique key in a map container.
          * 
          * @param other The action definition this one is being compared to.
-         * @return true They're the same;
-         * @return false They're not the same;
+         * @retval true They're the same;
+         * @retval false They're not the same;
          */
         inline bool operator==(const ActionDefinition& other) const {
             return !(*this < other) && !(other < *this);
@@ -543,8 +543,8 @@ namespace ToyMaker {
          * @brief Provides an implementation of the less than operator, mainly for use by the equality operator.
          * 
          * @param other The action definition this one is being compared to.
-         * @return true This one is lesser than the other.
-         * @return false This one is greater than the other.
+         * @retval true This one is lesser than the other.
+         * @retval false This one is greater than the other.
          */
         inline bool operator<(const ActionDefinition& other) const {
             return (mContext < other.mContext || (

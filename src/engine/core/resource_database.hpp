@@ -157,7 +157,7 @@ namespace ToyMaker {
      * 
      * Also holds a list of resource definitions.  When an attempt is made to retrieve a resource by its name, a copy of a reference to it is returned if it exists in memory, or the resource is constructed per the parameters stored in its description.
      * 
-     * # Usage:
+     * ## Usage:
      * 
      * A resource description of a known resource might look something like this:
      * 
@@ -234,8 +234,8 @@ namespace ToyMaker {
          * @brief Tests whether the description of a particular named resource exists in this project's ResourceDatabase.
          * 
          * @param resourceName The name of the resource whose registration is being tested.
-         * @return true If a description for this Resource exists;
-         * @return false If no description for this Resource exists;
+         * @retval true If a description for this Resource exists;
+         * @retval false If no description for this Resource exists;
          */
         static bool HasResourceDescription(const std::string& resourceName);
 
@@ -244,8 +244,8 @@ namespace ToyMaker {
          * 
          * @tparam TResource The type of resource whose existence is being tested.
          * @param resourceName The name of the resource.
-         * @return true If the resource is in memory;
-         * @return false If the resource isn't in memory;
+         * @retval true If the resource is in memory;
+         * @retval false If the resource isn't in memory;
          */
         template <typename TResource>
         static bool HasResource(const std::string& resourceName);
@@ -324,7 +324,7 @@ namespace ToyMaker {
      * 
      * References to a Resource are ultimately returned as shared pointers the the immediate subclass of this class.
      * 
-     * # Usage:
+     * ## Usage:
      * 
      * A class that wishes to be seen by the ResourceDatabase should have the following signature:
      * 
@@ -429,7 +429,7 @@ namespace ToyMaker {
      * 
      * Each method that results in a Texture implements ResourceConstructor, and is recorded in the Resource's ResourceFactory, which is in turn used by a ResourceDatabase.
      * 
-     * # Usage
+     * ## Usage
      * 
      * An example of a ResourceConstructor definition is given below:
      * 

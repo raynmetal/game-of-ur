@@ -915,8 +915,10 @@ bool ViewportNode::handleAction(std::pair<ActionDefinition, ActionData> pendingA
     bool actionHandled { false };
     actionHandled =  mActionDispatch.dispatchAction(pendingAction);
 
+    // Prevent propagation to descendant viewports if flowthrough is disallowed.
     if(!mActionFlowthrough) return actionHandled;
 
+    // Propagate action to descendants.
     for(std::shared_ptr<ViewportNode> child: mChildViewports) {
         if(child->isActive()) {
             bool childHandledAction { child->handleAction(pendingAction) };

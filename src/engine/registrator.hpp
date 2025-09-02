@@ -6,7 +6,7 @@ namespace ToyMaker {
     /**  
      *  Forces implementation of static function `registerSelf()` using CRTP, called here.
      * 
-     * ## Usage:
+     * ### Usage:
         ```c++
         class YourClass {
             // ... the rest of your class definition

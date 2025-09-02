@@ -194,8 +194,8 @@ namespace ToyMaker {
          * @brief Tests whether this array has an entry for this entity
          * 
          * @param entityID The entity whose component is being queried
-         * @return true The component is present;
-         * @return false The component is absent;
+         * @retval true The component is present;
+         * @retval false The component is absent;
          */
         virtual bool hasComponent(EntityID entityID) const=0;
 
@@ -374,9 +374,9 @@ namespace ToyMaker {
          * 
          * @param entityID The entity being tested.
          * 
-         * @return true Component belonging to the entity is present;
+         * @retval true Component belonging to the entity is present;
          * 
-         * @return false Component belonging to the entity is absent;
+         * @retval false Component belonging to the entity is absent;
          */
         bool hasComponent(EntityID entityID) const override;
 
@@ -615,8 +615,8 @@ namespace ToyMaker {
          * 
          * @tparam TComponent The type of component whose existence is being tested.
          * @param entityID The entity being queried.
-         * @return true The component is present;
-         * @return false The component is absent;
+         * @retval true The component is present;
+         * @retval false The component is absent;
          * 
          * @see bool hasComponent(EntityID entityID, const std::string& type)
          */
@@ -628,8 +628,8 @@ namespace ToyMaker {
          * 
          * @param entityID The entity being queried.
          * @param type The component type string of the component whose existence is being tested.
-         * @return true The component is present;
-         * @return false The component is absent;
+         * @retval true The component is present;
+         * @retval false The component is absent;
          * 
          * @see template <typename TComponent> bool hasComponent(EntityID entityID) const
          */
@@ -781,8 +781,8 @@ namespace ToyMaker {
         /**
          * @brief A method to query whether a particular System is a singleton, or is instantiated for each world in the project.
          * 
-         * @return true This system is a singleton, and manages entities across worlds;
-         * @return false This system belongs to the world it is a part of, and is instantiated once for each world;
+         * @retval true This system is a singleton, and manages entities across worlds;
+         * @retval false This system belongs to the world it is a part of, and is instantiated once for each world;
          */
         virtual bool isSingleton() const { return false; }
     protected:
@@ -821,8 +821,8 @@ namespace ToyMaker {
          * @brief Tests whether a particular entity is active for this system.
          * 
          * @param entityID The entity being queried.
-         * @return true Indicates that the entity is influenced by this system;
-         * @return false Indicates that the entity is not influenced by this system;
+         * @retval true Indicates that the entity is influenced by this system;
+         * @retval false Indicates that the entity is not influenced by this system;
          */
         bool isEnabled(EntityID entityID) const;
 
@@ -830,8 +830,8 @@ namespace ToyMaker {
          * @brief Tests whether a particular entity can be influenced by this system.
          * 
          * @param entityID The entity being queried.
-         * @return true Indicates that the entity's component signature matches this system's component signature;
-         * @return false Indicates that the component signatures do not match;
+         * @retval true Indicates that the entity's component signature matches this system's component signature;
+         * @retval false Indicates that the component signatures do not match;
          */
         bool isRegistered(EntityID entityID) const;
 
@@ -1189,8 +1189,8 @@ namespace ToyMaker {
          * 
          * @tparam TSystem The system being queried.
          * @param entityID The entity whose activation is being tested.
-         * @return true Indicates the entity is active;
-         * @return false Indicates the entity is inactive;
+         * @retval true Indicates the entity is active;
+         * @retval false Indicates the entity is inactive;
          */
         template<typename TSystem>
         bool isEnabled(EntityID entityID);
@@ -1200,8 +1200,8 @@ namespace ToyMaker {
          * 
          * @tparam TSystem The system being queried.
          * @param entityID The entity whose compatibility is being tested.
-         * @return true Indicates the entity is eligible;
-         * @return false Indicates the entity is ineligible;
+         * @retval true Indicates the entity is eligible;
+         * @retval false Indicates the entity is ineligible;
          */
         template <typename TSystem>
         bool isRegistered(EntityID entityID);
@@ -1498,8 +1498,8 @@ namespace ToyMaker {
          * 
          * @tparam TSystem The system being queried.
          * @param entityID The entity whose activation is being tested.
-         * @return true Indicates that the entity is enabled for a system;
-         * @return false Indicates that the entity is disabled for a system;
+         * @retval true Indicates that the entity is enabled for a system;
+         * @retval false Indicates that the entity is disabled for a system;
          */
         template <typename TSystem>
         bool isEnabled(EntityID entityID);
@@ -1509,8 +1509,8 @@ namespace ToyMaker {
          * 
          * @tparam TSystem The system being queried.
          * @param entityID The entity whose eligibility is being tested.
-         * @return true Indicates the entity is eligible;
-         * @return false Indicates the entity is ineligible.
+         * @retval true Indicates the entity is eligible;
+         * @retval false Indicates the entity is ineligible.
          */
         template <typename TSystem>
         bool isRegistered(EntityID entityID);
@@ -1805,8 +1805,8 @@ namespace ToyMaker {
          * 
          * @tparam TComponent The type of component being tested.
          * @param entityID The entity being queried.
-         * @return true Indicates the entity has such a component;
-         * @return false Indicates the entity doesn't have such a component;
+         * @retval true Indicates the entity has such a component;
+         * @retval false Indicates the entity doesn't have such a component;
          * 
          * @see ComponentManager::hasComponent()
          */
@@ -1819,8 +1819,8 @@ namespace ToyMaker {
          * @param entityID The entity being queried.
          * @param typeName the component type string of the component being tested.
          * 
-         * @return true Indicates the entity has such a component;
-         * @return false Indicates the entity doesn't have such a component;
+         * @retval true Indicates the entity has such a component;
+         * @retval false Indicates the entity doesn't have such a component;
          * 
          * @see ComponentManager::updateComponent()
          */
@@ -2044,8 +2044,8 @@ namespace ToyMaker {
          * @brief Tests whether this entity has a particular component.
          * 
          * @tparam TComponent The type of component whose existence is being tested.
-         * @return true The component is present;
-         * @return false The component is absent;
+         * @retval true The component is present;
+         * @retval false The component is absent;
          * 
          * @see ECSWorld::hasComponent()
          */
@@ -2056,8 +2056,8 @@ namespace ToyMaker {
          * @brief Tests whether this entity has a particular component.
          * 
          * @param typeName The component type string of the component being tested.
-         * @return true The component is present;
-         * @return false The component is absent;
+         * @retval true The component is present;
+         * @retval false The component is absent;
          * 
          * @see ECSWorld::hasComponent()
          */
@@ -2099,8 +2099,8 @@ namespace ToyMaker {
          * @brief Tests whether this entity is enabled for a particular system.
          * 
          * @tparam TSystem The System being queried.
-         * @return true This entity is active on the system;
-         * @return false This entity is not active on the system;
+         * @retval true This entity is active on the system;
+         * @retval false This entity is not active on the system;
          * 
          * @see ECSWorld::isEnabled()
          */
@@ -2111,8 +2111,8 @@ namespace ToyMaker {
          * @brief Tests whether this entity is eligible for participation with a given system.
          * 
          * @tparam TSystem The System being queried.
-         * @return true This entity fulfills participation prerequisites;
-         * @return false This entity fails participation prerequisites;
+         * @retval true This entity fulfills participation prerequisites;
+         * @retval false This entity fails participation prerequisites;
          * 
          * @see ECSWorld::isRegistered()
          */
