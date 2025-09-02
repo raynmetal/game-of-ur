@@ -580,25 +580,45 @@ namespace ToyMaker {
     class ActionDispatch {
     public:
         /**
-         * @brief Registers a handler for an action 
+         * @brief Registers a handler for an action.
          * 
-         * @param contextActionPair 
-         * @param actionHandler 
+         * @param contextActionPair The full name of the action.
+         * @param actionHandler A pointer to the action handler.
          */
         void registerActionHandler(const QualifiedActionName& contextActionPair, ::std::weak_ptr<IActionHandler> actionHandler);
+
+        /**
+         * @brief Removes a handler for a particular action.
+         * 
+         * @param contextActionPair The full name of the action.
+         * @param actionHandler A pointer to the action handler.
+         */
         void unregisterActionHandler(const QualifiedActionName& contextActionPair, ::std::weak_ptr<IActionHandler> actionHandler);
+
+        /**
+         * @brief Removes an action handler from all its subscribed actions.
+         * 
+         * @param actionHandler A pointer to the action handler.
+         */
         void unregisterActionHandler(::std::weak_ptr<IActionHandler> actionHandler);
 
+        /**
+         * @brief Sends data for an action to all of that action's registered handlers.
+         * 
+         * @param pendingAction The full action, including its definition and data.
+         * @retval true The action was handled by one of this ActionDispatch's subscribers.
+         * @retval false The action was not handled by any of this ActionDispatch's subscribers.
+         */
         bool dispatchAction(const ::std::pair<ActionDefinition, ActionData>& pendingAction);
 
     private:
 
         /**
-         * Pointers to all action handler instances waiting for a particular action
+         * @brief Pointers to all action handler instances waiting for a particular action.
+         * 
          */
         ::std::map<QualifiedActionName, ::std::set<::std::weak_ptr<IActionHandler>, ::std::owner_less<::std::weak_ptr<IActionHandler>>>, ::std::less<QualifiedActionName>> mActionHandlers {};
     };
-
 }
 
 #endif

@@ -12,8 +12,7 @@
 #include "core/resource_database.hpp"
 
 /**
- * NOTE: Since I'm packaging this as a static library, any premade resource type, resource constructor,
- * sim aspect type, or anything derived from a template ought to be included here.
+ * @note Since I'm packaging this as a static library, any premade resource type, resource constructor, sim aspect type, or anything derived from a template ought to be included here.
  */
 
 #include "window_context_manager.hpp"
