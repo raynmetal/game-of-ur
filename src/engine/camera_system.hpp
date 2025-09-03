@@ -12,6 +12,30 @@ namespace ToyMaker {
     /**
      * @brief Struct that encapsulates properties which define the (geometric) aspects of a scene camera.
      * 
+     * Its appearance in json is as follows:
+     * 
+     * ```json
+     * 
+     * {
+     *     "fov": 45.0,
+     *     "aspect": 0.0,
+     *     "orthographic_dimensions": {
+     *         "horizontal": 1366,
+     *         "vertical": 768
+     *     },
+     *     "near_far_planes": {
+     *         "near": -1000,
+     *         "far": 1000
+     *     },
+     *     "projection_mode": "orthographic",
+     *     "type": "CameraProperties"
+     * }
+     * 
+     * ```
+     * 
+     * 
+     * @see ECSWorld::registerComponentTypes()
+     * 
      */
     struct CameraProperties {
         /**
@@ -72,7 +96,6 @@ namespace ToyMaker {
          * 
          * @return std::string This object's component type string.
          * 
-         * @see ECSWorld::registerComponentTypes()
          * 
          */
         inline static std::string getComponentTypeName() { return "CameraProperties"; }

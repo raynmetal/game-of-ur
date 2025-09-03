@@ -108,9 +108,13 @@ namespace ToyMaker {
             std::size_t componentSize;
             switch(type) {
                 case GL_FLOAT:
+                    // fall through
                 case GL_INT:
+                    // fall through
                 case GL_UNSIGNED_INT:
                     componentSize = sizeof(GLfloat);
+                    break;
+
                 default:
                     assert(false && "Unrecognized or unsupported type");
             }

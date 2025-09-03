@@ -1,3 +1,13 @@
+/**
+ * @file light.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief A file that contains definitions for different types of lights, as components to entities, supported by the engine.
+ * @version 0.3.2
+ * @date 2025-09-03
+ * 
+ * 
+ */
+
 #ifndef FOOLSENGINE_LIGHT_H
 #define FOOLSENGINE_LIGHT_H
 
@@ -21,38 +31,167 @@
 namespace ToyMaker {
     struct LightEmissionData;
 
+    /**
+     * @brief A version of light data where the first element represents the light's position and direction, and the second represents its emission properties.
+     * 
+     */
     using LightPackedData = std::pair<std::pair<glm::vec4, glm::vec4>, LightEmissionData>;
 
+    /**
+     * @brief A struct, used as a component, describing the emissive properties of the light it represents per the Blinn-Phong shading model.
+     * 
+     * Its appearance in json might be as follows:
+     * 
+     * ```json
+     * 
+     * {
+     *    "ambient": [0.04, 0.1, 0.04],
+     *    "diffuse": [2.4, 8.7, 2.4],
+     *    "specular": [ 2.0, 2.0, 2.0],
+     *    "linearConst": 0.10,
+     *    "quadraticConst": 0.10,
+     *    "lightType": "point",
+     *    "type": "LightEmissionData"
+     * } 
+     * 
+     * ```
+     * 
+     * @see ECSWorld::registerComponentTypes()
+     * 
+     */
     struct LightEmissionData {
+        /**
+         * @brief Creates a directional source of light, which (in a scene) faces one direction and experiences no attenuation.
+         * 
+         * @param diffuse The diffuse component of a light per the Blinn-Phong model.
+         * 
+         * @param specular The specular component of a light per the Blinn-Phong model.
+         * 
+         * @param ambient The ambient component of a light per the Blinn-Phong model.
+         * 
+         * @return LightEmissionData The constructed light data object.
+         */
         static LightEmissionData MakeDirectionalLight(const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient);
+
+        /**
+         * @brief Creates a point source of light which has a position and experiences attenuation, but has no direction.
+         * 
+         * @param diffuse The diffuse component of the light per the Blinn-Phong model.
+         * @param specular The specular component of the light per the Blinn-Phong model.
+         * @param ambient The ambient component of the light per the Blinn-Phong model.
+         * @param linearConst The factor governing linear reduction in intensity of light with distance.
+         * @param quadraticConst The factor governing quadratic reduction in intensity of light with distance.
+         * @return LightEmissionData The constructed light data object.
+         */
         static LightEmissionData MakePointLight(const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient, float linearConst, float quadraticConst);
+
+        /**
+         * @brief Creates a spotlight which has a position, experiences attenuation, and has a direction.
+         * 
+         * @param diffuse The diffuse component of the light per the Blinn-Phong model.
+         * @param specular The specular component of the light per the Blinn-Phong model.
+         * @param ambient The ambient component of the light per the Blinn-Phong model.
+         * @param linearConst The factor governing linear reduction in intensity of light with distance.
+         * @param quadraticConst The factor governing quadratic reduction in intensity of light with distance.
+         * @param innerAngle The angle, in degrees, made by the inner cone of the spotlight (where intensity is strongest) relative to the direction vector of the light.
+         * @param outerAngle The angle, in degrees, made by the outer cone of the spotlight (beyond which no light is present) relative to the direction vector of the light.
+         * @return LightEmissionData The constructed light data object.
+         */
         static LightEmissionData MakeSpotLight(
             float innerAngle, float outerAngle, const glm::vec3& diffuse, const glm::vec3& specular, const glm::vec3& ambient,
             float linearConst, float quadraticConst
         );
 
+        /**
+         * @brief Integers representing different types of light sources.
+         * 
+         */
         enum LightType:int {
-            directional=0,
-            point=1,
-            spot=2
+            directional=0, //< No attenuation, no position, only direction
+            point=1, //< Has attenuation, has position, but no direction
+            spot=2, //< Has attenuation, position, and direction
         };
 
+        /**
+         * @brief The type of light described by this object.
+         * 
+         */
         LightType mType;
+
+        /**
+         * @brief The color of the diffuse component of the light represented by this object.
+         * 
+         * The diffuse color is what we would think of as "the color" of an object.  In light, it is the color of the light affecting object surfaces pointing towards the light source.
+         */
         glm::vec4 mDiffuseColor;
+
+        /**
+         * @brief The color of the specular component of the light represented by this object.
+         * 
+         * The specular color is the color on portions of the surface where light bounces off an object and towards the camera.
+         * 
+         */
         glm::vec4 mSpecularColor;
+
+        /**
+         * @brief The color of the ambient component of the light represented by this object.
+         * 
+         * Represents this source's contribution to indirect lighting affecting an object, reflected from other objects in the scene.  This factor just approximates indirect ambient light, and doesn't model real ambient lighting.
+         * 
+         */
         glm::vec4 mAmbientColor;
 
-        //Attenuation attributes
+
+        /**
+         * @brief A linear factor governing the attenuation in light intensity with distance from source, per the Blinn-Phong model.
+         * 
+         */
         GLfloat mDecayLinear;
+
+        /**
+         * @brief A quadractic factor governing the attenuation in light intensity with distance from source, per the Blinn-Phong model.
+         * 
+         */
         GLfloat mDecayQuadratic;
 
-        //Spotlight attributes
+
+        /**
+         * @brief The cos of the angle between the surface of the inner cone of a spot light (within which light intensity is highest), and the direction vector of the light.
+         * 
+         */
         GLfloat mCosCutoffInner;
+
+        /**
+         * @brief The cos of the angle between the surface of the outer cone of a spot light (beyond which light intensity drops to 0), and the direction vector of the light.
+         * 
+         */
         GLfloat mCosCutoffOuter;
 
+        /**
+         * @brief The computed radius of the light beyond which the light is no longer active, based on its emission data.
+         * 
+         * @see CalculateRadius
+         */
         GLfloat mRadius {0.f};
 
+        /**
+         * @brief A function that computes the cutoff radius for a light source based on its emissive properties.
+         * 
+         * @param diffuseColor The diffuse color of the light.
+         * @param decayLinear The linear factor governing light intensity decay.
+         * @param decayQuadratic The quadratic factor governing light intensity decay.
+         * @param intensityCutoff The nth fraction of the max intensity of the light beyond which the light is considered inactive.  Eg., intensityCutoff = 40.f => intensityAtRadius = maxIntensity/40.f.
+         * @return float 
+         */
         static float CalculateRadius(const glm::vec4& diffuseColor, float decayLinear, float decayQuadratic, float intensityCutoff);
+
+        /**
+         * @brief The component type string associated with this object.
+         * 
+         * @return std::string The component type string of this object.
+         * 
+         * @see ECSWorld::registerComponentTypes()
+         */
         inline static std::string getComponentTypeName() { return "LightEmissionData"; }
     };
 
@@ -205,6 +344,10 @@ namespace ToyMaker {
         }
     }
 
+    /**
+     * @brief The layout for built-in light sources when used as instance attributes.
+     * 
+     */
     static InstanceLayout LightInstanceLayout {{
         {"attrLightPlacement_mPosition", RUNTIME, 4, GL_FLOAT},
         {"attrLightPlacement_mDirection", RUNTIME, 4, GL_FLOAT},
@@ -221,6 +364,10 @@ namespace ToyMaker {
     }};
 
 
+    /**
+     * @brief The allocator associated with built in light sources used as attributes.
+     * 
+     */
     class LightInstanceAllocator : public BaseInstanceAllocator {
     public:
         LightInstanceAllocator(const std::vector<LightEmissionData>& lightEmissionDataList, const std::vector<glm::mat4>& lightModelMatrices);
@@ -232,6 +379,15 @@ namespace ToyMaker {
         std::vector<LightPackedData> mLightData;
     };
 
+    /**
+     * @brief Interpolates light emission properties between previous and next simulation states using linear interpolation.
+     * 
+     * @tparam Specialization for LightEmissionData.
+     * @param previousState The state of the light at the end of the last simulation step.
+     * @param nextState The state of the light at the end of this simulation step.
+     * @param simulationProgress Progress towards the new state from the old state, a number between 0.0 and 1.0
+     * @return LightEmissionData The interpolated light emission data.
+     */
     template<>
     inline LightEmissionData Interpolator<LightEmissionData>::operator() (
         const LightEmissionData& previousState,
