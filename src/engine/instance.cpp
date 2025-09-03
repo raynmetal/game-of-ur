@@ -123,6 +123,11 @@ void BuiltinModelMatrixAllocator::upload() {
 
     glGenBuffers(1, &mVertexBufferIndex);
     glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferIndex);
-        glBufferData(GL_ARRAY_BUFFER, mModelMatrices.size() * sizeof(glm::mat4), mModelMatrices.data(), GL_DYNAMIC_DRAW);
+        glBufferData(
+            GL_ARRAY_BUFFER,
+            mModelMatrices.size() * sizeof(glm::mat4),
+            mModelMatrices.data(),
+            GL_DYNAMIC_DRAW
+        );
     glBindBuffer(GL_ARRAY_BUFFER, 0);
 }

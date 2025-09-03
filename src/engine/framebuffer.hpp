@@ -1,3 +1,12 @@
+/**
+ * @file framebuffer.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief File containing wrapper over OpenGL Framebuffers and related objects.
+ * @version 0.3.2
+ * @date 2025-09-02
+ * 
+ */
+
 #ifndef FOOLSENGINE_FRAMEBUFFER_H
 #define FOOLSENGINE_FRAMEBUFFER_H
 
