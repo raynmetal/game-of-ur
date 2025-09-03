@@ -1,5 +1,5 @@
 /**
- * @file framebuffer.hpp
+ * @file toymaker/framebuffer.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief File containing wrapper over OpenGL Framebuffers and related objects.
  * @version 0.3.2

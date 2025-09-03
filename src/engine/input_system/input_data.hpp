@@ -1,5 +1,5 @@
 /**
- * @file input_data.hpp
+ * @file toymaker/input_system/input_data.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A collection of types used by the input system and any entities that have to interact with it.
  * @version 0.3.2

@@ -1,5 +1,5 @@
 /**
- * @file application.hpp
+ * @file toymaker/application.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Header for the engine's application class, which does project/application level initialization and cleanup before and after the game loop runs.
  * @version 0.3.2

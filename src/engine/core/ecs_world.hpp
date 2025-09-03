@@ -1,5 +1,5 @@
 /**
- * @file ecs_world.hpp
+ * @file toymaker/core/ecs_world.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief ToyMaker Engine's implementation of an ECS system
  * @version 0.3.2
