@@ -320,6 +320,28 @@ namespace ToyMaker {
     /**
      * @brief A material resource constructor which converts a material represented in JSON to its Material equivalent.
      * 
+     * Such a representation might look like this:
+     * 
+     * ```json
+     * 
+     * {
+     *     "name": "MyMaterial",
+     *     "type": "Material",
+     *     "method": "fromDescription",
+     * 
+     *     "parameters": {
+     *         "properties": [
+     *             {
+     *                 "name": "colorMultiplier",
+     *                 "type": "vec4",
+     *                 "value": [0.05, 0.05, 0.05, 1.0]
+     *             },
+     *         ],
+     *     }
+     * }
+     * 
+     * ```
+     * 
      */
     class MaterialFromDescription: public ResourceConstructor<Material, MaterialFromDescription> {
     public:
