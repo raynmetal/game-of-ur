@@ -256,6 +256,7 @@ namespace ToyMaker {
          * @brief Gets the constructor type string for this constructor.
          * 
          * @return std::string This object's constructor type string.
+         * 
          */
         inline static std::string getResourceConstructorName(){ return "fromDescription"; }
 
@@ -265,6 +266,7 @@ namespace ToyMaker {
          * @brief The method responsible for actually creating a StaticMesh.
          * 
          * @param methodParameters The StaticMesh's JSON description.
+         * 
          * @return std::shared_ptr<IResource> A handle to the constructed StaticMesh resource.
          */
         std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;

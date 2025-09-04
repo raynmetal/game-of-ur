@@ -1,3 +1,13 @@
+/**
+ * @file model.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Classes, constructors for this engine's representation of 3D models.
+ * @version 0.3.2
+ * @date 2025-09-04
+ * 
+ * 
+ */
+
 #ifndef FOOLSENGINE_MODEL_H
 #define FOOLSENGINE_MODEL_H
 
@@ -20,74 +30,153 @@
 #include "shader_program.hpp"
 #include "material.hpp"
 
-/*
- * A class that
- *  a) Loads models from their respective 3D model files
- *  b) Stores references to all the meshes used by the model
- *  c) Stores the hierarchical relationship between the meshes
- *  d) Stores material properties used by shaders for each mesh
- */
+
 namespace ToyMaker {
+
+    /**
+     * @brief This engine's representation of a single unrigged 3D model.
+     * 
+     * This object:
+     * 
+     *   - Stores references to all the meshes used by the model
+     * 
+     *   - Stores the hierarchical relationship between the meshes
+     * 
+     *   - Stores material properties used by shaders for each mesh
+     * 
+     * 
+     * @see toymaker/core/ecs_world_resource_ext.hpp
+     * 
+     */
     class StaticModel : public Resource<StaticModel>{
     public:
+        /**
+         * @brief Gets the resource type string for this object.
+         * 
+         * @return std::string This type's resource type string.
+         */
         inline static std::string getResourceTypeName() { return "StaticModel"; }
+
+        /**
+         * @brief Gets the component type string for this object.
+         * 
+         * @return std::string This type's component type string.
+         */
         inline static std::string getComponentTypeName() { return "StaticModel"; }
+
+        /**
+         * @brief Constructs a model out of a list of handles to meshes and materials.
+         * 
+         * Every mesh in the mesh list must have its material reference in the same index of the material list.
+         * 
+         * @param meshHandles List of meshes making up this model.
+         * @param materialHandles The materials corresponding to each mesh.
+         * 
+         */
         StaticModel(const std::vector<std::shared_ptr<StaticMesh>>& meshHandles, const std::vector<std::shared_ptr<Material>>& materialHandles);
 
-        /* Model destructor */
+        /** @brief Model destructor */
         ~StaticModel();
 
-        /* Move constructor */
+        /** @brief Move constructor */
         StaticModel(StaticModel&& other);
-        /* Copy constructor */
+        /** @brief Copy constructor */
         StaticModel(const StaticModel& other);
 
-        /* Move assignment */
+        /** @brief Move assignment */
         StaticModel& operator=(StaticModel&& other);
-        /* Copy assignment */
+        /** @brief Copy assignment */
         StaticModel& operator=(const StaticModel& other);
 
+        /**
+         * @brief Gets the list of StaticMeshes associated with this Model object.
+         * 
+         * @return std::vector<std::shared_ptr<StaticMesh>> This model's meshes.
+         */
         std::vector<std::shared_ptr<StaticMesh>> getMeshHandles() const;
+
+        /**
+         * @brief Gets the materials associated with this model object.
+         * 
+         * @return std::vector<std::shared_ptr<Material>> This model's materials.
+         */
         std::vector<std::shared_ptr<Material>> getMaterialHandles() const;
 
     private:
-        /*
-        * Meshes that make up this model
-        */
+        /**
+         * @brief The meshes that make up this model
+         */
         std::vector<std::shared_ptr<StaticMesh>> mMeshHandles {};
-        /*
-        * The materials that correspond to each mesh on this model
-        */
+        /**
+         * @brief The materials that correspond to each mesh on this model
+         * 
+         */
         std::vector<std::shared_ptr<Material>> mMaterialHandles {};
 
-        /* 
-        * Utility method for destroying resources associated with
-        * this model
-        */
+        /**
+         * @brief Utility method for destroying resources associated with this model
+         * 
+         */
         void free();
 
-        /*
-        * Utility method for taking resources from another instance of
-        * this class 
-        */
+        /**
+         * @brief Utility method for taking resources from another instance of this class 
+         * 
+         */
         void stealResources(StaticModel& other);
 
-        /*
-        * Utility method for deeply replicating resources from another 
-        * instance of this class
-        */
+        /**
+         * @brief Utility method for deeply replicating resources from another instance of this class
+         *
+         */
         void copyResources(const StaticModel& other);
 
+        /**
+         * @brief Destroys the resources associated with this object.
+         * 
+         */
         void destroyResource();
+
+        /**
+         * @brief Releases resources associated with this object so that they may be claimed by another part of the program.
+         * 
+         */
         void releaseResource();
     };
 
+    /**
+     * @brief A constructor method for StaticModels that loads such a model from its model file (w/ extensions such as .fbx, .obj, .gltf, and so on)
+     * 
+     * Such a resource's description in JSON might look like:
+     * 
+     * ```json
+
+     * ```
+     * 
+     */
     class StaticModelFromFile: public ResourceConstructor<StaticModel, StaticModelFromFile> {
     public:
+        /**
+         * @brief Creates a StaticModelFromFile object.
+         * 
+         */
         StaticModelFromFile();
+
+        /**
+         * @brief Gets the resource constructor type string for this constructor.
+         * 
+         * @return std::string This object's resource constructor type string.
+         */
         inline static std::string getResourceConstructorName() { return "fromFile"; }
 
     private:
+
+        /**
+         * @brief Creates a StaticModel resource based on its parameters.
+         * 
+         * @param methodParameters The parameters associated with this model object.
+         * @return std::shared_ptr<IResource> A reference to the constructed resource.
+         */
         std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
     };
 }
