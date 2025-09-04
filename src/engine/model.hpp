@@ -150,8 +150,33 @@ namespace ToyMaker {
      * Such a resource's description in JSON might look like:
      * 
      * ```json
-
+     * {
+     *     "method": "fromFile",
+     *     "name": "EagleModel_One",
+     *     "parameters": {
+     *         "path": "data/models/UrEagle.obj",
+     *         "material_overrides": {
+     *             "0": [
+     *                 {
+     *                     "name": "colorMultiplier",
+     *                     "type": "vec4",
+     *                     "value": [0.05, 0.05, 0.05, 1.0]
+     *                 }
+     *             ],
+     *             "1": [
+     *                 {
+     *                     "name": "colorMultiplier",
+     *                     "type": "vec4",
+     *                     "value": [0.05, 0.05, 0.05, 1.0]
+     *                 }
+     *             ]
+     *         }
+     *     },
+     *     "type": "StaticModel"
+     * }
      * ```
+     * 
+     * Where the `path` property is required and the `material_overrides` property may be left unspecified.  The number next to each material override represents the index of the mesh whose material is being overridden.
      * 
      */
     class StaticModelFromFile: public ResourceConstructor<StaticModel, StaticModelFromFile> {
@@ -175,6 +200,7 @@ namespace ToyMaker {
          * @brief Creates a StaticModel resource based on its parameters.
          * 
          * @param methodParameters The parameters associated with this model object.
+         * 
          * @return std::shared_ptr<IResource> A reference to the constructed resource.
          */
         std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
