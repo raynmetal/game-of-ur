@@ -722,6 +722,14 @@ namespace ToyMaker {
     private:
     };
 
+    /**
+     * @brief Render stage responsible for rendering any texture attached as source to the screen.
+     * 
+     * Expects as input a "renderSource" texture attachment.
+     * 
+     * Produces no output, but has the side effect of rendering to the window/screen per its configuration.
+     * 
+     */
     class ScreenRenderStage: public BaseRenderStage {
     public:
         ScreenRenderStage(const std::string& shaderFilepath):
