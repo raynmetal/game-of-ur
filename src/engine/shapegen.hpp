@@ -1,5 +1,5 @@
 /**
- * @file shapegen.hpp
+ * @file toymaker/shapegen.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains classes used to construct some common procedurally generated meshes and models.
  * @version 0.3.2
