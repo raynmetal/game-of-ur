@@ -1,3 +1,12 @@
+/**
+ * @file toymaker/scene_loading.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief A collection of ResourceConstructor classes responsible for loading a scene into the engine.
+ * @version 0.3.2
+ * @date 2025-09-06
+ * 
+ */
+
 #ifndef FOOLSENGINE_SCENELOADING_H
 #define FOOLSENGINE_SCENELOADING_H
 

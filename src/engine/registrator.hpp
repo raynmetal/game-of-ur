@@ -1,3 +1,13 @@
+/**
+ * @file toymaker/registrator.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains the definition for the Registrator<T> utility class, used anywhere that automatic registration of some kind during the static initialization phase of a program is required.
+ * @version 0.3.2
+ * @date 2025-09-06
+ * 
+ * 
+ */
+
 #ifndef FOOLSENGINE_REGISTRATOR_H
 #define FOOLSENGINE_REGISTRATOR_H
 

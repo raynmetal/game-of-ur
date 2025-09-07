@@ -1,5 +1,5 @@
 /**
- * @file render_system.hpp
+ * @file toymaker/render_system.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains definitions relating to the render system defined for this object.
  * @version 0.3.2

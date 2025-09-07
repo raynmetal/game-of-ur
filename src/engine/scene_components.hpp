@@ -1,5 +1,5 @@
 /**
- * @file scene_components.hpp
+ * @file toymaker/scene_components.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Stores structs and classes for common components used by the SceneSystem and other related Systems.
  * @version 0.3.2
