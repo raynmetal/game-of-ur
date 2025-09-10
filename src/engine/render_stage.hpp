@@ -57,7 +57,7 @@ namespace ToyMaker {
          * 
          * @param other The unit this one is being compared to
          * @retval true This unit has a lower sort key than the other.
-         * @return false This unit does not have a lower sort key than the other.
+         * @retval false This unit does not have a lower sort key than the other.
          */
         bool operator<(const OpaqueRenderUnit& other) const {
             return mSortKey < other.mSortKey;

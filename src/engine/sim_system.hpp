@@ -632,7 +632,7 @@ namespace ToyMaker{
          * 
          * @tparam TSimObjectAspect The type of aspect whose existence is being tested.
          * @retval true An aspect of the specified type exists;
-         * @return false No aspect of the type specified exists;
+         * @retval false No aspect of the type specified exists;
          */
         template <typename TSimObjectAspect>
         bool hasAspect() const;
@@ -792,7 +792,7 @@ namespace ToyMaker{
          * @brief Tests whether this aspect is attached to a SimObject.
          * 
          * @retval true This aspect is attached to a SimObject;
-         * @return false This aspect is untethered;
+         * @retval false This aspect is untethered;
          */
         inline bool isAttached() { return mState&AspectState::ATTACHED; }
 
@@ -800,7 +800,7 @@ namespace ToyMaker{
          * @brief Tests whether the SimObject this aspect is attached to is active on the SceneSystem and the SimSystem.
          * 
          * @retval true The underlying SimObject (and therefore this aspect) is active.
-         * @return false The underlying SimObject (and therefore this aspect) is inactive, or the SimObject does not exist.
+         * @retval false The underlying SimObject (and therefore this aspect) is inactive, or the SimObject does not exist.
          */
         inline bool isActive() { return mState&AspectState::ACTIVE; }
 
