@@ -12,22 +12,24 @@
 
 using namespace ToyMaker;
 
-// TODO: rewrite these through the JSON_SERIALIZE_ENUM 
-// macro provided by nlohmann json
+/** @todo Rewrite these through the JSON_SERIALIZE_ENUM macro provided by nlohmann json */
 const std::map<std::string, GLenum> kStringToFilter {
     {"linear", GL_LINEAR},
     {"nearest", GL_NEAREST},
 };
+/** @todo Rewrite these through the JSON_SERIALIZE_ENUM macro provided by nlohmann json */
 const std::map<GLenum, std::string> kFilterToString {
     {GL_LINEAR, "linear"},
     {GL_NEAREST, "nearest"},
 };
+/** @todo Rewrite these through the JSON_SERIALIZE_ENUM macro provided by nlohmann json */
 const std::map<std::string, GLenum> kStringToWrap {
     { "clamp-border", GL_CLAMP_TO_BORDER },
     { "clamp-edge", GL_CLAMP_TO_EDGE },
     { "repeat", GL_REPEAT },
     { "repeat-mirrored", GL_MIRRORED_REPEAT },
 };
+/** @todo Rewrite these through the JSON_SERIALIZE_ENUM macro provided by nlohmann json */
 const std::map<GLenum, std::string> kWrapToString {
     {GL_CLAMP_TO_BORDER, "clamp-border"},
     {GL_CLAMP_TO_EDGE, "clamp-edge"},
