@@ -1,5 +1,5 @@
 /**
- * @file toymaker/registrator.hpp
+ * @file registrator.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the definition for the Registrator<T> utility class, used anywhere that automatic registration of some kind during the static initialization phase of a program is required.
  * @version 0.3.2

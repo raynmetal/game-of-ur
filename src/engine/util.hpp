@@ -1,5 +1,5 @@
 /**
- * @file toymaker/util.hpp
+ * @file util.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains a couple of classes not tied to any part of the engine in particular, but useful to those parts all the same.
  * @version 0.3.2

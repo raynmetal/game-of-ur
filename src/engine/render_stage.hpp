@@ -1,5 +1,5 @@
 /**
- * @file toymaker/render_stage.hpp
+ * @file render_stage.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A file containing render stage related classes, this engine's representation of a single "step" in a graphics pipeline.
  * @version 0.3.2

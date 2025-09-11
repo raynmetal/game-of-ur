@@ -1,5 +1,5 @@
 /**
- * @file toymaker/spatial_query_octree.hpp
+ * @file spatial_query_octree.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Data structures, functions, and methods relating to the hierarchical organization and representation of spatial data.
  * @version 0.3.2

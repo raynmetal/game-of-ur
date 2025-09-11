@@ -1,5 +1,5 @@
 /**
- * @file toymaker/core/resource_database.hpp
+ * @file core/resource_database.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Headers relating to resources and their management for a given project. 
  * 

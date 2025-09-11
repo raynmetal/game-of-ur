@@ -1,5 +1,5 @@
 /**
- * @file toymaker/model.hpp
+ * @file model.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Classes, constructors for this engine's representation of 3D models.
  * @version 0.3.2

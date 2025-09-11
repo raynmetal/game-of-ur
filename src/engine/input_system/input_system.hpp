@@ -1,5 +1,5 @@
 /**
- * @file toymaker/input_system/input_system.hpp
+ * @file input_system/input_system.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief 
  * @version 0.3.2

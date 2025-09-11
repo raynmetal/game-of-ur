@@ -1,5 +1,5 @@
 /**
- * @file toymaker/spatial_query_basic_types.hpp
+ * @file spatial_query_basic_types.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Classes and structs representing data related to the engine's spatial query system (the precursor to a full-fledged physics system).
  * @version 0.3.2

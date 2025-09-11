@@ -1,5 +1,5 @@
 /**
- * @file toymaker/instance.hpp
+ * @file instance.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A wrapper over regular shader attributes intended to be used as "instance" attributes, i.e., ones that change after what would traditionally be one-or-more draw calls in the same render stage.
  * @version 0.3.2

@@ -1,5 +1,5 @@
 /**
- * @file toymaker/scene_system.hpp
+ * @file scene_system.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief System classes relating to the SceneSystem, which in some ways lies at the heart of the engine.
  * @version 0.3.2

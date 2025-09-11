@@ -1,5 +1,5 @@
 /**
- * @file toymaker/scene_loading.hpp
+ * @file scene_loading.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A collection of ResourceConstructor classes responsible for loading a scene into the engine.
  * @version 0.3.2

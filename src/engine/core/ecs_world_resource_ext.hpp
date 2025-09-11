@@ -1,5 +1,5 @@
 /**
- * @file toymaker/core/ecs_world_resource_ext.hpp
+ * @file core/ecs_world_resource_ext.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Header file that makes Resource objects useable as ECS components
  * @version 0.3.2

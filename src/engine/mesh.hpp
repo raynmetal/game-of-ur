@@ -1,5 +1,5 @@
 /**
- * @file toymaker/mesh.hpp
+ * @file mesh.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A file containing the ToyMaker::StaticMesh class and related structures.
  * @version 0.3.2

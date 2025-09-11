@@ -1,5 +1,5 @@
 /**
- * @file toymaker/spatial_query_math.hpp
+ * @file spatial_query_math.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Geometrical, mathematical functions and related structs used to answer some simple questions about shapes situated somewhere in the world.
  * 

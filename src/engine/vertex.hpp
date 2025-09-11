@@ -1,5 +1,5 @@
 /**
- * @file toymaker/vertex.hpp
+ * @file vertex.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains engine's built-in vertex definitions, along with their associated attribute locations in the engine's built-in shader programs.  A wrapper over OpenGL shader attributes.
  * @version 0.3.2

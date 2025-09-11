@@ -1,5 +1,5 @@
 /**
- * @file toymaker/text_render.hpp
+ * @file text_render.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Classes relating to the creation and use of fonts to render text.
  * @version 0.3.2

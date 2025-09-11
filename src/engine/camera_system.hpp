@@ -1,5 +1,5 @@
 /**
- * @file toymaker/camera_system.hpp
+ * @file camera_system.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains headers for the system and structs used by the engine's camera system.
  * @version 0.3.2

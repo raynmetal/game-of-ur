@@ -1,5 +1,5 @@
 /**
- * @file toymaker/sim_system.hpp
+ * @file sim_system.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Classes and structs relating to the SimSystem, the system responsible for providing some level of general scriptability to scene nodes from a game developer's point-of-view.
  * @version 0.3.2

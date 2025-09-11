@@ -1,5 +1,5 @@
 /**
- * @file toymaker/light.hpp
+ * @file light.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A file that contains definitions for different types of lights, as components to entities, supported by the engine.
  * @version 0.3.2

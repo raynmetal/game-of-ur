@@ -1,5 +1,5 @@
 /**
- * @file toymaker/material.hpp
+ * @file material.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Functions related to rendering materials.
  * @version 0.3.2

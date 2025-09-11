@@ -1,5 +1,5 @@
 /**
- * @file toymaker/signals.hpp
+ * @file signals.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Classes relating to this engine's implementation of signals.  Contains template classes used to define signal senders, receivers, and trackers.
  * @version 0.3.2

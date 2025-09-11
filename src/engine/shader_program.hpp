@@ -1,5 +1,5 @@
 /**
- * @file toymaker/shader_program.hpp
+ * @file shader_program.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A file containing class definitions for wrappers over OpenGL shader programs.
  * @version 0.3.2
