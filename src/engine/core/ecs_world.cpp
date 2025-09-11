@@ -4,7 +4,7 @@
 
 #include "ecs_world.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 WorldID ECSWorld::s_nextWorld { 0 };
 

@@ -1,11 +1,11 @@
 #include "ur_player_local.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> PlayerLocal::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> PlayerLocal::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<PlayerLocal> player { new PlayerLocal{} };
     player->mControllerPath = jsonAspectProperties.at("controller_path").get<std::string>();
     return player;
 }
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> PlayerLocal::clone() const  {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> PlayerLocal::clone() const  {
     std::shared_ptr<PlayerLocal> player { new PlayerLocal{} };
     player->mControllerPath = mControllerPath;
     return player;
@@ -14,7 +14,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> PlayerLocal::clone() const
 void PlayerLocal::onActivated() {
     assert(!mControls && "We shouldn't have controls assigned yet");
     mControls = (
-        ToyMakersEngine::ECSWorld::getSingletonSystem<ToyMakersEngine::SceneSystem>()
+        ToyMaker::ECSWorld::getSingletonSystem<ToyMaker::SceneSystem>()
             ->getByPath<UrController&>(mControllerPath + "@" + UrController::getSimObjectAspectTypeName()).createControls()
     );
     assert(mControls && "We should have controls assigned now");

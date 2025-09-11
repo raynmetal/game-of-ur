@@ -4,13 +4,13 @@
 #include "nlohmann/json.hpp"
 #include "ur_records.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrRecords::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrRecords::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<UrRecords> records { std::make_shared<UrRecords>() };
     records->mRecordsPath = jsonAspectProperties.at("records_path").get<std::string>();
     return records;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrRecords::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrRecords::clone() const {
     std::shared_ptr<UrRecords> records { std::make_shared<UrRecords>() };
     records->mLoadedRecords = mLoadedRecords;
     records->mRecordsPath = mRecordsPath;

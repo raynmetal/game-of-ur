@@ -1,13 +1,13 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
-#include "../engine/window_context_manager.hpp"
-#include "../engine/render_system.hpp"
+#include "toymaker/window_context_manager.hpp"
+#include "toymaker/render_system.hpp"
 
 #include "render_debug_viewer.hpp"
 
 
-bool RenderDebugViewer::onUpdateGamma(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+bool RenderDebugViewer::onUpdateGamma(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
     (void)actionDefinition; // prevent unused parameter warning
     getLocalViewport().updateGamma(
         getLocalViewport().getGamma() 
@@ -15,7 +15,7 @@ bool RenderDebugViewer::onUpdateGamma(const ToyMakersEngine::ActionData& actionD
     );
     return true;
 }
-bool RenderDebugViewer::onUpdateExposure(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+bool RenderDebugViewer::onUpdateExposure(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
     (void)actionDefinition; // prevent unused parameter warning
     getLocalViewport().updateExposure(
         getLocalViewport().getExposure()
@@ -23,24 +23,24 @@ bool RenderDebugViewer::onUpdateExposure(const ToyMakersEngine::ActionData& acti
     );
     return true;
 }
-bool RenderDebugViewer::onRenderNextTexture(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+bool RenderDebugViewer::onRenderNextTexture(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
     (void)actionData; // prevent unused parameter warning
     (void)actionDefinition; // prevent unused parameter warning
     getLocalViewport().viewNextDebugTexture();
     return true;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> RenderDebugViewer::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> RenderDebugViewer::clone() const {
     return std::shared_ptr<RenderDebugViewer>(new RenderDebugViewer {});
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> RenderDebugViewer::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> RenderDebugViewer::create(const nlohmann::json& jsonAspectProperties) {
     (void)jsonAspectProperties; // prevent unused parameter warning
     return std::shared_ptr<RenderDebugViewer>(new RenderDebugViewer {});
 }
 
 void RenderDebugViewer::printWindowProps() {
-    ToyMakersEngine::WindowContext& windowCtxManager { ToyMakersEngine::WindowContext::getInstance() };
+    ToyMaker::WindowContext& windowCtxManager { ToyMaker::WindowContext::getInstance() };
     std::cout << "Window State:\n"
         << "\tdisplay index: " << windowCtxManager.getDisplayID() << "\n"
         << "\ttitle: " << windowCtxManager.getTitle() << "\n"

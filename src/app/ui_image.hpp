@@ -1,10 +1,10 @@
 #ifndef ZOAPPUIIMAGE_H
 #define ZOAPPUIIMAGE_H
 
-#include "../engine/sim_system.hpp"
-#include "../engine/texture.hpp"
+#include "toymaker/sim_system.hpp"
+#include "toymaker/texture.hpp"
 
-class UIImage: public ToyMakersEngine::SimObjectAspect<UIImage> {
+class UIImage: public ToyMaker::SimObjectAspect<UIImage> {
 public:
     UIImage(): SimObjectAspect<UIImage>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "UIImage"; }

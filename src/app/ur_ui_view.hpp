@@ -1,15 +1,15 @@
 #ifndef ZOAPPURUIVIEW_H
 #define ZOAPPURUIVIEW_H
 
-#include "../engine/sim_system.hpp"
-#include "../engine/signals.hpp"
-#include "../engine/text_render.hpp"
+#include "toymaker/sim_system.hpp"
+#include "toymaker/signals.hpp"
+#include "toymaker/text_render.hpp"
 
 #include "game_of_ur_data/model.hpp"
 
-class UrUIView: public ToyMakersEngine::SimObjectAspect<UrUIView> {
+class UrUIView: public ToyMaker::SimObjectAspect<UrUIView> {
 public:
-    UrUIView(): ToyMakersEngine::SimObjectAspect<UrUIView>{0} {}
+    UrUIView(): ToyMaker::SimObjectAspect<UrUIView>{0} {}
 
     inline static std::string getSimObjectAspectTypeName() { return "UrUIView"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
@@ -36,7 +36,7 @@ private:
         TRANSITION,
     };
 
-    std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrController {};
+    std::weak_ptr<ToyMaker::SimObject> mGameOfUrController {};
     std::string mControllerPath {};
     PlayerID mControlledBy {};
     Mode mMode { Mode::INTERACT };
@@ -60,65 +60,65 @@ private:
     void onViewUpdateStarted();
     void onMoveMade(MoveResultData moveData);
     void onControlInterface(PlayerID playerID);
-    bool onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition);
+    bool onCancel(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition);
 
-    std::shared_ptr<ToyMakersEngine::SimObject> getLaunchButton(PieceTypeID pieceTypeID, PlayerID player);
-    std::shared_ptr<ToyMakersEngine::SceneNode> getPlayerPanel(PlayerID player);
-    std::shared_ptr<ToyMakersEngine::SimObject> getEndTurnButton();
+    std::shared_ptr<ToyMaker::SimObject> getLaunchButton(PieceTypeID pieceTypeID, PlayerID player);
+    std::shared_ptr<ToyMaker::SceneNode> getPlayerPanel(PlayerID player);
+    std::shared_ptr<ToyMaker::SimObject> getEndTurnButton();
 
-    std::weak_ptr<ToyMakersEngine::FixedActionBinding> handleCancel { declareFixedActionBinding(
-        "General", "Cancel", [this](const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+    std::weak_ptr<ToyMaker::FixedActionBinding> handleCancel { declareFixedActionBinding(
+        "General", "Cancel", [this](const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
             return this->onCancel(actionData, actionDefinition);
         }
     )};
 public:
-    ToyMakersEngine::SignalObserver<const std::string&> mObserveButtonClicked {
+    ToyMaker::SignalObserver<const std::string&> mObserveButtonClicked {
         *this, "ButtonClickedObserved",
         [this](const std::string& button) { this->onButtonClicked(button); }
     };
 
-    ToyMakersEngine::SignalObserver<GamePhaseData> mObservePhaseUpdated {
+    ToyMaker::SignalObserver<GamePhaseData> mObservePhaseUpdated {
         *this, "PhaseUpdatedObserved",
         [this](GamePhaseData phaseData) { this->onPhaseUpdated(phaseData); }
     };
-    ToyMakersEngine::SignalObserver<GameScoreData> mObserveScoreUpdated {
+    ToyMaker::SignalObserver<GameScoreData> mObserveScoreUpdated {
         *this, "ScoreUpdatedObserved",
         [this](GameScoreData scoreData) { this->onScoreUpdated(scoreData); }
     };
-    ToyMakersEngine::SignalObserver<PlayerData> mObservePlayerUpdated {
+    ToyMaker::SignalObserver<PlayerData> mObservePlayerUpdated {
         *this, "PlayerUpdatedObserved",
         [this](PlayerData playerData) { this->onPlayerUpdated(playerData); }
     };
-    ToyMakersEngine::SignalObserver<DiceData> mObserveDiceUpdated {
+    ToyMaker::SignalObserver<DiceData> mObserveDiceUpdated {
         *this, "DiceUpdatedObserved",
         [this](DiceData diceData) { this->onDiceUpdated(diceData); }
     };
-    ToyMakersEngine::SignalObserver<MoveResultData> mObserveMoveMade {
+    ToyMaker::SignalObserver<MoveResultData> mObserveMoveMade {
         *this, "MoveMadeObserved",
         [this](MoveResultData moveData) { this->onMoveMade(moveData); }
     };
 
-    ToyMakersEngine::SignalObserver<PlayerID> mObserveControlInterface {
+    ToyMaker::SignalObserver<PlayerID> mObserveControlInterface {
         *this, "ControlInterfaceObserved",
         [this](PlayerID playerID) { this->onControlInterface(playerID); }
     };
 
-    ToyMakersEngine::Signal<> mSigDiceRollAttempted { *this, "DiceRollAttempted" };
-    ToyMakersEngine::Signal<> mSigNextTurnAttempted { *this, "NextTurnAttempted" };
-    ToyMakersEngine::Signal<PieceTypeID> mSigLaunchPieceInitiated { *this, "LaunchPieceInitiated" };
-    ToyMakersEngine::Signal<> mSigLaunchPieceCanceled { *this, "LaunchPieceCanceled" };
+    ToyMaker::Signal<> mSigDiceRollAttempted { *this, "DiceRollAttempted" };
+    ToyMaker::Signal<> mSigNextTurnAttempted { *this, "NextTurnAttempted" };
+    ToyMaker::Signal<PieceTypeID> mSigLaunchPieceInitiated { *this, "LaunchPieceInitiated" };
+    ToyMaker::Signal<> mSigLaunchPieceCanceled { *this, "LaunchPieceCanceled" };
 
-    ToyMakersEngine::SignalObserver<> mObserveControllerReady { 
+    ToyMaker::SignalObserver<> mObserveControllerReady { 
         *this, "ControllerReadyObserved",
         [this]() {this->onControllerReady();}
     };
-    ToyMakersEngine::Signal<std::string> mSigViewSubscribed {*this, "ViewSubscribed"};
+    ToyMaker::Signal<std::string> mSigViewSubscribed {*this, "ViewSubscribed"};
 
-    ToyMakersEngine::SignalObserver<> mObserveViewUpdateStarted { 
+    ToyMaker::SignalObserver<> mObserveViewUpdateStarted { 
         *this, "ViewUpdateStartedObserved",
         [this](){ this->onViewUpdateStarted(); }
     };
-    ToyMakersEngine::Signal<std::string> mSigViewUpdateCompleted {
+    ToyMaker::Signal<std::string> mSigViewUpdateCompleted {
         *this, "ViewUpdateCompleted"
     };
 };

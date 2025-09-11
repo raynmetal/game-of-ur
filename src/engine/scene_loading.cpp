@@ -4,7 +4,7 @@
 
 #include "scene_loading.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 std::shared_ptr<IResource> SceneFromFile::createResource(const nlohmann::json& sceneFileDescription) {
     std::string scenePath { sceneFileDescription.at("path").get<std::string>() };
@@ -121,10 +121,10 @@ std::shared_ptr<SimObject> SceneFromDescription::loadSceneNodes(const nlohmann::
                     node->setName(overrides.at("name").get<std::string>());
                 }
                 if(overrides.find("components") != overrides.end()) {
-                    overrideComponents(std::static_pointer_cast<ToyMakersEngine::SimObject>(node), overrides.at("components"));
+                    overrideComponents(std::static_pointer_cast<ToyMaker::SimObject>(node), overrides.at("components"));
                 }
                 if(overrides.find("aspects") != overrides.end()) {
-                    overrideAspects(std::static_pointer_cast<ToyMakersEngine::SimObject>(node), overrides.at("aspects"));
+                    overrideAspects(std::static_pointer_cast<ToyMaker::SimObject>(node), overrides.at("aspects"));
                 }
             }
         } else {

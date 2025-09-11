@@ -6,12 +6,12 @@
 #include "version.h"
 
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUIVersion::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIVersion::create(const nlohmann::json& jsonAspectProperties) {
     (void)jsonAspectProperties; // prevent unused parameter warnings
     return std::shared_ptr<UrUIVersion>{ new UrUIVersion{} };
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUIVersion::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIVersion::clone() const {
     return std::shared_ptr<UrUIVersion>{ new UrUIVersion{} };
 }
 

@@ -15,7 +15,7 @@
 
 #include "render_system.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 constexpr float MAX_GAMMA  { 3.f };
 constexpr float MIN_GAMMA { 1.6f };

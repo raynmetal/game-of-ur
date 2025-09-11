@@ -1,9 +1,9 @@
 #ifndef ZOAPPURSCENEVIEW_H
 #define ZOAPPURSCENEVIEW_H
 
-#include "../engine/sim_system.hpp"
-#include "../engine/signals.hpp"
-#include "../engine/text_render.hpp"
+#include "toymaker/sim_system.hpp"
+#include "toymaker/signals.hpp"
+#include "toymaker/text_render.hpp"
 
 #include "board_locations.hpp"
 #include "game_of_ur_data/model.hpp"
@@ -12,9 +12,9 @@ struct UrPieceAnimationKey;
 
 bool operator<(const UrPieceAnimationKey& one, const UrPieceAnimationKey& two);
 
-class UrSceneView: public ToyMakersEngine::SimObjectAspect<UrSceneView> {
+class UrSceneView: public ToyMaker::SimObjectAspect<UrSceneView> {
 public:
-    UrSceneView(): ToyMakersEngine::SimObjectAspect<UrSceneView>{0} {}
+    UrSceneView(): ToyMaker::SimObjectAspect<UrSceneView>{0} {}
 
     inline static std::string getSimObjectAspectTypeName() { return "UrSceneView"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
@@ -31,9 +31,9 @@ private:
     };
 
     std::map<PieceIdentity, std::string> mPieceModelMap {};
-    std::map<PieceIdentity, std::shared_ptr<ToyMakersEngine::SceneNode>> mPieceNodeMap {};
-    std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrController {};
-    std::weak_ptr<ToyMakersEngine::SimObject> mGameOfUrBoard {};
+    std::map<PieceIdentity, std::shared_ptr<ToyMaker::SceneNode>> mPieceNodeMap {};
+    std::weak_ptr<ToyMaker::SimObject> mGameOfUrController {};
+    std::weak_ptr<ToyMaker::SimObject> mGameOfUrBoard {};
     std::priority_queue<UrPieceAnimationKey> mAnimationKeys {};
     uint32_t mAnimationTimeMillis {};
 
@@ -55,45 +55,45 @@ private:
     void variableUpdate(uint32_t variableStepMillis) override;
 
 public:
-    ToyMakersEngine::SignalObserver<glm::u8vec2> mObserveBoardClicked { 
+    ToyMaker::SignalObserver<glm::u8vec2> mObserveBoardClicked { 
         *this, "BoardClickedObserved",
         [this](glm::u8vec2 boardLocation) { this->onBoardClicked(boardLocation); }
     };
-    ToyMakersEngine::SignalObserver<PieceTypeID> mObserveLaunchPieceInitiated {
+    ToyMaker::SignalObserver<PieceTypeID> mObserveLaunchPieceInitiated {
         *this, "LaunchPieceInitiatedObserved",
         [this](PieceTypeID pieceType) { this->onLaunchPieceInitiated(pieceType); }
     };
-    ToyMakersEngine::SignalObserver<> mObserveLaunchPieceCancelled {
+    ToyMaker::SignalObserver<> mObserveLaunchPieceCancelled {
         *this, "LaunchPieceCanceledObserved",
         [this]() { this->onLaunchPieceCanceled(); }
     };
-    ToyMakersEngine::SignalObserver<MoveResultData> mObserveMoveMade {
+    ToyMaker::SignalObserver<MoveResultData> mObserveMoveMade {
         *this, "MoveMadeObserved",
         [this](const MoveResultData& moveResultData) { this->onMoveMade(moveResultData); }
     };
-    ToyMakersEngine::SignalObserver<PlayerID> mObserveControlInterface {
+    ToyMaker::SignalObserver<PlayerID> mObserveControlInterface {
         *this, "ControlInterfaceObserved",
         [this](PlayerID playerID) { this->onControlInterface(playerID); }
     };
 
-    ToyMakersEngine::Signal<PieceTypeID, glm::u8vec2> mSigLaunchPieceAttempted {
+    ToyMaker::Signal<PieceTypeID, glm::u8vec2> mSigLaunchPieceAttempted {
         *this, "LaunchPieceAttempted"
     };
-    ToyMakersEngine::Signal<PieceIdentity> mSigMovePieceAttempted {
+    ToyMaker::Signal<PieceIdentity> mSigMovePieceAttempted {
         *this, "MovePieceAttempted"
     };
 
-    ToyMakersEngine::SignalObserver<> mObserveControllerReady {
+    ToyMaker::SignalObserver<> mObserveControllerReady {
         *this, "ControllerReadyObserved",
         [this]() {this->onControllerReady();}
     };
-    ToyMakersEngine::Signal<std::string> mSigViewSubscribed {*this, "ViewSubscribed"};
+    ToyMaker::Signal<std::string> mSigViewSubscribed {*this, "ViewSubscribed"};
 
-    ToyMakersEngine::SignalObserver<> mObserveViewUpdateStarted { 
+    ToyMaker::SignalObserver<> mObserveViewUpdateStarted { 
         *this, "ViewUpdateStartedObserved",
         [this](){ this->onViewUpdateStarted(); }
     };
-    ToyMakersEngine::Signal<std::string> mSigViewUpdateCompleted {
+    ToyMaker::Signal<std::string> mSigViewUpdateCompleted {
         *this, "ViewUpdateCompleted"
     };
 };
@@ -101,7 +101,7 @@ public:
 struct UrPieceAnimationKey {
     uint32_t mTime;
     PieceIdentity mPieceIdentity;
-    ToyMakersEngine::Placement mPlacement;
+    ToyMaker::Placement mPlacement;
     bool mRemove { false };
 };
 

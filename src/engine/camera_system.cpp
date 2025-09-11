@@ -4,7 +4,7 @@
 #include "scene_system.hpp"
 #include "camera_system.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 const float MAX_FOV {90.f};
 const float MIN_FOV {40.f};

@@ -6,13 +6,13 @@
 #include "ur_controller.hpp"
 
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrController::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrController::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<UrController> controller { new UrController{} };
     controller->mSceneManagerPath = jsonAspectProperties.at("scene_manager_path");
     return controller;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrController::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrController::clone() const {
     std::shared_ptr<UrController> controller { new UrController {} };
     controller->mSceneManagerPath = mSceneManagerPath;
     return controller;
@@ -35,7 +35,7 @@ void UrController::onViewUpdatesCompleted(const std::string& viewName) {
 
     if(mModel.getCurrentPhase().mGamePhase == GamePhase::END) {
         getSimObject().getWorld().lock()
-            ->getSingletonSystem<ToyMakersEngine::SceneSystem>()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
             ->getByPath<UrSceneManager&>(
                 mSceneManagerPath 
                 + "@"
@@ -107,7 +107,7 @@ void UrController::onMoveBoardPieceAttempted(PlayerID player, PieceIdentity piec
 
     if(mModel.getCurrentPhase().mGamePhase == GamePhase::END) {
         getSimObject().getWorld().lock()
-            ->getSingletonSystem<ToyMakersEngine::SceneSystem>()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
             ->getByPath<UrRecords&>(
                 "/ur_records/@UrRecords"
             ).submitRecord(

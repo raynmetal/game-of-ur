@@ -3,13 +3,13 @@
 
 #include <nlohmann/json.hpp>
 
-#include "../engine/sim_system.hpp"
-#include "../engine/signals.hpp"
+#include "toymaker/sim_system.hpp"
+#include "toymaker/signals.hpp"
 
 #include "interface_pointer_callback.hpp"
 #include "nine_slice_panel.hpp"
 
-class UIButton: public ToyMakersEngine::SimObjectAspect<UIButton>, public IHoverable, public ILeftClickable {
+class UIButton: public ToyMaker::SimObjectAspect<UIButton>, public IHoverable, public ILeftClickable {
 public:
     enum State: uint8_t {
         ACTIVE,
@@ -57,13 +57,13 @@ private:
     void updateButtonState(UIButton::State newState);
     void fireStateEvent();
 
-    std::shared_ptr<ToyMakersEngine::SimObject> getTextObject();
+    std::shared_ptr<ToyMaker::SimObject> getTextObject();
 public:
-    ToyMakersEngine::Signal<std::string> mSigButtonPressed { *this, "ButtonPressed" };
-    ToyMakersEngine::Signal<std::string> mSigButtonReleased { *this, "ButtonReleased" };
-    ToyMakersEngine::Signal<std::string> mSigButtonHoveredOver { *this, "ButtonHoveredOver" };
-    ToyMakersEngine::Signal<> mSigButtonActivated { *this, "ButtonActivated" };
-    ToyMakersEngine::Signal<> mSigButtonDeactivated { *this, "ButtonDeactivated" };
+    ToyMaker::Signal<std::string> mSigButtonPressed { *this, "ButtonPressed" };
+    ToyMaker::Signal<std::string> mSigButtonReleased { *this, "ButtonReleased" };
+    ToyMaker::Signal<std::string> mSigButtonHoveredOver { *this, "ButtonHoveredOver" };
+    ToyMaker::Signal<> mSigButtonActivated { *this, "ButtonActivated" };
+    ToyMaker::Signal<> mSigButtonDeactivated { *this, "ButtonDeactivated" };
 
 private:
     bool onPointerEnter(glm::vec4 pointerLocation) override;

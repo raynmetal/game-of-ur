@@ -5,7 +5,7 @@
 
 #include "material.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 Material* Material::defaultMaterial { nullptr };
 

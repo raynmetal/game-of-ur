@@ -3,11 +3,11 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
-#include "../engine/sim_system.hpp"
+#include "toymaker/sim_system.hpp"
 
-class UrSceneManager: public ToyMakersEngine::SimObjectAspect<UrSceneManager> {
+class UrSceneManager: public ToyMaker::SimObjectAspect<UrSceneManager> {
 public:
-    UrSceneManager(): ToyMakersEngine::SimObjectAspect<UrSceneManager>{0} {}
+    UrSceneManager(): ToyMaker::SimObjectAspect<UrSceneManager>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "UrSceneManager"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
@@ -27,7 +27,7 @@ private:
     bool mSwitchScenesThisFrame { false };
     bool mAutoloadsActivated { false };
 
-    std::vector<std::shared_ptr<ToyMakersEngine::SceneNodeCore>> mRemovedScene {};
+    std::vector<std::shared_ptr<ToyMaker::SceneNodeCore>> mRemovedScene {};
 };
 
 #endif

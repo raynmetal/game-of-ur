@@ -1,6 +1,6 @@
 #include "signals.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 SignalTracker::SignalTracker() = default;
 

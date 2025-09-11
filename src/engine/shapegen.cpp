@@ -12,7 +12,7 @@
 #include "mesh.hpp"
 #include "shapegen.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 std::array<glm::vec2, 24> getCubemapTextureCoordinates(ColorBufferDefinition::CubemapLayout cubemapLayout);
 

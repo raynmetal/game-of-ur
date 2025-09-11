@@ -1,20 +1,20 @@
 #include <algorithm>
 
-#include "../engine/spatial_query_math.hpp"
+#include "toymaker/spatial_query_math.hpp"
 
 #include "query_click.hpp"
 #include "interface_pointer_callback.hpp"
 
-ToyMakersEngine::Ray QueryClick::rayFromClickCoordinates(glm::vec2 clickCoordinates) {
-    const ToyMakersEngine::CameraProperties cameraProps { getComponent<ToyMakersEngine::CameraProperties>() };
-    const ToyMakersEngine::ObjectBounds bounds { getComponent<ToyMakersEngine::ObjectBounds>() };
+ToyMaker::Ray QueryClick::rayFromClickCoordinates(glm::vec2 clickCoordinates) {
+    const ToyMaker::CameraProperties cameraProps { getComponent<ToyMaker::CameraProperties>() };
+    const ToyMaker::ObjectBounds bounds { getComponent<ToyMaker::ObjectBounds>() };
     const glm::vec3 cameraPosition { bounds.getComputedWorldPosition() };
     const glm::quat cameraOrientation { bounds.getComputedWorldOrientation() };
 
-    ToyMakersEngine::Ray cameraRay { .mLength { cameraProps.mNearFarPlanes.y - cameraProps.mNearFarPlanes.x } };
+    ToyMaker::Ray cameraRay { .mLength { cameraProps.mNearFarPlanes.y - cameraProps.mNearFarPlanes.x } };
     glm::vec3 relativeCameraPlaneIntersection;
     switch(cameraProps.mProjectionType) {
-        case ToyMakersEngine::CameraProperties::ProjectionType::ORTHOGRAPHIC: {
+        case ToyMaker::CameraProperties::ProjectionType::ORTHOGRAPHIC: {
             relativeCameraPlaneIntersection = {
                 (
                     cameraProps.mOrthographicDimensions 
@@ -30,7 +30,7 @@ ToyMakersEngine::Ray QueryClick::rayFromClickCoordinates(glm::vec2 clickCoordina
         }
         break;
 
-        case ToyMakersEngine::CameraProperties::ProjectionType::FRUSTUM: {
+        case ToyMaker::CameraProperties::ProjectionType::FRUSTUM: {
             const float twoTanFovByTwo { 2.f * glm::tan(glm::radians(cameraProps.mFov/2.f)) };
             relativeCameraPlaneIntersection = {
                 (
@@ -53,16 +53,16 @@ ToyMakersEngine::Ray QueryClick::rayFromClickCoordinates(glm::vec2 clickCoordina
     return cameraRay;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> QueryClick::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> QueryClick::clone() const {
     return std::shared_ptr<QueryClick>(new QueryClick{});
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> QueryClick::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> QueryClick::create(const nlohmann::json& jsonAspectProperties) {
     (void)jsonAspectProperties; // prevent unused parameter warning
     return std::shared_ptr<QueryClick>(new QueryClick{});
 }
 
-bool QueryClick::onLeftClick(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+bool QueryClick::onLeftClick(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
     (void)actionDefinition; // prevent unused parameter warning
     if(
         (actionData.mTwoAxisActionData.mValue.x < 0.f || actionData.mTwoAxisActionData.mValue.y < 0.f)
@@ -74,18 +74,18 @@ bool QueryClick::onLeftClick(const ToyMakersEngine::ActionData& actionData, cons
     const glm::vec2 clickCoordinates {glm::vec2{actionData.mTwoAxisActionData.mValue}};
 
     bool entityFound { false };
-    const ToyMakersEngine::Ray cameraRay { rayFromClickCoordinates(clickCoordinates) };
-    std::vector<std::shared_ptr<ToyMakersEngine::SceneNodeCore>> currentQueryResults {
-        getWorld().lock()->getSystem<ToyMakersEngine::SpatialQuerySystem>()->findNodesOverlapping(cameraRay)
+    const ToyMaker::Ray cameraRay { rayFromClickCoordinates(clickCoordinates) };
+    std::vector<std::shared_ptr<ToyMaker::SceneNodeCore>> currentQueryResults {
+        getWorld().lock()->getSystem<ToyMaker::SpatialQuerySystem>()->findNodesOverlapping(cameraRay)
     };
     for(const auto& foundNode: currentQueryResults) {
         entityFound = true;
         std::cout << "- " << foundNode->getViewportLocalPath() << "\n";
 
         //then click on every aspect of our query results that can be clicked
-        if(std::shared_ptr<ToyMakersEngine::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMakersEngine::SimObject>(foundNode)) {
+        if(std::shared_ptr<ToyMaker::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMaker::SimObject>(foundNode)) {
             if(nodeAsSimObject->hasAspectWithInterface<ILeftClickable>()) {
-                glm::vec4 intersectionLocation { ToyMakersEngine::computeIntersections(cameraRay, foundNode->getComponent<ToyMakersEngine::AxisAlignedBounds>()).second.first, 1.f };
+                glm::vec4 intersectionLocation { ToyMaker::computeIntersections(cameraRay, foundNode->getComponent<ToyMaker::AxisAlignedBounds>()).second.first, 1.f };
                 for(ILeftClickable& clickable: nodeAsSimObject->getAspectsWithInterface<ILeftClickable>()) {
                     leftClickOn(clickable, intersectionLocation);
                 }
@@ -97,7 +97,7 @@ bool QueryClick::onLeftClick(const ToyMakersEngine::ActionData& actionData, cons
     return entityFound;
 }
 
-bool QueryClick::onLeftRelease(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+bool QueryClick::onLeftRelease(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
     (void)actionDefinition; // prevent unused parameter warning
     if(
         (actionData.mTwoAxisActionData.mValue.x < 0.f || actionData.mTwoAxisActionData.mValue.y < 0.f)
@@ -109,18 +109,18 @@ bool QueryClick::onLeftRelease(const ToyMakersEngine::ActionData& actionData, co
     const glm::vec2 clickCoordinates {glm::vec2{actionData.mTwoAxisActionData.mValue}};
 
     bool entityFound { false };
-    const ToyMakersEngine::Ray cameraRay { rayFromClickCoordinates(clickCoordinates) };
-    std::vector<std::shared_ptr<ToyMakersEngine::SceneNodeCore>> currentQueryResults {
-        getWorld().lock()->getSystem<ToyMakersEngine::SpatialQuerySystem>()->findNodesOverlapping(cameraRay)
+    const ToyMaker::Ray cameraRay { rayFromClickCoordinates(clickCoordinates) };
+    std::vector<std::shared_ptr<ToyMaker::SceneNodeCore>> currentQueryResults {
+        getWorld().lock()->getSystem<ToyMaker::SpatialQuerySystem>()->findNodesOverlapping(cameraRay)
     };
     for(const auto& foundNode: currentQueryResults) {
         entityFound = true;
         std::cout << "- " << foundNode->getViewportLocalPath() << "\n";
 
         //then unclick on every aspect of our query results that can be clicked
-        if(std::shared_ptr<ToyMakersEngine::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMakersEngine::SimObject>(foundNode)) {
+        if(std::shared_ptr<ToyMaker::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMaker::SimObject>(foundNode)) {
             if(nodeAsSimObject->hasAspectWithInterface<ILeftClickable>()) {
-                glm::vec4 intersectionLocation { ToyMakersEngine::computeIntersections(cameraRay, foundNode->getComponent<ToyMakersEngine::AxisAlignedBounds>()).second.first, 1.f };
+                glm::vec4 intersectionLocation { ToyMaker::computeIntersections(cameraRay, foundNode->getComponent<ToyMaker::AxisAlignedBounds>()).second.first, 1.f };
                 for(ILeftClickable& clickable: nodeAsSimObject->getAspectsWithInterface<ILeftClickable>()) {
                     leftReleaseOn(clickable, intersectionLocation);
                 }
@@ -131,7 +131,7 @@ bool QueryClick::onLeftRelease(const ToyMakersEngine::ActionData& actionData, co
     return entityFound;
 }
 
-bool QueryClick::onPointerMove(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+bool QueryClick::onPointerMove(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
     (void)actionDefinition; // prevent unused parameter warning
     if(
         (actionData.mTwoAxisActionData.mValue.x < 0.f || actionData.mTwoAxisActionData.mValue.y < 0.f)
@@ -143,19 +143,19 @@ bool QueryClick::onPointerMove(const ToyMakersEngine::ActionData& actionData, co
     const glm::vec2 clickCoordinates {glm::vec2{actionData.mTwoAxisActionData.mValue}};
 
     bool entityFound { false };
-    const ToyMakersEngine::Ray cameraRay { rayFromClickCoordinates(clickCoordinates) };
+    const ToyMaker::Ray cameraRay { rayFromClickCoordinates(clickCoordinates) };
 
-    std::vector<std::shared_ptr<ToyMakersEngine::SceneNodeCore>> currentQueryResults {
-        getWorld().lock()->getSystem<ToyMakersEngine::SpatialQuerySystem>()->findNodesOverlapping(cameraRay)
+    std::vector<std::shared_ptr<ToyMaker::SceneNodeCore>> currentQueryResults {
+        getWorld().lock()->getSystem<ToyMaker::SpatialQuerySystem>()->findNodesOverlapping(cameraRay)
     };
     for(const auto& foundNode: currentQueryResults) {
         entityFound = true;
-        if(std::shared_ptr<ToyMakersEngine::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMakersEngine::SimObject>(foundNode)) {
+        if(std::shared_ptr<ToyMaker::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMaker::SimObject>(foundNode)) {
             if(nodeAsSimObject->hasAspectWithInterface<IHoverable>()) {
                 const bool isInPreviousQuery { std::find(mPreviousQueryResults.begin(), mPreviousQueryResults.end(), foundNode) != mPreviousQueryResults.end() };
                 if(!isInPreviousQuery) {
                     for(IHoverable& hoverableAspect: nodeAsSimObject->getAspectsWithInterface<IHoverable>()) {
-                        glm::vec4 intersectionLocation { ToyMakersEngine::computeIntersections(cameraRay, foundNode->getComponent<ToyMakersEngine::AxisAlignedBounds>()).second.first, 1.f };
+                        glm::vec4 intersectionLocation { ToyMaker::computeIntersections(cameraRay, foundNode->getComponent<ToyMaker::AxisAlignedBounds>()).second.first, 1.f };
                         pointerEnter(hoverableAspect, intersectionLocation);
                     }
                 }
@@ -165,7 +165,7 @@ bool QueryClick::onPointerMove(const ToyMakersEngine::ActionData& actionData, co
 
     // unhover on every aspect of our previous query results that we had been hovering on
     for(const auto& foundNode: mPreviousQueryResults) {
-        if(std::shared_ptr<ToyMakersEngine::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMakersEngine::SimObject>(foundNode)) {
+        if(std::shared_ptr<ToyMaker::SimObject> nodeAsSimObject = std::dynamic_pointer_cast<ToyMaker::SimObject>(foundNode)) {
             if(nodeAsSimObject->hasAspectWithInterface<IHoverable>()) {
                 const bool isInCurrentQuery { std::find(currentQueryResults.begin(), currentQueryResults.end(), foundNode) != currentQueryResults.end() };
                 if(!isInCurrentQuery) {

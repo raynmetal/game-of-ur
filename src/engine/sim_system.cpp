@@ -1,6 +1,6 @@
 #include "sim_system.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 SimObject::~SimObject() {
     for(const auto& aspectPair: mSimObjectAspects) {

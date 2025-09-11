@@ -1,11 +1,11 @@
 #ifndef ZOAPPUIPANEL_H
 #define ZOAPPUIPANEL_H
 
-#include "../engine/sim_system.hpp"
+#include "toymaker/sim_system.hpp"
 
 #include "nine_slice_panel.hpp"
 
-class UIPanel: public ToyMakersEngine::SimObjectAspect<UIPanel> {
+class UIPanel: public ToyMaker::SimObjectAspect<UIPanel> {
 public:
     UIPanel(): SimObjectAspect<UIPanel>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "UIPanel"; }

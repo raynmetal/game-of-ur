@@ -2,12 +2,12 @@
 
 #include "ur_player_cpu_random.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> PlayerCPURandom::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> PlayerCPURandom::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<PlayerCPURandom> player { new PlayerCPURandom{} };
     player->mControllerPath = jsonAspectProperties.at("controller_path").get<std::string>();
     return player;
 }
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> PlayerCPURandom::clone() const  {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> PlayerCPURandom::clone() const  {
     std::shared_ptr<PlayerCPURandom> player { new PlayerCPURandom{} };
     player->mControllerPath = mControllerPath;
     return player;
@@ -16,7 +16,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> PlayerCPURandom::clone() c
 void PlayerCPURandom::onActivated() {
     assert(!mControls && "We shouldn't have controls assigned yet");
     mControls = (
-        ToyMakersEngine::ECSWorld::getSingletonSystem<ToyMakersEngine::SceneSystem>()
+        ToyMaker::ECSWorld::getSingletonSystem<ToyMaker::SceneSystem>()
             ->getByPath<UrController&>(mControllerPath + "@" + UrController::getSimObjectAspectTypeName()).createControls()
     );
     assert(mControls && "We should have controls assigned now");

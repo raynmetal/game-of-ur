@@ -1,3 +1,13 @@
+/**
+ * @file shapegen.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains classes used to construct some common procedurally generated meshes and models.
+ * @version 0.3.2
+ * @date 2025-09-07
+ * 
+ * 
+ */
+
 #ifndef FOOLSENGINE_SHAPEGEN_H
 #define FOOLSENGINE_SHAPEGEN_H
 
@@ -8,8 +18,28 @@
 #include "mesh.hpp"
 #include "model.hpp"
 
-namespace ToyMakersEngine {
+namespace ToyMaker {
 
+    /**
+     * @brief Mesh constructor that creates a spherical mesh using a latitude-longitude method.
+     * 
+     * Example:
+     * 
+     * ```c++
+     * 
+     * nlohmann::json sphereLightDescription {
+     *     {"name", "sphereLight-10lat-5long"},
+     *     {"type", StaticMesh::getResourceTypeName()},
+     *     {"method", StaticMeshSphereLatLong::getResourceConstructorName()},
+     *     {"parameters", {
+     *         {"nLatitudes", 10},
+     *         {"nMeridians", 5}
+     *     }}
+     * }
+     * 
+     * ```
+     * 
+     */
     class StaticMeshSphereLatLong: public ResourceConstructor<StaticMesh, StaticMeshSphereLatLong> {
     public:
         StaticMeshSphereLatLong():
@@ -20,6 +50,25 @@ namespace ToyMakersEngine {
         std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
     };
 
+    /**
+     * @brief Constructs a rectangle mesh based on its dimensions.
+     * 
+     * Example:
+     * 
+     * ```c++
+     * 
+     * const nlohmann::json rectangleParameters = { 
+     *     {"type", ToyMaker::StaticModel::getResourceTypeName()},
+     *     {"method", ToyMaker::StaticModelRectangleDimensions::getResourceConstructorName()},
+     *     {"parameters", {
+     *         {"width", finalRectangleDimensions.x }, {"height", finalRectangleDimensions.y },
+     *         {"flip_texture_y", true},
+     *         {"material_properties", nlohmann::json::array()},
+     *     }}
+     * } 
+     * 
+     * ```
+     */
     class StaticMeshRectangleDimensions: public ResourceConstructor<StaticMesh, StaticMeshRectangleDimensions> {
     public:
         StaticMeshRectangleDimensions():
@@ -30,6 +79,28 @@ namespace ToyMakersEngine {
         std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
     };
 
+    /**
+     * @brief Constructs a cuboid mesh based on its dimensions.
+     * 
+     * Example:
+     * 
+     * ```c++
+     * 
+     * renderSet.second.mSkyboxRenderStage->attachMesh("unitCube", ResourceDatabase::ConstructAnonymousResource<StaticMesh>({
+     *     {"type", StaticMesh::getResourceTypeName()},
+     *     {"method", StaticMeshCuboidDimensions::getResourceConstructorName()},
+     *     {"parameters", {
+     *         {"depth", 2.f},
+     *         {"width", 2.f},
+     *         {"height", 2.f},
+     *         {"layout", mSkyboxTexture->getColorBufferDefinition().mCubemapLayout},
+     *         {"flip_texture_y", true},
+     *     }},
+     * }));
+     * 
+     * ```
+     * 
+     */
     class StaticMeshCuboidDimensions: public ResourceConstructor<StaticMesh, StaticMeshCuboidDimensions> {
     public:
         StaticMeshCuboidDimensions():
@@ -40,6 +111,12 @@ namespace ToyMakersEngine {
         std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
     };
 
+    /**
+     * @brief Constructs a sphere model using the latitude-longitude method.
+     * 
+     * @see StaticMeshSphereLatLong
+     * 
+     */
     class StaticModelSphereLatLong: public ResourceConstructor<StaticModel, StaticModelSphereLatLong> {
     public:
         StaticModelSphereLatLong():
@@ -50,6 +127,13 @@ namespace ToyMakersEngine {
         std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
     };
 
+    /**
+     * @brief Constructs a rectangle mesh using the latitude-longitude method.
+     * 
+     * 
+     * @see StaticMeshRectangleDimensions
+     * 
+     */
     class StaticModelRectangleDimensions: public ResourceConstructor<StaticModel, StaticModelRectangleDimensions> {
     public:
         StaticModelRectangleDimensions():
@@ -60,6 +144,12 @@ namespace ToyMakersEngine {
         std::shared_ptr<IResource> createResource(const nlohmann::json& methodParameters) override;
     };
 
+    /**
+     * @brief Constructs a cuboid mesh based on its dimensions
+     * 
+     * @see StaticMeshCuboidDimensions
+     * 
+     */
     class StaticModelCuboidDimensions: public ResourceConstructor<StaticModel, StaticModelCuboidDimensions> {
     public:
         StaticModelCuboidDimensions():

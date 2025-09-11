@@ -7,13 +7,13 @@
 
 #include "ur_ui_records_browser.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUIRecordsBrowser::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIRecordsBrowser::create(const nlohmann::json& jsonAspectProperties) {
     (void)jsonAspectProperties; // prevent unused parameter warnings
     std::shared_ptr<UrUIRecordsBrowser> recordsBrowser { std::make_shared<UrUIRecordsBrowser>() };
     return recordsBrowser;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUIRecordsBrowser::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIRecordsBrowser::clone() const {
     std::shared_ptr<UrUIRecordsBrowser> recordsBrowser { std::make_shared<UrUIRecordsBrowser>() };
     return recordsBrowser;
 }
@@ -101,14 +101,14 @@ bool UrUIRecordsBrowser::hasPage(uint32_t page) const {
 
 void UrUIRecordsBrowser::refreshRecords() {
     mFetchedRecords = getSimObject().getWorld().lock()
-        ->getSingletonSystem<ToyMakersEngine::SceneSystem>()
+        ->getSingletonSystem<ToyMaker::SceneSystem>()
         ->getByPath<UrRecords&>(
             "/ur_records/@UrRecords"
         ).getAllRecords();
 }
 
 
-bool UrUIRecordsBrowser::onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+bool UrUIRecordsBrowser::onCancel(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
     (void)actionDefinition; // prevent unused parameter warnings
     (void)actionData; // prevent unused parameter warnings
     if(mMode == Mode::BROWSE) { return false; };
@@ -142,7 +142,7 @@ void UrUIRecordsBrowser::openDetailedRecord(uint32_t entry) {
     prev.disableButton();
 
     // update record details
-    std::shared_ptr<ToyMakersEngine::SceneNode> recordDetails {
+    std::shared_ptr<ToyMaker::SceneNode> recordDetails {
         getSimObject().getByPath("/viewport_UI/record_details/")
     };
     const std::size_t selectedEntryIndex { mFetchedRecords.size() - (mPage*5 + entry) };
@@ -159,7 +159,7 @@ void UrUIRecordsBrowser::openDetailedRecord(uint32_t entry) {
         const PlayerData& playerData {
             (playerChar == 'a')? selectedRecord->mPlayerA: selectedRecord->mPlayerB
         };
-        std::shared_ptr<ToyMakersEngine::SceneNode> playerSection {
+        std::shared_ptr<ToyMaker::SceneNode> playerSection {
             recordDetails->getByPath(playerDetailPath)
         };
         UIText& name { playerSection->getByPath<UIText&>("/name/@UIText") };
@@ -195,8 +195,8 @@ void UrUIRecordsBrowser::openDetailedRecord(uint32_t entry) {
         );
     }
 
-    ToyMakersEngine::Placement recordDetailPlacement {
-        recordDetails->getComponent<ToyMakersEngine::Placement>()
+    ToyMaker::Placement recordDetailPlacement {
+        recordDetails->getComponent<ToyMaker::Placement>()
     };
     recordDetailPlacement.mPosition.z = 10.f;
     recordDetails->updateComponent(recordDetailPlacement);
@@ -205,10 +205,10 @@ void UrUIRecordsBrowser::openDetailedRecord(uint32_t entry) {
 }
 
 void UrUIRecordsBrowser::closeDetailedRecord() {
-    std::shared_ptr<ToyMakersEngine::SceneNode> recordDetails { getSimObject().getByPath("/viewport_UI/record_details/") };
-    ToyMakersEngine::Placement recordDetailsPlacement { recordDetails->getComponent<ToyMakersEngine::Placement>() };
+    std::shared_ptr<ToyMaker::SceneNode> recordDetails { getSimObject().getByPath("/viewport_UI/record_details/") };
+    ToyMaker::Placement recordDetailsPlacement { recordDetails->getComponent<ToyMaker::Placement>() };
     recordDetailsPlacement.mPosition.z = -10.f;
-    recordDetails->updateComponent<ToyMakersEngine::Placement>(recordDetailsPlacement);
+    recordDetails->updateComponent<ToyMaker::Placement>(recordDetailsPlacement);
 
     openPage(mPage);
     mMode = Mode::BROWSE;

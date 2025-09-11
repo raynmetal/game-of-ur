@@ -8,7 +8,7 @@
 
 #include "ur_ui_tutorials_browser.hpp"
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUITutorialsBrowser::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUITutorialsBrowser::create(const nlohmann::json& jsonAspectProperties) {
     (void)jsonAspectProperties; // prevent unused parameter warnings
 
     std::shared_ptr<UrUITutorialsBrowser> tutorialsBrowser { std::make_shared<UrUITutorialsBrowser>() };
@@ -20,7 +20,7 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUITutorialsBrowser::crea
     return tutorialsBrowser;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUITutorialsBrowser::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUITutorialsBrowser::clone() const {
     std::shared_ptr<UrUITutorialsBrowser> tutorialsBrowser { std::make_shared<UrUITutorialsBrowser>() };
 
     tutorialsBrowser->mTutorialsFilepath = mTutorialsFilepath;

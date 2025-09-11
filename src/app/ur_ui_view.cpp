@@ -21,13 +21,13 @@ const std::map<std::string, UrUIView::Buttons> UrUIView::kButtonEnumMap {
     {"next_turn", UrUIView::Buttons::NEXT_TURN},
 };
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUIView::clone() const {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIView::clone() const {
     std::shared_ptr<UrUIView> uiView{ std::make_shared<UrUIView>() };
     uiView->mControllerPath = mControllerPath;
     return uiView;
 }
 
-std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUIView::create(const nlohmann::json& jsonAspectProperties) {
+std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIView::create(const nlohmann::json& jsonAspectProperties) {
     std::shared_ptr<UrUIView> uiView { std::make_shared<UrUIView>() };
     uiView->mControllerPath = jsonAspectProperties.at("controller_path").get<std::string>();
     return uiView;
@@ -35,8 +35,8 @@ std::shared_ptr<ToyMakersEngine::BaseSimObjectAspect> UrUIView::create(const nlo
 
 void UrUIView::onActivated() {
     mGameOfUrController = (
-        ToyMakersEngine::ECSWorld::getSingletonSystem<ToyMakersEngine::SceneSystem>()
-        ->getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>(mControllerPath)
+        ToyMaker::ECSWorld::getSingletonSystem<ToyMaker::SceneSystem>()
+        ->getByPath<std::shared_ptr<ToyMaker::SimObject>>(mControllerPath)
     );
 }
 
@@ -152,7 +152,7 @@ void UrUIView::onScoreUpdated(GameScoreData score) {
 
 void UrUIView::onPlayerUpdated(PlayerData player) {
     std::cout << "UrUIView: on player updated\n";
-    std::shared_ptr<ToyMakersEngine::SceneNode> playerPanel { getPlayerPanel(player.mPlayer) };
+    std::shared_ptr<ToyMaker::SceneNode> playerPanel { getPlayerPanel(player.mPlayer) };
 
     std::string playerText { (player.mPlayer == PlayerID::PLAYER_A)? "Player A": "Player B"};
     switch(player.mRole) {
@@ -212,7 +212,7 @@ void UrUIView::onMoveMade(MoveResultData moveData) {
     getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
 }
 
-bool UrUIView::onCancel(const ToyMakersEngine::ActionData& actionData, const ToyMakersEngine::ActionDefinition& actionDefinition) {
+bool UrUIView::onCancel(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
     (void)actionData; // prevent unused parameter warnings
     (void)actionDefinition; // prevent unused parameter warnings
     std::cout << "UrUIView: cancel attempted\n";
@@ -222,7 +222,7 @@ bool UrUIView::onCancel(const ToyMakersEngine::ActionData& actionData, const Toy
     return true;
 }
 
-std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getLaunchButton(PieceTypeID pieceType, PlayerID player) {
+std::shared_ptr<ToyMaker::SimObject> UrUIView::getLaunchButton(PieceTypeID pieceType, PlayerID player) {
     const std::string pieceString {
         "launch_" + std::find_if(kButtonEnumMap.begin(), kButtonEnumMap.end(),
             [pieceType](std::pair<std::string, UrUIView::Buttons> item){
@@ -230,22 +230,22 @@ std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getLaunchButton(PieceTypeI
             }
         )->first
     };
-    return getPlayerPanel(player)->getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>(
+    return getPlayerPanel(player)->getByPath<std::shared_ptr<ToyMaker::SimObject>>(
             "/buttons/" + pieceString + "/"
     );
 }
 
-std::shared_ptr<ToyMakersEngine::SceneNode> UrUIView::getPlayerPanel(PlayerID player) {
+std::shared_ptr<ToyMaker::SceneNode> UrUIView::getPlayerPanel(PlayerID player) {
     const std::string playerPanelString {
         "player_panel_" + static_cast<std::string>((player == PlayerID::PLAYER_A)? "a": "b")
     };
-    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SceneNode>>(
+    return getSimObject().getByPath<std::shared_ptr<ToyMaker::SceneNode>>(
         "/viewport_UI/" + playerPanelString + "/"
     );
 }
 
-std::shared_ptr<ToyMakersEngine::SimObject> UrUIView::getEndTurnButton() {
-    return getSimObject().getByPath<std::shared_ptr<ToyMakersEngine::SimObject>>("/viewport_UI/next_turn/");
+std::shared_ptr<ToyMaker::SimObject> UrUIView::getEndTurnButton() {
+    return getSimObject().getByPath<std::shared_ptr<ToyMaker::SimObject>>("/viewport_UI/next_turn/");
 }
 
 void UrUIView::onControllerReady() {

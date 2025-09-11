@@ -3,11 +3,11 @@
 
 #include <random>
 
-#include "../engine/sim_system.hpp"
+#include "toymaker/sim_system.hpp"
 
 #include "ur_controller.hpp"
 
-class PlayerCPURandom: public ToyMakersEngine::SimObjectAspect<PlayerCPURandom> {
+class PlayerCPURandom: public ToyMaker::SimObjectAspect<PlayerCPURandom> {
 public:
     PlayerCPURandom(): SimObjectAspect<PlayerCPURandom>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "UrPlayerCPURandom"; }
@@ -24,7 +24,7 @@ private:
     void onActivated() override;
     void onMovePrompted(GamePhaseData phaseData);
 
-    ToyMakersEngine::SignalObserver<GamePhaseData> mObserveMovePrompted { *this, "MovePromptedObserved", [this](GamePhaseData phaseData) { this->onMovePrompted(phaseData); }};
+    ToyMaker::SignalObserver<GamePhaseData> mObserveMovePrompted { *this, "MovePromptedObserved", [this](GamePhaseData phaseData) { this->onMovePrompted(phaseData); }};
 public:
 };
 

@@ -4,7 +4,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
-#include "../engine/sim_system.hpp"
+#include "toymaker/sim_system.hpp"
 
 #include "ur_records.hpp"
 
@@ -15,10 +15,10 @@ struct TutorialContent {
     std::string mImageFilepath {};
 };
 
-class UrUITutorialsBrowser: public ToyMakersEngine::SimObjectAspect<UrUITutorialsBrowser> {
+class UrUITutorialsBrowser: public ToyMaker::SimObjectAspect<UrUITutorialsBrowser> {
 public:
 
-    UrUITutorialsBrowser(): ToyMakersEngine::SimObjectAspect<UrUITutorialsBrowser>{0} {}
+    UrUITutorialsBrowser(): ToyMaker::SimObjectAspect<UrUITutorialsBrowser>{0} {}
     inline static std::string getSimObjectAspectTypeName() { return "UrUITutorialsBrowser"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
@@ -43,7 +43,7 @@ private:
     void loadTutorials();
 
 public:
-    ToyMakersEngine::SignalObserver<const std::string&> mObserveButtonClicked {
+    ToyMaker::SignalObserver<const std::string&> mObserveButtonClicked {
         *this, "ButtonClickedObserved",
         [this](const std::string& button) { this->onButtonClicked(button); }
     };

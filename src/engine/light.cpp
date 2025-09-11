@@ -5,7 +5,7 @@
 
 #include "light.hpp"
 
-using namespace ToyMakersEngine;
+using namespace ToyMaker;
 
 float LightEmissionData::CalculateRadius(const glm::vec4& diffuseColor, float decayLinear, float decayQuadratic, float intensityCutoff) {
     float intensityMax = diffuseColor.r;
