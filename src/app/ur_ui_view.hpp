@@ -1,3 +1,13 @@
+/**
+ * @file ur_ui_view.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains the definition of the class responsible for managing and displaying the UI layer of the game scene.
+ * @version 0.3.2
+ * @date 2025-09-13
+ * 
+ * 
+ */
+
 #ifndef ZOAPPURUIVIEW_H
 #define ZOAPPURUIVIEW_H
 

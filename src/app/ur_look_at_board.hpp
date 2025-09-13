@@ -1,8 +1,22 @@
+/**
+ * @file ur_look_at_board.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains a utility class for centering the game camera in the 3D scene on the game board object.
+ * @version 0.3.2
+ * @date 2025-09-13
+ * 
+ * 
+ */
+
 #ifndef ZOAPPLOOKATBOARD_H
 #define ZOAPPLOOKATBOARD_H
 
 #include "toymaker/sim_system.hpp"
 
+/**
+ * @brief Stupid utility class for centering the game camera in the 3D scene on the game board object.
+ * 
+ */
 class UrLookAtBoard: public ToyMaker::SimObjectAspect<UrLookAtBoard> {
 public:
     UrLookAtBoard() : SimObjectAspect<UrLookAtBoard>{0} {}

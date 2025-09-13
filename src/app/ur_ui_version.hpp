@@ -1,3 +1,13 @@
+/**
+ * @file ur_ui_version.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains the definition for the class responsible for displaying the game version text on the main menu of the game.
+ * @version 0.3.2
+ * @date 2025-09-13
+ * 
+ * 
+ */
+
 #ifndef ZOAPPUIVERSIONTEXT_H
 #define ZOAPPUIVERSIONTEXT_H
 

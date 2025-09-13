@@ -1,9 +1,23 @@
+/**
+ * @file render_debug_viewer.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains an aspect class used to log window events and change the debug texture rendered to the viewport it manages.
+ * @version 0.3.2
+ * @date 2025-09-13
+ * 
+ * 
+ */
+
 #ifndef ZOAPPRENDERDEBUGVIEWER_H
 #define ZOAPPRENDERDEBUGVIEWER_H
 
 #include "toymaker/sim_system.hpp"
 #include "toymaker/window_context_manager.hpp"
 
+/**
+ * @brief A utility aspect class used to log window events and change the debug texture rendered to the viewport it manages.
+ * 
+ */
 class RenderDebugViewer: public ToyMaker::SimObjectAspect<RenderDebugViewer> {
 public:
     inline static std::string getSimObjectAspectTypeName() { return "RenderDebugViewer"; }

@@ -1,3 +1,13 @@
+/**
+ * @file ur_ui_records_browser.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains the definition for the aspect class responsible for displaying records for previously completed games.
+ * @version 0.3.2
+ * @date 2025-09-13
+ * 
+ * 
+ */
+
 #ifndef ZOAPPUIRECORDSBROWSER_H
 #define ZOAPPUIRECORDSBROWSER_H
 

@@ -1,3 +1,13 @@
+/**
+ * @file game_of_ur_data/serialize.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains methods to convert data from its-in game representation to its JSON representation, and vice versa.
+ * @version 0.3.2
+ * @date 2025-09-12
+ * 
+ * 
+ */
+
 #ifndef ZOAPPSERIALIZE_H
 #define ZOAPPSERIALIZE_H
 
