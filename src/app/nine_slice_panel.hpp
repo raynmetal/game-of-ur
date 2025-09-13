@@ -133,6 +133,22 @@ private:
 /**
  * @brief Resource constructor for creating new NineSlicePanel resources from their descriptions in JSON.
  * 
+ * Its appearance in JSON is as follows:
+ * 
+ * ```json
+ * 
+ * {
+ *     "name": "Bad_Panel",
+ *     "type": "NineSlicePanel",
+ *     "method": "fromDescription",
+ *     "parameters": {
+ *         "base_texture": "Bad_Panel_Texture",
+ *         "content_region": [ 0.0235, 0.0235, 0.953, 0.953]
+ *     }
+ * }
+ *
+ * ```
+ *
  */
 class NineSlicePanelFromDescription: public ToyMaker::ResourceConstructor<NineSlicePanel, NineSlicePanelFromDescription> {
 public:
