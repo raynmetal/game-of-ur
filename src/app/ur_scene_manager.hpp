@@ -1,3 +1,13 @@
+/**
+ * @file ur_scene_manager.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains the definition for the class responsible for transitioning between scenes/views available in the game.
+ * @version 0.3.2
+ * @date 2025-09-13
+ * 
+ * 
+ */
+
 #ifndef ZOAPPSCENEMANAGER_H
 #define ZOAPPSCENEMANAGER_H
 

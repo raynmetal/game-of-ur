@@ -1,3 +1,13 @@
+/**
+ * @file ur_ui_tutorials_browser.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains the class definition for the aspect responsible for loading and displaying tutorial content.
+ * @version 0.3.2
+ * @date 2025-09-13
+ * 
+ * 
+ */
+
 #ifndef ZOAPPUITUTORIALSBROWSER_H
 #define ZOAPPUITUTORIALSBROWSER_H
 

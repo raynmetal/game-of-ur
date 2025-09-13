@@ -1,3 +1,13 @@
+/**
+ * @file ur_scene_view.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains the definition of the class representing and controlling the 3D scene in which the game is played.
+ * @version 0.3.2
+ * @date 2025-09-13
+ * 
+ * 
+ */
+
 #ifndef ZOAPPURSCENEVIEW_H
 #define ZOAPPURSCENEVIEW_H
 
