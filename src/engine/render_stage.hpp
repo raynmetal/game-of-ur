@@ -195,7 +195,7 @@ namespace ToyMaker {
          * 
          * @param targetDimensions The dimensions of the texture to which this stage will render.
          * 
-         * @todo Much of this is finnicky and poorly defined.  Stricter requirements needed.
+         * @todo Much of this is finicky and poorly defined.  Stricter requirements needed.
          * 
          */
         virtual void setup(const glm::u16vec2& targetDimensions) = 0;
@@ -203,7 +203,7 @@ namespace ToyMaker {
         /**
          * @brief Validates this stage by checking for availability of required resources, connections with adjacent render stages.
          * 
-         * @todo Much of this is finnicky and poorly defined.  Stricter requirements needed.
+         * @todo Much of this is finicky and poorly defined.  Stricter requirements needed.
          * 
          */
         virtual void validate() = 0;
