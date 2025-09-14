@@ -1,3 +1,13 @@
+/**
+ * @file ur_records.hpp
+ * @author Zoheb Shujauddin (zoheb2424@gmail.com)
+ * @brief Contains aspect class definition for the records save system.
+ * @version 0.3.2
+ * @date 2025-09-14
+ * 
+ * 
+ */
+
 #ifndef ZOAPPRECORDS_H
 #define ZOAPPRECORDS_H
 
@@ -7,12 +17,20 @@
 #include "game_of_ur_data/serialize.hpp"
 
 
+/**
+ * @brief The details of a single completed game.
+ * 
+ */
 struct GameRecord {
     GameScoreData mSummary;
     PlayerData mPlayerA;
     PlayerData mPlayerB;
 };
 
+/**
+ * @brief Class responsible for loading, validating, and storing records of all completed games played on this platform.
+ * 
+ */
 class UrRecords: public ToyMaker::SimObjectAspect<UrRecords> {
 public:
     UrRecords(): SimObjectAspect<UrRecords>{0} {}

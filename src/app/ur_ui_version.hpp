@@ -13,6 +13,10 @@
 
 #include "toymaker/sim_system.hpp"
 
+/**
+ * @brief The class responsible for setting the game version text of the UI object it is connected to per the value populated in version.h.
+ * 
+ */
 class UrUIVersion: public ToyMaker::SimObjectAspect<UrUIVersion> {
 public:
     UrUIVersion(): SimObjectAspect<UrUIVersion>{0} {}
