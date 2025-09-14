@@ -22,6 +22,14 @@ struct UrPieceAnimationKey;
 
 bool operator<(const UrPieceAnimationKey& one, const UrPieceAnimationKey& two);
 
+/**
+ * @brief The class responsible for managing the 3D representation and interactions of a game in progress.
+ * 
+ * Displays the game board and adds game pieces to it per the current state of the game.  The state of the game is read from the game data model (or from changes broadcasted by UrController).
+ * 
+ * Converts board or game piece clicks into actions usable by the currently active player controller.  Also reports view updates (like animations that play after a game state change) to the game controller.
+ * 
+ */
 class UrSceneView: public ToyMaker::SimObjectAspect<UrSceneView> {
 public:
     UrSceneView(): ToyMaker::SimObjectAspect<UrSceneView>{0} {}

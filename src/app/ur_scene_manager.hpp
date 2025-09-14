@@ -15,6 +15,10 @@
 #include <glm/gtx/string_cast.hpp>
 #include "toymaker/sim_system.hpp"
 
+/**
+ * @brief The aspect class responsible for transitioning between the scenes availabe in the game.
+ * 
+ */
 class UrSceneManager: public ToyMaker::SimObjectAspect<UrSceneManager> {
 public:
     UrSceneManager(): ToyMaker::SimObjectAspect<UrSceneManager>{0} {}

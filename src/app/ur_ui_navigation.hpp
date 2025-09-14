@@ -15,6 +15,11 @@
 #include <glm/gtx/string_cast.hpp>
 #include "toymaker/sim_system.hpp"
 
+
+/**
+ * @brief The aspect class responsible for connecting the UI in the current scene with the game scene manager.  Responds to navigation UI events with scene changes.
+ * 
+ */
 class UrUINavigation: public ToyMaker::SimObjectAspect<UrUINavigation> {
 public:
     UrUINavigation(): ToyMaker::SimObjectAspect<UrUINavigation>{0} {}

@@ -17,6 +17,10 @@
 
 #include "toymaker/sim_system.hpp"
 
+/**
+ * @brief The aspect class responsible for managing the records browser, responsible for listing and displaying records for completed games.
+ * 
+ */
 class UrUIRecordsBrowser: public ToyMaker::SimObjectAspect<UrUIRecordsBrowser> {
 public:
     enum class Mode {

@@ -19,12 +19,20 @@
 #include "ur_records.hpp"
 
 
+/**
+ * @brief The data associated with a single tutorial page.
+ * 
+ */
 struct TutorialContent {
     std::string mHeading {};
     std::string mText {};
     std::string mImageFilepath {};
 };
 
+/**
+ * @brief The aspect class responsible for loading, listing, and displaying the tutorial pages written for this game.
+ * 
+ */
 class UrUITutorialsBrowser: public ToyMaker::SimObjectAspect<UrUITutorialsBrowser> {
 public:
 
