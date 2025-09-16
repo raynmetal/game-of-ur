@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerECS
  * @file core/ecs_world.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief ToyMaker Engine's implementation of an ECS system
@@ -30,9 +31,36 @@
 #include "../util.hpp"
 #include "../registrator.hpp"
 
+/**
+ * @defgroup ToyMakerCore Classes and functions at the core of ToyMaker
+ * @ingroup ToyMakerEngine
+ * 
+ */
+
+/**
+ * @defgroup ToyMakerECS The ToyMaker engine's ECS implementation
+ * @ingroup ToyMakerCore
+ * 
+ */
+
+/**
+ * @defgroup ToyMakerECSSystem Classes related to ECS Systems.
+ * @ingroup ToyMakerECS
+ * 
+ */
+
+/**
+ * @defgroup ToyMakerECSComponent Classes related to ECS Components.
+ * @ingroup ToyMakerECS
+ * 
+ */
+
 namespace ToyMaker {
 
+
+
     /**
+     * @ingroup ToyMakerECS
      * @brief A single unsigned integer used as a name for an entity managed by an ECS system
      * 
      * All components belonging to an entity will also have the entity's id associated with it.  
@@ -40,6 +68,7 @@ namespace ToyMaker {
     using EntityID = std::uint64_t;
 
     /**
+     * @ingroup ToyMakerECS
      * @brief An unsigned integer representing the name of an ECS world.  
      * 
      * A single application may contain multiple "Worlds" -- a set of tables containing entities and the components that describe them.  Each world is given an ID in turn.
@@ -47,6 +76,7 @@ namespace ToyMaker {
     using WorldID = std::uint64_t;
 
     /**
+     * @ingroup ToyMakerECS
      * @brief An ID that uniquely identifies an entity.
      * 
      * This ID is made by appending the ID of the entity to the ID of the world the entity belongs to.  Together, they uniquely identify an entity within the entire application
@@ -55,6 +85,7 @@ namespace ToyMaker {
     using UniversalEntityID = std::pair<WorldID, EntityID>;
 
     /**
+     * @ingroup ToyMakerECS
      * @brief A number tag used to represent components and systems.
      * 
      * @warning There can be no more than 254 different systems and types.
@@ -62,6 +93,7 @@ namespace ToyMaker {
     using ECSType = std::uint8_t;
 
     /**
+     * @ingroup ToyMakerECSComponent
      * @brief An unsigned integer representing the type of a component.
      * 
      * Each type of component is mapped to one such number, and the same number doubles as an index into the entity's signature.
@@ -71,6 +103,7 @@ namespace ToyMaker {
     using ComponentType = ECSType;
 
     /**
+     * @ingroup ToyMakerECSSystem
      * @brief An unsigned integer representing the type of a system
      * 
      * Each type of system is mapped to one such number, and the same number doubles as an index into an entity's signature.
@@ -79,29 +112,34 @@ namespace ToyMaker {
     using SystemType = ECSType;
 
     /**
+     * @ingroup ToyMakerECS
      * @brief A user-set constant which limits the number of creatable entities in a single ECS system
      * 
      */
     constexpr EntityID kMaxEntities { 1000000 };
 
     /** 
+     * @ingroup ToyMakerECS
      * @brief A constant used to restrict the number of definable system and component types in a project
      */
     constexpr ECSType kMaxECSTypes { 255 };
 
     /**
+     * @ingroup ToyMakerECSComponent
      * @brief A constant that restricts the number of definable components in a project
      * @see kMaxECSTypes
      */
     constexpr ComponentType kMaxComponents { kMaxECSTypes };
 
     /**
+     * @ingroup ToyMakerECSSystem
      * @brief A constant that restricts the number of definable systems in a project
      * @see kMaxECSTypes
      */
     constexpr SystemType kMaxSystems { kMaxECSTypes };
 
     /**
+     * @ingroup ToyMakerECSSystem ToyMakerECSComponent
      * @brief A 255 bit number, where each enabled bit represents a relationship between an entity and some ECS related object
      * 
      * Some of its uses are described here:
@@ -122,6 +160,7 @@ namespace ToyMaker {
     class ECSWorld;
 
     /**
+     * @ingroup ToyMakerECSComponent
      * @brief An abstract base class for all ECS component arrays.
      * 
      * A component array is a table containing a mapping from an entity to its component, whose type is defined in a subclass of BaseComponentArray
@@ -224,6 +263,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECSComponent ToyMakerSerialization 
      * @brief A struct that describes how a JSON component description is turned into a component
      * 
      * 
@@ -262,6 +302,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECSComponent ToyMakerSerialization
      * @brief A specialization of ComponentFromJSON that applies to components that are stored as shared pointers to components (as opposed to a value of the component type itself)
      * 
      * @tparam TComponent The type of the component created and stored in a shared pointer
@@ -281,6 +322,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECSComponent
      * @brief A template class for interpolating components between simulation frames for various purposes.
      * 
      * Each simulation tick, two versions of a component are stored by each component array. The first version is the state of the component at T-0, and the next is the state of the component at T-<simulation step>.
@@ -313,6 +355,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECSComponent
      * @brief A class that implements BaseComponentArray specializing it for a component of type `TComponent`.
      * 
      * @tparam TComponent The type of component the array is being made for.
@@ -460,6 +503,8 @@ namespace ToyMaker {
 
 
     /**
+     * @ingroup ToyMakerECSComponent
+     * 
      * @brief An object that stores and manages updates to all the component arrays instantiated for this ECS World.
      * 
      */
@@ -762,6 +807,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECSSystem
      * @brief The base class that acts as the interface between the engine's ECS system and a particular built-in or user-defined System
      *
      */
@@ -1005,6 +1051,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECSSystem
      * @brief A system template that disables systems with this form of declaration.
      * 
      * @tparam TSystemDerived The class that is derived from this one, as in CRTP
@@ -1015,6 +1062,7 @@ namespace ToyMaker {
     class System{ static_assert(false && "Non specialized system cannot be declared"); };
 
     /**
+     * @ingroup ToyMakerECSSystem
      * @brief The base class for any built-in or user-defined system that would like to be hooked to the engine's event cycle or have access to entities and components.
      * 
      * @tparam TSystemDerived The derived class to this base class, as in CRTP.
@@ -1091,6 +1139,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECSSystem
      * @brief Holds references to all the systems belonging to this manager's ECSWorld.
      * 
      * The system manager is responsible for keeping track of and passing messages to the various systems in this world.  It also maintains tables to track entity membership and activation for all the systems it manages.
@@ -1369,6 +1418,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECS
      * @brief A class that represents a set of systems, entities, and components, that are all interrelated, but isolated from other similar sets.
      * 
      * A single such set is called an ECSWorld.  Each ECSWorld is comprised of a list of entities, a system manager, and a component manager of its own.  Entities, systems, and components belonging to one world are not visible to systems in other worlds, or to any other ECSWorld.
@@ -2035,6 +2085,8 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECS
+     * 
      * @brief The Entity is a wrapper on an entity ID, used as the primary interface between an application and the engine's ECS system.
      * 
      * Holds an entity ID, and has several methods for querying and changing components, participation in different systems belonging to its ECSWorld.
@@ -2285,8 +2337,9 @@ namespace ToyMaker {
 
 
     /**
+     * @ingroup ToyMakerECSComponent 
      * 
-     * Step interpolation implementation, compatible with most types.
+     * @brief Step interpolation implementation, compatible with most types.
      * 
      */
     template<typename T>

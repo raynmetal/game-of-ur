@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerSpatialQuerySystem
  * @file spatial_query_math.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Geometrical, mathematical functions and related structs used to answer some simple questions about shapes situated somewhere in the world.
@@ -23,6 +24,7 @@ namespace ToyMaker {
     class AxisAlignedBounds;
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Generates a list of triangles making up the surface of a box situated somewhere in the world, given the coordinates of its corners.
      * 
      * @param boxCorners An array containing coordinates for the corners of a box located somewhere in the world.
@@ -33,6 +35,7 @@ namespace ToyMaker {
     std::array<AreaTriangle, 12> computeBoxFaceTriangles(const std::array<glm::vec3, 8>& boxCorners);
 
     /** 
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns a bool-vector pair, with bool indicating whether a point of intersection was found, and the vector containing the point of intersection.
      * 
      * @warning Error if invalid ray or plane specified (plane with no normal, or ray with no direction)
@@ -40,6 +43,7 @@ namespace ToyMaker {
     std::pair<bool, glm::vec3> computeIntersection(const Ray& ray, const Plane& plane);
 
     /** 
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns a bool-vector pair, with bool indicating whether a point of intersection was found, and the vector containing the point of intersection
      * 
      * @warning Error if invalid ray or triangle specified (triangle with no area, or ray with no direction)
@@ -47,6 +51,7 @@ namespace ToyMaker {
     std::pair<bool, glm::vec3> computeIntersection(const Ray& ray, const AreaTriangle& triangle);
 
     /** 
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns an unsigned int and vector-pair pair, with unsigned indicating whether any and how many points of intersection were found with the AABB, and the vector containing the points of intersection.
      * 
      * (if the ray "glances off" the volume, it does not count as an intersection per my implementation)
@@ -58,6 +63,7 @@ namespace ToyMaker {
 
 
     /** 
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns an unsigned int and vector pair pair, with int indicating whether and how many points of intersection were found, and the vector containing the points of intersection
      * 
      * Object bounds only supports convex shapes, and so one can expect that if a point of intersection exists, then there will be a second to go with it. (provided the ray is long enough) (and also unless the ray "glances off" the volume, which counts as no intersection per my implementation)
@@ -66,42 +72,54 @@ namespace ToyMaker {
     // std::pair<uint8_t, std::pair<glm::vec3, glm::vec3>> computeIntersections(const Ray& ray, const ObjectBounds& objectbounds);
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns a bool value indicating whether the ray passes through the object volume
      */
     // bool overlaps(const Ray& ray, const ObjectBounds& objectBounds);
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns whether `point` is contained by `bounds`.
      * 
      */
     bool overlaps(const glm::vec3& point, const AxisAlignedBounds& bounds);
+
     /** 
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns whether `ray` overlaps with `bounds`.
      * 
      */
     bool overlaps(const Ray& ray, const AxisAlignedBounds& bounds);
+
     /** 
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns whether `one` overlaps `two`. 
      * 
      */
     bool overlaps(const AxisAlignedBounds& one, const AxisAlignedBounds& two);
+
     /** 
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns whether `point` is contained by `bounds`. 
      * 
      */
     bool contains(const glm::vec3& point, const AxisAlignedBounds& bounds);
+
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns whether `ray` is contained by `bounds`. 
      * 
      */
     bool contains(const Ray& ray, const AxisAlignedBounds& bounds);
     /** 
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Returns whether `one` is contained by `two`. 
      * 
      */
     bool contains(const AxisAlignedBounds& one, const AxisAlignedBounds& two);
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief A component defining the true bounds of a spatially queryable object situated somewhere in the world.
      * 
      * Also provides methods for retrieving related axis aligned and volume aligned box properties.
@@ -286,6 +304,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief An object containing a coarse simplified representation, AABB, of spatially queryable objects.
      * 
      * AABBs, Axis-aligned bounding boxes, are defined by two 3D coordinates, each corresponding to opposite corners of an axis-aligned box in the world.  The axes here are the unit vectors of the world space (in which exists the node owning this component).
@@ -434,12 +453,20 @@ namespace ToyMaker {
         Extents mExtents {glm::vec3{0.f}, glm::vec3{0.f}};
     };
 
+    /**
+     * @ingroup ToyMakerSerialization ToyMakerSpatialQuerySystem
+     * 
+     */
     NLOHMANN_JSON_SERIALIZE_ENUM( ObjectBounds::TrueVolumeType, {
         {ObjectBounds::TrueVolumeType::BOX, "box"},
         {ObjectBounds::TrueVolumeType::SPHERE, "sphere"},
         {ObjectBounds::TrueVolumeType::CAPSULE, "capsule"},
     })
 
+    /**
+     * @ingroup ToyMakerSerialization ToyMakerSpatialQuerySystem
+     * 
+     */
     inline void to_json(nlohmann::json& json, const ObjectBounds& objectBounds) {
         json = {
             {"type", ObjectBounds::getComponentTypeName()},
@@ -469,6 +496,7 @@ namespace ToyMaker {
         };
     }
 
+    /** @ingroup ToyMakerSerialization ToyMakerSpatialQuerySystem */
     inline void from_json(const nlohmann::json& json, ObjectBounds& objectBounds) {
         assert(json.at("type") == ObjectBounds::getComponentTypeName() && "Incorrect type property for an objectBounds component");
         const glm::vec3 positionOffset {
@@ -519,10 +547,13 @@ namespace ToyMaker {
         }
     }
 
+    /** @ingroup ToyMakerSerialization ToyMakerSpatialQuerySystem */
     inline void to_json(nlohmann::json& json, const AxisAlignedBounds& axisAlignedBounds) { /* never used, so pass */
         (void)json; // prevent unused parameter warnings
         (void)axisAlignedBounds; // prevent unused parameter warnings
     }
+
+    /** @ingroup ToyMakerSerialization ToyMakerSpatialQuerySystem */
     inline void from_json(const nlohmann::json& json, AxisAlignedBounds& objectBounds) { /* never used, so pass */ 
         (void)json; // prevent unused parameter warnings
         (void)objectBounds; // prevent unused parameter warnings

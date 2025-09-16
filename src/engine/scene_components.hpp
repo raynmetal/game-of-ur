@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerSceneSystem
  * @file scene_components.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Stores structs and classes for common components used by the SceneSystem and other related Systems.
@@ -20,6 +21,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerSceneSystem ToyMakerECSComponent
      * @brief A component representing the position, rotation, and scale of an entity.
      * 
      * @see ECSWorld::registerComponentTypes()
@@ -81,6 +83,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSceneSystem ToyMakerECSComponent
      * @brief The transform component, which moves the vertices of a model to their world space coordinates during rendering.
      * 
      * Computed based on the parameters specified in the placement component along with transforms of objects higher up in the scene hierarchy.
@@ -104,6 +107,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSceneSystem ToyMakerECSComponent
      * @brief Component representing hierarchical information related to this entity.
      * 
      * Necessary because quite often systems will not/should not have direct access to the SceneSystem.
@@ -144,6 +148,7 @@ namespace ToyMaker {
         inline static std::string getComponentTypeName() { return "SceneHierarchyData"; }
     };
 
+    /** @ingroup ToyMakerSerialization ToyMakerSceneSystem */
     inline void from_json(const nlohmann::json& json, Placement& placement) {
         assert(json.at("type").get<std::string>() == Placement::getComponentTypeName() && "Type mismatch. Component json must have type Placement");
         json.at("position")[0].get_to(placement.mPosition.x);
@@ -161,6 +166,8 @@ namespace ToyMaker {
         json.at("scale")[1].get_to(placement.mScale.y);
         json.at("scale")[2].get_to(placement.mScale.z);
     }
+
+    /** @ingroup ToyMakerSerialization  ToyMakerSceneSystem */
     inline void to_json(nlohmann::json& json, const Placement& placement) {
         json = {
             {"type", Placement::getComponentTypeName()},
@@ -183,24 +190,33 @@ namespace ToyMaker {
             }}
         };
     }
+
+    /** @ingroup ToyMakerSerialization ToyMakerSceneSystem */
     inline void to_json(nlohmann::json& json, const SceneHierarchyData& sceneHierarchyData) {
         (void)json; (void)sceneHierarchyData; // prevent unused parameter warnings
     }
+
+    /** @ingroup ToyMakerSerialization ToyMakerSceneSystem */
     inline void from_json(const nlohmann::json& json, SceneHierarchyData& sceneHierarchyData) {
         (void)json; (void)sceneHierarchyData; // prevent unused parameter warnings
     }
+
+    /** @ingroup ToyMakerSerialization ToyMakerSceneSystem */
     inline void to_json(nlohmann::json& json, const Transform& transform) {
         (void)transform; // prevent unused parameter warnings
         json = {
             {"type", Transform::getComponentTypeName()},
         };
     }
+
+    /** @ingroup ToyMakerSerialization ToyMakerSceneSystem */
     inline void from_json(const nlohmann::json& json, Transform& transform) {
         assert(json.at("type") == Transform::getComponentTypeName() && "Type mismatch. Component json must have type Transform");
         transform.mModelMatrix = glm::mat4{1.f};
     }
 
     /**
+     * @ingroup ToyMakerECSComponent
      * @brief Override of the Placement component's Interpolator.
      * 
      * Uses linear interpolation for position and scale, and spherical interpolation for quaternions.
@@ -225,6 +241,7 @@ namespace ToyMaker {
     }
 
     /**
+     * @ingroup ToyMakerECSComponent
      * @brief Override of the Transform component's Interpolator.
      * 
      * Simple linear interpolation for this Transform's model matrix.
@@ -248,6 +265,7 @@ namespace ToyMaker {
     }
 
     /**
+     * @ingroup ToyMakerECSComponent
      * @brief Override of the SceneHierarchyData Interpolator.
      * 
      * Simply returns SceneHierarchyData in its most current state, its state in the next simulation step.

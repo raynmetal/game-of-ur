@@ -21,6 +21,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerSerialization ToyMakerECSComponent ToyMakerResourceDB
      * @brief Allows a shared pointer to a resource to be constructed as a component for an entity when loading a scene.
      * 
      * The scene loading system, when it comes across such a resource reference in a scene file, will automatically attempt to construct the resource (or fetch a pointer to it, if it has already been constructed) based on its description in the resource database.

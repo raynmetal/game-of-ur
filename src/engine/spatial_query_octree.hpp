@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerSpatialQuerySystem
  * @file spatial_query_octree.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Data structures, functions, and methods relating to the hierarchical organization and representation of spatial data.
@@ -23,6 +24,7 @@ namespace ToyMaker {
     class Octree;
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief A single node of an octree, representing a single octant of the 8 that make up its parent region.
      * 
      */
@@ -442,6 +444,8 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
+     * 
      * @brief A data structure used for speeding up spatial queries about 3-dimensional objects in the scene.
      * 
      * The octree is essentially a node representing a cuboidal region that can be subdivided into equally-proportioned smaller cuboidal regions recursively.  Each node of the octree maintains a list entities contained by its region.

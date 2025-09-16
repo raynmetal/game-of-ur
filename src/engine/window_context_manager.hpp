@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerCore
  * @file window_context_manager.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains classes and functions for managing the (at present, single) window of this application.
@@ -26,6 +27,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerCore
      * @brief A class providing access to various window management methods and window event Signals.
      * 
      * It is essentially a convenient wrapper over SDL_Window.

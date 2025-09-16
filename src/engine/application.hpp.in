@@ -26,6 +26,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerEngine
      * @brief Class that handles setup for the rest of the engine and application.
      * 
      * This class is responsible for initializing the various packages used by the engine, reading window and other project configurations from `project.json`, and loading and initializing the default or first scene in the project.

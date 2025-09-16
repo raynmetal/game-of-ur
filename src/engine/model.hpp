@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file model.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Classes, constructors for this engine's representation of 3D models.
@@ -34,6 +35,8 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerRenderSystem ToyMakerECSComponent
+     * 
      * @brief This engine's representation of a single unrigged 3D model.
      * 
      * This object:
@@ -145,6 +148,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerRenderSystem
      * @brief A constructor method for StaticModels that loads such a model from its model file (w/ extensions such as .fbx, .obj, .gltf, and so on)
      * 
      * Such a resource's description in JSON might look like:

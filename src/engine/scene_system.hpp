@@ -1,9 +1,16 @@
 /**
+ * @ingroup ToyMakerSceneSystem
  * @file scene_system.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief System classes relating to the SceneSystem, which in some ways lies at the heart of the engine.
  * @version 0.3.2
  * @date 2025-09-05
+ * 
+ */
+
+/**
+ * @defgroup ToyMakerSceneSystem
+ * @ingroup ToyMakerEngine
  * 
  */
 
@@ -36,6 +43,7 @@ namespace ToyMaker {
     class SceneSystem;
 
     /**
+     * @ingroup ToyMakerSceneSystem
      * @brief (Presently unused) A marker to indicate how transforms should be computed for a given scene node.
      * 
      * Currently all scene nodes are computed relative to their parent (even if they shouldn't be).
@@ -49,11 +57,13 @@ namespace ToyMaker {
         // CAMERA=2,
     };
 
+    /** @ingroup ToyMakerSerialization ToyMakerSceneSystem */
     NLOHMANN_JSON_SERIALIZE_ENUM(RelativeTo, {
         {RelativeTo::PARENT, "parent"},
     });
 
     /**
+     * @ingroup ToyMakerSceneSystem
      * @brief (Perhaps unused) Special "reserved" entity IDs which the scene system might use.
      * 
      * @todo Figure out if there's actual any use for this or if my brain farted when I was writing the scene system.
@@ -63,12 +73,14 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSceneSystem
      * @brief Special name for the scene root, unusable by any other scene object.
      * 
      */
     extern const std::string kSceneRootName;
 
     /**
+     * @ingroup ToyMakerSceneSystem
      * @brief The core of a node in the SceneSystem, a set of components and methods overridable or usable by all types of scene nodes.
      * 
      */
@@ -678,6 +690,7 @@ namespace ToyMaker {
 
 
     /**
+     * @ingroup ToyMakerSceneSystem
      * @brief A CRTP template for all the scene node types present in the project.
      * 
      * @tparam TSceneNode A specialization and subclass of this class.
@@ -781,6 +794,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSceneSystem
      * @brief The most basic vanilla flavour of scene node comprised of no more than a name and some components.
      * 
      * @see SceneNodeFromDescription
@@ -815,6 +829,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSceneSystem ToyMakerRenderSystem
      * @brief A type of node capable of and responsible for interacting sensibly with the engine's RenderSystem and ECSWorlds.
      * 
      * It is the only type of node (at present) to be able to create an ECSWorld of its own.  Any ECSWorld thus made will have its Entitys, Systems, and ComponentArrays isolated from those of any other ECSWorld.
@@ -1389,6 +1404,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSceneSystem ToyMakerECSSystem
      * @brief The SceneSystem, a singleton System, responsible for tracking all objects in the scene, computing their Transforms, and maintaining hierarchical relationships between scene nodes.
      * 
      * In many ways this is the primary interface through which a game developer will manipulate and query the game world.  The scene tree is to games what a DOM tree is to browsers.
@@ -1545,6 +1561,7 @@ namespace ToyMaker {
 
     private:
         /**
+         * @ingroup ToyMakerECSSystem ToyMakerSceneSystem
          * @brief A subsystem of the SceneSystem which tracks, per world, which objects have had their Placement components updated.
          * 
          * These objects then have their UniversalEntityIDs sent to the SceneSystem, which schedules an update to their transforms as soon as possible.

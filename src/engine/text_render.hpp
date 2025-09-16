@@ -1,10 +1,18 @@
 /**
+ * @ingroup ToyMakerText
  * @file text_render.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Classes relating to the creation and use of fonts to render text.
  * @version 0.3.2
  * @date 2025-09-10
  * 
+ * 
+ */
+
+/**
+ * @defgroup ToyMakerText ToyMaker font loading and text rendering implementation 
+ * 
+ * @ingroup ToyMakerEngine ToyMakerResourceDB
  * 
  */
 
@@ -20,6 +28,7 @@ namespace ToyMaker{
     class TextFont;
 
     /**
+     * @ingroup ToyMakerText
      * @brief A wrapper class over SDL_ttf, providing methods to generate text textures from text using a font as a resource.
      * 
      */
@@ -137,6 +146,7 @@ namespace ToyMaker{
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerText
      * @brief The ResourceConstructor responsible for loading a TextFont from its file path.
      * 
      * ## Usage:

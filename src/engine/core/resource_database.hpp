@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerResourceDB ToyMakerCore
  * @file core/resource_database.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Headers relating to resources and their management for a given project. 
@@ -11,6 +12,12 @@
  * @see ToyMaker::ResourceDatabase
  * @see ToyMaker::ResourceConstructor
  * @see ToyMaker::Resource
+ */
+
+/**
+ * @defgroup ToyMakerResourceDB Classes related to the ToyMaker resource database
+ * @ingroup ToyMakerEngine ToyMakerSerialization ToyMakerCore
+ * 
  */
 
 #ifndef FOOLSENGINE_RESOURCEDATABASE_H
@@ -39,6 +46,8 @@ namespace ToyMaker {
     template <typename TResource, typename TMethod> class ResourceConstructor;
 
     /**
+     * @ingroup ToyMakerResourceDB
+     *
      * @brief Base class of all Resource types.
      * 
      */
@@ -75,6 +84,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB
      * @brief A class that holds references to all constructors for a type of Resource object.
      * 
      */
@@ -106,6 +116,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB
      * @brief A single way that a resource may be constructed.
      * 
      */
@@ -153,6 +164,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB
      * @brief A database of all Resource types available for this project, and the various ResourceConstructors responsible for making them.
      * 
      * Also holds a list of resource definitions.  When an attempt is made to retrieve a resource by its name, a copy of a reference to it is returned if it exists in memory, or the resource is constructed per the parameters stored in its description.
@@ -320,6 +332,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB
      * @brief The base class for any type whose creation and storage should be managed by the ResourceDatabase.
      * 
      * References to a Resource are ultimately returned as shared pointers the the immediate subclass of this class.
@@ -398,6 +411,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB
      * @brief Tracks pointers to all ResourceConstructors responsible for creating a resource of one type.
      * 
      * An object of this kind is created automatically when a resource type registers itself for management by the ResourceDatabase.
@@ -423,6 +437,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB
      * @brief An object representing one method for creating a resource of a given kind.
      * 
      * A single resource may be created in multiple ways.  A texture resource, for example, may be loaded from an image file, or procedurally generated, or simply allocated.

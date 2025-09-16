@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerSpatialQuerySystem
  * @file spatial_query_basic_types.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Classes and structs representing data related to the engine's spatial query system (the precursor to a full-fledged physics system).
@@ -17,12 +18,14 @@
 
 namespace ToyMaker {
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Type used to represent the name of the corner of a box.
      * 
      */
     using BoxCorner = uint8_t;
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Enum values correspond to bits on a BoxCorner which help specify which side of the box on each axis is being indicated.
      * 
      */
@@ -34,6 +37,7 @@ namespace ToyMaker {
 
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Tests whether a given number is finite.
      * 
      * @param number The number being tested.
@@ -44,6 +48,7 @@ namespace ToyMaker {
         return std::isfinite(number);
     }
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Tests whether a set of 3 numbers is finite.
      * 
      * @param vector The numbers being tested.
@@ -55,6 +60,7 @@ namespace ToyMaker {
     }
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Tests whether a number is positive.
      * 
      * @param number The number being tested.
@@ -66,6 +72,7 @@ namespace ToyMaker {
     }
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Tests whether a set of 3 numbers is positive.
      * 
      * @param vector The numbers being tested.
@@ -77,6 +84,7 @@ namespace ToyMaker {
     }
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Tests whether a number is non-negative.
      * 
      * @param number The number being tested.
@@ -88,6 +96,7 @@ namespace ToyMaker {
     }
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Tests whether a set of numbers is non-negative.
      * 
      * @param vector The numbers being tested.
@@ -103,6 +112,7 @@ namespace ToyMaker {
 
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief The base class of all spatial query volumes.
      * 
      * Provides functions and methods for retrieving and computing volume relative and axis aligned box corner coordinates.
@@ -157,6 +167,7 @@ namespace ToyMaker {
         }
     };
 
+    /** @ingroup ToyMakerSpatialQuerySystem */
     template <typename TDerived>
     struct Volume: public VolumeBase_ {
         /**
@@ -171,6 +182,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Holds the parameters describing the spatial query volume of a simple three-dimensionsal box.
      * 
      */
@@ -202,6 +214,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Holds the parameters describing the spatial query volume of a simple three-dimensionsal capsule (or pill, or whatever you like).
      * 
      */
@@ -245,6 +258,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief Holds parameters describing a spherical spatial query volume.
      * 
      */
@@ -276,6 +290,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief A set of 3 points located in the world forming a (hopefully sensible) triangle.
      * 
      */
@@ -308,6 +323,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief A set of numbers representing a single circle situated somewhere in the world.
      * 
      */
@@ -351,6 +367,7 @@ namespace ToyMaker {
 
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief A set of numbers describing a ray with its source at some finite point in the world, projected in a direction for some positive length.
      * 
      */
@@ -393,6 +410,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSpatialQuerySystem
      * @brief A set of numbers describing a plane situated somewhere in the world.
      * 
      */

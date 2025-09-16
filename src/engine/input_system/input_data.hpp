@@ -8,6 +8,12 @@
  * The input system, in a nutshell, breaks up all inputs from every source into their constituent single axis values.  Each such value is then remapped to one axis of one action.
  */
 
+/**
+ * @defgroup ToyMakerInputSystem Classes related to the ToyMaker input system
+ * @ingroup ToyMakerEngine
+ * 
+ */
+
 #ifndef FOOLSENGINE_INPUTSYSTEMDATA_H
 #define FOOLSENGINE_INPUTSYSTEMDATA_H
 
@@ -22,6 +28,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief The name of an action whose meaning is known within a specific context.
      * 
      * @see ContextName
@@ -30,6 +37,7 @@ namespace ToyMaker {
     using ActionName = ::std::string;
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief The name of a context which contains definitions for actions that are valid within it.
      * 
      */
@@ -38,6 +46,7 @@ namespace ToyMaker {
     struct InputSourceDescription;
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief The type of input device that was responsible for creating the signal which will be mapped to an action.
      * 
      */
@@ -50,6 +59,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A single device may have multiple buttons and other controls, each of which will correspond to a type of input listed here.
      * 
      */
@@ -63,6 +73,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A type with multiple uses.
      * 
      * The bits of this type signify a single axis, in the positive or negative direction.  They also determine whether the value is that of a change, or of a state.
@@ -77,6 +88,7 @@ namespace ToyMaker {
     typedef uint8_t AxisFilterType;
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A type that is quite possibly unnecessary now that DeviceType and ControlType exist.
      * 
      * But either way.  Lists various attributes of the control that it is associated with. (State/change? Axis/button? Simple? One-axis? Two-axes?)
@@ -85,12 +97,14 @@ namespace ToyMaker {
     typedef uint8_t InputAttributesValueType;
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A composite type which uniquely identifies a control attached to the platform running this application.
      * 
      */
     typedef ::std::pair<DeviceType, ControlType> InputSourceType;
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A class that, perhaps just as unnecessarily, stores a value of InputAttributesValueType.
      * 
      */
@@ -102,12 +116,14 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A mapping from each type of input control to the attributes associated with it.
      * 
      */
     extern const ::std::map<InputSourceType, InputAttributesType> kInputSourceTypeAttributes;
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A collection of a few important input attribute value type values and masks.
      * 
      * Each value corresponds to some aspect that an input control might have. The input attributes value, filtered through these enums, tells you of the capabilities of the control.
@@ -127,8 +143,9 @@ namespace ToyMaker {
         STATE_IS_LOCATION=0x40, /**< Does the control sometimes indicate a location? (like mouse pointers, touch pads, tablet pen hovers) */
     };
 
-    /** @brief Identifies a single control, such as a button, 
-     * trigger, or joystick, on a single device.
+    /** 
+     * @ingroup ToyMakerInputSystem
+     * @brief Identifies a single control, such as a button, trigger, or joystick, on a single device.
      */
     struct InputSourceDescription {
         /**
@@ -217,6 +234,7 @@ namespace ToyMaker {
     };
 
     /** 
+     * @ingroup ToyMakerInputSystem
      * @brief Enumeration of all possible axis filter values 
      * 
      */
@@ -238,6 +256,7 @@ namespace ToyMaker {
     };
     
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief Important values used with AxisFilterType for determining the type, direction, and sign, of an input.
      * 
      */
@@ -248,6 +267,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief Filter that uniquely defines ONE axis of one control of one input belonging to one device.
      * 
      */
@@ -312,6 +332,8 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
+     * 
      * @brief An input combo that whose value is recorded and mapped to an (axis of an) action value of some kind.
      * 
      * These objects are used to inform the InputManager what inputs are being listened for, how these inputs relate to each other, and what event should trigger an Action update.
@@ -433,6 +455,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief An input state that hasn't yet been mapped to its corresponding action.
      * 
      */
@@ -463,6 +486,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief The type of value associated with this action.
      * 
      */
@@ -472,16 +496,18 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief An identifier that fully names one action present in the project.
      * 
      */
     using QualifiedActionName = ::std::pair<ContextName, ActionName>;
 
     /**
-    * @brief The definition of a single action, including whether it represents state or change, whether it supports negative values, and the number of axes it has.
-    * 
-    * The only parts of the definition used for comparisons is the action's name and context;  its input attributes are mainly used internally, by the InputManager itself.
-    */
+     * @ingroup ToyMakerInputSystem
+     * @brief The definition of a single action, including whether it represents state or change, whether it supports negative values, and the number of axes it has.
+     * 
+     * The only parts of the definition used for comparisons is the action's name and context;  its input attributes are mainly used internally, by the InputManager itself.
+     */
     struct ActionDefinition {
         /**
          * @brief Construct a new action definition object
@@ -564,6 +590,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A seemingly redundant type that is a part of the ActionData struct and not the ActionDefinition struct.
      * 
      */
@@ -575,6 +602,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief Helps describe what InputCombo related event was responsible for signaling this action.
      * 
      */
@@ -584,6 +612,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A struct containing meta-info that will be present for all types of actions.
      * 
      */
@@ -621,12 +650,14 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief Actions that ultimately act like a single button value, where mActivated is the state of the button.
      * 
      */
     typedef CommonActionData SimpleActionData;
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief Actions that have just one axis of data, eg., the accelerator on a car.
      * 
      */
@@ -645,6 +676,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief Actions that have two axes of data. (Pointer locations, movement direction input, pitch+roll, etc.)
      * 
      */
@@ -663,6 +695,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief Actions described by 3 axes (I can't think of any examples for this)
      * 
      */
@@ -681,6 +714,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A union that may contain any one of SimpleActionData, OneAxisActionData, TwoAxisActionData, ThreeAxisActionData
      * 
      */
@@ -785,6 +819,10 @@ namespace ToyMaker {
         ThreeAxisActionData mThreeAxisActionData;
     };
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     NLOHMANN_JSON_SERIALIZE_ENUM ( DeviceType, {
         {DeviceType::NA, "na"},
         {DeviceType::MOUSE, "mouse"},
@@ -793,6 +831,10 @@ namespace ToyMaker {
         {DeviceType::CONTROLLER, "controller"},
     });
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     NLOHMANN_JSON_SERIALIZE_ENUM(ControlType, {
         {ControlType::NA, "na"},
         {ControlType::AXIS, "axis"},
@@ -802,6 +844,10 @@ namespace ToyMaker {
         {ControlType::RADIO, "radio"},
     });
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     NLOHMANN_JSON_SERIALIZE_ENUM( AxisFilter, {
         {AxisFilter::SIMPLE, "simple"},
         {AxisFilter::X_POS, "+x"},
@@ -818,6 +864,10 @@ namespace ToyMaker {
         {AxisFilter::Z_CHANGE_NEG, "-dz"},
     });
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     NLOHMANN_JSON_SERIALIZE_ENUM( InputCombo::Trigger, {
         {InputCombo::Trigger::ON_PRESS, "on-press"},
         {InputCombo::Trigger::ON_RELEASE, "on-release"},
@@ -827,24 +877,73 @@ namespace ToyMaker {
         {InputCombo::Trigger::ON_BUTTON_CHANGE, "on-button-change"},
     });
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     NLOHMANN_JSON_SERIALIZE_ENUM( ActionValueType, {
         {ActionValueType::STATE, "state"},
         {ActionValueType::CHANGE, "change"},
     });
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void to_json(nlohmann::json& json, const ToyMaker::InputAttributesType& inputAttributes);
+
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void from_json(const nlohmann::json& json, ToyMaker::InputAttributesType& inputAttributes);
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void to_json(nlohmann::json& json, const ToyMaker::InputSourceDescription& inputSourceDescription);
+
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void from_json(const nlohmann::json& json, ToyMaker::InputSourceDescription& inputSourceDescription);
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void to_json(nlohmann::json& json, const ToyMaker::InputFilter& inputFilter);
+
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void from_json(const nlohmann::json& json, ToyMaker::InputFilter& inputFilter);
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void to_json(nlohmann::json& json, const ToyMaker::InputCombo& inputCombo);
+
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void from_json(const nlohmann::json& json, ToyMaker::InputCombo& inputCombo);
 
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void to_json(nlohmann::json& json, const ToyMaker::ActionDefinition& actionDefinition);
+
+    /**
+     * @ingroup ToyMakerInputSystem
+     * 
+     */
     void from_json(const nlohmann::json& json, ToyMaker::ActionDefinition& actionDefinition);
 }
 

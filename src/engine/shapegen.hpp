@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerResourceDB ToyMakerRenderSystem
  * @file shapegen.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains classes used to construct some common procedurally generated meshes and models.
@@ -21,6 +22,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerRenderSystem ToyMakerResourceDB
      * @brief Mesh constructor that creates a spherical mesh using a latitude-longitude method.
      * 
      * Example:
@@ -51,6 +53,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem ToyMakerResourceDB
      * @brief Constructs a rectangle mesh based on its dimensions.
      * 
      * Example:
@@ -80,6 +83,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerRenderSystem
      * @brief Constructs a cuboid mesh based on its dimensions.
      * 
      * Example:
@@ -112,6 +116,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerRenderSystem
      * @brief Constructs a sphere model using the latitude-longitude method.
      * 
      * @see StaticMeshSphereLatLong
@@ -128,6 +133,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem ToyMakerResourceDB
      * @brief Constructs a rectangle mesh using the latitude-longitude method.
      * 
      * 
@@ -145,6 +151,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerRenderSystem
      * @brief Constructs a cuboid mesh based on its dimensions
      * 
      * @see StaticMeshCuboidDimensions

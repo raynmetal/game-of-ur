@@ -1,10 +1,16 @@
 /**
+ * @ingroup ToyMakerCameraSystem
  * @file camera_system.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains headers for the system and structs used by the engine's camera system.
  * @version 0.3.2
  * @date 2025-09-03
  * 
+ */
+
+/**
+ * @defgroup ToyMakerCameraSystem
+ * @ingroup ToyMakerEngine ToyMakerRenderSystem
  * 
  */
 
@@ -20,6 +26,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerCameraSystem ToyMakerECSComponent
      * @brief Struct that encapsulates properties which define the (geometric) aspects of a scene camera.
      * 
      * Its appearance in json is as follows:
@@ -111,12 +118,17 @@ namespace ToyMaker {
         inline static std::string getComponentTypeName() { return "CameraProperties"; }
     };
 
+    /** 
+     * @ingroup ToyMakerSerialization
+     * 
+     */
     NLOHMANN_JSON_SERIALIZE_ENUM(CameraProperties::ProjectionType, {
         {CameraProperties::ProjectionType::FRUSTUM, "frustum"},
         {CameraProperties::ProjectionType::ORTHOGRAPHIC, "orthographic"},
     });
 
     /**
+     * @ingroup ToyMakerCameraSystem ToyMakerECSSystem
      * @brief System responsible for managing all active cameras belonging to this world, tracking and updating associated projection and view matrices.
      * 
      */
@@ -198,6 +210,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECSComponent
      * @brief Interpolation override for the camera properties struct, mainly using linear interpolation for each member
      * 
      * @tparam CameraProperties Specialization for the CameraProperties component.
@@ -236,6 +249,9 @@ namespace ToyMaker {
         };
     }
 
+    /**
+     * @ingroup ToyMakerSerialization
+     */
     inline void from_json(const nlohmann::json& json, CameraProperties& cameraProperties) {
         assert(json.at("type").get<std::string>() == CameraProperties::getComponentTypeName() && "Type mismatch, json must be of camera properties type");
         json.at("projection_mode").get_to(cameraProperties.mProjectionType);
@@ -251,6 +267,7 @@ namespace ToyMaker {
         json.at("near_far_planes").at("far").get_to(cameraProperties.mNearFarPlanes.y);
     }
 
+    /** @ingroup ToyMakerSerialization */
     inline void to_json(nlohmann::json& json, const CameraProperties& cameraProperties) {
         json = {
             {"type", CameraProperties::getComponentTypeName()},

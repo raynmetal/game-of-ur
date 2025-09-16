@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerInputSystem
  * @file input_system/input_system.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief 
@@ -31,6 +32,8 @@ namespace ToyMaker {
     class InputManager;
 
     /**
+     * @ingroup ToyMakerInputSystem
+     * 
      * @brief The class that acts as the main interface between the rest of the project and the input system.
      * 
      * Processes raw SDL input events into unmapped inputs, and later reports bind value changes to an ActionContext for conversion into corresponding action events.
@@ -276,6 +279,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief Class interface for systems that wish to be notified when action events occur in an action context.
      * 
      * ## Usage
@@ -314,6 +318,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief A container for actions that make sense within a given context.
      * 
      * Different contexts might have different requirements, even with the same set of inputs.  For example, it might make sense to have a "slash" action in the game world, but in the context of a game menu, slash cannot have meaning.
@@ -540,6 +545,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerInputSystem
      * @brief An object responsible for tracking action listeners for a given project.
      * 
      * Triggered actions created by ActionContext do not actually reach their intended listeners until it has been (manually) sent via an ActionDispatch object.  This affords developers some control over when and where actions are received.

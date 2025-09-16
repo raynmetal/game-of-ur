@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerSerialization ToyMakerSceneSystem ToyMakerResourceDB
  * @file scene_loading.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A collection of ResourceConstructor classes responsible for loading a scene into the engine.
@@ -22,6 +23,7 @@ namespace ToyMaker {
     class ViewportNodeFromDescription;
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerSceneSystem
      * @brief Constructs a scene tree from a file containing its JSON description.
      * 
      * Its appearance in JSON might be as follows:
@@ -65,6 +67,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerSceneSystem
      * @brief Constructs a scene tree (separate from @em the scene tree) based on its description in JSON.
      * 
      * It will have, as its root, a SimObject which serves (or is intended to serve) as the interface between it and the scene it was imported into.
@@ -217,6 +220,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerSceneSystem
      * @brief Constructs a scene node based on its description in JSON.
      * 
      * @see SceneFromDescription
@@ -235,6 +239,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerSceneSystem
      * @brief Constructs a SimObject from its description in JSON.
      * 
      * @see SceneFromDescription
@@ -252,6 +257,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerSceneSystem
      * @brief Constructs a ViewportNode from its description in JSON.
      * 
      * Its description might look as follows:

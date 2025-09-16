@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file material.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Functions related to rendering materials.
@@ -26,6 +27,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A collection of key value pairs used to control the behaviour of the rendering system when rendering a single "object."
      * 
      * Each key-value pair is a string-type pair declared by the rendering system or its submodules at the start of the application.
@@ -318,6 +320,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerRenderSystem
      * @brief A material resource constructor which converts a material represented in JSON to its Material equivalent.
      * 
      * Such a representation might look like this:
