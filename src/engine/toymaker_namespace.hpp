@@ -12,12 +12,12 @@
 #define FOOLSENGINE_NAMESPACE_H
 
 /**
- * @defgroup ToyMakerEngine The ToyMaker game engine
+ * @defgroup ToyMakerEngine ToyMaker Engine
  * 
  */
 
  /**
-  * @defgroup ToyMakerSerialization Classes and functions relating to serialization.
+  * @defgroup ToyMakerSerialization Serialization
   * @ingroup ToyMakerEngine
   * 
   */

@@ -10,7 +10,7 @@
  */
 
 /**
- * @defgroup ToyMakerRenderSystem
+ * @defgroup ToyMakerRenderSystem Render System
  * @ingroup ToyMakerEngine
  * 
  */

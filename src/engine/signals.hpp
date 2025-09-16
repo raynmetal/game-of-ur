@@ -10,7 +10,7 @@
  */
 
 /**
- * @defgroup ToyMakerSignals ToyMaker engine signal implementation
+ * @defgroup ToyMakerSignals Signals
  * @ingroup ToyMakerCore
  * 
  */

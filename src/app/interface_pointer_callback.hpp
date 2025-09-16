@@ -9,7 +9,7 @@
  */
 
 /**
- * @defgroup UrGameInteractionLayer Ur classes providing user interactivity
+ * @defgroup UrGameInteractionLayer Interaction Layer
  * @ingroup UrGame
  * 
  */

@@ -15,7 +15,7 @@
  */
 
 /**
- * @defgroup ToyMakerResourceDB Classes related to the ToyMaker resource database
+ * @defgroup ToyMakerResourceDB Resource Database
  * @ingroup ToyMakerEngine ToyMakerSerialization ToyMakerCore
  * 
  */

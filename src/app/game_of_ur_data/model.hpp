@@ -9,12 +9,12 @@
  */
 
 /**
- * @defgroup UrGame Game of Ur project
+ * @defgroup UrGame Game of Ur
  * 
  */
 
 /**
- * @defgroup UrGameDataModel Game of Ur data model implementation
+ * @defgroup UrGameDataModel Data Model
  * @ingroup UrGame
  * 
  */

@@ -9,7 +9,7 @@
  */
 
 /**
- * @defgroup ToyMakerSpatialQuerySystem Spatial query implementation and usage
+ * @defgroup ToyMakerSpatialQuerySystem Spatial Queries
  * @ingroup ToyMakerEngine
  * 
  */

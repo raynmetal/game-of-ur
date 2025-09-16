@@ -10,7 +10,7 @@
  */
 
 /**
- * @defgroup ToyMakerText ToyMaker font loading and text rendering implementation 
+ * @defgroup ToyMakerText Text
  * 
  * @ingroup ToyMakerEngine ToyMakerResourceDB
  * 
