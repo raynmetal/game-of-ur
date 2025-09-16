@@ -1109,6 +1109,7 @@ namespace ToyMaker{
         static constexpr bool s_valid { true };
     };
 
+    /** @ingroup ToyMakerECSComponent ToyMakerSimSystem */
     template<>
     inline SimCore Interpolator<SimCore>::operator() (const SimCore&, const SimCore& next, float) const {
         // Never return the previous state, as that is (supposed to be)

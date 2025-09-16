@@ -820,7 +820,7 @@ namespace ToyMaker {
     };
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     NLOHMANN_JSON_SERIALIZE_ENUM ( DeviceType, {
@@ -832,7 +832,7 @@ namespace ToyMaker {
     });
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     NLOHMANN_JSON_SERIALIZE_ENUM(ControlType, {
@@ -845,7 +845,7 @@ namespace ToyMaker {
     });
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     NLOHMANN_JSON_SERIALIZE_ENUM( AxisFilter, {
@@ -865,7 +865,7 @@ namespace ToyMaker {
     });
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     NLOHMANN_JSON_SERIALIZE_ENUM( InputCombo::Trigger, {
@@ -878,7 +878,7 @@ namespace ToyMaker {
     });
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     NLOHMANN_JSON_SERIALIZE_ENUM( ActionValueType, {
@@ -887,61 +887,61 @@ namespace ToyMaker {
     });
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void to_json(nlohmann::json& json, const ToyMaker::InputAttributesType& inputAttributes);
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void from_json(const nlohmann::json& json, ToyMaker::InputAttributesType& inputAttributes);
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void to_json(nlohmann::json& json, const ToyMaker::InputSourceDescription& inputSourceDescription);
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void from_json(const nlohmann::json& json, ToyMaker::InputSourceDescription& inputSourceDescription);
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void to_json(nlohmann::json& json, const ToyMaker::InputFilter& inputFilter);
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void from_json(const nlohmann::json& json, ToyMaker::InputFilter& inputFilter);
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void to_json(nlohmann::json& json, const ToyMaker::InputCombo& inputCombo);
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void from_json(const nlohmann::json& json, ToyMaker::InputCombo& inputCombo);
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void to_json(nlohmann::json& json, const ToyMaker::ActionDefinition& actionDefinition);
 
     /**
-     * @ingroup ToyMakerInputSystem
+     * @ingroup ToyMakerInputSystem ToyMakerSerialization
      * 
      */
     void from_json(const nlohmann::json& json, ToyMaker::ActionDefinition& actionDefinition);

@@ -388,7 +388,7 @@ namespace ToyMaker {
     };
 
     /**
-     * @ingroup ToyMakerECSComponent
+     * @ingroup ToyMakerECSComponent ToyMakerRenderSystem
      * @brief Interpolates light emission properties between previous and next simulation states using linear interpolation.
      * 
      * @tparam Specialization for LightEmissionData.

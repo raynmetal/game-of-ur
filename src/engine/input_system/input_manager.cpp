@@ -846,6 +846,7 @@ void InputManager::unregisterInputCombos() {
     }
 }
 
+/** @ingroup ToyMakerInputSystem ToyMakerSerialization */
 void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputAttributesType& inputAttributes) {
     json = {
         {"n_axes", (inputAttributes&InputAttributes::N_AXES)},
@@ -856,6 +857,8 @@ void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputAttributesType
         {"state_is_location", (inputAttributes&InputAttributes::STATE_IS_LOCATION) > 0},
     };
 }
+
+/** @ingroup ToyMakerInputSystem ToyMakerSerialization */
 void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputAttributesType& inputAttributes) {
     inputAttributes = (
         json.at("n_axes").get<uint8_t>()
@@ -872,6 +875,7 @@ void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputAttributesTy
     );
 }
 
+/** @ingroup ToyMakerInputSystem ToyMakerSerialization */
 void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputSourceDescription& inputSourceDescription) {
     json = {
         {"device_type", inputSourceDescription.mDeviceType},
@@ -880,6 +884,8 @@ void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputSourceDescript
         {"control", inputSourceDescription.mControl},
     };
 }
+
+/** @ingroup ToyMakerInputSystem ToyMakerSerialization */
 void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputSourceDescription& inputSourceDescription) {
     json.at("device_type").get_to(inputSourceDescription.mDeviceType);
     json.at("device").get_to(inputSourceDescription.mDevice);
@@ -889,12 +895,14 @@ void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputSourceDescri
     inputSourceDescription.mAttributes = kInputSourceTypeAttributes.at(inputSourceType);
 }
 
+/** @ingroup ToyMakerInputSystem ToyMakerSerialization */
 void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputFilter& inputFilter) {
     json = {
         {"input_source", inputFilter.mControl},
         {"filter", inputFilter.mAxisFilter},
     };
 }
+
 void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputFilter& inputFilter) {
     json.at("input_source").get_to(inputFilter.mControl);
     json.at("filter").get_to(inputFilter.mAxisFilter);
@@ -910,6 +918,7 @@ void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::InputCombo& inputCo
         {"threshold", inputCombo.mThreshold},
     };
 }
+
 void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::InputCombo& inputCombo) {
     json.at("main_control").get_to(inputCombo.mMainControl);
     json.at("modifier_1").get_to(inputCombo.mModifier1);
@@ -926,6 +935,7 @@ void ToyMaker::to_json(nlohmann::json& json, const ToyMaker::ActionDefinition& a
         {"value_type", actionDefinition.mValueType},
     };
 }
+
 void ToyMaker::from_json(const nlohmann::json& json, ToyMaker::ActionDefinition& actionDefinition) {
     json.at("name").get_to(actionDefinition.mName);
     json.at("attributes").get_to(actionDefinition.mAttributes);

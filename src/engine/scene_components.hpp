@@ -216,7 +216,7 @@ namespace ToyMaker {
     }
 
     /**
-     * @ingroup ToyMakerECSComponent
+     * @ingroup ToyMakerECSComponent ToyMakerSceneSystem
      * @brief Override of the Placement component's Interpolator.
      * 
      * Uses linear interpolation for position and scale, and spherical interpolation for quaternions.
@@ -241,7 +241,7 @@ namespace ToyMaker {
     }
 
     /**
-     * @ingroup ToyMakerECSComponent
+     * @ingroup ToyMakerECSComponent ToyMakerSceneSystem
      * @brief Override of the Transform component's Interpolator.
      * 
      * Simple linear interpolation for this Transform's model matrix.
@@ -265,7 +265,7 @@ namespace ToyMaker {
     }
 
     /**
-     * @ingroup ToyMakerECSComponent
+     * @ingroup ToyMakerECSComponent ToyMakerSceneSystem
      * @brief Override of the SceneHierarchyData Interpolator.
      * 
      * Simply returns SceneHierarchyData in its most current state, its state in the next simulation step.

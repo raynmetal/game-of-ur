@@ -1962,12 +1962,14 @@ namespace ToyMaker {
         return getWorld().lock()->getSystem<SceneSystem>()->getNodeByID<TSceneNode>({getWorldID(), entityID});
     }
 
+    /** @ingroup ToyMakerRenderSystem ToyMakerSerialization */
     NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::ResizeType, {
         {ViewportNode::RenderConfiguration::ResizeType::OFF, "off"},
         {ViewportNode::RenderConfiguration::ResizeType::VIEWPORT_DIMENSIONS, "viewport-dimensions"},
         {ViewportNode::RenderConfiguration::ResizeType::TEXTURE_DIMENSIONS, "texture-dimensions"},
     });
 
+    /** @ingroup ToyMakerRenderSystem ToyMakerSerialization */
     NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::ResizeMode, {
         {ViewportNode::RenderConfiguration::ResizeMode::FIXED_ASPECT,"fixed-aspect"},
         {ViewportNode::RenderConfiguration::ResizeMode::EXPAND_VERTICALLY, "expand-vertically"},
@@ -1975,6 +1977,7 @@ namespace ToyMaker {
         {ViewportNode::RenderConfiguration::ResizeMode::EXPAND_FILL, "expand-fill"},
     });
 
+    /** @ingroup ToyMakerRenderSystem ToyMakerSerialization */
     NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::UpdateMode, {
         {ViewportNode::RenderConfiguration::UpdateMode::NEVER, "never"},
         {ViewportNode::RenderConfiguration::UpdateMode::ONCE, "once"},
@@ -1983,11 +1986,13 @@ namespace ToyMaker {
         {ViewportNode::RenderConfiguration::UpdateMode::ON_RENDER_CAP_FPS, "on-render-cap-fps"},
     });
 
+    /** @ingroup ToyMakerRenderSystem ToyMakerSerialization */
     NLOHMANN_JSON_SERIALIZE_ENUM(ViewportNode::RenderConfiguration::RenderType, {
         {ViewportNode::RenderConfiguration::RenderType::BASIC_3D, "basic-3d"},
         {ViewportNode::RenderConfiguration::RenderType::ADDITION, "addition"},
     });
 
+    /** @ingroup ToyMakerRenderSystem ToyMakerSerialization */
     inline void to_json(nlohmann::json& json, const ViewportNode::RenderConfiguration& renderConfiguration) {
         json = {
             {"base_dimensions", nlohmann::json::array({renderConfiguration.mBaseDimensions.x, renderConfiguration.mBaseDimensions.y})},
@@ -2000,6 +2005,7 @@ namespace ToyMaker {
         };
     }
 
+    /** @ingroup ToyMakerRenderSystem ToyMakerSerialization */
     inline void from_json(const nlohmann::json& json, ViewportNode::RenderConfiguration& renderConfiguration) {
         assert(json.find("base_dimensions") != json.end() && "Viewport descriptions must contain the \"base_dimensions\" size 2 array of Numbers attribute");
         json.at("base_dimensions")[0].get_to(renderConfiguration.mBaseDimensions.x);
