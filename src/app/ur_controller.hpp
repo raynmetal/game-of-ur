@@ -8,6 +8,12 @@
  * 
  */
 
+/**
+ * @defgroup UrGameControlLayer Interface between visual/interactive layer and Ur game data model
+ * @ingroup UrGame
+ * 
+ */
+
 #ifndef ZOAPPURCONTROLLER_H
 #define ZOAPPURCONTROLLER_H
 
@@ -21,6 +27,7 @@
 class UrPlayerControls;
 
 /**
+ * @ingroup UrGameControlLayer
  * @brief The class responsible for managing and reporting the state of the game.  It owns its own instance of GameOfUrModel, and acts as the interface between it and engine-specific objects.
  * 
  */
@@ -230,6 +237,7 @@ friend class UrPlayerControls;
 };
 
 /**
+ * @ingroup UrGameControlLayer
  * @brief The definition for the object that acts as the interface between the game controller and any systems or objects interested in interacting with it.
  * 
  * Contains methods for prompting updates in the state of the game data model managed by the controller.  Each instance of this represents a single player playing the game.

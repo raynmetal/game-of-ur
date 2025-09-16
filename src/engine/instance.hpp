@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file instance.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A wrapper over regular shader attributes intended to be used as "instance" attributes, i.e., ones that change after what would traditionally be one-or-more draw calls in the same render stage.
@@ -18,6 +19,7 @@
 
 namespace ToyMaker {
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Attribute locations, per existing shaders.
      * 
      */
@@ -27,6 +29,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A struct describing the name and type of each attribute designated as an instance attribute.
      * 
      */
@@ -123,6 +126,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Object representing the layout of one set of related attributes representing (presumably) one object or instance.
      * 
      * In implementation it is essentially a list of attribute descriptors.  The descriptors are then used to upload data to GPU memory, and also help bind (a subset of) attributes correctly to shaders for some rendering stage.
@@ -204,6 +208,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Class that is responsible for taking an instance layout and correctly uploading it to the GPU.
      * 
      * It is also responsible for binding attribute data as specified by a layout to some shader attribute.
@@ -310,6 +315,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief The layout of the in-built model matrix instance attribute, present on pretty much every engine-defined shader.
      * 
      */
@@ -323,6 +329,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief An instance allocator initialized with the built in model matrix layout object.
      * 
      * @see BuiltinModelMatrixLayout

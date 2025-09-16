@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file texture.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Header containing definitions of classes and functions related to loading and using Texture resources.
@@ -22,6 +23,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToymakerRenderSystem ToyMakerECSComponent
      * @brief A struct containing the definition of a color buffer, using which similar color buffers can be created.
      * 
      */
@@ -107,6 +109,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief The class representation of textures on this engine, which are a type of Resource used both within and outside of the engine.
      * 
      */
@@ -247,6 +250,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerRenderSystem
      * @brief A resource constructor which loads a texture from a supported image file located via its file path.
      * 
      * ## Usage:
@@ -277,6 +281,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem ToyMakerResourceDB
      * @brief Generates a texture based on its color buffer definition.
      * 
      * ## Usage:
@@ -314,6 +319,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A (quite possibly unnecessary) function to fetch the enum corresponding to the "internalFormat" argument of glTexImage2D based on some color buffer definition.
      * 
      * 
@@ -347,6 +353,7 @@ namespace ToyMaker {
     }
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A (quite possibly unnecessary) function to fetch the enum corresponding to the "format" argument of glTexImage2D based on some color buffer definition.
      * 
      * 
@@ -374,8 +381,10 @@ namespace ToyMaker {
     }
 
 
+    /** @ingroup ToyMakerSerialization ToyMakerRenderSystem */
     void to_json(nlohmann::json& json, const ColorBufferDefinition& colorBufferDefinition);
 
+    /** @ingroup ToyMakerSerialization ToyMakerRenderSystem */
     void from_json(const nlohmann::json& json, ColorBufferDefinition& colorBufferDefinition);
     NLOHMANN_JSON_SERIALIZE_ENUM(ColorBufferDefinition::CubemapLayout, {
         {ColorBufferDefinition::CubemapLayout::NA, "na"}, 

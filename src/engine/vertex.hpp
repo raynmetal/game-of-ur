@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file vertex.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains engine's built-in vertex definitions, along with their associated attribute locations in the engine's built-in shader programs.  A wrapper over OpenGL shader attributes.
@@ -17,6 +18,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Values for different attribute locations used by the engine's built-in shader programs.
      * 
      */
@@ -31,6 +33,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief The description of a single vertex attribute associated with a vertex layout, giving its size and location id.
      * 
      */
@@ -129,6 +132,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A list of attribute descriptors that together define the layout and size of the vertex they make up in GPU memory.
      * 
      * @todo This isn't particularly intuitive or useful yet; expand on this so that shaders can declare their vertex layouts in their json headers maybe?  At present we've just hardcoded this into the render stages.
@@ -214,6 +218,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief The vertex data used by all this engine's in-built shader program's vertex shaders.
      * 
      */
@@ -265,6 +270,7 @@ namespace ToyMaker {
         glm::vec2 mUV3;
     };
 
+    /** @ingroup ToyMakerRenderSystem ToyMakerSerialization */
     inline void from_json(const nlohmann::json& json, BuiltinVertexData& builtinVertexData) {
         json.at("position").at(0).get_to(builtinVertexData.mPosition.x);
         json.at("position").at(1).get_to(builtinVertexData.mPosition.y);
@@ -290,6 +296,7 @@ namespace ToyMaker {
         json.at("uv3").at(1).get_to(builtinVertexData.mUV3.t);
     }
 
+    /** @ingroup ToyMakerRenderSystem ToyMakerSerialization */
     inline void to_json(nlohmann::json& json, const BuiltinVertexData& builtinVertexData) {
         json = {
             {"position", 
@@ -346,6 +353,7 @@ namespace ToyMaker {
     }
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief The vertex layout used by most shader programs built into the engine.
      * 
      */

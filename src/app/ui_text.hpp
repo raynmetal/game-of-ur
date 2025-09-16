@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameUIComponent
  * @file ui_text.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the definition for UIText, responsible for rendering text textures.
@@ -15,6 +16,7 @@
 #include "toymaker/text_render.hpp"
 
 /**
+ * @ingroup UrGameUIComponent
  * @brief An aspect responsible for rendering text textures and displaying them on a surface in the scene.
  * 
  */

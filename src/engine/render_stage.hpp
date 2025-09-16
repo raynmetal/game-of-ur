@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file render_stage.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A file containing render stage related classes, this engine's representation of a single "step" in a graphics pipeline.
@@ -28,6 +29,7 @@
 
 namespace ToyMaker {
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief An object representing a single opaque mesh-material pair, to be rendered this frame.
      * 
      * Its sort key is computed such that render priority looks like this:
@@ -100,6 +102,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Contains the model matrix, mesh, and light emission for a single light object being rendered this frame.
      * 
      */
@@ -163,6 +166,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Represents a single render stage or a render step that applies to the default (window) framebuffer.
      * 
      * Also contains handles to the various resources required by it, the first of which is the OpenGL shader program it uses.
@@ -354,6 +358,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Base class for render stages which render to an offscreen buffer.
      * 
      */
@@ -490,6 +495,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Render step responsible for translating mesh-material data into geometry buffers.
      * 
      * This render stage produces a position buffer, normal buffer, an albedo-specular buffer, and a depth buffer.
@@ -540,6 +546,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Render stage which takes geometry buffers and scene lights as inputs, and produces a lit scene as output.
      * 
      * Requires "positionMap", "normalMap", and "albedoSpecularMap" texture attachments.
@@ -582,6 +589,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Multipurpose render stage which at present is used to compute a simple bloom effect from a scene's "brightCutoff" texture.
      * 
      * As input expects an "unblurredImage" texture attachment.  Produces "pingBuffer" and "pongBuffer" and render targets.
@@ -620,6 +628,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Uses a skybox texture (i.e a texture with a supported cubemap format) to render a skybox behind geometry in the scene.
      * 
      * As input expects "skybox" texture attachment,  and a "unitCube" mesh attachment, and also should have the geometry buffer's RBO attached (for its depth buffer).
@@ -650,6 +659,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Takes lit scene (with bloom if it's used), and produces a tonemapped and gamma corrected version of the scene.
      * 
      * As input expects a "screenMesh" mesh attachment, and "litScene" and "bloomEffect" texture attachments.
@@ -687,6 +697,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Stage responsible for combining multiple textures together.
      * 
      * Expects as input "textureAddend_0", "textureAddend_1", ..., "textureAddend_n" texture attachments.
@@ -723,6 +734,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Render stage responsible for rendering any texture attached as source to the screen.
      * 
      * Expects as input a "renderSource" texture attachment.
@@ -742,6 +754,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Render stage responsible for resizing a texture to its final intended resolution.
      * 
      * Useful when the rendering resolution for a pipeline is different from the resolution of its target.

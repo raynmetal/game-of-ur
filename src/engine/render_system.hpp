@@ -1,10 +1,17 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file render_system.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains definitions relating to the render system defined for this object.
  * @version 0.3.2
  * @date 2025-09-05
  * 
+ * 
+ */
+
+/**
+ * @defgroup ToyMakerRenderSystem
+ * @ingroup ToyMakerEngine
  * 
  */
 
@@ -25,15 +32,19 @@
 
 namespace ToyMaker {
     struct RenderSet;
+
+    /** @ingroup ToyMakerRenderSystem */
     using RenderSetID = uint32_t;
 
     /** 
+     * @ingroup ToyMakerRenderSystem
      * @brief The total number of RenderSets, per ECSWorld, that can be created.
      * 
      */
     const RenderSetID kMaxRenderSetIDs { 10000 };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A collection of shaders, render configurations, cameras, and related framebuffers used by a viewport within an ECSWorld.
      * 
      * These render sets have in common with each other opaque geometry, light sources, a skybox, and a common uniform buffer for storing camera matrices.
@@ -244,6 +255,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief The render system for a single ECSWorld, which joins together various RenderStages into a render pipeline for objects present in that world.
      * 
      */

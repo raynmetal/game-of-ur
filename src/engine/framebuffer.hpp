@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file framebuffer.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief File containing wrapper over OpenGL Framebuffers and related objects.
@@ -24,6 +25,7 @@ namespace ToyMaker {
     class Framebuffer;
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief Wrapper class over OpenGL RBOs.
      * 
      * An RBO, or a render buffer object, is a texture representing the depth map or stencil buffer for the framebuffer it's attached to.
@@ -75,6 +77,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A wrapper class over OpenGL framebuffers.
      * 
      * Framebuffers are, in essence, a collection of buffers that relate to each other in some way.  Each framebuffer must have either an RBO or color buffer or both, and may have multiple color buffers.  Their actual usage depends on the requirements of the program or module using them.
@@ -281,6 +284,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerRenderSystem ToyMakerResourceDB
      * @brief Constructs a Framebuffer from its description in JSON.
      * 
      */

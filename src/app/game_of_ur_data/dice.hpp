@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/dice.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the data model class representing the pair of dice used to play the Royal Game of Ur.
@@ -17,6 +18,7 @@
 #include "phase.hpp"
 
 /**
+ * @ingroup UrGameDataModel
  * @brief The data model used to represent the pair of dice used to play the Royal Game of Ur.
  * 
  * Contains methods for querying the current state of the dice, and for performing dice rolls (when valid).

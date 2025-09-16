@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameControlLayer
  * @file ur_player_local.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the class definition for PlayerLocal, representing a player using this application's UI and input to generate game events.
@@ -16,6 +17,7 @@
 #include "ur_controller.hpp"
 
 /**
+ * @ingroup UrGameControlLayer
  * @brief Definition of the aspect class representing a player playing the Game of Ur locally.
  * 
  * This player uses this application's UI and input system to interact with the game data model.

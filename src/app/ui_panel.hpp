@@ -1,10 +1,23 @@
 /**
+ * @ingroup UrGameUIComponent
  * @file ui_panel.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the class responsible for managing, configuring, and displaying a NineSlicePanel resource.
  * @version 0.3.2
  * @date 2025-09-13
  * 
+ * 
+ */
+
+/**
+ * @defgroup UrGameVisualLayer Game of Ur visual representation or related
+ * @ingroup UrGame
+ * 
+ */
+
+/**
+ * @defgroup UrGameUIComponent Aspects rendering Game of Ur UI Components
+ * @ingroup UrGameVisualLayer
  * 
  */
 
@@ -16,6 +29,7 @@
 #include "nine_slice_panel.hpp"
 
 /**
+ * @ingroup UrGameUIComponent
  * @brief UI aspect responsible for managing and rendering a NineSlicePanel texture on the UI.
  * 
  * ## Usage:

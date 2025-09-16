@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameUIComponent
  * @file ur_ui_version.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the definition for the class responsible for displaying the game version text on the main menu of the game.
@@ -14,6 +15,7 @@
 #include "toymaker/sim_system.hpp"
 
 /**
+ * @ingroup UrGameUIComponent
  * @brief The class responsible for setting the game version text of the UI object it is connected to per the value populated in version.h.
  * 
  */

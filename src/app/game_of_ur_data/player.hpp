@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/player.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains structs and classes representing a single player of the game and their current state.
@@ -20,6 +21,7 @@
 #include "role_id.hpp"
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Data model for a single player of the game, tracking also the number of counters held by this player.
  * 
  */

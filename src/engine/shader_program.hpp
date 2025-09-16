@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file shader_program.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A file containing class definitions for wrappers over OpenGL shader programs.
@@ -22,6 +23,7 @@
 namespace ToyMaker {
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A wrapper over OpenGL's shader programs.
      * 
      */
@@ -212,6 +214,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerRenderSystem
      * @brief Constructs a ShaderProgram from its shader program header, found at a particular path.
      * 
      * ### The resource description for a shader program:

@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/house.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains classes and enums that define a house and describe its state.
@@ -19,6 +20,7 @@
 
 
 /**
+ * @ingroup UrGameDataModel
  * @brief The representation of a single house on the Game of Ur Board, in other words a tile.
  * 
  * Also stores a reference to the game piece presently occupying this house.

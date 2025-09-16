@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/board.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the data model class representing the 20-square board for the Royal Game of Ur.
@@ -19,6 +20,7 @@
 #include "house.hpp"
 
 /**
+ * @ingroup UrGameDataModel
  * @brief The data model class representing the 20-square board for the Royal Game of Ur.
  * 
  * Implements various methods for querying the state of the board, eg., the region a particular tile (house) on the board belongs to, any piece currently occupying a tile, whether a move on the board is possible, and so on.

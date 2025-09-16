@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameUIComponent UrGameInteractionLayer
  * @file ui_button.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the class representation of UI buttons used in this project.
@@ -20,6 +21,7 @@
 #include "nine_slice_panel.hpp"
 
 /**
+ * @ingroup UrGameInteractionLayer UrGameUIComponent
  * @brief A UI component class for creating simple buttons comprised of a resizable panel and some text.
  * 
  * May optionally also have a "highlight" texture configured to overlay over a button in order to represent special application defined states.
@@ -351,6 +353,7 @@ private:
 };
 
 
+/** @ingroup UrGameUIComponent UrGameInteractionLayer */
 NLOHMANN_JSON_SERIALIZE_ENUM(UIButton::State, {
     {UIButton::State::ACTIVE, "active"},
     {UIButton::State::HOVER, "hover"},

@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerCore
  * @file util.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains a couple of classes not tied to any part of the engine in particular, but useful to those parts all the same.
@@ -15,6 +16,7 @@
 
 namespace ToyMaker {
     /**
+     * @ingroup ToyMakerCore ToyMakerSceneSystem
      * @brief Converts a position, orientation and scale into its model matrix equivalent.
      * 
      * @param position The position offset to apply to a mesh.
@@ -25,6 +27,7 @@ namespace ToyMaker {
     glm::mat4 buildModelMatrix(glm::vec4 position, glm::quat orientation, glm::vec3 scale = glm::vec3{1.f, 1.f, 1.f}); 
 
     /**
+     * @ingroup ToyMakerCore
      * @brief A simple linear interpolation implementation between a fixed input and output range.
      * 
      * ## Usage:

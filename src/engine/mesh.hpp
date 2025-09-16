@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file mesh.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A file containing the ToyMaker::StaticMesh class and related structures.
@@ -25,6 +26,7 @@
 
 namespace ToyMaker {
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A class whose current main purpose is to store geometry related info, and to upload it to GPU memory when requested
      * 
      */
@@ -194,6 +196,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerResourceDB ToyMakerRenderSystem
      * @brief Creates a static mesh based on its description in JSON.
      * 
      * Such a representation might look like:

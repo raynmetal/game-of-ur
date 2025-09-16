@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameControlLayer
  * @file ur_records.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains aspect class definition for the records save system.
@@ -18,6 +19,7 @@
 
 
 /**
+ * @ingroup UrGameDataModel UrGameControlLayer
  * @brief The details of a single completed game.
  * 
  */
@@ -28,6 +30,7 @@ struct GameRecord {
 };
 
 /**
+ * @ingroup UrGameControlLayer
  * @brief Class responsible for loading, validating, and storing records of all completed games played on this platform.
  * 
  */

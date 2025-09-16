@@ -1,10 +1,17 @@
 /**
+ * @ingroup ToyMakerSignals
  * @file signals.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Classes relating to this engine's implementation of signals.  Contains template classes used to define signal senders, receivers, and trackers.
  * @version 0.3.2
  * @date 2025-09-07
  * 
+ * 
+ */
+
+/**
+ * @defgroup ToyMakerSignals ToyMaker engine signal implementation
+ * @ingroup ToyMakerCore
  * 
  */
 
@@ -34,6 +41,7 @@ namespace ToyMaker {
     class ISignalObserver {};
 
     /**
+     * @ingroup ToyMakerSignals
      * @brief The base class for any signal that an object advertises.
      * 
      */
@@ -48,6 +56,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSignals
      * @brief A class containing most of the implementation of this engine's Signal concept.
      * 
      * @tparam TArgs The types of data that are sent when this signal is emitted.
@@ -92,6 +101,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSignals
      * @brief A class containing most of the implementation for this engine's SignalObserver concept.
      * 
      * A signal observer may subscribe to any Signal that sends the same data the observer declares it is capable of handling.
@@ -125,6 +135,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSignals
      * @brief A signal tracker, the main interface between an object and the signal system.
      * 
      * Connections in JSON scene descriptions may appear as follows:
@@ -254,6 +265,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerSignals
      * @brief A Signal object, designed to emit signals matching some data signature to be received by all the SignalObservers subscribed to it.
      * 
      * It is essentially a wrapper over Signal_<T>
@@ -362,6 +374,7 @@ namespace ToyMaker {
 
 
     /**
+     * @ingroup ToyMakerSignals
      * @brief A SignalObserver object, which can subscribe to Signals matching  its data signature and receive signal events from them.
      * 
      * It is essentially a wrapper over SignalObserver_<T>.

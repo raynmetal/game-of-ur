@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameVisualLayer
  * @file ur_scene_view.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the definition of the class representing and controlling the 3D scene in which the game is played.
@@ -23,6 +24,7 @@ struct UrPieceAnimationKey;
 bool operator<(const UrPieceAnimationKey& one, const UrPieceAnimationKey& two);
 
 /**
+ * @ingroup UrGameVisualLayer
  * @brief The class responsible for managing the 3D representation and interactions of a game in progress.
  * 
  * Displays the game board and adds game pieces to it per the current state of the game.  The state of the game is read from the game data model (or from changes broadcasted by UrController).
@@ -116,6 +118,7 @@ public:
     };
 };
 
+/** @ingroup UrGameVisualLayer */
 struct UrPieceAnimationKey {
     uint32_t mTime;
     PieceIdentity mPieceIdentity;

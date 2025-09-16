@@ -1,4 +1,5 @@
 /**
+ * @ingroup ToyMakerRenderSystem
  * @file light.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief A file that contains definitions for different types of lights, as components to entities, supported by the engine.
@@ -32,12 +33,14 @@ namespace ToyMaker {
     struct LightEmissionData;
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief A version of light data where the first element represents the light's position and direction, and the second represents its emission properties.
      * 
      */
     using LightPackedData = std::pair<std::pair<glm::vec4, glm::vec4>, LightEmissionData>;
 
     /**
+     * @ingroup ToyMakerRenderSystem ToyMakerECSComponent
      * @brief A struct, used as a component, describing the emissive properties of the light it represents per the Blinn-Phong shading model.
      * 
      * Its appearance in json might be as follows:
@@ -195,12 +198,14 @@ namespace ToyMaker {
         inline static std::string getComponentTypeName() { return "LightEmissionData"; }
     };
 
+    /** @ingroup ToyMakerSerialization ToyMakerRenderSystem */
     NLOHMANN_JSON_SERIALIZE_ENUM( LightEmissionData::LightType, {
         {LightEmissionData::LightType::directional, "directional"},
         {LightEmissionData::LightType::point, "point"},
         {LightEmissionData::LightType::spot, "spot"},
     });
 
+    /** @ingroup ToyMakerSerialization ToyMakerRenderSystem */
     inline void from_json(const nlohmann::json& json, LightEmissionData& lightEmissionData) {
         assert(json.at("type") == LightEmissionData::getComponentTypeName() && "Type mismatch. Light component json must have type LightEmissionData");
         json.at("lightType").get_to(lightEmissionData.mType);
@@ -270,6 +275,7 @@ namespace ToyMaker {
             break;
         }
     }
+    /** @ingroup ToyMakerSerialization ToyMakerRenderSystem */
     inline void to_json(nlohmann::json& json, const LightEmissionData& lightEmissionData) {
         switch(lightEmissionData.mType) {
             case LightEmissionData::LightType::directional:
@@ -345,6 +351,7 @@ namespace ToyMaker {
     }
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief The layout for built-in light sources when used as instance attributes.
      * 
      */
@@ -365,6 +372,7 @@ namespace ToyMaker {
 
 
     /**
+     * @ingroup ToyMakerRenderSystem
      * @brief The allocator associated with built in light sources used as attributes.
      * 
      */
@@ -380,6 +388,7 @@ namespace ToyMaker {
     };
 
     /**
+     * @ingroup ToyMakerECSComponent ToyMakerRenderSystem
      * @brief Interpolates light emission properties between previous and next simulation states using linear interpolation.
      * 
      * @tparam Specialization for LightEmissionData.
