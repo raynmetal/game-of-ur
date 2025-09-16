@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameInteractionLayer
  * @file board_locations.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the class responsible for mapping locations on the 3D game board model to their equivalent coordinates in the data model.
@@ -18,6 +19,7 @@
 
 
 /**
+ * @ingroup UrGameInteractionLayer
  * @brief The aspect responsible for mapping points on the 3D game board to their equivalent coordinates on the game board data model.
  * 
  */

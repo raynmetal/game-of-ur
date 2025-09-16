@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameControlLayer
  * @file ur_player_cpu_random.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the class definition of the CPU player controller.
@@ -18,6 +19,7 @@
 #include "ur_controller.hpp"
 
 /**
+ * @ingroup UrGameControlLayer
  * @brief An aspect representing a computer controlled player of the game of ur, which makes its decisions completely randomly.
  * 
  */

@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameVisualLayer
  * @file ur_ui_records_browser.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the definition for the aspect class responsible for displaying records for previously completed games.
@@ -18,6 +19,7 @@
 #include "toymaker/sim_system.hpp"
 
 /**
+ * @ingroup UrGameVisualLayer
  * @brief The aspect class responsible for managing the records browser, responsible for listing and displaying records for completed games.
  * 
  */

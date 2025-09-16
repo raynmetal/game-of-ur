@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameVisualLayer
  * @file ur_ui_navigation.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the class definition for the aspect which informs the UrSceneManager that a scene change is required upon receiving a corresponding UI event.
@@ -17,6 +18,7 @@
 
 
 /**
+ * @ingroup UrGameVisualLayer
  * @brief The aspect class responsible for connecting the UI in the current scene with the game scene manager.  Responds to navigation UI events with scene changes.
  * 
  */

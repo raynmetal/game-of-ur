@@ -1,9 +1,16 @@
 /**
+ * @ingroup UrGameInteractionLayer
  * @file interface_pointer_callback.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains classes that serve as interfaces for sim objects that wish to respond to click events.
  * @version 0.3.2
  * @date 2025-09-13
+ * 
+ */
+
+/**
+ * @defgroup UrGameInteractionLayer Ur classes providing user interactivity
+ * @ingroup UrGame
  * 
  */
 
@@ -15,6 +22,7 @@ class ILeftClickable;
 class IHoverable;
 
 /**
+ * @ingroup UrGameInteractionLayer
  * @brief The interface used by aspects, objects, which cast pointer rays to interact with objects present in the world.
  * 
  * This interface will usually be attached to an aspect associated with a camera object.
@@ -73,6 +81,7 @@ protected:
 };
 
 /**
+ * @ingroup UrGameInteractionLayer
  * @brief The interface used by aspects which wish to respond to mouse left click events (or equivalent).
  * 
  */
@@ -104,6 +113,7 @@ friend class IUsePointer;
 // };
 
 /**
+ * @ingroup UrGameInteractionLayer
  * @brief The interface implemented by aspects which wish to respond to pointer hover related events.
  * 
  */

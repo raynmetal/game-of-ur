@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameVisualLayer
  * @file ur_look_at_board.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains a utility class for centering the game camera in the 3D scene on the game board object.
@@ -14,6 +15,7 @@
 #include "toymaker/sim_system.hpp"
 
 /**
+ * @ingroup UrGameVisualLayer
  * @brief Stupid utility class for centering the game camera in the 3D scene on the game board object.
  * 
  */

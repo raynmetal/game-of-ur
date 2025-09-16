@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/piece_type.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains structs and consts that describe the pieces in the game and their capabilities.
@@ -18,6 +19,7 @@
 #include "piece_type_id.hpp"
 
 /**
+ * @ingroup UrGameDataModel
  * @brief A struct containing information about a piece, including its name and information.
  * 
  */
@@ -57,6 +59,7 @@ struct PieceType {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief An array of PieceTypes, each element describing a single type of piece used in the game.
  * 
  */

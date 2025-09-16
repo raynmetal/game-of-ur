@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameInteractionLayer
  * @file query_click.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the QueryClick class definition, responsible for calling pointer click callbacks for objects in its world that support it.
@@ -17,6 +18,7 @@
 #include "interface_pointer_callback.hpp"
 
 /**
+ * @ingroup UrGameInteractionLayer
  * @brief The aspect responsible for conducting raycasts and calling pointer event callbacks on eligible objects.
  * 
  * It has access to object click callbacks through its IUsePointer interface.

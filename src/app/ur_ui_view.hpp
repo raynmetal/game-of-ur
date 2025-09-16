@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameVisualLayer
  * @file ur_ui_view.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the definition of the class responsible for managing and displaying the UI layer of the game scene.
@@ -18,6 +19,7 @@
 #include "game_of_ur_data/model.hpp"
 
 /**
+ * @ingroup UrGameVisualLayer
  * @brief The aspect class for the UI layer of the game scene.
  * 
  * Converts UI interactions into game actions sent to the active player controller.  Partially displays information about the current state of the game, as reported by the game data model or UrController.

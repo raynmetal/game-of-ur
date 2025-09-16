@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/role_id.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains an enum for the roles (sets of pieces) possible within this game.
@@ -12,6 +13,7 @@
 #define ZOAPPPLAYERROLEID_H
 
 /**
+ * @ingroup UrGameDataModel
  * @brief A value representing the various roles (or sets, if preferred) possible in this game.
  * 
  */

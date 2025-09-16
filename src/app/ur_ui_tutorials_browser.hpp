@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameVisualLayer
  * @file ur_ui_tutorials_browser.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the class definition for the aspect responsible for loading and displaying tutorial content.
@@ -20,6 +21,7 @@
 
 
 /**
+ * @ingroup UrGameVisualLayer
  * @brief The data associated with a single tutorial page.
  * 
  */
@@ -30,6 +32,7 @@ struct TutorialContent {
 };
 
 /**
+ * @ingroup UrGameVisualLayer
  * @brief The aspect class responsible for loading, listing, and displaying the tutorial pages written for this game.
  * 
  */
@@ -67,7 +70,9 @@ public:
     };
 };
 
+/** @ingroup UrGameVisualLayer */
 void from_json(const nlohmann::json& json, TutorialContent& tutorialContent);
+/** @ingroup UrGameVisualLayer */
 void to_json(nlohmann::json& json, const TutorialContent& tutorialContent);
 
 #endif

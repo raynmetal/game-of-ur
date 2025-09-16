@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/phase.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Enums whose values represent the different phases a game can be in.
@@ -12,6 +13,7 @@
 #define ZOAPPGAMEPHASE_H
 
 /**
+ * @ingroup UrGameDataModel
  * @brief A value representing the high level phase of an entire game.
  * 
  */
@@ -22,6 +24,7 @@ enum class GamePhase {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief A value representing the phases possible in a single turn of the game.
  * 
  */
@@ -32,6 +35,7 @@ enum class TurnPhase {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief A value representing the phase of a single round, where in a round all players take a turn once.
  * 
  * In the Royal Game of Ur, a round ends every pair of turns.

@@ -1,9 +1,21 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/model.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief The class containing the interface to the data model for the whole game (The Royal Game of Ur).
  * @version 0.3.2
  * @date 2025-09-12
+ * 
+ */
+
+/**
+ * @defgroup UrGame Game of Ur project
+ * 
+ */
+
+/**
+ * @defgroup UrGameDataModel Game of Ur data model implementation
+ * @ingroup UrGame
  * 
  */
 
@@ -21,6 +33,7 @@
 #include "dice.hpp"
 
 /**
+ * @ingroup UrGameDataModel
  * @brief The two players playing the game, as known to GameOfUrModel.
  * 
  */
@@ -30,6 +43,7 @@ enum PlayerID: uint8_t {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Data returned by GameOfUrModel when queried about the state of a House.
  * 
  */
@@ -66,6 +80,7 @@ struct HouseData {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Data returned by GameOfUrModel when queried about the state of a single game piece.
  * 
  */
@@ -90,6 +105,7 @@ struct GamePieceData {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Data returned by GameOfUrModel when queried about the current phase of the game.
  * 
  */
@@ -128,6 +144,7 @@ struct GamePhaseData {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Data returned by GameOfUrModel when queried for scores.
  * 
  */
@@ -168,6 +185,7 @@ struct GameScoreData {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Data returned by GameOfUrModel when queried for dice related information.
  * 
  */
@@ -204,6 +222,7 @@ struct DiceData {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Data returned by GameOfUrModel when queried about a player.
  * 
  */
@@ -252,6 +271,7 @@ struct PlayerData {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Data returned by the GameOfUrModel when making a move, or querying possible moves.
  * 
  */
@@ -306,6 +326,7 @@ struct MoveResultData {
 };
 
 /**
+ * @ingroup UrGameDataModel
  * @brief The data model representing one instance of The Royal Game of Ur.
  * 
  * Maintains information and references to the game board, its pieces, its players, the counters possessed by each player and held in common.  Provides methods for advancing the game and querying its current state.

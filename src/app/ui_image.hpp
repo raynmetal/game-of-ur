@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameUIComponent
  * @file ui_image.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the definition of the aspect responsible for the model-texture combo for displaying an image from a file.
@@ -15,6 +16,7 @@
 #include "toymaker/texture.hpp"
 
 /**
+ * @ingroup UrGameUIComponent
  * @brief The aspect class responsible for displaying an image from a file scaled to some specific dimensions.
  * 
  * ## Usage:

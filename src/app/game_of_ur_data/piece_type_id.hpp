@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/piece_type_id.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains enum listing the different types of pieces present in the game.
@@ -14,6 +15,7 @@
 #include <cstdint>
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Enum listing the different types of pieces present in the game.
  * 
  */

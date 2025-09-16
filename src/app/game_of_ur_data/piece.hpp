@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameDataModel
  * @file game_of_ur_data/piece.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains definitions for pieces belonging to different sets used by competing players.
@@ -19,6 +20,7 @@
 #include "piece_type_id.hpp"
 
 /**
+ * @ingroup UrGameDataModel
  * @brief Data uniquely identifying a piece used in the game.
  * 
  * If PieceIdentity::mOwner has a value of RoleID::NA, this PieceIdentity should be treated as null.
@@ -43,6 +45,7 @@ bool operator==(const PieceIdentity& one, const PieceIdentity& two);
 bool operator!=(const PieceIdentity& one, const PieceIdentity& two);
 
 /**
+ * @ingroup UrGameDataModel
  * @brief The state of a single piece of the game.
  * 
  */

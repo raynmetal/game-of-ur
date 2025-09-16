@@ -1,4 +1,5 @@
 /**
+ * @ingroup UrGameControlLayer
  * @file ur_scene_manager.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
  * @brief Contains the definition for the class responsible for transitioning between scenes/views available in the game.
@@ -16,6 +17,7 @@
 #include "toymaker/sim_system.hpp"
 
 /**
+ * @ingroup UrGameControlLayer
  * @brief The aspect class responsible for transitioning between the scenes availabe in the game.
  * 
  */
