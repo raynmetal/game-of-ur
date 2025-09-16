@@ -9,7 +9,7 @@
  */
 
 /**
- * @defgroup ToyMakerSceneSystem
+ * @defgroup ToyMakerSceneSystem Scene System
  * @ingroup ToyMakerEngine
  * 
  */

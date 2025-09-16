@@ -9,7 +9,7 @@
  */
 
 /**
- * @defgroup ToyMakerInputSystem Classes related to the ToyMaker input system
+ * @defgroup ToyMakerInputSystem Input System
  * @ingroup ToyMakerEngine
  * 
  */

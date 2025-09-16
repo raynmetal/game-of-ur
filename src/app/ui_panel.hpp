@@ -10,13 +10,13 @@
  */
 
 /**
- * @defgroup UrGameVisualLayer Game of Ur visual representation or related
+ * @defgroup UrGameVisualLayer Visual Layer
  * @ingroup UrGame
  * 
  */
 
 /**
- * @defgroup UrGameUIComponent Aspects rendering Game of Ur UI Components
+ * @defgroup UrGameUIComponent UI Components
  * @ingroup UrGameVisualLayer
  * 
  */

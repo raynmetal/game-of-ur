@@ -32,25 +32,25 @@
 #include "../registrator.hpp"
 
 /**
- * @defgroup ToyMakerCore Classes and functions at the core of ToyMaker
+ * @defgroup ToyMakerCore Core
  * @ingroup ToyMakerEngine
  * 
  */
 
 /**
- * @defgroup ToyMakerECS The ToyMaker engine's ECS implementation
+ * @defgroup ToyMakerECS Entity Component System
  * @ingroup ToyMakerCore
  * 
  */
 
 /**
- * @defgroup ToyMakerECSSystem Classes related to ECS Systems.
+ * @defgroup ToyMakerECSSystem Systems
  * @ingroup ToyMakerECS
  * 
  */
 
 /**
- * @defgroup ToyMakerECSComponent Classes related to ECS Components.
+ * @defgroup ToyMakerECSComponent Components
  * @ingroup ToyMakerECS
  * 
  */

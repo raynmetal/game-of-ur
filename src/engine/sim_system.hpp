@@ -10,7 +10,7 @@
  */
 
 /**
- * @defgroup ToyMakerSimSystem ToyMaker engine object-oriented simulation logic system
+ * @defgroup ToyMakerSimSystem User Object-Oriented Logic
  * @ingroup ToyMakerEngine ToyMakerSceneSystem
  * 
  */

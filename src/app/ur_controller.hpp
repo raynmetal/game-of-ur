@@ -9,7 +9,7 @@
  */
 
 /**
- * @defgroup UrGameControlLayer Interface between visual/interactive layer and Ur game data model
+ * @defgroup UrGameControlLayer Control Layer
  * @ingroup UrGame
  * 
  */
