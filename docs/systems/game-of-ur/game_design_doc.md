@@ -1,4 +1,4 @@
-# Game of Ur
+# Game Design Document
 
 ## About
 

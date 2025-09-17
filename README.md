@@ -1,4 +1,4 @@
-# Game of Ur
+# The Royal Game of Ur Project
 
 ## Project Description
 
