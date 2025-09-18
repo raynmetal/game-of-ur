@@ -1,4 +1,4 @@
-# ToyMaker: Resource Database
+# ToyMaker: Core: Resource Database
 
 ## What is it?
 
@@ -6,7 +6,7 @@ A resource is any block of data used in different parts of a project.  The data 
 
 The resource database holds a list of definitions for resources used by the project, along with references to classes responsible for loading them into the application on request.
 
-![An example scenario involving a resource database](./Resource_Database_Example.png "An example scenario involving a resource database")
+![An example scenario involving a resource database.](./Resource_Database_Example.png "An example scenario involving a resource database.")
 
 ## Important API
 

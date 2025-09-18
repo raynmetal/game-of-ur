@@ -1,10 +1,10 @@
-# ToyMaker: Entity Component System
+# ToyMaker: Core: Entity Component System
 
 ## What is it?
 
 ECS is the primary way project data and behaviour is organized in the ToyMaker engine.
 
-![An example scenario using ECS](./ECS_Example.png "An example scenario using ECS")
+![An example scenario using ECS.](./ECS_Example.png "An example scenario using ECS.")
 
 An ToyMaker::Entity is an object in a game known by its integer ID (ToyMaker::EntityID).  Conceptually, an entity is a logical container for components, or a key to an entry in a table.
 
