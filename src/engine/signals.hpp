@@ -140,7 +140,7 @@ namespace ToyMaker {
      * 
      * Connections in JSON scene descriptions may appear as follows:
      * 
-     * ```json
+     * ```yaml
      * 
      * {
      *     "from": "/viewport_UI/return/@UIButton",

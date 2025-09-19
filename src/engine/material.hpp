@@ -54,7 +54,7 @@ namespace ToyMaker {
          * 
          * Here is an example of material overrides for a model resource defined in a scene file:
          * 
-         * ```json
+         * ```yaml
          * 
          * {
          *     "method": "fromFile",
@@ -325,7 +325,7 @@ namespace ToyMaker {
      * 
      * Such a representation might look like this:
      * 
-     * ```json
+     * ```yaml
      * 
      * {
      *     "name": "MyMaterial",

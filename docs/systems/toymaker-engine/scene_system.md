@@ -46,7 +46,7 @@ In ToyMaker, a scene file is a JSON file adhering to a specific structure.  The 
 
 This is a list of resources.  It is an array mapped to the scene file's root object's `"resources"` property.
 
-```json
+```yaml
 // NOTE: Scene file json object
 {
     "resources": [
@@ -58,7 +58,7 @@ This is a list of resources.  It is an array mapped to the scene file's root obj
 
 Each resource is an object necessarily containing the name of the resource, the type of resource it is, its resource constructor (called method), and the parameters the method uses.
 
-```json
+```yaml
 {
     "resources": [
         {
@@ -104,7 +104,7 @@ The root node must also have an empty string `""` as the value of its `"parent"`
 
 ToyMaker::SceneNode is the most basic type of scene node, comprised of nothing more than its names and ToyMaker::ECSWorld components.  It has the following appearance in a scene file:
 
-```json
+```yaml
 {
 
     "nodes" [
@@ -153,7 +153,7 @@ A ToyMaker::SimObjectAspect is the base class of aspects used by ToyMaker::SimSy
 
 As noted earlier, the root node of any scene file must be a SimObject.  The appearance of a SimObject in a scene file is given below:
 
-```json
+```yaml
 {
 
     // ... other sections ...
@@ -213,7 +213,7 @@ SimObjects have one more special feature in a scene file.
 
 Since the root node of a scene file is always guaranteed to be a SimObject, when one scene is imported into another scene, the import*ing* scene may specify overrides for the name, components, and aspects, of the import*ed* scene's root node, like so:
 
-```json
+```yaml
 {
     "resources": [
 
@@ -300,7 +300,7 @@ This also ensures that nodes in the UI world aren't affected by the systems acti
 
 The appearance of the viewport node in a scene file is given below:
 
-```json
+```yaml
 {
 
     // ... other sections ...

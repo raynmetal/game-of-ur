@@ -27,7 +27,7 @@
  * 
  * Its appearance in JSON is as follows:
  * 
- * ```json
+ * ```yaml
  * 
  * { "type": "QueryClick" }
  * 

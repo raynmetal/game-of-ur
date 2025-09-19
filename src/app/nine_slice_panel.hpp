@@ -138,7 +138,7 @@ private:
  * 
  * Its appearance in JSON is as follows:
  * 
- * ```json
+ * ```yaml
  * 
  * {
  *     "name": "Bad_Panel",

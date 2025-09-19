@@ -32,7 +32,7 @@
  * 
  * Its appearance in JSON may be as follows:
  * 
- * ```json
+ * ```yaml
  * {
  *     "name": "Ur_Button",
  *     "parent": "/viewport_UI/",

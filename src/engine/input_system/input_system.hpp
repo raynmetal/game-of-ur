@@ -74,7 +74,7 @@ namespace ToyMaker {
          * 
          * Example:
          * 
-         * ```json
+         * ```yaml
          * {
          *     "action": "Rotate",
          *     "context": "Camera",
@@ -129,7 +129,7 @@ namespace ToyMaker {
          * 
          * The action contains also a description of its type, axes, and other things.  See for example:
          * 
-         * ```json
+         * ```yaml
          * {
          *     "attributes": {
          *         "has_button_value": false,
