@@ -548,9 +548,9 @@ namespace ToyMaker {
      * @ingroup ToyMakerInputSystem
      * @brief An object responsible for tracking action listeners for a given project.
      * 
-     * Triggered actions created by ActionContext do not actually reach their intended listeners until it has been (manually) sent via an ActionDispatch object.  This affords developers some control over when and where actions are received.
+     * Triggered actions created by ActionContext do not actually reach their intended listeners until they have been (manually) sent via an ActionDispatch object.  This affords developers some control over when and where actions are received.
      * 
-     * In the engine's scene system, for example, while very ViewportNode has an associated ActionDispatch object, descendant viewports do not see triggered actions unless their parent viewports allow actions to propagate to them.
+     * In the engine's scene system, for example, while every ViewportNode has an associated ActionDispatch object, descendant viewports do not see triggered actions unless their parent viewports allow actions to propagate to them.
      * 
      * ## Usage:
      * 

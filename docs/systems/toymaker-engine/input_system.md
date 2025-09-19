@@ -2,13 +2,13 @@
 
 ## What is it?
 
-The toymaker input system is responsible for translating raw input from the app's platform into abstract inputs, called actions, meaningful within a subcontext of the application.
+The ToyMaker input system is responsible for translating raw input from the app's platform into abstract inputs, called actions, meaningful within a context of the application.
 
 The process by which it does so is described below:
 
-1. It receives input from the platform via InputFilter::InputManager::queueInput() (through SDL, currently).
+1. It receives input from the platform via ToyMaker::InputManager::queueInput() (through SDL, currently).
 
-2. It decomposes the input into several simple normalized single-axis values.  Each value corresponds to an ToyMaker::InputFilter, stored in InputFilter::InputManager::mRawInputState.
+2. It decomposes the input into several simple normalized single-axis values.  Each value corresponds to an ToyMaker::InputFilter, stored in ToyMaker::InputManager::mRawInputState.
 
 3. It takes a set of 1-3 of the decomposed input and maps them to one input combo value.  If the input combo value is considered triggered, it is added to a list of unmapped inputs generated this frame (ToyMaker::InputManager::mUnmappedInputs).
 
@@ -16,19 +16,16 @@ The process by which it does so is described below:
 
 5. Each action context translates input combos received to actions that it knows, returns them to the input manager, which returns them to the engine.
 
-6. The engine forwards the mapped actions to whichever objects need them, via ToyMaker::ActionDispatch.
+6. The engine forwards the mapped actions to whichever objects need them, via ToyMaker::ActionDispatch::dispatchAction().
 
-```
-
-
-  W    ______
-A|S|D        \___.--> Character : Move (2 Axes) --> (Move handlers)
-<keyboard>    /
+```txt
+   W    ______
+ A|S|D        \___.--> Character : Move (2 Axes) --> (Move handlers)
+<keyboard>     /
+              /
              /
-            /
-(( L ))----/
+ (( L ))----/
 <controller>
-
 ```
 
 Setup takes place via an input bindings file, pointed to by the project configuration's `"input_map_path"` property.  This bindings file lists

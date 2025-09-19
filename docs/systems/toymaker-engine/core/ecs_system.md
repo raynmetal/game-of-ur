@@ -20,7 +20,7 @@ A ToyMaker::System is a module which operates on entities and their components i
 
 - ToyMaker::Entity -- A high level interface to this engine's ECS, offering object-oriented-like access to entity components and systems.
 
-## Why is it used?
+## Why does it exist?
 
 Given that:
 
