@@ -169,7 +169,7 @@ namespace ToyMaker{
      * 
      * An example JSON description of a SimObject, as would be seen in a scene file:
      * 
-     * ```yaml
+     * ```jsonc
      * {
      *     "aspects": [
      *         { "type": "QueryClick" }, 

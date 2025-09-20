@@ -18,7 +18,7 @@ The process by which it does so is described below:
 
 6. The engine forwards the mapped actions to whichever objects need them, via ToyMaker::ActionDispatch::dispatchAction().
 
-```txt
+```plaintext
    W    ______
  A|S|D        \___.--> Character : Move (2 Axes) --> (Move handlers)
 <keyboard>     /

@@ -37,7 +37,7 @@ public:
      * 
      * This is its appearance in JSON:
      * 
-     * ```yaml
+     * ```jsonc
      * 
      * { "type": "BoardLocations" }
      * 

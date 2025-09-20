@@ -45,7 +45,7 @@ namespace ToyMaker {
      * 
      * Its appearance in json might be as follows:
      * 
-     * ```yaml
+     * ```jsonc
      * 
      * {
      *    "ambient": [0.04, 0.1, 0.04],

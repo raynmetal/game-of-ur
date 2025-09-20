@@ -234,7 +234,7 @@ namespace ToyMaker {
      * 
      * ### The shader program json header itself:
      * 
-     * ```yaml
+     * ```jsonc
      * {
      *     "name": "basicShader",
      *     "type": "shader/program",
@@ -246,7 +246,7 @@ namespace ToyMaker {
      * 
      * ### Fragment shader header:
      * 
-     * ```yaml
+     * ```jsonc
      * 
      * {
      *     "name": "basicFS",
@@ -263,7 +263,7 @@ namespace ToyMaker {
      * 
      * ### Vertex shader header:
      * 
-     * ```yaml
+     * ```jsonc
      * 
      * {
      *     "name": "basicVS",

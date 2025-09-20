@@ -153,7 +153,7 @@ namespace ToyMaker {
      * 
      * Such a resource's description in JSON might look like:
      * 
-     * ```yaml
+     * ```jsonc
      * {
      *     "method": "fromFile",
      *     "name": "EagleModel_One",

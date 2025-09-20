@@ -33,7 +33,7 @@ namespace ToyMaker {
      * 
      * Here's an example of a valid project json file:
      * 
-     * ```yaml
+     * ```jsonc
      * 
      * {
      *     "window_configuration": {

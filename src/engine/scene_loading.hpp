@@ -28,7 +28,7 @@ namespace ToyMaker {
      * 
      * Its appearance in JSON might be as follows:
      * 
-     * ```yaml
+     * ```jsonc
      * 
      * {
      *     "name": "Ur_Button",
@@ -74,7 +74,7 @@ namespace ToyMaker {
      * 
      * An example of such a json description is given below:
      * 
-     * ```yaml
+     * ```jsonc
      * 
      * {
      *     "resources": [],
@@ -262,7 +262,7 @@ namespace ToyMaker {
      * 
      * Its description might look as follows:
      * 
-     * ```yaml
+     * ```jsonc
      * 
      * {
      *     "name": "viewport_3D",

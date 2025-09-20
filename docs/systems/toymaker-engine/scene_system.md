@@ -46,7 +46,7 @@ In ToyMaker, a scene file is a JSON file adhering to a specific structure.  The 
 
 This is a list of resources.  It is an array mapped to the scene file's root object's `"resources"` property.
 
-```yaml
+```jsonc
 // NOTE: Scene file json object
 {
     "resources": [
@@ -58,7 +58,7 @@ This is a list of resources.  It is an array mapped to the scene file's root obj
 
 Each resource is an object necessarily containing the name of the resource, the type of resource it is, its resource constructor (called method), and the parameters the method uses.
 
-```yaml
+```jsonc
 {
     "resources": [
         {
@@ -104,7 +104,7 @@ The root node must also have an empty string `""` as the value of its `"parent"`
 
 ToyMaker::SceneNode is the most basic type of scene node, comprised of nothing more than its names and ToyMaker::ECSWorld components.  It has the following appearance in a scene file:
 
-```yaml
+```jsonc
 {
 
     "nodes" [
@@ -153,7 +153,7 @@ A ToyMaker::SimObjectAspect is the base class of aspects used by ToyMaker::SimSy
 
 As noted earlier, the root node of any scene file must be a SimObject.  The appearance of a SimObject in a scene file is given below:
 
-```yaml
+```jsonc
 {
 
     // ... other sections ...
@@ -213,7 +213,7 @@ SimObjects have one more special feature in a scene file.
 
 Since the root node of a scene file is always guaranteed to be a SimObject, when one scene is imported into another scene, the import*ing* scene may specify overrides for the name, components, and aspects, of the import*ed* scene's root node, like so:
 
-```yaml
+```jsonc
 {
     "resources": [
 
@@ -300,7 +300,7 @@ This also ensures that nodes in the UI world aren't affected by the systems acti
 
 The appearance of the viewport node in a scene file is given below:
 
-```yaml
+```jsonc
 {
 
     // ... other sections ...
@@ -362,3 +362,78 @@ The appearance of the viewport node in a scene file is given below:
 ```
 
 The root viewport of the ToyMaker::SceneSystem is also a viewport node, retrievable using ToyMaker::SceneSystem::getRootViewport().
+
+### Signal connections
+
+ToyMaker::SimObjectAspect, which is the engine's scripting interface, supports signals.  Any aspect subclass may declare its own signal or signal observer like so:
+
+```c++
+#include "toymaker/sim_system.hpp"
+
+class MyAspect: public ToyMaker::SimObjectAspect<MyAspect> {
+private:
+    // ... other class members
+    
+    // NOTE: Handler method for some signal this aspect expects to
+    // observe
+    void someSignalHandler (int signalValue1, float signalValue2);
+public:
+
+    // ... other class interface members
+
+    // NOTE: A signal member of this aspect
+    Toymaker::Signal<> mSigMySignal {
+        *this, // NOTE: Reference to SignalTracker-derived self
+        "MySignal" // NOTE: The aspect's signal's name
+    }
+
+    // ... other class interface members
+
+    // NOTE: A signal observer member of this aspect
+    ToyMaker::SignalObserver<int, float> // NOTE: data types received
+      mObserveSomeSignal {
+
+        *this, // NOTE: ref to tracker
+        "SomeSignalObserved"// NOTE: name of observer
+
+        // NOTE: Lambda connecting this observer to the handler
+        [this](int sig1, float sig2) {this->someSignalHandler(sig1, sig2);}
+    };
+
+    // ... other class interface members
+
+};
+```
+
+Then, in the `"connections"` section of the scene file, use this to connect a signal from one node aspect to another:
+
+```jsonc
+{
+    // ... other sections ...
+
+    "connections": [
+
+        // ... other connections ...
+
+        {
+            "to": "/path/to/my_node/@MyAspect",
+            "observer": "SomeSignalObserved", // NOTE: name of our observer
+
+            "from": "/path/to/other_node/@SomeSignalGenAspect",
+            "signal": "SomeSignal"
+        },
+
+        {
+            "from": "/path/to/my_node/@MyAspect",
+            "signal": "MySignal", // our signal's name
+
+            "from": "/path/to/yet/another_node/@SomeObserverAspect",
+            "observer": "MySignalObserved"
+        }
+
+        // ... other connections ...
+    ]
+}
+```
+
+... where all paths are relative to the current scene file's root node.  Signals and observers from other scene files, provided they've been added to this scene's tree, may also be referenced.
