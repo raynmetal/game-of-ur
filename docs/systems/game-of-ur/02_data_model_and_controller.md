@@ -14,7 +14,17 @@ The ur controller is a ToyMaker::SimObjectAspect that acts as the engine level i
 
 At the start of a game, it instantiates two player controllers.  Each player controller has methods representing game-actions each player can take.  Since player controllers aren't tied to the presentation layer directly, their methods may even be called by AI, or (theoretically) even a player on another machine.
 
-## Important API
+## Important components
+
+### Scenes and configs
+
+- data/project.json -- The configuration file for the project, locating the first game scene and specifying the game's initial window dimensions.
+
+- data/ur_prototype_cpu_vs.json -- The controllers responsible for a game between 1 human and 1 CPU player.
+
+- data/ur_prototype_local_vs.json -- The controllers responsible for a game between 2 humans on the same computer.
+
+### Classes
 
 - GameOfUrModel -- The class at the center of the data model.  Provides methods for querying and advancing the state of the game.
 
@@ -23,6 +33,10 @@ At the start of a game, it instantiates two player controllers.  Each player con
 - UrPlayerControls -- An object instantiated by UrController.  The controller creates 2 of these in its lifetime, one corresponding to each player of the game.  Gives access to methods to communicate with UrController, and advance the state of the game.
 
 - UrRecords -- An aspect singleton class which collaborates with the UrController to save and load records of the results of past completed games.
+
+- PlayerLocal -- An aspect representing a single human player on this platform.
+
+- PlayerCPURandom -- An aspect representing a single AI player on this platform, which selects its moves at random.
 
 ## Why does it exist?
 
