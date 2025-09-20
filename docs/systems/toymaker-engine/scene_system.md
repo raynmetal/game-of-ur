@@ -4,7 +4,7 @@
 
 The ToyMaker::SceneSystem is responsible for maintaining and exposing the currently active scene.  It does so by holding a reference to a scene tree.
 
-The scene tree is made up of scene nodes, derived from ToyMaker::SceneNodeCore.  Each node is a wrapper over an ToyMaker::Entity.  This entity is guaranteed to have at least 3 components:
+The scene tree is made up of scene nodes derived from ToyMaker::SceneNodeCore.  Each node is a wrapper over an ToyMaker::Entity.  This entity is guaranteed to have at least 3 components:
 
 - ToyMaker::Placement -- The position, orientation, and scale of the node, relative to its parent (or not, depending on ToyMaker::RelativeTo)
 
