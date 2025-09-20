@@ -292,7 +292,7 @@ Since the root node of a scene file is always guaranteed to be a SimObject, when
 
 A ToyMaker::ViewportNode is one of the main interfaces between the developer and the ToyMaker::RenderSystem.  It is used to control the frequency of rendering updates to the target texture owned by this node, as well as the dimensions of that texture.
 
-According to its configuration, it may also mark the boundary between the part of the scene tree corresponding to its parent viewport's ToyMaker::ECSWorld, and its own ECSWorld. 
+According to its configuration, it may also mark the boundary between the part of the scene tree corresponding to its parent viewport's ToyMaker::ECSWorld, and its own ECSWorld.
 
 An example of where these properties are useful is if a game wants its UI to be rendered at the platform's native resolution, while rendering its 3D game world at a lower resolution.  The parent viewport and the UI viewport can have their render textures set to the size of the application window in native pixel dimensions.  The game world viewport has its resolution scaled down.  The parent viewport produces the final window texture by combining the results from the UI viewport and the game world viewport.
 

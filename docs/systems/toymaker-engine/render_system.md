@@ -10,7 +10,7 @@ Common to all pipelines is the following stage:
 
 - ToyMaker::ResizeRenderStage -- Responsible for scaling a texture from its render dimensions (used by its pipeline) to its target dimensions (requested by the viewport controlling the render system).
 
-At present, rendering pipelines cannot be configured, only selected from built-in options. The render system currently supports two pipelines:
+At present, rendering pipelines cannot be configured, only selected from built-in options (ToyMaker::ViewportNode::RenderConfiguration::RenderType). The render system currently supports two pipelines:
 
 ### The 3D rendering pipeline
 
@@ -32,12 +32,14 @@ This pipeline has only one render stage, and works with its viewport to combine 
 
 ## Important API
 
-- ToyMaker::ViewportNode -- A developers primary interface to the render system.  Exposes methods to configure the frequency of rendering updates, render target texture dimensions, skybox texture, and so on.
+- ToyMaker::ViewportNode -- A developer's primary interface to the render system.  Exposes methods to configure the frequency of rendering updates, render target texture dimensions, skybox texture, and so on.
 
 - ToyMaker::BaseOffscreenRenderStage and ToyMaker::BaseRenderStage -- Base classes for all render stages, including (in the future) custom developer-defined ones.
 
+- ToyMaker::CameraProperties -- In association with a viewport: determines how much of the scene, and with what projection, is rendered by the render pipeline.
+
 ## Why does it exist?
 
-If a tree falls in a forest, and no one is there to see it, did it really fall?  Was there ever even a tree in the first place?
+If a tree were to fall in a forest, and there was no one to see it, then did it really fall?
 
-The render system in its present state is a placeholder for a more robust and configurable render system later on.  The idea being that users define their render stages (as code, including their material properties and vertex layouts) and rendering pipelines (as configuration files or programmatically), and rely on the render system to run the pipeline automatically when required.
+The render system in its present state is a placeholder for a more robust and configurable render system later on.  The idea being that users define their render stages (as code, including their material properties and attribute layouts) and rendering pipelines (as configuration files or programmatically), and rely on the render system to run the pipeline when required.

@@ -37,7 +37,7 @@ namespace ToyMaker {
      * 
      * {
      *     "window_configuration": {
-     *         "application_title": "The Royal Game of Ur",
+     *         "application_title": "Game of Ur",
      *         "window_width": 800,
      *         "window_height": 600 
      *     },

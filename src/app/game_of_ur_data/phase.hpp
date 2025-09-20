@@ -38,7 +38,7 @@ enum class TurnPhase {
  * @ingroup UrGameDataModel
  * @brief A value representing the phase of a single round, where in a round all players take a turn once.
  * 
- * In the Royal Game of Ur, a round ends every pair of turns.
+ * In Game of Ur, a round ends every pair of turns.
  */
 enum class RoundPhase {
     IN_PROGRESS, //< The round is in progress.

@@ -2,7 +2,7 @@
  * @ingroup UrGameDataModel
  * @file game_of_ur_data/model.hpp
  * @author Zoheb Shujauddin (zoheb2424@gmail.com)
- * @brief The class containing the interface to the data model for the whole game (The Royal Game of Ur).
+ * @brief The class containing the interface to the data model for the whole game (Game of Ur).
  * @version 0.3.2
  * @date 2025-09-12
  * 
@@ -327,7 +327,7 @@ struct MoveResultData {
 
 /**
  * @ingroup UrGameDataModel
- * @brief The data model representing one instance of The Royal Game of Ur.
+ * @brief The data model representing one instance of Game of Ur.
  * 
  * Maintains information and references to the game board, its pieces, its players, the counters possessed by each player and held in common.  Provides methods for advancing the game and querying its current state.
  * 
