@@ -1,12 +1,12 @@
-# Game of Ur
+# Game of Ur: Game Design Document
 
 ## About
 
-Game of Ur is the oldest board game known to date.  It is informally named after the ruins the first board of its kind was excavated from, the Royal Cemetary at Ur, an ancient Sumer burial site.  The other, more formal name for the Game of Ur is the "Game of Twenty Squares."
+Game of Ur is the oldest board game known to date.  It is informally named after the ruins the first board of its kind was excavated from, Cemetary at Ur, an ancient Sumer burial site.  The other, more formal name for the Game of Ur is the "Game of Twenty Squares."
 
 It is thought to be a race game, with some variants possibly using additional rules for complex betting.  Two players, each with 5 (or 7, or 9) playing pieces, attempt to move all their pieces from the start of the board to the end and off the board.  The one to do so first, wins.
 
-The version of the game used as the basis for this document (and prototype) is the one described by Irving Finkel in [Ancient Board Games in Perspective](https://archive.org/details/ancientboardgame0000unse), in the chapter titled *On the Rules for the Royal Game of Ur*.  It is based on a cuneiform manuscript written in ancient Babylon, and appears to describe a special variant of the game played there.
+The version of the game used as the basis for this document (and prototype) is the one described by Irving Finkel in [Ancient Board Games in Perspective](https://archive.org/details/ancientboardgame0000unse), in the chapter titled *On the Rules for Game of Ur*.  It is based on a cuneiform manuscript written in ancient Babylon, and appears to describe a special variant of the game played there.
 
 ### Modifications
 

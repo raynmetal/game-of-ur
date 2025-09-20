@@ -34,6 +34,8 @@ namespace ToyMaker {
      * 
      * It is presently implemented as an octree, and only answers questions that take the form of a Ray or an AABB.
      * 
+     * @todo SceneHierarchyData isn't required by this system, as far as I can tell.
+     * 
      */
     class SpatialQuerySystem: public System<SpatialQuerySystem, std::tuple<Transform, ObjectBounds>, std::tuple<SceneHierarchyData, AxisAlignedBounds>> {
     public:

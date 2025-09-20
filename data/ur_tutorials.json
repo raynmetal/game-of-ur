@@ -1,7 +1,7 @@
 [
     {
         "heading": "Introduction",
-        "text": "\tThe Royal Game of Ur is a race game played between two players.\n\n\tThe players are given 5 pieces each which they attempt to move to the end of the route on the game board.  The one to do so first, wins the game.\n\n\tBoth players are also each given 25 counters to represent their wagers.  These counters may be won from or lost to their opponent over the course of play.",
+        "text": "\tGame of Ur is a race game played between two players.\n\n\tThe players are given 5 pieces each which they attempt to move to the end of the route on the game board.  The one to do so first, wins the game.\n\n\tBoth players are also each given 25 counters to represent their wagers.  These counters may be won from or lost to their opponent over the course of play.",
         "image_filepath": "data/textures/tutorial/ui_unmarked.png"
     },
 

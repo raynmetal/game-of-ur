@@ -153,7 +153,7 @@ namespace ToyMaker{
      * 
      * An example JSON representation of a TextFont resource loaded from a file:
      * 
-     * ```json
+     * ```jsonc
      * 
      * {
      *     "name": "Roboto_Mono_Regular_24",

@@ -135,7 +135,7 @@
             "aspects": [
                 {
                     "type": "UIText",
-                    "text": "The Royal Game of Ur",
+                    "text": "Game of Ur",
                     "font_resource_name": "Roboto_Mono_Regular_42",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],

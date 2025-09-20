@@ -25,7 +25,7 @@ namespace ToyMaker {
      * 
      * Its appearance in json is as follows:
      * 
-     * ```json
+     * ```jsonc
      * 
      * {
      *     "fov": 45.0,

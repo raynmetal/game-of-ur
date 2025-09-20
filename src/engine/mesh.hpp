@@ -201,7 +201,7 @@ namespace ToyMaker {
      * 
      * Such a representation might look like:
      * 
-     * ```json
+     * ```jsonc
      * 
      * {
      *     "name": "MyMesh",

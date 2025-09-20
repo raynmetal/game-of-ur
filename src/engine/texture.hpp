@@ -257,7 +257,7 @@ namespace ToyMaker {
      * 
      * An example JSON texture resource description.
      * 
-     * ```json
+     * ```jsonc
      * 
      * {
      *     "name": "Skybox_Texture",
@@ -288,7 +288,7 @@ namespace ToyMaker {
      * 
      * A JSON example of a resource loaded from its color buffer definition:
      * 
-     * ```json
+     * ```jsonc
      * 
      * {
      *     "name": "Plain_White_Texture",

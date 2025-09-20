@@ -138,7 +138,7 @@ private:
  * 
  * Its appearance in JSON is as follows:
  * 
- * ```json
+ * ```jsonc
  * 
  * {
  *     "name": "Bad_Panel",

@@ -1,4 +1,4 @@
-# Game of Ur
+# Game of Ur Project
 
 ## Project Description
 
@@ -7,6 +7,10 @@
 This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Royal_Game_of_Ur), written in C++ mainly using SDL and OpenGL.
 
 Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant implemented in this adaptation is based on a paper by Irving Finkel.  See the [game design document](docs/game_design_doc.md) for more information.
+
+### Documentation
+
+Documentation for this game and its engine is available on this project's [github pages](https://raynmetal.github.io/game-of-ur/index.html).
 
 ### Motivation
 
@@ -25,7 +29,11 @@ I decided against making an original game because I wanted to focus on the techn
 - ~~Playable on Android~~ (Maybe some day)
 - [ ] Itch.io release
 - ~~Play Store release~~ (Maybe a day long after the other days)
-- [ ] Code Documentation
+- [x] Code Documentation
+
+## Contributing
+
+I'm not planning to accept contributions to this project any time soon.  Feel free to fork the project and make it your own, though!
 
 ## LICENSE
 
