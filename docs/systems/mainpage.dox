@@ -1,0 +1,9 @@
+/** @mainpage Game of Ur Documentation
+ *
+ * The link to the github project associated with this documentation is here: https://github.com/raynmetal/game-of-ur
+ * 
+ * Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant implemented in this adaptation is based on a paper by Irving Finkel.
+ *
+ * 
+ *
+ */
