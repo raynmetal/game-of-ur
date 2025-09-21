@@ -60,6 +60,12 @@
     },
 
     {
+        "heading": "Launching the Swallow",
+        "text": "The Swallow piece has a special launch method.  When it is available to be launched, click on the Swallow launch button (Sw), then click on a board location one house behind a rosette house.\n\n\tRight clicking, or clicking on an invalid location, cancels launch location selection.",
+        "image_filepath": "data/textures/tutorial/ui_launch_swallow.png"
+    },
+
+    {
         "heading": "Game Piece Values",
         "text": "This table shows the no. of counters won or lost by landing or failing to land on a rosette square, corresponding to each piece:",
         "image_filepath": "data/textures/tutorial/value_table.png"
