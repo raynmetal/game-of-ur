@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(Game_Of_Ur VERSION 0.3.2)
+project(Game_Of_Ur VERSION 0.3.3)
 
 
 set(CMAKE_DEBUG_POSTFIX -d)
@@ -80,16 +80,14 @@ install(
     DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data
     DESTINATION .
 )
-install(
-    DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs/game-of-ur
-    DESTINATION .
-)
+
 install(
     DIRECTORY
     DESTINATION user_data
 )
 install(
     FILES
+        "docs/systems/game-of-ur/01_design_doc.md"
         "LICENSE.txt"
         "README.md"
     DESTINATION 
