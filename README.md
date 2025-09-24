@@ -8,6 +8,12 @@ This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Roya
 
 Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant implemented in this adaptation is based on a paper by Irving Finkel.  See the [game design document](docs/game_design_doc.md) for more information.
 
+![Game of Ur being played.](data/textures/tutorial/game_in_progress.png "A picture of Game of Ur being played.")
+
+![Picture of the game labeled with the game's route and game piece launch locations.](data/textures/tutorial/board_route.png "A picture of the game labeled with the game's route and game piece launch locations.")
+
+![A screenshot of the game's main menu.](data/textures/tutorial/game_main_menu.png "A screenshot of Game of Ur's main menu.")
+
 ### Documentation
 
 Documentation for this game and its engine is available on this project's [github pages](https://raynmetal.github.io/game-of-ur/index.html).
