@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(Game_Of_Ur VERSION 0.3.3)
+project(ToyMakerDemo VERSION 0.0.2)
 
 
 set(CMAKE_DEBUG_POSTFIX -d)
@@ -8,11 +8,11 @@ set(CMAKE_RELWITHDEBINFO_POSTFIX -dfast)
 set(CMAKE_BUILD_PARALLEL_LEVEL 8)
 
 
-add_executable(Game_Of_Ur)
-set_target_properties(Game_Of_Ur PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
-set_target_properties(Game_Of_Ur PROPERTIES RELWITHDEBINFO_POSTFIX ${CMAKE_RELWITHDEBINFO_POSTFIX})
-set_target_properties(Game_Of_Ur PROPERTIES WIN32_EXECUTABLE $<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>>)
-target_compile_definitions(Game_Of_Ur PRIVATE CMAKE_EXPORT_COMPILE_COMMANDS=1)
+add_executable(ToyMakerDemo)
+set_target_properties(ToyMakerDemo PROPERTIES DEBUG_POSTFIX ${CMAKE_DEBUG_POSTFIX})
+set_target_properties(ToyMakerDemo PROPERTIES RELWITHDEBINFO_POSTFIX ${CMAKE_RELWITHDEBINFO_POSTFIX})
+set_target_properties(ToyMakerDemo PROPERTIES WIN32_EXECUTABLE $<NOT:$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>>)
+target_compile_definitions(ToyMakerDemo PRIVATE CMAKE_EXPORT_COMPILE_COMMANDS=1)
 
 add_library(project_compiler_flags INTERFACE)
 target_compile_features(project_compiler_flags INTERFACE cxx_std_17)
@@ -24,9 +24,8 @@ target_compile_options(
     "$<$<CONFIG:Debug>:$<${msvc_cxx}:-W3;-g>>"
 )
 
-configure_file(src/app/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/src/app/version.h)
 target_include_directories(
-    Game_Of_Ur PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/app ${CMAKE_CURRENT_BINARY_DIR}/src/app
+    ToyMakerDemo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src/app ${CMAKE_CURRENT_BINARY_DIR}/src/app
 )
 
 # copy all data files over, creating dependency between copy and source
@@ -50,7 +49,7 @@ add_custom_target(data_file_dependencies DEPENDS "$<LIST:TRANSFORM,${DATA_FILES}
 add_subdirectory(src/engine)
 
 target_sources(
-    Game_Of_Ur
+    ToyMakerDemo
     # Ur application sources
     PRIVATE
         ${SRC_FILES}
@@ -65,16 +64,16 @@ find_package(glm 1.0 REQUIRED)
 find_package(assimp 6.0 REQUIRED)
 
 if(TARGET SDL2::SDL2main)
-    target_link_libraries(Game_Of_Ur PRIVATE SDL2::SDL2main)
+    target_link_libraries(ToyMakerDemo PRIVATE SDL2::SDL2main)
 endif()
-target_link_libraries(Game_Of_Ur PRIVATE SDL2::SDL2)
-target_link_libraries(Game_Of_Ur PRIVATE nlohmann_json::nlohmann_json)
-target_link_libraries(Game_Of_Ur PRIVATE glm::glm)
-target_link_libraries(Game_Of_Ur PRIVATE assimp::assimp)
-target_link_libraries(Game_Of_Ur PRIVATE project_compiler_flags)
-target_link_libraries(Game_Of_Ur PRIVATE ToyMaker)
+target_link_libraries(ToyMakerDemo PRIVATE SDL2::SDL2)
+target_link_libraries(ToyMakerDemo PRIVATE nlohmann_json::nlohmann_json)
+target_link_libraries(ToyMakerDemo PRIVATE glm::glm)
+target_link_libraries(ToyMakerDemo PRIVATE assimp::assimp)
+target_link_libraries(ToyMakerDemo PRIVATE project_compiler_flags)
+target_link_libraries(ToyMakerDemo PRIVATE ToyMaker)
 
-add_dependencies(Game_Of_Ur data_file_dependencies build_time_make_directory)
+add_dependencies(ToyMakerDemo data_file_dependencies build_time_make_directory)
 
 install(
     DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/data
@@ -94,7 +93,7 @@ install(
         "."
 )
 install(
-    TARGETS Game_Of_Ur
+    TARGETS ToyMakerDemo
     RUNTIME_DEPENDENCY_SET deps
     DESTINATION .
 )
@@ -111,8 +110,8 @@ set(CMAKE_INSTALL_SYSTEM_RUNTIME_DESTINATION .)
 
 include(InstallRequiredSystemLibraries)
 set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt)
-set(CPACK_PACKAGE_VERSION_MAJOR "${Game_Of_Ur_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${Game_Of_Ur_VERSION_MINOR}")
+set(CPACK_PACKAGE_VERSION_MAJOR "${ToyMakerDemo_VERSION_MAJOR}")
+set(CPACK_PACKAGE_VERSION_MINOR "${ToyMakerDemo_VERSION_MINOR}")
 set(CPACK_GENERATOR "ZIP")
 set(CPACK_SOURCE_GENERATOR "ZIP")
 include(CPack)

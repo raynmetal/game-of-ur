@@ -131,7 +131,7 @@ void Application::execute() {
     bool quit {false};
     sceneSystem->onApplicationStart();
     sceneSystem->getRootViewport().requestDimensions(WindowContext::getInstance().getDimensions());
-    printSceneHierarchyData(sceneSystem->getNode("/scene_root/"));
+    // printSceneHierarchyData(sceneSystem->getNode("/root/"));
     while(true) {
         //Handle events before anything else
         while(SDL_PollEvent(&event)) {
