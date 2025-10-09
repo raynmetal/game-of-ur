@@ -42,21 +42,22 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "Game of Ur"
+PROJECT_NAME           = "ToyMaker Game Engine"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = 0.3.3
+PROJECT_NUMBER         = 0.0.2
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewers a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = "This is a computer adaptation of Game of Ur, written in C++ mainly using SDL and OpenGL.
+PROJECT_BRIEF          = "ToyMaker is a game engine developed and maintained by Zoheb Shujauddin.
 
-Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant implemented in this adaptation is based on a paper by Irving Finkel.  See the game design document for more information."
+It is built in C++, primarily using SDL and OpenGL.  It provides a familiar, simple to use C++ scripting interface for game objects in the form of SimObjectAspect, and currently supports a fixed Blinn-Phong 3D rendering pipeline.
+"
 
 # With the PROJECT_LOGO tag one can specify a logo or an icon that is included
 # in the documentation. The maximum height of the logo should not exceed 55

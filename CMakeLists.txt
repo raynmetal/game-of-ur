@@ -84,19 +84,13 @@ install(
     DIRECTORY
     DESTINATION user_data
 )
-install(
-    FILES
-        "docs/systems/game-of-ur/01_design_doc.md"
-        "LICENSE.txt"
-        "README.md"
-    DESTINATION 
-        "."
-)
+
 install(
     TARGETS ToyMakerDemo
     RUNTIME_DEPENDENCY_SET deps
     DESTINATION .
 )
+
 install(
     RUNTIME_DEPENDENCY_SET deps
     PRE_EXCLUDE_REGEXES "api-ms-" "ext-ms-"

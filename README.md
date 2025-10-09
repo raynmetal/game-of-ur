@@ -1,38 +1,24 @@
-# Game of Ur Project
+# ToyMaker Project
 
 ## Project Description
 
 ### Introduction
 
-This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Royal_Game_of_Ur), written in C++ mainly using SDL and OpenGL.
-
-Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant implemented in this adaptation is based on a paper by Irving Finkel.  See the [game design document](docs/game_design_doc.md) for more information.
-
-![Game of Ur being played.](data/textures/tutorial/game_in_progress.png "A picture of Game of Ur being played.")
-
-![Picture of the game labeled with the game's route and game piece launch locations.](data/textures/tutorial/board_route.png "A picture of the game labeled with the game's route and game piece launch locations.")
-
-![A screenshot of the game's main menu.](data/textures/tutorial/game_main_menu.png "A screenshot of Game of Ur's main menu.")
+ToyMaker is an open source game engine developed and maintained by Zoheb Shujauddin.
 
 ### Documentation
 
-Documentation for this game and its engine is available on this project's [github pages](https://raynmetal.github.io/game-of-ur/index.html).
+Documentation for this game and its engine is available on this project's [github pages](https://raynmetal.github.io/toymaker/index.html).
 
 ### Motivation
 
 I spent 2023-2024 studying C++, OpenGL, SDL, and 3D graphics by following the tutorials on [learncpp](https://www.learncpp.com/), [Lazy Foo](https://lazyfoo.net), and [Learn OpenGL](https://learnopengl.com/) among others. With this project, I hope to both cement and demonstrate my newly acquired skills.
 
-I decided against making an original game because I wanted to focus on the technical aspects of game development, and not on game design. Adapting an existing game seemed like a good way to limit the scope of my first project.
+Take a look at my [Game of Ur Project](https://www.github.com/raynmetal/game-of-ur) to see the engine being used for a full game!
 
 ## Installation
 
 Note that at the moment the project is only available on Windows.  I have not yet attempted to run or build it on any other platform.
-
-### Pre-built executable
-
-The latest build of the project can be downloaded from this project's [releases page.](https://github.com/raynmetal/game-of-ur/releases)
-
-Once downloaded, the game zip can be extracted to any location of your choice, and then launched with `Game_Of_Ur.exe`.
 
 ### Building from source
 
@@ -63,7 +49,7 @@ On your platform, download the following packages and place them somewhere disco
 
 If you'd like to generate and tinker with the documentation generated for the project, also install [Doxygen](https://www.doxygen.nl/).
 
-Finally, [clone this repository,](https://github.com/raynmetal/game-of-ur) or download its snapshot.
+Finally, [clone this repository,](https://github.com/raynmetal/toymaker) or download its snapshot.
 
 #### Compiling
 
@@ -73,20 +59,11 @@ Finally, [clone this repository,](https://github.com/raynmetal/game-of-ur) or do
 
 3. Change to the build directory using `cd build`, then run `cmake --build .` to build the Debug version of the project.
 
-4. Run the (debug build of the) game using the generated `Game_Of_Ur-d.exe` file in the build folder.
+4. Run the (debug build of the) game using the generated `ToyMakerDemo-d.exe` file in the build folder.
 
 ## Goals
 
-- [x] Stylized 3D graphics
-- [x] Offline multiplayer
-- [x] AI opponent
-- ~~Music and sound effects~~ (I'm tired)
-- ~~Tutorialization~~ (I'm very very tired)
-- [x] Playable on Windows
-- ~~Playable on Android~~ (Maybe some day)
-- [ ] Itch.io release
-- ~~Play Store release~~ (Maybe a day long after the other days)
-- [x] Code Documentation
+WIP
 
 ## Contributing
 
@@ -94,14 +71,20 @@ I'm not planning to accept contributions to this project any time soon.  Feel fr
 
 ## LICENSE
 
-raynmetal/game-of-ur is distributed under the terms of the [MIT License](LICENSE.txt).
+raynmetal/toymaker is distributed under the terms of the [MIT License](LICENSE.txt).
 
 This program makes extensive use of the following libraries:
 
 - [SDL](https://www.libsdl.org/)
+
 - [SDL Image](https://github.com/libsdl-org/SDL_image)
+
 - [SDL TTF](https://github.com/libsdl-org/SDL_ttf)
+
 - [GLEW](https://github.com/nigels-com/glew)
+
 - [Nlohmann JSON](https://json.nlohmann.me/)
+
 - [GLM](https://github.com/g-truc/glm)
+
 - [Assimp](https://github.com/assimp/assimp)
