@@ -12,9 +12,7 @@ Documentation for this game and its engine is available on this project's [githu
 
 ### Motivation
 
-I spent 2023-2024 studying C++, OpenGL, SDL, and 3D graphics by following the tutorials on [learncpp](https://www.learncpp.com/), [Lazy Foo](https://lazyfoo.net), and [Learn OpenGL](https://learnopengl.com/) among others. With this project, I hope to both cement and demonstrate my newly acquired skills.
-
-Take a look at my [Game of Ur Project](https://www.github.com/raynmetal/game-of-ur) to see the engine being used for a full game!
+I spent 2023-2024 studying C++, OpenGL, SDL, and 3D graphics by following the tutorials on [learncpp](https://www.learncpp.com/), [Lazy Foo](https://lazyfoo.net), and [Learn OpenGL](https://learnopengl.com/) among others.  Having written [Game of Ur](https://www.github.com/raynmetal/game-of-ur) with the game engine developed using my learnings, I wish to split ToyMaker off into its own project to continue to refine it further.
 
 ## Installation
 

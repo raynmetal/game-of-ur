@@ -2,11 +2,12 @@
 /.vscode
 
 #Build files
-/**/*.o
-/**/*.a
-/**/*.dll
-/**/*.exe
-build/**/*
+# /**/*.o
+# /**/*.a
+# /**/*.dll
+# /**/*.exe
+build
+install
 docs/_generated
 
 #Local files
