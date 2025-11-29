@@ -66,7 +66,7 @@ target_sources(
         ${CMAKE_CURRENT_BINARY_DIR}/src/app/version.h
 )
 
-find_package(ToyMaker 0.1.1 REQUIRED)
+find_package(ToyMaker 0.1.2 REQUIRED)
 
 toymaker_configure_executable(Game_Of_Ur)
 
