@@ -2,13 +2,13 @@
 #include <sstream>
 #include <nlohmann/json.hpp>
 
+#include <toymaker/builtins/ui_text.hpp>
+#include <toymaker/builtins/ui_button.hpp>
+
 #include "game_of_ur_data/model.hpp"
 
-#include "ur_controller.hpp"
-#include "ui_text.hpp"
-#include "ui_button.hpp"
-
 #include "ur_ui_view.hpp"
+#include "ur_controller.hpp"
 
 const std::map<std::string, UrUIView::Buttons> UrUIView::kButtonEnumMap {
     {"swallow", UrUIView::Buttons::SWALLOW},
@@ -113,7 +113,7 @@ void UrUIView::onPhaseUpdated(GamePhaseData phase){
                 .mType { static_cast<PieceTypeID>(pieceType) },
                 .mOwner { getModel().getPlayerData(player).mRole }
             };
-            UIButton& button { getLaunchButton(static_cast<PieceTypeID>(pieceType), player)->getAspect<UIButton>() };
+            ToyMaker::UIButton& button { getLaunchButton(static_cast<PieceTypeID>(pieceType), player)->getAspect<ToyMaker::UIButton>() };
             button.disableButton();
             if(phase.mGamePhase != GamePhase::INITIATIVE) {
                 const GamePieceData currentPlayerPiece { getModel().getPieceData(currentPlayerPieceIdentity) };
@@ -132,7 +132,7 @@ void UrUIView::onPhaseUpdated(GamePhaseData phase){
         }
     }
 
-    UIButton& endTurnButton { getEndTurnButton()->getAspect<UIButton>() };
+    ToyMaker::UIButton& endTurnButton { getEndTurnButton()->getAspect<ToyMaker::UIButton>() };
     endTurnButton.disableButton();
 }
 
@@ -203,13 +203,13 @@ void UrUIView::onDiceUpdated(DiceData dice) {
         std::string("Previous: ") + std::to_string(static_cast<int>(dice.mPreviousResult))
     );
 
-    getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
+    getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
 }
 
 void UrUIView::onMoveMade(MoveResultData moveData) {
     (void)moveData; // prevent unused parameter warnings
     std::cout << "UrUIView: on move made\n";
-    getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
+    getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
 }
 
 bool UrUIView::onCancel(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
@@ -266,7 +266,7 @@ void UrUIView::variableUpdate(uint32_t timeStep) {
 
     // It's time for the animation to come to an end
     if(mAnimationTimeMillis >= mBlinkLengthMillis || mUpdatedTextElements.empty()) {
-        for(UIText& text: mUpdatedTextElements) {
+        for(ToyMaker::UIText& text: mUpdatedTextElements) {
             text.updateColor(glm::u8vec4{255, 255, 255, 255});
         }
         mUpdatedTextElements.clear();
@@ -285,13 +285,13 @@ void UrUIView::variableUpdate(uint32_t timeStep) {
         glm::u8vec4{255, 255, 255, 255}:
         glm::u8vec4{0, 0, 0, 255}
     };
-    for(UIText& text: mUpdatedTextElements) {
+    for(ToyMaker::UIText& text: mUpdatedTextElements) {
         text.updateColor(currentColor);
     }
 }
 
 void UrUIView::updateText(const std::string& path, const std::string& text) {
-    UIText& textNode { getSimObject().getByPath<UIText&>(path) };
+    ToyMaker::UIText& textNode { getSimObject().getByPath<ToyMaker::UIText&>(path) };
     if(text == textNode.getText()) { return; }
 
     textNode.updateText(text);
@@ -310,9 +310,9 @@ void UrUIView::reactivateControls() {
         };
 
         if(getModel().canLaunchPiece(currentPlayerPieceIdentity, mControlledBy)) {
-            UIButton& button {
+            ToyMaker::UIButton& button {
                 getLaunchButton(static_cast<PieceTypeID>(pieceType),
-                mControlledBy)->getAspect<UIButton>()
+                mControlledBy)->getAspect<ToyMaker::UIButton>()
             };
             button.enableButton();
         }
@@ -320,7 +320,7 @@ void UrUIView::reactivateControls() {
 
     // enable the end turn button only at the end of a turn and
     // only during initiative and play phases
-    UIButton& endTurnButton { getEndTurnButton()->getAspect<UIButton>() };
+    ToyMaker::UIButton& endTurnButton { getEndTurnButton()->getAspect<ToyMaker::UIButton>() };
     if(
         phase.mTurnPhase == TurnPhase::END 
         && phase.mGamePhase != GamePhase::END
@@ -330,7 +330,7 @@ void UrUIView::reactivateControls() {
     }
 
     // enable the dice button if a die can be rolled
-    UIButton& diceButton { getSimObject().getByPath<UIButton&>("/viewport_UI/dice_roll/@UIButton") };
+    ToyMaker::UIButton& diceButton { getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/dice_roll/@UIButton") };
     if(
         phase.mGamePhase != GamePhase::END 
         && phase.mTurnPhase != TurnPhase::END

@@ -1,8 +1,8 @@
 #include <string>
 
-#include "ui_text.hpp"
-#include "ur_ui_version.hpp"
+#include <toymaker/builtins/ui_text.hpp>
 
+#include "ur_ui_version.hpp"
 #include "version.h"
 
 
@@ -16,7 +16,7 @@ std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIVersion::clone() const {
 }
 
 void UrUIVersion::onActivated() {
-    getAspect<UIText>().updateText(
+    getAspect<ToyMaker::UIText>().updateText(
         "Game Of Ur v" 
         + std::to_string(Game_Of_Ur_VERSION_MAJOR) 
         + "." 

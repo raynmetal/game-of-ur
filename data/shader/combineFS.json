@@ -1,9 +1,0 @@
-{
-    "name": "combineFS",
-    "type": "shader/fragment",
-    "sources": [
-        "common/versionHeader.glsl",
-        "common/fragmentAttributes.fs",
-        "combine/combine.fs"
-    ]
-}

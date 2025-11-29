@@ -173,7 +173,7 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "UI_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -191,15 +191,15 @@
                     {
                         "type": "UIButton",
                         "text": "<",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [1.0, 1.0],
                         "value": "previous",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
                         "has_highlight": false
                     }
                 ]
@@ -207,7 +207,7 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "UI_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -225,15 +225,15 @@
                     {
                         "type": "UIButton",
                         "text": ">",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 1.0],
                         "value": "next",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
                         "has_highlight": false
                     }
                 ]
@@ -256,7 +256,7 @@
                 {
                     "type": "UIText",
                     "text": "Some nonsense text goes in here without particular regard to its content as it's just for testing purposes or so I hope.",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "max_width": 640.0,
                     "anchor": [0.5, 0.0],
@@ -288,7 +288,7 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "UI_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -306,15 +306,15 @@
                     {
                         "type": "UIButton",
                         "text": "<- Main Menu",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 0.0],
                         "value": "Game_Of_Ur_Main_Menu",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
                         "has_highlight": false
                     }
                 ]
