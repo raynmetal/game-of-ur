@@ -4,7 +4,7 @@
 
 ### Introduction
 
-This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Royal_Game_of_Ur), written in C++ mainly using SDL and OpenGL, on built on top of the [ToyMaker game engine.](https://github.com/raynmetal/toymaker)
+This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Royal_Game_of_Ur), written in C++ mainly using SDL and OpenGL, and built on top of the [ToyMaker game engine.](https://github.com/raynmetal/toymaker)
 
 Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant implemented in this adaptation is based on a paper by Irving Finkel.  See the [game design document](docs/game_design_doc.md) for more information.
 
