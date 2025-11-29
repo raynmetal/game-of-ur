@@ -138,7 +138,7 @@
         },
 
         {
-            "name": "UI_Button",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -156,15 +156,15 @@
                     {
                         "type": "UIButton",
                         "text": "<- Main Menu",
-                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 1.0],
                         "value": "Game_Of_Ur_Main_Menu",
-                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
-                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
-                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
-                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
                         "has_highlight": false
                     }
                 ]
@@ -210,7 +210,7 @@
                 {
                     "type": "UIText",
                     "text": "Phase: ",
-                    "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
                     "color": [255, 255, 255, 255]
@@ -219,7 +219,7 @@
         },
 
         {
-            "name": "UI_Button",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -237,15 +237,15 @@
                     {
                         "type": "UIButton",
                         "text": "Roll Dice!",
-                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 0.0],
                         "value": "dice_roll",
-                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
-                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
-                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
-                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
                         "has_highlight": false
                     }
                 ]
@@ -268,7 +268,7 @@
                 {
                     "type": "UIText",
                     "text": "Primary: NA",
-                    "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "anchor": [1.0, 0.0],
                     "color": [255, 255, 255, 255]
@@ -291,7 +291,7 @@
                 {
                     "type": "UIText",
                     "text": "Double/Quit: NA",
-                    "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "anchor": [1.0, 0.0],
                     "color": [255, 255, 255, 255]
@@ -314,7 +314,7 @@
                 {
                     "type": "UIText",
                     "text": "Final: NA",
-                    "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "anchor": [1.0, 0.0],
                     "color": [255, 255, 255, 255]
@@ -337,7 +337,7 @@
                 {
                     "type": "UIText",
                     "text": "Previous: NA",
-                    "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                    "font_resource_name": "Roboto_Mono_Regular_24",
                     "scale": 1.0,
                     "anchor": [1.0, 0.0],
                     "color": [255, 255, 255, 255]
@@ -408,7 +408,7 @@
         },
 
         {
-            "name": "UI_Button",
+            "name": "Ur_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -426,16 +426,16 @@
                     {
                         "type": "UIButton",
                         "text": "Next Turn!",
-                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                        "font_resource_name": "Roboto_Mono_Regular_24",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.5],
                         "value": "next_turn",
 
-                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
-                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
-                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
-                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
+                        "panel_active": "Bad_Button_Active_Panel",
+                        "panel_inactive": "Bad_Button_Inactive_Panel",
+                        "panel_hover": "Bad_Button_Hover_Panel",
+                        "panel_pressed": "Bad_Button_Pressed_Panel",
 
                         "has_highlight": false
                     }
