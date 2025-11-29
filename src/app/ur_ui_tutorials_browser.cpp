@@ -1,11 +1,11 @@
 #include <fstream>
 #include <string>
 
-#include "ui_button.hpp"
-#include "ui_text.hpp"
-#include "ui_image.hpp"
-#include "ur_scene_manager.hpp"
+#include <toymaker/builtins/ui_button.hpp>
+#include <toymaker/builtins/ui_text.hpp>
+#include <toymaker/builtins/ui_image.hpp>
 
+#include "ur_scene_manager.hpp"
 #include "ur_ui_tutorials_browser.hpp"
 
 std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUITutorialsBrowser::create(const nlohmann::json& jsonAspectProperties) {
@@ -73,14 +73,14 @@ void UrUITutorialsBrowser::openPage(uint32_t page) {
     assert(hasPage(page) && "No such page exists");
     mPage = page;
 
-    UIText& heading {
-        getSimObject().getByPath<UIText&>(mTutorialHeadingAspect)
+    ToyMaker::UIText& heading {
+        getSimObject().getByPath<ToyMaker::UIText&>(mTutorialHeadingAspect)
     };
-    UIText& text {
-        getSimObject().getByPath<UIText&>(mTutorialTextAspect)
+    ToyMaker::UIText& text {
+        getSimObject().getByPath<ToyMaker::UIText&>(mTutorialTextAspect)
     };
-    UIImage& image {
-        getSimObject().getByPath<UIImage&>(mTutorialImageAspect)
+    ToyMaker::UIImage& image {
+        getSimObject().getByPath<ToyMaker::UIImage&>(mTutorialImageAspect)
     };
     heading.updateText(
         mTutorials[mPage].mHeading 
@@ -91,13 +91,13 @@ void UrUITutorialsBrowser::openPage(uint32_t page) {
     text.updateText(mTutorials[mPage].mText);
     image.updateImage(mTutorials[mPage].mImageFilepath);
 
-    UIButton& next {
-        getSimObject().getByPath<UIButton&>(
+    ToyMaker::UIButton& next {
+        getSimObject().getByPath<ToyMaker::UIButton&>(
             "/viewport_UI/next/@UIButton"
         )
     };
-    UIButton& prev {
-        getSimObject().getByPath<UIButton&>(
+    ToyMaker::UIButton& prev {
+        getSimObject().getByPath<ToyMaker::UIButton&>(
             "/viewport_UI/previous/@UIButton"
         )
     };

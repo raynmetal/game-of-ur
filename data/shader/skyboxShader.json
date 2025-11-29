@@ -1,6 +1,0 @@
-{
-    "name": "skyboxShader",
-    "type": "shader/program",
-    "vertexShader": "skyboxVS.json",
-    "fragmentShader": "skyboxFS.json"
-}

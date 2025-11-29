@@ -12,9 +12,9 @@
 #ifndef ZOAPPBOARDLOCATIONS_H
 #define ZOAPPBOARDLOCATIONS_H
 
-#include "toymaker/sim_system.hpp"
+#include <toymaker/engine/sim_system.hpp>
+#include <toymaker/builtins/interface_pointer_callback.hpp>
 
-#include "interface_pointer_callback.hpp"
 #include "game_of_ur_data/house.hpp"
 
 
@@ -23,7 +23,7 @@
  * @brief The aspect responsible for mapping points on the 3D game board to their equivalent coordinates on the game board data model.
  * 
  */
-class BoardLocations: public ToyMaker::SimObjectAspect<BoardLocations>, public ILeftClickable {
+class BoardLocations: public ToyMaker::SimObjectAspect<BoardLocations>, public ToyMaker::ILeftClickable {
 public:
     /**
      * @brief Gets the aspect type string associated with this class.
