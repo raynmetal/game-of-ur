@@ -20,7 +20,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
-#include <toymaker/engine/sim_system.hpp>
+#include "toymaker/sim_system.hpp"
 
 #include "game_of_ur_data/model.hpp"
 

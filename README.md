@@ -4,7 +4,7 @@
 
 ### Introduction
 
-This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Royal_Game_of_Ur), written in C++ mainly using SDL and OpenGL, and built on top of the [ToyMaker game engine.](https://github.com/raynmetal/toymaker)
+This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Royal_Game_of_Ur), written in C++ mainly using SDL and OpenGL.
 
 Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant implemented in this adaptation is based on a paper by Irving Finkel.  See the [game design document](docs/game_design_doc.md) for more information.
 
@@ -61,8 +61,6 @@ On your platform, download the following packages and place them somewhere disco
 
 - [Assimp](https://github.com/assimp/assimp) -- For importing assets of various kinds, mainly 3D models.
 
-- [ToyMaker](https://github.com/raynmetal/toymaker) -- For the engine/framework this game is built on.
-
 If you'd like to generate and tinker with the documentation generated for the project, also install [Doxygen](https://www.doxygen.nl/).
 
 Finally, [clone this repository,](https://github.com/raynmetal/game-of-ur) or download its snapshot.
@@ -75,7 +73,7 @@ Finally, [clone this repository,](https://github.com/raynmetal/game-of-ur) or do
 
 3. Change to the build directory using `cd build`, then run `cmake --build .` to build the Debug version of the project.
 
-4. Run the (debug build of the) game using the generated `Game_Of_Ur.exe` file in the build folder.
+4. Run the (debug build of the) game using the generated `Game_Of_Ur-d.exe` file in the build folder.
 
 ## Goals
 
