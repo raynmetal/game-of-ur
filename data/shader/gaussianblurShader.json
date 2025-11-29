@@ -1,6 +1,0 @@
-{
-    "name": "gaussianblurShader",
-    "type": "shader/program",
-    "vertexShader": "gaussianblurVS.json",
-    "fragmentShader": "gaussianblurFS.json"
-}

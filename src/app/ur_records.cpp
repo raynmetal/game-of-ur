@@ -1,7 +1,8 @@
 #include <filesystem>
 #include <fstream>
 
-#include "nlohmann/json.hpp"
+#include <nlohmann/json.hpp>
+
 #include "ur_records.hpp"
 
 std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrRecords::create(const nlohmann::json& jsonAspectProperties) {
