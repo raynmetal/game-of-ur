@@ -4,4 +4,6 @@
  * 
  * Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant implemented in this adaptation is based on a paper by Irving Finkel.
  *
+ * 
+ *
  */

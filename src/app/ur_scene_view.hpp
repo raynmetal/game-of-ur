@@ -12,9 +12,9 @@
 #ifndef ZOAPPURSCENEVIEW_H
 #define ZOAPPURSCENEVIEW_H
 
-#include <toymaker/engine/sim_system.hpp>
-#include <toymaker/engine/signals.hpp>
-#include <toymaker/engine/text_render.hpp>
+#include "toymaker/sim_system.hpp"
+#include "toymaker/signals.hpp"
+#include "toymaker/text_render.hpp"
 
 #include "board_locations.hpp"
 #include "game_of_ur_data/model.hpp"

@@ -14,11 +14,9 @@
 
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
-
-#include <toymaker/engine/sim_system.hpp>
-
 #include "ur_records.hpp"
 
+#include "toymaker/sim_system.hpp"
 
 /**
  * @ingroup UrGameVisualLayer
