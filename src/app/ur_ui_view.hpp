@@ -12,9 +12,9 @@
 #ifndef ZOAPPURUIVIEW_H
 #define ZOAPPURUIVIEW_H
 
-#include "toymaker/sim_system.hpp"
-#include "toymaker/signals.hpp"
-#include "toymaker/text_render.hpp"
+#include <toymaker/engine/sim_system.hpp>
+#include <toymaker/engine/signals.hpp>
+#include <toymaker/engine/text_render.hpp>
 
 #include "game_of_ur_data/model.hpp"
 
@@ -58,7 +58,7 @@ private:
     std::string mControllerPath {};
     PlayerID mControlledBy {};
     Mode mMode { Mode::INTERACT };
-    std::vector<std::reference_wrapper<UIText>> mUpdatedTextElements {};
+    std::vector<std::reference_wrapper<ToyMaker::UIText>> mUpdatedTextElements {};
     uint32_t mAnimationTimeMillis { 0 };
     uint32_t mBlinkLengthMillis { 2500 };
     uint32_t mBlinkPeriodMillis { 400 };

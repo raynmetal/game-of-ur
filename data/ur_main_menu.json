@@ -144,7 +144,7 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "UI_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -162,15 +162,15 @@
                     {
                         "type": "UIButton",
                         "text": "Local VS",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_Local_VS",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
                         "has_highlight": false
                     }
                 ]
@@ -178,7 +178,7 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "UI_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -196,15 +196,15 @@
                     {
                         "type": "UIButton",
                         "text": "CPU VS",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_CPU_VS",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
                         "has_highlight": false
                     }
                 ]
@@ -212,7 +212,7 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "UI_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -230,15 +230,15 @@
                     {
                         "type": "UIButton",
                         "text": "Credits",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_Credits",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
                         "has_highlight": false
                     }
                 ]
@@ -246,7 +246,7 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "UI_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -264,15 +264,15 @@
                     {
                         "type": "UIButton",
                         "text": "Records",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_Records_Browser",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
                         "has_highlight": false
                     }
                 ]
@@ -280,7 +280,7 @@
         },
 
         {
-            "name": "Ur_Button",
+            "name": "UI_Button",
             "parent": "/viewport_UI/",
             "type": "Scene",
             "copy": true,
@@ -298,15 +298,15 @@
                     {
                         "type": "UIButton",
                         "text": "How to Play",
-                        "font_resource_name": "Roboto_Mono_Regular_24",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.5],
                         "value": "Game_Of_Ur_Tutorials_Browser",
-                        "panel_active": "Bad_Button_Active_Panel",
-                        "panel_inactive": "Bad_Button_Inactive_Panel",
-                        "panel_hover": "Bad_Button_Hover_Panel",
-                        "panel_pressed": "Bad_Button_Pressed_Panel",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
                         "has_highlight": false
                     }
                 ]
@@ -329,7 +329,7 @@
                 {
                     "type": "UIText",
                     "text": "Game of Ur alpha x.x.x",
-                    "font_resource_name": "Roboto_Mono_Regular_24",
+                    "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.0, 1.0],
                     "color": [255, 255, 255, 255]
