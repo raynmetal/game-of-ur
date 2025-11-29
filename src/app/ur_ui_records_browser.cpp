@@ -1,10 +1,10 @@
 #include <string>
 
-#include <toymaker/builtins/ui_button.hpp>
-#include <toymaker/builtins/ui_text.hpp>
-
+#include "ui_button.hpp"
+#include "ui_text.hpp"
 #include "ur_scene_manager.hpp"
 #include "ur_records.hpp"
+
 #include "ur_ui_records_browser.hpp"
 
 std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIRecordsBrowser::create(const nlohmann::json& jsonAspectProperties) {
@@ -45,7 +45,7 @@ void UrUIRecordsBrowser::openPage(uint32_t page) {
     auto entry { mFetchedRecords.rbegin() + 5*page };
     auto end { mFetchedRecords.rend() };
     for(uint32_t entryIndex{0}; entryIndex < 5; ++entryIndex) {
-        ToyMaker::UIButton& recordButton { getSimObject().getByPath<ToyMaker::UIButton&>(
+        UIButton& recordButton { getSimObject().getByPath<UIButton&>(
                 "/viewport_UI/record_" 
                 + std::to_string(entryIndex)
                 + "/@UIButton"
@@ -69,13 +69,13 @@ void UrUIRecordsBrowser::openPage(uint32_t page) {
         }
     }
     
-    ToyMaker::UIButton& next {
-        getSimObject().getByPath<ToyMaker::UIButton&>(
+    UIButton& next {
+        getSimObject().getByPath<UIButton&>(
             "/viewport_UI/next/@UIButton"
         )
     };
-    ToyMaker::UIButton& prev {
-        getSimObject().getByPath<ToyMaker::UIButton&>(
+    UIButton& prev {
+        getSimObject().getByPath<UIButton&>(
             "/viewport_UI/previous/@UIButton"
         )
     };
@@ -119,18 +119,18 @@ bool UrUIRecordsBrowser::onCancel(const ToyMaker::ActionData& actionData, const 
 
 void UrUIRecordsBrowser::openDetailedRecord(uint32_t entry) {
     // Disable all the buttons on the records browser
-    ToyMaker::UIButton& next {
-        getSimObject().getByPath<ToyMaker::UIButton&>(
+    UIButton& next {
+        getSimObject().getByPath<UIButton&>(
             "/viewport_UI/next/@UIButton"
         )
     };
-    ToyMaker::UIButton& prev {
-        getSimObject().getByPath<ToyMaker::UIButton&>(
+    UIButton& prev {
+        getSimObject().getByPath<UIButton&>(
             "/viewport_UI/previous/@UIButton"
         )
     };
     for(uint32_t entryIndex{0}; entryIndex < 5; ++entryIndex) {
-        ToyMaker::UIButton& recordButton { getSimObject().getByPath<ToyMaker::UIButton&>(
+        UIButton& recordButton { getSimObject().getByPath<UIButton&>(
                 "/viewport_UI/record_" 
                 + std::to_string(entryIndex)
                 + "/@UIButton"
@@ -146,8 +146,8 @@ void UrUIRecordsBrowser::openDetailedRecord(uint32_t entry) {
         getSimObject().getByPath("/viewport_UI/record_details/")
     };
     const std::size_t selectedEntryIndex { mFetchedRecords.size() - (mPage*5 + entry) };
-    ToyMaker::UIText& recordTitle {
-        recordDetails->getByPath<ToyMaker::UIText&>("/title/@UIText")
+    UIText& recordTitle {
+        recordDetails->getByPath<UIText&>("/title/@UIText")
     };
     recordTitle.updateText(
         std::string{"Game "} + std::to_string(selectedEntryIndex)
@@ -162,12 +162,12 @@ void UrUIRecordsBrowser::openDetailedRecord(uint32_t entry) {
         std::shared_ptr<ToyMaker::SceneNode> playerSection {
             recordDetails->getByPath(playerDetailPath)
         };
-        ToyMaker::UIText& name { playerSection->getByPath<ToyMaker::UIText&>("/name/@UIText") };
-        ToyMaker::UIText& role { playerSection->getByPath<ToyMaker::UIText&>("/role/@UIText") };
-        ToyMaker::UIText& counters { playerSection->getByPath<ToyMaker::UIText&>("/counters/@UIText") };
-        ToyMaker::UIText& victoryPieces { playerSection->getByPath<ToyMaker::UIText&>("/victory_pieces/@UIText") };
-        ToyMaker::UIText& onBoardPieces { playerSection->getByPath<ToyMaker::UIText&>("/on_board_pieces/@UIText") };
-        ToyMaker::UIText& unlaunchedPieces { playerSection->getByPath<ToyMaker::UIText&>("/unlaunched_pieces/@UIText") };
+        UIText& name { playerSection->getByPath<UIText&>("/name/@UIText") };
+        UIText& role { playerSection->getByPath<UIText&>("/role/@UIText") };
+        UIText& counters { playerSection->getByPath<UIText&>("/counters/@UIText") };
+        UIText& victoryPieces { playerSection->getByPath<UIText&>("/victory_pieces/@UIText") };
+        UIText& onBoardPieces { playerSection->getByPath<UIText&>("/on_board_pieces/@UIText") };
+        UIText& unlaunchedPieces { playerSection->getByPath<UIText&>("/unlaunched_pieces/@UIText") };
 
         name.updateText(
             std::string{"Player "} 

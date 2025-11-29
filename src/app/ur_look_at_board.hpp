@@ -12,7 +12,7 @@
 #ifndef ZOAPPLOOKATBOARD_H
 #define ZOAPPLOOKATBOARD_H
 
-#include <toymaker/engine/sim_system.hpp>
+#include "toymaker/sim_system.hpp"
 
 /**
  * @ingroup UrGameVisualLayer

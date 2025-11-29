@@ -14,7 +14,7 @@
 
 #include <random>
 
-#include <toymaker/engine/sim_system.hpp>
+#include "toymaker/sim_system.hpp"
 
 #include "ur_controller.hpp"
 
