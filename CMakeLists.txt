@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(Game_Of_Ur VERSION 0.3.7)
+project(Game_Of_Ur VERSION 0.3.10)
 
 add_executable(Game_Of_Ur WIN32)
 
@@ -66,7 +66,7 @@ target_sources(
         ${CMAKE_CURRENT_BINARY_DIR}/src/app/version.h
 )
 
-find_package(ToyMaker 0.1.3 REQUIRED)
+find_package(ToyMaker 0.2.3 REQUIRED)
 
 toymaker_configure_executable(Game_Of_Ur)
 
