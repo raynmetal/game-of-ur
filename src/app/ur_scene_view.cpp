@@ -1,7 +1,8 @@
-#include "game_of_ur_data/serialize.hpp"
+#include <iostream>
 
 #include <toymaker/engine/core/resource_database.hpp>
 
+#include "game_of_ur_data/serialize.hpp"
 #include "ur_controller.hpp"
 #include "ur_scene_view.hpp"
 
