@@ -10,7 +10,7 @@
                 },
                 {
                     "type": "UrUITutorialsBrowser",
-                    "tutorials_filepath": "data/ur_tutorials.json",
+                    "tutorials_filepath": "ur_tutorials.json",
                     "heading_node_aspect": "/viewport_UI/tutorial_heading/@UIText",
                     "text_node_aspect": "/viewport_UI/tutorial_text/@UIText",
                     "image_node_aspect": "/viewport_UI/tutorial_image/@UIImage"
@@ -91,7 +91,8 @@
                         "far": 1000
                     },
                     "projection_mode": "orthographic",
-                    "type": "CameraProperties"
+                    "type": "CameraProperties",
+                    "aspect_mode": "fixed"
                 },
                 {
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
@@ -280,7 +281,7 @@
             "aspects": [
                 {
                     "type": "UIImage",
-                    "image_filepath": "data/textures/button_active.png",
+                    "image_filepath": "textures/button_active.png",
                     "dimensions": [620, 440],
                     "anchor": [0.5, 0.5]
                 }

@@ -81,7 +81,8 @@
                         "far": 1000
                     },
                     "projection_mode": "orthographic",
-                    "type": "CameraProperties"
+                    "type": "CameraProperties",
+                    "aspect_mode": "fixed"
                 },
                 {
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],

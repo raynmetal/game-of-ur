@@ -123,7 +123,8 @@
                     "orthographic_dimensions": {"horizontal": 0, "vertical": 0},
                     "near_far_planes": {"near": 0.5, "far": 100},
                     "projection_mode": "frustum",
-                    "type": "CameraProperties"
+                    "type": "CameraProperties",
+                    "aspect_mode": "fixed"
                 },
                 {
                     "orientation": [
