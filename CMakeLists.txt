@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(Game_Of_Ur VERSION 0.3.10)
+project(Game_Of_Ur VERSION 0.3.11)
 
 add_executable(Game_Of_Ur WIN32)
 
