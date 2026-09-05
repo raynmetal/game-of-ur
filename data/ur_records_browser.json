@@ -106,6 +106,8 @@
             "aspects": [
                 {
                     "type": "UIPanel",
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "anchor": [0.5, 0.5],
                     "content_size": [1366.0, 768.0],
                     "panel_resource_name": "Bad_Panel"
@@ -140,6 +142,8 @@
                     "font_resource_name": "Roboto_Mono_Regular_42",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -168,6 +172,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [1.0, 1.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "previous",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -201,6 +207,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 1.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "next",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -235,6 +243,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "0",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -268,6 +278,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "1",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -301,6 +313,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "2",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -334,6 +348,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "3",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -367,6 +383,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "4",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -401,6 +419,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 0.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "Game_Of_Ur_Main_Menu",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -434,6 +454,8 @@
                     "type": "UIPanel",
                     "anchor": [0.5, 0.5],
                     "content_size": [911.0, 512.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "panel_resource_name": "Bad_Panel"
                 }
             ],
@@ -466,6 +488,8 @@
                     "font_resource_name": "Roboto_Mono_Regular_36",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -503,6 +527,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -526,6 +552,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -549,6 +577,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -572,6 +602,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -595,6 +627,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -618,6 +652,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -655,6 +691,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -678,6 +716,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -701,6 +741,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -724,6 +766,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -747,6 +791,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -770,6 +816,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]

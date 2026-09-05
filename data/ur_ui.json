@@ -100,6 +100,8 @@
                 {
                     "type": "UIPanel",
                     "anchor": [1.0, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "content_size": [454.0, 764.0],
                     "panel_resource_name": "Bad_Panel"
                 }
@@ -121,6 +123,8 @@
                 {
                     "type": "UIPanel",
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "content_size": [600.0, 100.0],
                     "panel_resource_name": "Bad_Panel"
                 }
@@ -161,6 +165,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 1.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "Game_Of_Ur_Main_Menu",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -191,6 +197,8 @@
                     "font_resource_name": "Roboto_Mono_Regular_42",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -214,6 +222,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -242,6 +252,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 0.0],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "dice_roll",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -272,6 +284,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [1.0, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -295,6 +309,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [1.0, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -318,6 +334,8 @@
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
                     "anchor": [1.0, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -340,6 +358,8 @@
                     "text": "Previous: NA",
                     "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                     "scale": 1.0,
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "anchor": [1.0, 0.0],
                     "color": [255, 255, 255, 255]
                 }
@@ -365,6 +385,8 @@
                     "font_resource_name": "Roboto_Mono_Regular_36",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
+                    "reference_coordinate": [0, 0],
+                    "offsets": [0, 0, 0],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -431,6 +453,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.5],
+                        "reference_coordinate": [0, 0],
+                        "offsets": [0, 0, 0],
                         "value": "next_turn",
 
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
