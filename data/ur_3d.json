@@ -162,7 +162,7 @@
                 },
                 {
                     "ambient": [0.1, 0.04, 0.04],
-                    "diffuse": [8.7, 2.4, 2.4],
+                    "diffuse": [2.1, 0.6, 0.6],
                     "specular": [2.0, 2.0, 2.0],
                     "linearConst": 0.10,
                     "quadraticConst": 0.10,
@@ -185,8 +185,8 @@
                 },
                 {
                     "ambient": [0.04, 0.1, 0.04],
-                    "diffuse": [2.4, 8.7, 2.4],
-                    "specular": [ 2.0, 2.0, 2.0],
+                    "diffuse": [0.6, 2.1, 0.6],
+                    "specular": [ 1.0, 1.0, 1.0],
                     "linearConst": 0.10,
                     "quadraticConst": 0.10,
                     "lightType": "point",
@@ -208,7 +208,7 @@
                 },
                 {
                     "ambient": [0.04, 0.04, 0.1],
-                    "diffuse": [2.4, 2.4, 8.7],
+                    "diffuse": [0.6, 0.6, 2.1],
                     "specular": [ 2.0, 2.0, 2.0],
                     "linearConst": 0.10,
                     "quadraticConst": 0.10,
@@ -231,7 +231,7 @@
                 },
                 {
                     "ambient": [0.1, 0.04, 0.1],
-                    "diffuse": [5.2, 2.4, 5.2],
+                    "diffuse": [2.1, 0.6, 2.1],
                     "specular": [ 2.0, 2.0, 2.0],
                     "linearConst": 0.10,
                     "quadraticConst": 0.10,
