@@ -52,6 +52,9 @@ void UrSceneManager::loadScene_() {
         "/"
     );
     assert(getSimObject().getChildren().size() == 1 && "The scene manager must always have no more than one child");
+
+    auto& viewport { getLocalViewport() };
+    viewport.requestDimensions(viewport.getRenderConfiguration().mRequestedDimensions);
 }
 
 void UrSceneManager::loadAutoloads() {
