@@ -63,6 +63,8 @@ bool Board::canMove(RoleID role, const Piece& gamePiece, glm::u8vec2 toLocation,
         ) || (isRouteEnd(toLocation))
     };
 
+    if(!destinationAvailable) return false;
+
     const bool moveCorrespondsToDice {
         (
             gamePiece.getState()==Piece::State::ON_BOARD 
@@ -74,7 +76,7 @@ bool Board::canMove(RoleID role, const Piece& gamePiece, glm::u8vec2 toLocation,
         )
     };
 
-    return destinationAvailable && moveCorrespondsToDice;
+    return moveCorrespondsToDice;
 }
 
 bool Board::movePassesRosette(const Piece& gamePiece, glm::u8vec2 toLocation) const {
