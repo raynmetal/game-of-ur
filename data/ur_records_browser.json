@@ -40,8 +40,8 @@
             "render_configuration": {
                 "base_dimensions": [1366, 768],
                 "update_mode": "on-render-cap-fps",
-                "resize_type": "texture-dimensions",
-                "resize_mode": "fixed-dimensions",
+                "resize_type": "viewport-dimensions",
+                "resize_mode": "expand-fill",
                 "render_type": "basic-3d",
                 "fps_cap": 60,
                 "render_scale": 1.0
@@ -104,6 +104,7 @@
             "parent": "/viewport_UI/",
             "type": "SimObject",
             "aspects": [
+                { "type": "UIContainer" },
                 {
                     "type": "UIPanel",
                     "reference_coordinate": [0, 0],
@@ -116,7 +117,7 @@
             "components": [
                 {
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
-                    "position": [ 0.0, 0.0, -1.0, 1.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ],
                     "type": "Placement"
                 }
@@ -125,7 +126,7 @@
 
         {
             "name": "title",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
@@ -142,8 +143,8 @@
                     "font_resource_name": "Roboto_Mono_Regular_42",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
-                    "reference_coordinate": [0, 0],
-                    "offsets": [0, 0, 0],
+                    "reference_coordinate": [0.5, 0],
+                    "offsets": [0, 10, 1],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -151,7 +152,7 @@
 
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -172,8 +173,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [1.0, 1.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0.5, 0.5],
+                        "offsets": [-400, -200, 1],
                         "value": "previous",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -186,7 +187,7 @@
         },
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -207,8 +208,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 1.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0.5, 0.5],
+                        "offsets": [400, -200, 1],
                         "value": "next",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -222,7 +223,7 @@
 
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -243,8 +244,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0.5, 0.5],
+                        "offsets": [0, -140, 1],
                         "value": "0",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -257,7 +258,7 @@
         },
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -278,8 +279,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0.5, 0.5],
+                        "offsets": [0, -60, 1],
                         "value": "1",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -292,7 +293,7 @@
         },
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -313,8 +314,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0.5, 0.5],
+                        "offsets": [0, 20, 1],
                         "value": "2",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -327,7 +328,7 @@
         },
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -348,8 +349,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0.5, 0.5],
+                        "offsets": [0, 100, 1],
                         "value": "3",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -362,7 +363,7 @@
         },
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -383,8 +384,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.5, 0.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0.5, 0.5],
+                        "offsets": [0, 180, 1],
                         "value": "4",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -398,7 +399,7 @@
 
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -418,9 +419,9 @@
                         "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "anchor": [0.0, 1.0],
+                        "reference_coordinate": [0, 1],
+                        "offsets": [15, -15, 1],
                         "value": "Game_Of_Ur_Main_Menu",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -826,7 +827,7 @@
 
     "connections":[
         {
-            "from": "/viewport_UI/return/@UIButton",
+            "from": "/viewport_UI/ui_panel/return/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUINavigation",
@@ -834,14 +835,14 @@
         },
 
         {
-            "from": "/viewport_UI/next/@UIButton",
+            "from": "/viewport_UI/ui_panel/next/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/previous/@UIButton",
+            "from": "/viewport_UI/ui_panel/previous/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIRecordsBrowser",
@@ -849,35 +850,35 @@
         },
 
         {
-            "from": "/viewport_UI/record_0/@UIButton",
+            "from": "/viewport_UI/ui_panel/record_0/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/record_1/@UIButton",
+            "from": "/viewport_UI/ui_panel/record_1/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/record_2/@UIButton",
+            "from": "/viewport_UI/ui_panel/record_2/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/record_3/@UIButton",
+            "from": "/viewport_UI/ui_panel/record_3/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/record_4/@UIButton",
+            "from": "/viewport_UI/ui_panel/record_4/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIRecordsBrowser",

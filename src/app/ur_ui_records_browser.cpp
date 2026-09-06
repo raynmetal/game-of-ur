@@ -46,7 +46,7 @@ void UrUIRecordsBrowser::openPage(uint32_t page) {
     auto end { mFetchedRecords.rend() };
     for(uint32_t entryIndex{0}; entryIndex < 5; ++entryIndex) {
         ToyMaker::UIButton& recordButton { getSimObject().getByPath<ToyMaker::UIButton&>(
-                "/viewport_UI/record_" 
+                "/viewport_UI/ui_panel/record_" 
                 + std::to_string(entryIndex)
                 + "/@UIButton"
             )
@@ -71,12 +71,12 @@ void UrUIRecordsBrowser::openPage(uint32_t page) {
     
     ToyMaker::UIButton& next {
         getSimObject().getByPath<ToyMaker::UIButton&>(
-            "/viewport_UI/next/@UIButton"
+            "/viewport_UI/ui_panel/next/@UIButton"
         )
     };
     ToyMaker::UIButton& prev {
         getSimObject().getByPath<ToyMaker::UIButton&>(
-            "/viewport_UI/previous/@UIButton"
+            "/viewport_UI/ui_panel/previous/@UIButton"
         )
     };
 
@@ -121,17 +121,17 @@ void UrUIRecordsBrowser::openDetailedRecord(uint32_t entry) {
     // Disable all the buttons on the records browser
     ToyMaker::UIButton& next {
         getSimObject().getByPath<ToyMaker::UIButton&>(
-            "/viewport_UI/next/@UIButton"
+            "/viewport_UI/ui_panel/next/@UIButton"
         )
     };
     ToyMaker::UIButton& prev {
         getSimObject().getByPath<ToyMaker::UIButton&>(
-            "/viewport_UI/previous/@UIButton"
+            "/viewport_UI/ui_panel/previous/@UIButton"
         )
     };
     for(uint32_t entryIndex{0}; entryIndex < 5; ++entryIndex) {
         ToyMaker::UIButton& recordButton { getSimObject().getByPath<ToyMaker::UIButton&>(
-                "/viewport_UI/record_" 
+                "/viewport_UI/ui_panel/record_" 
                 + std::to_string(entryIndex)
                 + "/@UIButton"
             )
