@@ -11,9 +11,9 @@
                 {
                     "type": "UrUITutorialsBrowser",
                     "tutorials_filepath": "ur_tutorials.json",
-                    "heading_node_aspect": "/viewport_UI/tutorial_heading/@UIText",
-                    "text_node_aspect": "/viewport_UI/tutorial_text/@UIText",
-                    "image_node_aspect": "/viewport_UI/tutorial_image/@UIImage"
+                    "heading_node_aspect": "/viewport_UI/ui_panel/tutorial_heading/@UIText",
+                    "text_node_aspect": "/viewport_UI/ui_panel/tutorial_text/@UIText",
+                    "image_node_aspect": "/viewport_UI/ui_panel/tutorial_image/@UIImage"
                 }
             ],
             "components": [
@@ -44,8 +44,8 @@
             "render_configuration": {
                 "base_dimensions": [1366, 768],
                 "update_mode": "on-render-cap-fps",
-                "resize_type": "texture-dimensions",
-                "resize_mode": "fixed-dimensions",
+                "resize_type": "viewport-dimensions",
+                "resize_mode": "expand-fill",
                 "render_type": "basic-3d",
                 "fps_cap": 60,
                 "render_scale": 1.0
@@ -92,7 +92,7 @@
                     },
                     "projection_mode": "orthographic",
                     "type": "CameraProperties",
-                    "aspect_mode": "fixed"
+                    "aspect_mode": "resize"
                 },
                 {
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
@@ -108,6 +108,7 @@
             "parent": "/viewport_UI/",
             "type": "SimObject",
             "aspects": [
+                { "type": "UIContainer" },
                 {
                     "type": "UIPanel",
                     "anchor": [0.5, 0.5],
@@ -120,7 +121,7 @@
             "components": [
                 {
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
-                    "position": [ 0.0, 0.0, -1.0, 1.0 ],
+                    "position": [ 0.0, 0.0, 0.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ],
                     "type": "Placement"
                 }
@@ -129,7 +130,7 @@
 
         {
             "name": "title",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
@@ -146,8 +147,8 @@
                     "font_resource_name": "Roboto_Mono_Regular_42",
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
-                    "reference_coordinate": [0, 0],
-                    "offsets": [0, 0, 0],
+                    "reference_coordinate": [0.5, 0],
+                    "offsets": [0, 10, 1],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -155,7 +156,7 @@
 
         {
             "name": "tutorial_heading",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
@@ -172,8 +173,8 @@
                     "font_resource_name": "Roboto_Mono_Regular_36",
                     "scale": 1.0,
                     "anchor": [0.5, 1.0],
-                    "reference_coordinate": [0, 0],
-                    "offsets": [0, 0, 0],
+                    "reference_coordinate": [0.5, 0.5],
+                    "offsets": [0, -200, 1],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -181,7 +182,7 @@
 
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -202,8 +203,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [1.0, 1.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0.5, 0.5],
+                        "offsets": [-400, -200, 1],
                         "value": "previous",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -217,7 +218,7 @@
 
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -238,8 +239,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 1.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0.5, 0.5],
+                        "offsets": [400, -200, 1],
                         "value": "next",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -253,7 +254,7 @@
 
         {
             "name": "tutorial_text",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
@@ -271,8 +272,8 @@
                     "scale": 1.0,
                     "max_width": 640.0,
                     "anchor": [0.5, 0.0],
-                    "reference_coordinate": [0, 0],
-                    "offsets": [0, 0, 0],
+                    "reference_coordinate": [0.5, 0.5],
+                    "offsets": [-300, -150, 1],
                     "color": [255, 255, 255, 255]
                 }
             ]
@@ -280,7 +281,7 @@
 
         {
             "name": "tutorial_image",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
@@ -295,8 +296,8 @@
                     "type": "UIImage",
                     "image_filepath": "textures/button_active.png",
                     "dimensions": [620, 440],
-                    "reference_coordinate": [0, 0],
-                    "offsets": [0, 0, 0],
+                    "reference_coordinate": [0.5, 0.5],
+                    "offsets": [341.5, 125, 1],
                     "anchor": [0.5, 0.5]
                 }
             ]
@@ -304,7 +305,7 @@
 
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -324,9 +325,9 @@
                         "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
-                        "anchor": [0.0, 0.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "anchor": [0.0, 1.0],
+                        "reference_coordinate": [0, 1],
+                        "offsets": [5, -5, 1],
                         "value": "Game_Of_Ur_Main_Menu",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -341,7 +342,7 @@
 
     "connections": [
         {
-            "from": "/viewport_UI/return/@UIButton",
+            "from": "/viewport_UI/ui_panel/return/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUINavigation",
@@ -349,14 +350,14 @@
         },
 
         {
-            "from": "/viewport_UI/next/@UIButton",
+            "from": "/viewport_UI/ui_panel/next/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUITutorialsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/previous/@UIButton",
+            "from": "/viewport_UI/ui_panel/previous/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUITutorialsBrowser",

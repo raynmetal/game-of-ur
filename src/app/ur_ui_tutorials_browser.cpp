@@ -96,12 +96,12 @@ void UrUITutorialsBrowser::openPage(uint32_t page) {
 
     ToyMaker::UIButton& next {
         getSimObject().getByPath<ToyMaker::UIButton&>(
-            "/viewport_UI/next/@UIButton"
+            "/viewport_UI/ui_panel/next/@UIButton"
         )
     };
     ToyMaker::UIButton& prev {
         getSimObject().getByPath<ToyMaker::UIButton&>(
-            "/viewport_UI/previous/@UIButton"
+            "/viewport_UI/ui_panel/previous/@UIButton"
         )
     };
     if(hasPage(page+1)) {
