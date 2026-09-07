@@ -103,8 +103,8 @@
             "render_configuration": {
                 "base_dimensions": [1366, 768],
                 "update_mode": "on-render-cap-fps",
-                "resize_type": "texture-dimensions",
-                "resize_mode": "fixed-dimensions",
+                "resize_type": "viewport-dimensions",
+                "resize_mode": "expand-fill",
                 "render_type": "basic-3d",
                 "fps_cap": 60,
                 "render_scale": 1.0
@@ -124,7 +124,7 @@
                     "near_far_planes": {"near": 0.5, "far": 100},
                     "projection_mode": "frustum",
                     "type": "CameraProperties",
-                    "aspect_mode": "fixed"
+                    "aspect_mode": "resize"
                 },
                 {
                     "orientation": [

@@ -37,12 +37,27 @@
             "render_configuration": {
                 "base_dimensions": [1366, 768],
                 "update_mode": "on-render-cap-fps",
-                "resize_type": "texture-dimensions",
-                "resize_mode": "fixed-dimensions",
+                "resize_type": "viewport-dimensions",
+                "resize_mode": "expand-fill",
                 "render_type": "basic-3d",
                 "fps_cap": 60,
                 "render_scale": 1.0
             }
+        },
+
+        {
+            "name": "ui_container",
+            "parent": "/viewport_UI/",
+            "type": "SimObject",
+            "aspects": [ { "type": "UIContainer" } ],
+            "components": [
+                {
+                    "orientation": [1, 0, 0, 0],
+                    "position": [0, 0, 0, 1],
+                    "scale": [1, 1, 1],
+                    "type": "Placement"
+                }
+            ]
         },
 
         {
@@ -82,7 +97,7 @@
                     },
                     "projection_mode": "orthographic",
                     "type": "CameraProperties",
-                    "aspect_mode": "fixed"
+                    "aspect_mode": "resize"
                 },
                 {
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
@@ -99,9 +114,9 @@
             "aspects": [
                 {
                     "type": "UIPanel",
-                    "anchor": [1.0, 0.0],
-                    "reference_coordinate": [0, 0],
-                    "offsets": [0, 0, 0],
+                    "anchor": [1.0, 0.5],
+                    "reference_coordinate": [1, 0.5],
+                    "offsets": [0, 0, 1],
                     "content_size": [454.0, 764.0],
                     "panel_resource_name": "Bad_Panel"
                 }
@@ -109,22 +124,23 @@
             "components": [
                 {
                     "orientation": [ 1.0, 0.0, 0.0, 0.0 ],
-                    "position": [ 683.0, 384.0, -1.0, 1.0 ],
+                    "position": [ 683.0, 384.0, 0.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ],
                     "type": "Placement"
                 }
             ],
             "name": "ui_panel",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/",
             "type": "SimObject"
         },
+
         {
             "aspects": [
                 {
                     "type": "UIPanel",
                     "anchor": [0.5, 0.0],
-                    "reference_coordinate": [0, 0],
-                    "offsets": [0, 0, 0],
+                    "reference_coordinate": [0.33, 0],
+                    "offsets": [0, 0, 1],
                     "content_size": [600.0, 100.0],
                     "panel_resource_name": "Bad_Panel"
                 }
@@ -138,13 +154,13 @@
                 }
             ],
             "name": "phase_panel",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/",
             "type": "SimObject"
         },
 
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -165,8 +181,8 @@
                         "color": [255, 255, 255, 255],
                         "scale": 1.0,
                         "anchor": [0.0, 1.0],
-                        "reference_coordinate": [0, 0],
-                        "offsets": [0, 0, 0],
+                        "reference_coordinate": [0, 1],
+                        "offsets": [5, -5, 1],
                         "value": "Game_Of_Ur_Main_Menu",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
@@ -180,13 +196,13 @@
 
         {
             "name": "current_turn",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/phase_panel/",
             "type": "SimObject",
             "components": [
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -227.0, 380.0, 0.0, 1.0 ],
+                    "position": [ 0.0, -4.0, 1.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
@@ -198,20 +214,20 @@
                     "scale": 1.0,
                     "anchor": [0.5, 0.0],
                     "reference_coordinate": [0, 0],
-                    "offsets": [0, 0, 0],
+                    "offsets": [0, 0, 2],
                     "color": [255, 255, 255, 255]
                 }
             ]
         },
         {
             "name": "phase",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/phase_panel/",
             "type": "SimObject",
             "components": [
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ -227.0, 315.0, 0.0, 1.0 ],
+                    "position": [ 0.0, -69.0, 1.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
@@ -231,7 +247,7 @@
 
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides":  {
@@ -240,7 +256,7 @@
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ 238.0, 346.0, 0.0, 1.0 ],
+                        "position": [ -445.0, 346.0, 1.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
@@ -267,13 +283,13 @@
 
         {
             "name": "primary_roll",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 672.0, 378.0, 0.0, 1.0 ],
+                    "position": [ -11.0, 378.0, 1.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
@@ -292,13 +308,13 @@
         },
         {
             "name": "secondary_roll",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 672.0, 346.0, 0.0, 1.0 ],
+                    "position": [ -11.0, 346.0, 1.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
@@ -317,13 +333,13 @@
         },
         {
             "name": "final_roll",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 672.0, 314.0, 0.0, 1.0 ],
+                    "position": [ -11.0, 314.0, 1.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
@@ -342,13 +358,13 @@
         },
         {
             "name": "previous_roll",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 672.0, 282.0, 0.0, 1.0 ],
+                    "position": [ -11.0, 282.0, 1.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
@@ -368,13 +384,13 @@
 
         {
             "name": "common_pile",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "SimObject",
             "components": [
                 {
                     "type": "Placement",
                     "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                    "position": [ 455.0, 210.0, 0.0, 1.0 ],
+                    "position": [ -228.0, 210.0, 1.0, 1.0 ],
                     "scale": [ 1.0, 1.0, 1.0 ]
                 }
             ],
@@ -394,7 +410,7 @@
 
         {
             "name":"Ur_Player_Panel",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides": {
@@ -403,7 +419,7 @@
                     {
                         "type": "Placement",
                         "orientation": [1.0, 0.0, 0.0, 0.0],
-                        "position": [238, 120, 0, 1],
+                        "position": [-445, 120, 1, 1],
                         "scale": [1, 1, 1]
                     }
                 ],
@@ -413,7 +429,7 @@
 
         {
             "name":"Ur_Player_Panel",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides": {
@@ -422,7 +438,7 @@
                     {
                         "type": "Placement",
                         "orientation": [1.0, 0.0, 0.0, 0.0],
-                        "position": [238, -70, 0, 1],
+                        "position": [-445, -70, 1, 1],
                         "scale": [1, 1, 1]
                     }
                 ],
@@ -432,7 +448,7 @@
 
         {
             "name": "UI_Button",
-            "parent": "/viewport_UI/",
+            "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "Scene",
             "copy": true,
             "overrides": {
@@ -441,7 +457,7 @@
                     {
                         "type": "Placement",
                         "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
-                        "position": [ 455.0, -320.0, 0.0, 1.0 ],
+                        "position": [ -228.0, -320.0, 1.0, 1.0 ],
                         "scale": [ 1.0, 1.0, 1.0 ]
                     }
                 ],
@@ -471,50 +487,14 @@
 
     "connections": [
         {
-            "from": "/viewport_UI/dice_roll/@UIButton",
+            "from": "/viewport_UI/ui_container/ui_panel/dice_roll/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/next_turn/@UIButton",
-            "signal": "ButtonReleased",
-
-            "to": "/@UrUIView",
-            "observer": "ButtonClickedObserved"
-        },
-
-        {
-            "from": "/viewport_UI/player_panel_a/buttons/launch_swallow/@UIButton",
-            "signal": "ButtonReleased",
-
-            "to": "/@UrUIView",
-            "observer": "ButtonClickedObserved"
-        },
-        {
-            "from": "/viewport_UI/player_panel_a/buttons/launch_storm_bird/@UIButton",
-            "signal": "ButtonReleased",
-
-            "to": "/@UrUIView",
-            "observer": "ButtonClickedObserved"
-        },
-        {
-            "from": "/viewport_UI/player_panel_a/buttons/launch_raven/@UIButton",
-            "signal": "ButtonReleased",
-
-            "to": "/@UrUIView",
-            "observer": "ButtonClickedObserved"
-        },
-        {
-            "from": "/viewport_UI/player_panel_a/buttons/launch_rooster/@UIButton",
-            "signal": "ButtonReleased",
-
-            "to": "/@UrUIView",
-            "observer": "ButtonClickedObserved"
-        },
-        {
-            "from": "/viewport_UI/player_panel_a/buttons/launch_eagle/@UIButton",
+            "from": "/viewport_UI/ui_container/ui_panel/next_turn/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
@@ -522,35 +502,35 @@
         },
 
         {
-            "from": "/viewport_UI/player_panel_b/buttons/launch_swallow/@UIButton",
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_swallow/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/player_panel_b/buttons/launch_storm_bird/@UIButton",
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_storm_bird/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/player_panel_b/buttons/launch_raven/@UIButton",
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_raven/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/player_panel_b/buttons/launch_rooster/@UIButton",
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_rooster/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
-            "from": "/viewport_UI/player_panel_b/buttons/launch_eagle/@UIButton",
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_eagle/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUIView",
@@ -558,7 +538,43 @@
         },
 
         {
-            "from": "/viewport_UI/return/@UIButton",
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_swallow/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_storm_bird/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_raven/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_rooster/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_eagle/@UIButton",
+            "signal": "ButtonReleased",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/ui_container/return/@UIButton",
             "signal": "ButtonReleased",
 
             "to": "/@UrUINavigation",
