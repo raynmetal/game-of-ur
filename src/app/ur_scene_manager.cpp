@@ -1,3 +1,5 @@
+#include "toymaker/engine/window_context_manager.hpp"
+
 #include "ur_scene_manager.hpp"
 
 std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrSceneManager::create(const nlohmann::json& jsonAspectProperties) {
@@ -15,6 +17,7 @@ std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrSceneManager::clone() const {
 }
 
 void UrSceneManager::onActivated() {
+    ToyMaker::WindowContext::getInstance().setDimensionsMinimum({ 1280, 720 });
     loadAutoloads();
     loadScene(mNextScene);
 }

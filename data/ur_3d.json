@@ -118,7 +118,7 @@
             ],
             "components": [
                 {
-                    "fov": 55.5,
+                    "fov": 65.5,
                     "aspect": 1.77778,
                     "orthographic_dimensions": {"horizontal": 0, "vertical": 0},
                     "near_far_planes": {"near": 0.5, "far": 100},
@@ -134,7 +134,7 @@
                         -0.214287385 
                     ],
                     "position": [
-                        -6.0,
+                        -4.2,
                         8.4,
                         6.0,
                         1.0
