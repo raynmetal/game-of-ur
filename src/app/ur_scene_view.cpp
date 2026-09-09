@@ -114,6 +114,8 @@ void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
 
 void UrSceneView::onLaunchPieceInitiated(PieceTypeID pieceType) {
     std::cout << "UrSceneView: Launch piece initiated\n";
+
+    // guard: we can only consider launching pieces during the play phase
     if(getModel().getCurrentPhase().mGamePhase != GamePhase::PLAY) return;
     const PieceIdentity pieceIdentity {
         .mType { pieceType },
@@ -134,6 +136,24 @@ void UrSceneView::onLaunchPieceInitiated(PieceTypeID pieceType) {
         pieceType,
         launchLocation
     );
+}
+
+void UrSceneView::onLaunchPieceHovered(PieceTypeID pieceType) {
+    std::cout << "Launch button hovered\n";
+
+    // guard: we can only consider launching pieces during the play phase
+    if(getModel().getCurrentPhase().mGamePhase != GamePhase::PLAY) return;
+
+    const PieceIdentity pieceIdentity {
+        .mType { pieceType },
+        .mOwner{ getModel().getCurrentPlayer().mRole },
+    };
+    const std::vector<glm::u8vec2> launchPositions { getModel().getLaunchPositions(pieceIdentity) };
+    assert(launchPositions.size() && "Every piece must have at least one launch position associated with it");
+    std::cout << "Launch positions:\n";
+    for(const auto& position: launchPositions) {
+        std::cout << "\t" << static_cast<int>(position.x) << ", " << static_cast<int>(position.y) << "\n";
+    }
 }
 
 void UrSceneView::onLaunchPieceCanceled() {

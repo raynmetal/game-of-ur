@@ -185,6 +185,10 @@
             "to": "/scene_root_3D/@UrSceneView", "observer": "LaunchPieceInitiatedObserved"
         },
         {
+            "from": "/ui_root/@UrUIView", "signal": "LaunchPieceHovered",
+            "to": "/scene_root_3D/@UrSceneView", "observer": "LaunchPieceHoveredObserved"
+        },
+        {
             "from": "/ui_root/@UrUIView", "signal": "LaunchPieceCanceled",
             "to": "/scene_root_3D/@UrSceneView", "observer": "LaunchPieceCanceledObserved"
         },

@@ -29,7 +29,7 @@ class UrPlayerControls;
 /**
  * @ingroup UrGameControlLayer
  * @brief The class responsible for managing and reporting the state of the game.  It owns its own instance of GameOfUrModel, and acts as the interface between it and engine-specific objects.
- * 
+ *
  */
 class UrController: public ToyMaker::SimObjectAspect<UrController> {
 public:

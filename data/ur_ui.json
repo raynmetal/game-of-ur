@@ -538,6 +538,42 @@
         },
 
         {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_swallow/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_storm_bird/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_raven/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_rooster/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_eagle/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
+
+        {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_swallow/@UIButton",
             "signal": "ButtonReleased",
 
@@ -571,6 +607,42 @@
 
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
+        },
+
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_swallow/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_storm_bird/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_raven/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_rooster/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_eagle/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
         },
 
         {

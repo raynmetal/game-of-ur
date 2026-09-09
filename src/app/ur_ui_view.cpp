@@ -47,7 +47,7 @@ const GameOfUrModel& UrUIView::getModel() const {
 
 void UrUIView::onButtonClicked(const std::string& button) {
     if(mMode == Mode::TRANSITION) return;
-    UrUIView::Buttons enumButton { kButtonEnumMap.at(button) };
+    const UrUIView::Buttons enumButton { kButtonEnumMap.at(button) };
     std::cout << "UrUIView: ";
     switch(enumButton) {
         case SWALLOW:
@@ -65,6 +65,23 @@ void UrUIView::onButtonClicked(const std::string& button) {
         case NEXT_TURN:
             std::cout << "next turn clicked\n";
             mSigNextTurnAttempted.emit();
+            break;
+    }
+}
+
+void UrUIView::onButtonHoveredOver(const std::string& button) {
+    if(mMode == Mode::TRANSITION) return;
+    const UrUIView::Buttons enumButton { kButtonEnumMap.at(button) };
+    switch(enumButton) {
+        case SWALLOW:
+        case STORMBIRD:
+        case RAVEN:
+        case ROOSTER:
+        case EAGLE:
+            std::cout << "launch piece hovered over\n";
+            mSigLaunchPieceHovered.emit(static_cast<PieceTypeID>(enumButton));
+            break;
+        default:
             break;
     }
 }

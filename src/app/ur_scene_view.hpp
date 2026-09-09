@@ -65,6 +65,7 @@ private:
 
     void onBoardClicked(glm::u8vec2 boardLocation);
     void onLaunchPieceInitiated(PieceTypeID piece);
+    void onLaunchPieceHovered(PieceTypeID  piece);
     void onLaunchPieceCanceled();
     void onMoveMade(const MoveResultData& moveResultData);
 
@@ -82,6 +83,10 @@ public:
     ToyMaker::SignalObserver<PieceTypeID> mObserveLaunchPieceInitiated {
         *this, "LaunchPieceInitiatedObserved",
         [this](PieceTypeID pieceType) { this->onLaunchPieceInitiated(pieceType); }
+    };
+    ToyMaker::SignalObserver<PieceTypeID> mObserveLaunchPieceHovered {
+        *this, "LaunchPieceHoveredObserved",
+        [this](PieceTypeID pieceType) { this->onLaunchPieceHovered(pieceType); }
     };
     ToyMaker::SignalObserver<> mObserveLaunchPieceCancelled {
         *this, "LaunchPieceCanceledObserved",

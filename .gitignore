@@ -8,6 +8,7 @@
 /**/*.exe
 build/**/*
 docs/_generated
+compile_commands.json
 
 #Local files
 user_data/
