@@ -53,6 +53,7 @@ void UrSceneView::onActivated() {
         ->getByPath<std::shared_ptr<ToyMaker::SimObject>>(mControllerPath)
     );
     mGameOfUrBoard = getSimObject().getByPath<std::shared_ptr<ToyMaker::SimObject>>("/viewport_3D/gameboard/");
+    clearLights();
 }
 
 const GameOfUrModel& UrSceneView::getModel() const {
@@ -63,9 +64,62 @@ const BoardLocations& UrSceneView::getBoard() const {
     return mGameOfUrBoard.lock()->getAspect<BoardLocations>();
 }
 
+void UrSceneView::clearLights() {
+    if(!getSimObject().hasNode("/viewport_3D/board_lights/")) {
+        return;
+    }
+
+    auto boardLights {
+        getSimObject().getNode("/viewport_3D/board_lights/")
+    };
+    boardLights->removeChildren();
+}
+
+void UrSceneView::addLights(const std::vector<glm::u8vec2>& boardPositions) {
+    if(!getSimObject().hasNode("/viewport_3D/board_lights/")) {
+        auto boardLights {
+            ToyMaker::SceneNode::create(
+                ToyMaker::Placement {},
+                "board_lights"
+            )
+        };
+        getSimObject().addNode(
+            boardLights,
+            "/viewport_3D/"
+        );
+    }
+
+    auto boardLights {
+        getSimObject().getNode("/viewport_3D/board_lights/")
+    };
+    for(const auto& position: boardPositions) {
+        const glm::vec3 boardPosition { getBoard().gridIndicesToBoardPoint(position) };
+        const auto light {
+            ToyMaker::SceneNode::create(
+                ToyMaker::Placement {
+                    .mPosition { boardPosition + glm::vec3 { 0.f, 4.f, 0.f }, 1.f },
+                    .mOrientation { 0.7071068, -0.7071068, 0, 0 }
+                },
+                "light__" + std::to_string(static_cast<int>(position.x)) + "_" + std::to_string(static_cast<int>(position.y)),
+                ToyMaker::LightEmissionData::MakeSpotLight(
+                    2, // inner angle
+                    10, // outer angle
+                    glm::vec3 { .5f, .5f, 0.f }, // diffuse
+                    glm::vec3 { 0.f }, // specular
+                    glm::vec3 { 0.f }, // ambient
+                    0.02, // linear decay
+                    0.004  // quadratic decay
+                )
+            )
+        };
+        boardLights->addNode(light, "/");
+    }
+}
+
 void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
     std::cout << "UrSceneView: Board location clicked: \n";
     if(mMode == Mode::TRANSITION) return;
+    clearLights();
 
     const GameOfUrModel& model { getModel() };
     const HouseData houseData { model.getHouseData(boardLocation) };
@@ -143,6 +197,7 @@ void UrSceneView::onLaunchPieceHovered(PieceTypeID pieceType) {
 
     // guard: we can only consider launching pieces during the play phase
     if(getModel().getCurrentPhase().mGamePhase != GamePhase::PLAY) return;
+    clearLights();
 
     const PieceIdentity pieceIdentity {
         .mType { pieceType },
@@ -154,16 +209,19 @@ void UrSceneView::onLaunchPieceHovered(PieceTypeID pieceType) {
     for(const auto& position: launchPositions) {
         std::cout << "\t" << static_cast<int>(position.x) << ", " << static_cast<int>(position.y) << "\n";
     }
+    addLights(launchPositions);
 }
 
 void UrSceneView::onLaunchPieceCanceled() {
     std::cout << "UrSceneView: Launch piece canceled\n";
     mMode = Mode::GENERAL;
+    clearLights();
 }
 
 void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
     std::cout << "UrSceneView: move made\n";
     mMode = Mode::GENERAL;
+    clearLights();
 
     const PieceIdentity& displacedPieceIdentity { moveResultData.mDisplacedPiece.mIdentity };
     const PieceIdentity& movedPieceIdentity { moveResultData.mMovedPiece.mIdentity };
@@ -244,6 +302,7 @@ void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
 
 void UrSceneView::onControlInterface(PlayerID player) {
     mControlledBy = player;
+    clearLights();
 }
 
 void UrSceneView::onControllerReady() {
@@ -255,6 +314,7 @@ void UrSceneView::onControllerReady() {
 void UrSceneView::onViewUpdateStarted() {
     mAnimationTimeMillis = 0;
     mMode = Mode::TRANSITION;
+    clearLights();
 }
 
 void UrSceneView::variableUpdate(uint32_t variableStepMillis) {

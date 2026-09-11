@@ -75,6 +75,9 @@ private:
     void onActivated() override;
     void variableUpdate(uint32_t variableStepMillis) override;
 
+    void addLights(const std::vector<glm::u8vec2>& boardPositions);
+    void clearLights();
+
 public:
     ToyMaker::SignalObserver<glm::u8vec2> mObserveBoardClicked { 
         *this, "BoardClickedObserved",
