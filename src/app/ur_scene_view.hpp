@@ -44,6 +44,8 @@ public:
     const BoardLocations& getBoard() const;
 
 private:
+    static const glm::u8vec2 kGridUnfocused;
+
     enum class Mode {
         GENERAL,
         LAUNCH_POSITION_SELECTION,
@@ -60,10 +62,12 @@ private:
     std::string mControllerPath {};
     Mode mMode { Mode::GENERAL };
     PlayerID mControlledBy {};
+    glm::u8vec2 mFocusedGridCell {};
 
     void onControllerReady();
 
     void onBoardClicked(glm::u8vec2 boardLocation);
+    void onBoardHovered(glm::u8vec2 boardLocation);
     void onLaunchPieceInitiated(PieceTypeID piece);
     void onLaunchPieceHovered(PieceTypeID  piece);
     void onLaunchPieceCanceled();
@@ -75,6 +79,7 @@ private:
     void onActivated() override;
     void variableUpdate(uint32_t variableStepMillis) override;
 
+    void addLight(glm::u8vec2 boardPosition, const ToyMaker::LightEmissionData& light);
     void addLights(const std::vector<glm::u8vec2>& boardPositions);
     void clearLights();
 
@@ -82,6 +87,10 @@ public:
     ToyMaker::SignalObserver<glm::u8vec2> mObserveBoardClicked { 
         *this, "BoardClickedObserved",
         [this](glm::u8vec2 boardLocation) { this->onBoardClicked(boardLocation); }
+    };
+    ToyMaker::SignalObserver<glm::u8vec2> mObserveBoardHovered {
+        *this, "BoardHoveredObserved",
+        [this](glm::u8vec2 boardLocation) { this->onBoardHovered(boardLocation); }
     };
     ToyMaker::SignalObserver<PieceTypeID> mObserveLaunchPieceInitiated {
         *this, "LaunchPieceInitiatedObserved",
@@ -133,5 +142,7 @@ struct UrPieceAnimationKey {
     ToyMaker::Placement mPlacement;
     bool mRemove { false };
 };
+
+inline const glm::u8vec2 UrSceneView::kGridUnfocused { 255, 255 };
 
 #endif

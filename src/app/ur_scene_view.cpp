@@ -6,6 +6,36 @@
 #include "ur_controller.hpp"
 #include "ur_scene_view.hpp"
 
+const auto kWhiteCone { ToyMaker::LightEmissionData::MakeSpotLight(
+    2, // inner angle
+    10, // outer angle
+    glm::vec3 { 1.5f, 1.5f, 1.5f }, // diffuse
+    glm::vec3 { 0.f }, // specular
+    glm::vec3 { 0.f }, // ambient
+    0.02, // linear decay
+    0.004  // quadratic decay
+) };
+
+const auto kYellowCone { ToyMaker::LightEmissionData::MakeSpotLight(
+    2, // inner angle
+    10, // outer angle
+    glm::vec3 { 1.5f, 1.5f, 0.f }, // diffuse
+    glm::vec3 { 0.f }, // specular
+    glm::vec3 { 0.f }, // ambient
+    0.02, // linear decay
+    0.004  // quadratic decay
+) };
+
+const auto kGreenCone { ToyMaker::LightEmissionData::MakeSpotLight(
+    2, // inner angle
+    10, // outer angle
+    glm::vec3 { 0.f, 1.5f, 0.f }, // diffuse
+    glm::vec3 { 0.f }, // specular
+    glm::vec3 { 0.f }, // ambient
+    0.02, // linear decay
+    0.004  // quadratic decay
+) };
+
 bool operator<(const UrPieceAnimationKey& one, const UrPieceAnimationKey& two) {
     return (
         one.mTime > two.mTime
@@ -54,6 +84,7 @@ void UrSceneView::onActivated() {
     );
     mGameOfUrBoard = getSimObject().getByPath<std::shared_ptr<ToyMaker::SimObject>>("/viewport_3D/gameboard/");
     clearLights();
+    mFocusedGridCell = kGridUnfocused;
 }
 
 const GameOfUrModel& UrSceneView::getModel() const {
@@ -75,7 +106,7 @@ void UrSceneView::clearLights() {
     boardLights->removeChildren();
 }
 
-void UrSceneView::addLights(const std::vector<glm::u8vec2>& boardPositions) {
+void UrSceneView::addLight(glm::u8vec2 gridPosition, const ToyMaker::LightEmissionData& light) {
     if(!getSimObject().hasNode("/viewport_3D/board_lights/")) {
         auto boardLights {
             ToyMaker::SceneNode::create(
@@ -88,31 +119,27 @@ void UrSceneView::addLights(const std::vector<glm::u8vec2>& boardPositions) {
             "/viewport_3D/"
         );
     }
-
     auto boardLights {
         getSimObject().getNode("/viewport_3D/board_lights/")
     };
+    const glm::vec3 boardPosition { getBoard().gridIndicesToBoardPoint(gridPosition) };
+    const auto lightNode {
+        ToyMaker::SceneNode::create(
+            ToyMaker::Placement {
+                .mPosition { boardPosition + glm::vec3 { 0.f, 4.f, 0.f }, 1.f },
+                .mOrientation { 0.7071068, -0.7071068, 0, 0 }
+            },
+            "light__" + std::to_string(static_cast<int>(gridPosition.x)) + "_" + std::to_string(static_cast<int>(gridPosition.y)),
+            light
+        )
+    };
+    boardLights->addNode(lightNode, "/");
+}
+
+void UrSceneView::addLights(const std::vector<glm::u8vec2>& boardPositions) {
+    clearLights();
     for(const auto& position: boardPositions) {
-        const glm::vec3 boardPosition { getBoard().gridIndicesToBoardPoint(position) };
-        const auto light {
-            ToyMaker::SceneNode::create(
-                ToyMaker::Placement {
-                    .mPosition { boardPosition + glm::vec3 { 0.f, 4.f, 0.f }, 1.f },
-                    .mOrientation { 0.7071068, -0.7071068, 0, 0 }
-                },
-                "light__" + std::to_string(static_cast<int>(position.x)) + "_" + std::to_string(static_cast<int>(position.y)),
-                ToyMaker::LightEmissionData::MakeSpotLight(
-                    2, // inner angle
-                    10, // outer angle
-                    glm::vec3 { .5f, .5f, 0.f }, // diffuse
-                    glm::vec3 { 0.f }, // specular
-                    glm::vec3 { 0.f }, // ambient
-                    0.02, // linear decay
-                    0.004  // quadratic decay
-                )
-            )
-        };
-        boardLights->addNode(light, "/");
+        addLight(position, kWhiteCone);
     }
 }
 
@@ -120,6 +147,7 @@ void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
     std::cout << "UrSceneView: Board location clicked: \n";
     if(mMode == Mode::TRANSITION) return;
     clearLights();
+    mFocusedGridCell = kGridUnfocused;
 
     const GameOfUrModel& model { getModel() };
     const HouseData houseData { model.getHouseData(boardLocation) };
@@ -166,6 +194,61 @@ void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
     }
 }
 
+void UrSceneView::onBoardHovered(glm::u8vec2 boardLocation) {
+    std::cout << "UrSceneView: Board location hovered: " << glm::to_string(boardLocation) << "\n";
+
+    // guard: we're not in a phase where highlights are required, or this isn't a new
+    // board grid cell
+    if(
+        mMode == Mode::LAUNCH_POSITION_SELECTION
+        || getModel().getCurrentPhase().mGamePhase != GamePhase::PLAY
+        || getModel().getCurrentPhase().mTurnPhase != TurnPhase::MOVE_PIECE
+        || boardLocation == mFocusedGridCell
+    ) {
+        return;
+    }
+
+    // guard: no occupant in this house
+    const auto houseData { getModel().getHouseData(boardLocation) };
+    if(houseData.mOccupant.mOwner == RoleID::NA) {
+        return;
+    }
+
+    // guard: non-owner or non-active player can't query move for this piece
+    const auto moveData { getModel().getBoardMoveData(houseData.mOccupant) };
+    const auto currentPlayer { getModel().getCurrentPlayer() };
+    if(
+        currentPlayer.mPlayer != mControlledBy
+        || currentPlayer.mRole != houseData.mOccupant.mOwner
+    ) {
+        return;
+    }
+
+    // switch focus to moves possible with piece at current location
+    clearLights();
+    mFocusedGridCell = boardLocation;
+
+    // no move possible, so nothing highlighted
+    if(!(moveData.mFlags&MoveResultData::IS_POSSIBLE)) {
+        return;
+    }
+
+    // game ending move highlighted in gold
+    if(moveData.mFlags&MoveResultData::ENDS_GAME) {
+        addLight(boardLocation, kYellowCone);
+        return;
+    }
+
+    // piece success in green
+    if(moveData.mFlags&MoveResultData::COMPLETES_ROUTE) {
+        addLight(boardLocation, kGreenCone);
+        return;
+    }
+
+    // regular moves in white
+    addLight(moveData.mMoveLocation, kWhiteCone);
+}
+
 void UrSceneView::onLaunchPieceInitiated(PieceTypeID pieceType) {
     std::cout << "UrSceneView: Launch piece initiated\n";
 
@@ -196,8 +279,14 @@ void UrSceneView::onLaunchPieceHovered(PieceTypeID pieceType) {
     std::cout << "Launch button hovered\n";
 
     // guard: we can only consider launching pieces during the play phase
-    if(getModel().getCurrentPhase().mGamePhase != GamePhase::PLAY) return;
+    if(
+        mMode == Mode::TRANSITION
+        || mMode == Mode::LAUNCH_POSITION_SELECTION
+        || getModel().getCurrentPhase().mGamePhase != GamePhase::PLAY
+    ) return;
+
     clearLights();
+    mFocusedGridCell = kGridUnfocused;
 
     const PieceIdentity pieceIdentity {
         .mType { pieceType },
@@ -216,12 +305,14 @@ void UrSceneView::onLaunchPieceCanceled() {
     std::cout << "UrSceneView: Launch piece canceled\n";
     mMode = Mode::GENERAL;
     clearLights();
+    mFocusedGridCell = kGridUnfocused;
 }
 
 void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
     std::cout << "UrSceneView: move made\n";
     mMode = Mode::GENERAL;
     clearLights();
+    mFocusedGridCell = kGridUnfocused;
 
     const PieceIdentity& displacedPieceIdentity { moveResultData.mDisplacedPiece.mIdentity };
     const PieceIdentity& movedPieceIdentity { moveResultData.mMovedPiece.mIdentity };
@@ -303,6 +394,7 @@ void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
 void UrSceneView::onControlInterface(PlayerID player) {
     mControlledBy = player;
     clearLights();
+    mFocusedGridCell = kGridUnfocused;
 }
 
 void UrSceneView::onControllerReady() {
@@ -315,6 +407,7 @@ void UrSceneView::onViewUpdateStarted() {
     mAnimationTimeMillis = 0;
     mMode = Mode::TRANSITION;
     clearLights();
+    mFocusedGridCell = kGridUnfocused;
 }
 
 void UrSceneView::variableUpdate(uint32_t variableStepMillis) {

@@ -323,6 +323,12 @@ struct MoveResultData {
      * 
      */
     uint8_t mCountersLost;
+
+    /**
+     * @brief The new location of the piece after the move.
+     *
+     */
+    glm::u8vec2 mMoveLocation;
 };
 
 /**

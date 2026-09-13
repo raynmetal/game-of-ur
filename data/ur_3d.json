@@ -261,14 +261,18 @@
         }
     ],
 
-
     "connections": [
         {
             "from": "/viewport_3D/gameboard/@BoardLocations",
             "signal": "BoardClicked",
-
             "to": "/@UrSceneView",
             "observer": "BoardClickedObserved"
+        },
+        {
+            "from": "/viewport_3D/gameboard/@BoardLocations",
+            "signal": "BoardHovered",
+            "to": "/@UrSceneView",
+            "observer": "BoardHoveredObserved"
         }
     ]
 }
