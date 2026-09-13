@@ -13,8 +13,8 @@
 #define ZOAPPURUIVIEW_H
 
 #include <toymaker/engine/sim_system.hpp>
-#include <toymaker/engine/signals.hpp>
-#include <toymaker/engine/text_render.hpp>
+
+#include <toymaker/builtins/ui_text.hpp>
 
 #include "game_of_ur_data/model.hpp"
 
@@ -71,6 +71,7 @@ private:
     void reactivateControls();
 
     void onButtonClicked(const std::string& button);
+    void onButtonHoveredOver(const std::string& button);
     void onPhaseUpdated(GamePhaseData phase);
     void onScoreUpdated(GameScoreData score);
     void onPlayerUpdated(PlayerData player);
@@ -93,6 +94,11 @@ public:
     ToyMaker::SignalObserver<const std::string&> mObserveButtonClicked {
         *this, "ButtonClickedObserved",
         [this](const std::string& button) { this->onButtonClicked(button); }
+    };
+
+    ToyMaker::SignalObserver<const std::string&> mObserveButtonHoveredOver {
+        *this, "ButtonHoveredOverObserved",
+        [this](const std::string& button) { this->onButtonHoveredOver(button); }
     };
 
     ToyMaker::SignalObserver<GamePhaseData> mObservePhaseUpdated {
@@ -124,6 +130,7 @@ public:
     ToyMaker::Signal<> mSigDiceRollAttempted { *this, "DiceRollAttempted" };
     ToyMaker::Signal<> mSigNextTurnAttempted { *this, "NextTurnAttempted" };
     ToyMaker::Signal<PieceTypeID> mSigLaunchPieceInitiated { *this, "LaunchPieceInitiated" };
+    ToyMaker::Signal<PieceTypeID> mSigLaunchPieceHovered { *this, "LaunchPieceHovered" };
     ToyMaker::Signal<> mSigLaunchPieceCanceled { *this, "LaunchPieceCanceled" };
 
     ToyMaker::SignalObserver<> mObserveControllerReady { 

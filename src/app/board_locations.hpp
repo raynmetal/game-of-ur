@@ -15,16 +15,15 @@
 #include <toymaker/engine/sim_system.hpp>
 #include <toymaker/builtins/interface_pointer_callback.hpp>
 
-#include "game_of_ur_data/house.hpp"
-
 
 /**
  * @ingroup UrGameInteractionLayer
  * @brief The aspect responsible for mapping points on the 3D game board to their equivalent coordinates on the game board data model.
  * 
  */
-class BoardLocations: public ToyMaker::SimObjectAspect<BoardLocations>, public ToyMaker::ILeftClickable {
+class BoardLocations: public ToyMaker::SimObjectAspect<BoardLocations>, public ToyMaker::ILeftClickable, public ToyMaker::IHoverable {
 public:
+
     /**
      * @brief Gets the aspect type string associated with this class.
      * 
@@ -57,28 +56,17 @@ public:
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
 
     /**
-     * @brief Responds to left click events by logging them to the console, translating the location of the click to their game board grid coordinates.
-     * 
-     * @param clickLocation The 3D coordinates of the location on the board that was clicked.
-     * @retval true The location clicked corresponded to a real game board grid location.
-     * @retval false The location clicked did not correspond to a real game board grid location.
-     */
-    bool onPointerLeftClick(glm::vec4 clickLocation)  override;
-
-    /**
-     * @brief Responds to a full left click by emitting mSigBoardClicked with the clicked location's equivalent game board coordinates, if possible.
-     * 
-     * @param clickLocation The 3D coordinates of the point on the board that was clicked.
-     * @retval true The clicked location caused mSigBoardClicked to be emitted.
-     * @retval false No signal was emitted as a result of this click.
-     */
-    inline bool onPointerLeftRelease(glm::vec4 clickLocation) override { (void)clickLocation;/*prevent unused parameter warnings*/ return false; }
-
-    /**
      * @brief The event emitted signalling to the 3D viewport controller that a location on the board was clicked.
      * 
      */
     ToyMaker::Signal<glm::u8vec2> mSigBoardClicked { *this, "BoardClicked" };
+
+    /**
+     * @brief The event emitted signalling to the 3D viewport controller that a location on the board
+     * was hovered on.
+     *
+     */
+    ToyMaker::Signal<glm::u8vec2> mSigBoardHovered { *this, "BoardHovered" };
 
     /**
      * @brief Given the 2D coordinates of a point relative to the top surface of the board, returns the equivalent game board data model grid coordinates.
@@ -97,6 +85,50 @@ public:
     glm::vec4 gridIndicesToBoardPoint(glm::u8vec2 gridIndices) const;
 
 private:
+    /**
+     * @brief Responds to left click events by logging them to the console, translating the location of the click to their game board grid coordinates.
+     * 
+     * @param clickLocation The 3D coordinates of the location on the board that was clicked.
+     * @retval true The location clicked corresponded to a real game board grid location.
+     * @retval false The location clicked did not correspond to a real game board grid location.
+     */
+    bool onPointerLeftClick(glm::vec4 clickLocation) override;
+
+    /**
+     * @brief Unused pointer hover callback.
+     *
+     */
+    inline bool onPointerEnter(glm::vec4 hoverLocation) override {
+        return false;
+    }
+
+    /**
+     * @brief Responds to pointer enter events by reporting them to subscribed event observers.
+     *
+     * @param hoverLocation The 3D coordinates of the location on the board that was hovered over.
+     *
+     * @retval true The location hovered on corresponded to a real game board grid location.
+     * @retval false The location hovered on did not correspond to a real game board grid location.
+     */
+    bool onPointerHover(glm::vec4 hoverLocation) override;
+
+    /**
+     * @brief Responds to pointer leave events by reporting them to subscribed event observers.
+     *
+     * @retval true The location hovered on corresponded to a real game board grid location.
+     * @retval false The location hovered on did not correspond to a real game board grid location.
+     */
+    bool onPointerLeave() override;
+
+    /**
+     * @brief Responds to a full left click by emitting mSigBoardClicked with the clicked location's equivalent game board coordinates, if possible.
+     * 
+     * @param clickLocation The 3D coordinates of the point on the board that was clicked.
+     * @retval true The clicked location caused mSigBoardClicked to be emitted.
+     * @retval false No signal was emitted as a result of this click.
+     */
+    inline bool onPointerLeftRelease(glm::vec4 clickLocation) override { (void)clickLocation;/*prevent unused parameter warnings*/ return false; }
+
     /**
      * @brief Constructs a new Board Locations object.
      * 

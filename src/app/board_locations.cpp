@@ -1,4 +1,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
+#include <iostream>
+
 #include <glm/gtx/string_cast.hpp>
 
 #include "board_locations.hpp"
@@ -16,6 +18,24 @@ bool BoardLocations::onPointerLeftClick(glm::vec4 clickLocation) {
     return true;
 }
 
+bool BoardLocations::onPointerHover(glm::vec4 hoverLocation) {
+    std::cout << "Board hover: " << glm::to_string(hoverLocation) << "\n";
+    if(hoverLocation.y >= -0.1){
+        const glm::u8vec2 boardLocation {
+            boardPointToGridIndices({ hoverLocation.x, hoverLocation.z })
+        };
+        if(boardLocation.x >= mRowLengths.size() || boardLocation.y >= mRowLengths[boardLocation.x]) {
+            return true;
+        }
+        mSigBoardHovered.emit(boardLocation);
+    }
+    return true;
+}
+
+bool BoardLocations::onPointerLeave() {
+    return true;
+}
+
 std::shared_ptr<ToyMaker::BaseSimObjectAspect> BoardLocations::create(const nlohmann::json& jsonAspectProperties) {
     (void)jsonAspectProperties; // prevent unused parameter warnings
     return std::shared_ptr<BoardLocations>{ new BoardLocations{} };
@@ -28,14 +48,15 @@ std::shared_ptr<ToyMaker::BaseSimObjectAspect> BoardLocations::clone() const {
 glm::uvec2 BoardLocations::boardPointToGridIndices(glm::vec2 point) const {
     const ToyMaker::AxisAlignedBounds::Extents boardExtents { getComponent<ToyMaker::AxisAlignedBounds>().getAxisAlignedBoxExtents() };
     glm::vec2 normalizedPoint {
-        (point.x - boardExtents.second.x) / (boardExtents.first.x - boardExtents.second.x),
-        (point.y - boardExtents.second.z) / (boardExtents.first.z - boardExtents.second.z),
+        glm::clamp(
+            (point.x - boardExtents.second.x) / (boardExtents.first.x - boardExtents.second.x),
+            0.f, .99999f
+        ),
+        glm::clamp(
+            (point.y - boardExtents.second.z) / (boardExtents.first.z - boardExtents.second.z),
+            0.f, .99999f
+        ),
     };
-    assert(
-        normalizedPoint.x >= 0.f && normalizedPoint.x <= 1.f
-        && normalizedPoint.y >= 0.f && normalizedPoint.y <= 1.f
-        && "selected point is beyond the bounds of the board"
-    );
     return {normalizedPoint.x * mRowLengths.size(), normalizedPoint.y * mRowLengths[1]};
 }
 

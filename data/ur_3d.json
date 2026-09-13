@@ -103,8 +103,8 @@
             "render_configuration": {
                 "base_dimensions": [1366, 768],
                 "update_mode": "on-render-cap-fps",
-                "resize_type": "texture-dimensions",
-                "resize_mode": "fixed-dimensions",
+                "resize_type": "viewport-dimensions",
+                "resize_mode": "expand-fill",
                 "render_type": "basic-3d",
                 "fps_cap": 60,
                 "render_scale": 1.0
@@ -118,12 +118,13 @@
             ],
             "components": [
                 {
-                    "fov": 55.5,
+                    "fov": 65.5,
                     "aspect": 1.77778,
                     "orthographic_dimensions": {"horizontal": 0, "vertical": 0},
                     "near_far_planes": {"near": 0.5, "far": 100},
                     "projection_mode": "frustum",
-                    "type": "CameraProperties"
+                    "type": "CameraProperties",
+                    "aspect_mode": "resize"
                 },
                 {
                     "orientation": [
@@ -133,7 +134,7 @@
                         -0.214287385 
                     ],
                     "position": [
-                        -6.0,
+                        -4.2,
                         8.4,
                         6.0,
                         1.0
@@ -160,9 +161,9 @@
                     "type": "Placement"
                 },
                 {
-                    "ambient": [0.1, 0.04, 0.04],
-                    "diffuse": [8.7, 2.4, 2.4],
-                    "specular": [2.0, 2.0, 2.0],
+                    "ambient": [0.05, 0.002, 0.002],
+                    "diffuse": [0.2525, 0.075, 0.075],
+                    "specular": [0.1, 0.1, 0.1],
                     "linearConst": 0.10,
                     "quadraticConst": 0.10,
                     "lightType": "point",
@@ -183,9 +184,9 @@
                     "type": "Placement"
                 },
                 {
-                    "ambient": [0.04, 0.1, 0.04],
-                    "diffuse": [2.4, 8.7, 2.4],
-                    "specular": [ 2.0, 2.0, 2.0],
+                    "ambient": [0.002, 0.05, 0.002],
+                    "diffuse": [0.075, 0.2525, 0.075],
+                    "specular": [ 0.1, 0.1, 0.1],
                     "linearConst": 0.10,
                     "quadraticConst": 0.10,
                     "lightType": "point",
@@ -206,9 +207,9 @@
                     "type": "Placement"
                 },
                 {
-                    "ambient": [0.04, 0.04, 0.1],
-                    "diffuse": [2.4, 2.4, 8.7],
-                    "specular": [ 2.0, 2.0, 2.0],
+                    "ambient": [0.001, 0.001, 0.0025],
+                    "diffuse": [0.075, 0.075, 0.2525],
+                    "specular": [ 0.1, 0.1, 0.1],
                     "linearConst": 0.10,
                     "quadraticConst": 0.10,
                     "lightType": "point",
@@ -230,8 +231,8 @@
                 },
                 {
                     "ambient": [0.1, 0.04, 0.1],
-                    "diffuse": [5.2, 2.4, 5.2],
-                    "specular": [ 2.0, 2.0, 2.0],
+                    "diffuse": [0.2525, 0.075, 0.2525],
+                    "specular": [ 1.0, 1.0, 1.0],
                     "linearConst": 0.10,
                     "quadraticConst": 0.10,
                     "lightType": "point",
@@ -260,14 +261,18 @@
         }
     ],
 
-
     "connections": [
         {
             "from": "/viewport_3D/gameboard/@BoardLocations",
             "signal": "BoardClicked",
-
             "to": "/@UrSceneView",
             "observer": "BoardClickedObserved"
+        },
+        {
+            "from": "/viewport_3D/gameboard/@BoardLocations",
+            "signal": "BoardHovered",
+            "to": "/@UrSceneView",
+            "observer": "BoardHoveredObserved"
         }
     ]
 }

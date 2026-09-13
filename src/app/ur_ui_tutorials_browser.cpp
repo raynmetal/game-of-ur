@@ -1,9 +1,11 @@
+#include <iostream>
 #include <fstream>
 #include <string>
 
 #include <toymaker/builtins/ui_button.hpp>
 #include <toymaker/builtins/ui_text.hpp>
 #include <toymaker/builtins/ui_image.hpp>
+#include <toymaker/engine/application.hpp>
 
 #include "ur_scene_manager.hpp"
 #include "ur_ui_tutorials_browser.hpp"
@@ -34,8 +36,9 @@ std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUITutorialsBrowser::clone() con
 void UrUITutorialsBrowser::loadTutorials() {
     mTutorials.clear();
 
+    static const std::string dataPath { ToyMaker::Application::getProjectDataPath() };
     std::ifstream jsonFileStream;
-    jsonFileStream.open(mTutorialsFilepath);
+    jsonFileStream.open(dataPath + "/" + mTutorialsFilepath);
     nlohmann::json tutorialsJSON = nlohmann::json::parse(jsonFileStream);
     jsonFileStream.close();
 
@@ -93,12 +96,12 @@ void UrUITutorialsBrowser::openPage(uint32_t page) {
 
     ToyMaker::UIButton& next {
         getSimObject().getByPath<ToyMaker::UIButton&>(
-            "/viewport_UI/next/@UIButton"
+            "/viewport_UI/ui_panel/next/@UIButton"
         )
     };
     ToyMaker::UIButton& prev {
         getSimObject().getByPath<ToyMaker::UIButton&>(
-            "/viewport_UI/previous/@UIButton"
+            "/viewport_UI/ui_panel/previous/@UIButton"
         )
     };
     if(hasPage(page+1)) {

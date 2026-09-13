@@ -1,3 +1,4 @@
+#include <iostream>
 #include <algorithm>
 #include <sstream>
 #include <nlohmann/json.hpp>
@@ -46,7 +47,7 @@ const GameOfUrModel& UrUIView::getModel() const {
 
 void UrUIView::onButtonClicked(const std::string& button) {
     if(mMode == Mode::TRANSITION) return;
-    UrUIView::Buttons enumButton { kButtonEnumMap.at(button) };
+    const UrUIView::Buttons enumButton { kButtonEnumMap.at(button) };
     std::cout << "UrUIView: ";
     switch(enumButton) {
         case SWALLOW:
@@ -64,6 +65,23 @@ void UrUIView::onButtonClicked(const std::string& button) {
         case NEXT_TURN:
             std::cout << "next turn clicked\n";
             mSigNextTurnAttempted.emit();
+            break;
+    }
+}
+
+void UrUIView::onButtonHoveredOver(const std::string& button) {
+    if(mMode == Mode::TRANSITION) return;
+    const UrUIView::Buttons enumButton { kButtonEnumMap.at(button) };
+    switch(enumButton) {
+        case SWALLOW:
+        case STORMBIRD:
+        case RAVEN:
+        case ROOSTER:
+        case EAGLE:
+            std::cout << "launch piece hovered over\n";
+            mSigLaunchPieceHovered.emit(static_cast<PieceTypeID>(enumButton));
+            break;
+        default:
             break;
     }
 }
@@ -96,11 +114,11 @@ void UrUIView::onPhaseUpdated(GamePhaseData phase){
             break;
     }
     updateText(
-        "/viewport_UI/current_turn/@UIText",
+        "/viewport_UI/ui_container/phase_panel/current_turn/@UIText",
         playerText
     );
     updateText(
-        "/viewport_UI/phase/@UIText",
+        "/viewport_UI/ui_container/phase_panel/phase/@UIText",
         phaseText.str()
     );
 
@@ -145,7 +163,7 @@ void UrUIView::onControlInterface(PlayerID player) {
 void UrUIView::onScoreUpdated(GameScoreData score) {
     std::cout << "UrUIView: on score updated\n";
     updateText(
-        "/viewport_UI/common_pile/@UIText",
+        "/viewport_UI/ui_container/ui_panel/common_pile/@UIText",
         "Winning pile: " + std::to_string(static_cast<int>(score.mCommonPoolCounters))
     );
 }
@@ -182,11 +200,11 @@ void UrUIView::onDiceUpdated(DiceData dice) {
     std::cout << "UrUIView: on dice updated\n";
 
     updateText(
-        "/viewport_UI/primary_roll/@UIText",
+        "/viewport_UI/ui_container/ui_panel/primary_roll/@UIText",
         "Primary: " + ((dice.mState!=Dice::State::UNROLLED)? std::to_string(static_cast<int>(dice.mPrimaryRoll)): "NA")
     );
     updateText(
-        "/viewport_UI/secondary_roll/@UIText",
+        "/viewport_UI/ui_container/ui_panel/secondary_roll/@UIText",
         std::string{"Double/Quit: "} + (
             (dice.mState != Dice::State::SECONDARY_ROLLED)? 
                 "NA":
@@ -194,22 +212,22 @@ void UrUIView::onDiceUpdated(DiceData dice) {
         )
     );
     updateText(
-        "/viewport_UI/final_roll/@UIText",
+        "/viewport_UI/ui_container/ui_panel/final_roll/@UIText",
         std::string("Final: ") 
         + ((dice.mState != Dice::State::UNROLLED)? std::to_string(static_cast<int>(dice.mResultScore)): "NA")
     );
     updateText(
-        "/viewport_UI/previous_roll/@UIText",
+        "/viewport_UI/ui_container/ui_panel/previous_roll/@UIText",
         std::string("Previous: ") + std::to_string(static_cast<int>(dice.mPreviousResult))
     );
 
-    getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
+    getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/ui_container/ui_panel/dice_roll/@UIButton").disableButton();
 }
 
 void UrUIView::onMoveMade(MoveResultData moveData) {
     (void)moveData; // prevent unused parameter warnings
     std::cout << "UrUIView: on move made\n";
-    getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/dice_roll/@UIButton").disableButton();
+    getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/ui_container/ui_panel/dice_roll/@UIButton").disableButton();
 }
 
 bool UrUIView::onCancel(const ToyMaker::ActionData& actionData, const ToyMaker::ActionDefinition& actionDefinition) {
@@ -240,12 +258,12 @@ std::shared_ptr<ToyMaker::SceneNode> UrUIView::getPlayerPanel(PlayerID player) {
         "player_panel_" + static_cast<std::string>((player == PlayerID::PLAYER_A)? "a": "b")
     };
     return getSimObject().getByPath<std::shared_ptr<ToyMaker::SceneNode>>(
-        "/viewport_UI/" + playerPanelString + "/"
+        "/viewport_UI/ui_container/ui_panel/" + playerPanelString + "/"
     );
 }
 
 std::shared_ptr<ToyMaker::SimObject> UrUIView::getEndTurnButton() {
-    return getSimObject().getByPath<std::shared_ptr<ToyMaker::SimObject>>("/viewport_UI/next_turn/");
+    return getSimObject().getByPath<std::shared_ptr<ToyMaker::SimObject>>("/viewport_UI/ui_container/ui_panel/next_turn/");
 }
 
 void UrUIView::onControllerReady() {
@@ -330,7 +348,7 @@ void UrUIView::reactivateControls() {
     }
 
     // enable the dice button if a die can be rolled
-    ToyMaker::UIButton& diceButton { getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/dice_roll/@UIButton") };
+    ToyMaker::UIButton& diceButton { getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/ui_container/ui_panel/dice_roll/@UIButton") };
     if(
         phase.mGamePhase != GamePhase::END 
         && phase.mTurnPhase != TurnPhase::END

@@ -473,6 +473,7 @@ MoveResultData GameOfUrModel::getMoveData(PieceIdentity pieceID, glm::u8vec2 mov
         .mMovedPiece { movedPieceData },
         .mCountersWon { nCountersWon },
         .mCountersLost { nCountersLost },
+        .mMoveLocation { moveLocation },
     };
 }
 

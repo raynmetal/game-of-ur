@@ -5,7 +5,7 @@
             "type": "Texture",
             "method": "fromFile",
             "parameters": {
-                "path": "data/textures/button_active.png",
+                "path": "textures/button_active.png",
                 "cubemap_layout": "row"
             }
         },
@@ -23,7 +23,7 @@
             "type": "TextFont",
             "method": "fromFile",
             "parameters": {
-                "path": "data/fonts/Roboto_Mono/static/RobotoMono-Regular.ttf",
+                "path": "fonts/Roboto_Mono/static/RobotoMono-Regular.ttf",
                 "point_size": 36
             }
         },
@@ -32,7 +32,7 @@
             "type": "TextFont",
             "method": "fromFile",
             "parameters": {
-                "path": "data/fonts/Roboto_Mono/static/RobotoMono-Regular.ttf",
+                "path": "fonts/Roboto_Mono/static/RobotoMono-Regular.ttf",
                 "point_size": 42
             }
         },
@@ -41,7 +41,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_ui_player_panel.json"
+                "path": "ur_ui_player_panel.json"
             }
         },
         {
@@ -49,7 +49,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ui_button.json"
+                "path": "ui_button.json"
             }
         },
 
@@ -57,7 +57,7 @@
             "method": "fromFile",
             "name": "SwallowModel_One",
             "parameters": {
-                "path": "data/models/UrSwallow.obj",
+                "path": "models/UrSwallow.obj",
                 "material_overrides": {
                     "0": [
                         {
@@ -81,7 +81,7 @@
             "method": "fromFile",
             "name": "StormbirdModel_One",
             "parameters": {
-                "path": "data/models/UrStormbird.obj",
+                "path": "models/UrStormbird.obj",
                 "material_overrides": {
                     "0": [
                         {
@@ -105,7 +105,7 @@
             "method": "fromFile",
             "name": "RavenModel_One",
             "parameters": {
-                "path": "data/models/UrRaven.obj",
+                "path": "models/UrRaven.obj",
                 "material_overrides": {
                     "0": [
                         {
@@ -129,7 +129,7 @@
             "method": "fromFile",
             "name": "RoosterModel_One",
             "parameters": {
-                "path": "data/models/UrRooster.obj",
+                "path": "models/UrRooster.obj",
                 "material_overrides": {
                     "0": [
                         {
@@ -153,7 +153,7 @@
             "method": "fromFile",
             "name": "EagleModel_One",
             "parameters": {
-                "path": "data/models/UrEagle.obj",
+                "path": "models/UrEagle.obj",
                 "material_overrides": {
                     "0": [
                         {
@@ -178,7 +178,7 @@
             "method": "fromFile",
             "name": "SwallowModel_Two",
             "parameters": {
-                "path": "data/models/UrSwallow.obj"
+                "path": "models/UrSwallow.obj"
             },
             "type": "StaticModel"
         },
@@ -186,7 +186,7 @@
             "method": "fromFile",
             "name": "StormbirdModel_Two",
             "parameters": {
-                "path": "data/models/UrStormbird.obj"
+                "path": "models/UrStormbird.obj"
             },
             "type": "StaticModel"
         },
@@ -194,7 +194,7 @@
             "method": "fromFile",
             "name": "RavenModel_Two",
             "parameters": {
-                "path": "data/models/UrRaven.obj"
+                "path": "models/UrRaven.obj"
             },
             "type": "StaticModel"
         },
@@ -202,7 +202,7 @@
             "method": "fromFile",
             "name": "RoosterModel_Two",
             "parameters": {
-                "path": "data/models/UrRooster.obj"
+                "path": "models/UrRooster.obj"
             },
             "type": "StaticModel"
         },
@@ -210,7 +210,7 @@
             "method": "fromFile",
             "name": "EagleModel_Two",
             "parameters": {
-                "path": "data/models/UrEagle.obj"
+                "path": "models/UrEagle.obj"
             },
             "type": "StaticModel"
         },
@@ -219,7 +219,7 @@
             "method": "fromFile",
             "name": "GameboardModel",
             "parameters": {
-                "path": "data/models/UrGameBoard.obj"
+                "path": "models/UrGameBoard.obj"
             },
             "type": "StaticModel"
         },
@@ -229,7 +229,7 @@
             "type": "Texture",
             "method": "fromFile",
             "parameters": {
-                "path": "data/textures/skybox.png",
+                "path": "textures/skybox.png",
                 "cubemap_layout": "row"
             }
         },
@@ -239,7 +239,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_3d.json"
+                "path": "ur_3d.json"
             }
         },
 
@@ -248,7 +248,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_ui.json"
+                "path": "ur_ui.json"
             }
         },
 
@@ -257,7 +257,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_main_menu.json"
+                "path": "ur_main_menu.json"
             }
         },
 
@@ -266,7 +266,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_prototype_local_vs.json"
+                "path": "ur_prototype_local_vs.json"
             }
         },
 
@@ -275,7 +275,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_prototype_cpu_vs.json"
+                "path": "ur_prototype_cpu_vs.json"
             }
         },
 
@@ -284,7 +284,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_credits.json"
+                "path": "ur_credits.json"
             }
         },
 
@@ -293,7 +293,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_records.json"
+                "path": "ur_records.json"
             }
         },
 
@@ -302,7 +302,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_records_browser.json"
+                "path": "ur_records_browser.json"
             }
         },
 
@@ -311,7 +311,7 @@
             "type": "SimObject",
             "method": "fromSceneFile",
             "parameters": {
-                "path": "data/ur_tutorials_browser.json"
+                "path": "ur_tutorials_browser.json"
             }
         }
     ],
