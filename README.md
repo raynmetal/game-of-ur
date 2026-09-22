@@ -4,9 +4,11 @@
 
 ### Introduction
 
-This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Royal_Game_of_Ur), written in C++ mainly using SDL and OpenGL, and built on top of the [ToyMaker game engine.](https://github.com/raynmetal/toymaker)
+This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Royal_Game_of_Ur), written in C++ mainly using SDL and OpenGL, and built
+on top of the [ToyMaker game engine.](https://github.com/raynmetal/toymaker)
 
-Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant implemented in this adaptation is based on a paper by Irving Finkel.  See the [game design document](docs/game_design_doc.md) for more information.
+Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant
+implemented in this adaptation is based on a paper by Irving Finkel.  See the [game design document](docs/game_design_doc.md) for more information.
 
 ![Game of Ur being played.](data/textures/tutorial/game_in_progress.png "A picture of Game of Ur being played.")
 
@@ -82,7 +84,7 @@ Finally, [clone this repository,](https://github.com/raynmetal/game-of-ur) or do
 - [x] Stylized 3D graphics
 - [x] Offline multiplayer
 - [x] AI opponent
-- ~~Music and sound effects~~ (I'm tired)
+- [ ] Music and sound effects
 - ~~Tutorialization~~ (I'm very very tired)
 - [x] Playable on Windows
 - ~~Playable on Android~~ (Maybe some day)
@@ -107,3 +109,12 @@ This program makes extensive use of the following libraries:
 - [Nlohmann JSON](https://json.nlohmann.me/)
 - [GLM](https://github.com/g-truc/glm)
 - [Assimp](https://github.com/assimp/assimp)
+
+Along with the following sounds, courtesy [freesound.org](freesound.org):
+
+- Melancholic piano music.mp3 by ZHRØ | License: Creative Commons 0
+- box_drag.wav by X3msnake | License: Creative Commons 0
+- Teeth clack 1 by hollandm | License: Creative Commons 0
+- Door Handle Wood Clack.aif by RutgerMuller | License: Creative Commons 0
+- Dice.mp3 by AbdrTar | License: Creative Commons 0
+
