@@ -13,7 +13,7 @@
 #define ZOAPPURUIVIEW_H
 
 #include <toymaker/engine/sim_system.hpp>
-
+#include <toymaker/engine/sound/types.hpp>
 #include <toymaker/builtins/ui_text.hpp>
 
 #include "game_of_ur_data/model.hpp"
@@ -53,6 +53,10 @@ private:
         INTERACT,
         TRANSITION,
     };
+
+    std::unique_ptr<ToyMaker::SoundChannel> mSoundChannel {};
+    std::shared_ptr<ToyMaker::Sound> mSoundButtonHover { nullptr };
+    std::shared_ptr<ToyMaker::Sound> mSoundButtonClick { nullptr };
 
     std::weak_ptr<ToyMaker::SimObject> mGameOfUrController {};
     std::string mControllerPath {};

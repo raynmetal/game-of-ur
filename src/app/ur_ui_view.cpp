@@ -3,6 +3,8 @@
 #include <sstream>
 #include <nlohmann/json.hpp>
 
+#include <toymaker/engine/sound/types.hpp>
+#include <toymaker/engine/sound/system.hpp>
 #include <toymaker/builtins/ui_text.hpp>
 #include <toymaker/builtins/ui_button.hpp>
 
@@ -39,6 +41,9 @@ void UrUIView::onActivated() {
         ToyMaker::ECSWorld::getSingletonSystem<ToyMaker::SceneSystem>()
         ->getByPath<std::shared_ptr<ToyMaker::SimObject>>(mControllerPath)
     );
+    mSoundChannel = getSimObject().getWorld().lock()->getSystem<ToyMaker::SoundSystem>()->createChannel();
+    mSoundButtonClick = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Click_Sound");
+    mSoundButtonHover = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Hover_Sound");
 }
 
 const GameOfUrModel& UrUIView::getModel() const {

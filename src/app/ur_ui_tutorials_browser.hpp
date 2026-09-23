@@ -15,6 +15,7 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
+#include <toymaker/engine/sound/types.hpp>
 #include <toymaker/engine/sim_system.hpp>
 
 #include "ur_records.hpp"
@@ -54,10 +55,13 @@ private:
     std::string mTutorialImageAspect {};
     std::vector<TutorialContent> mTutorials {};
 
+    std::unique_ptr<ToyMaker::SoundChannel> mSoundChannel {};
+    std::shared_ptr<ToyMaker::Sound> mSoundButtonHover { nullptr };
+    std::shared_ptr<ToyMaker::Sound> mSoundButtonClick { nullptr };
+
     void onActivated() override;
 
     void onButtonClicked(const std::string& button);
-    
     bool hasPage(uint32_t page) const;
     void openPage(uint32_t page);
 

@@ -1,5 +1,61 @@
 {
     "resources": [
+
+        {
+            "name": "Background_Music_Sound",
+            "type": "Sound",
+            "method": "fromFile",
+            "parameters": {
+                "path": "sounds/background_music.mp3",
+                "decompress": false
+            }
+        },
+        {
+            "name": "Button_Click_Sound",
+            "type": "Sound",
+            "method": "fromFile",
+            "parameters": {
+                "path": "sounds/button_click.wav",
+                "decompress": true
+            }
+        },
+        {
+            "name": "Button_Hover_Sound",
+            "type": "Sound",
+            "method": "fromFile",
+            "parameters": {
+                "path": "sounds/button_hover.wav",
+                "decompress": true
+            }
+        },
+        {
+            "name": "Dice_Roll_Sound",
+            "type": "Sound",
+            "method": "fromFile",
+            "parameters": {
+                "path": "sounds/dice_roll.wav",
+                "decompress": true
+            }
+        },
+        {
+            "name": "Piece_Drag_Sound",
+            "type": "Sound",
+            "method": "fromFile",
+            "parameters": {
+                "path": "sounds/piece_drag.wav",
+                "decompress": true
+            }
+        },
+        {
+            "name": "Piece_Launch_Sound",
+            "type": "Sound",
+            "method": "fromFile",
+            "parameters": {
+                "path": "sounds/piece_launch.wav",
+                "decompress": true
+            }
+        },
+
         {
             "name": "Bad_Panel_Texture",
             "type": "Texture",
