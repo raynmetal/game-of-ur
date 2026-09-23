@@ -844,52 +844,87 @@
         {
             "from": "/viewport_UI/ui_panel/next/@UIButton",
             "signal": "ButtonReleased",
-
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/next/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/previous/@UIButton",
+            "signal": "ButtonReleased",
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_panel/previous/@UIButton",
-            "signal": "ButtonReleased",
-
+            "signal": "ButtonHoveredOver",
             "to": "/@UrUIRecordsBrowser",
-            "observer": "ButtonClickedObserved"
+            "observer": "ButtonHoveredOverObserved"
         },
 
         {
             "from": "/viewport_UI/ui_panel/record_0/@UIButton",
             "signal": "ButtonReleased",
-
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/record_0/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/record_1/@UIButton",
+            "signal": "ButtonReleased",
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_panel/record_1/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/record_2/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_panel/record_2/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/record_3/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_panel/record_3/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUIRecordsBrowser",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/record_4/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIRecordsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_panel/record_4/@UIButton",
-            "signal": "ButtonReleased",
-
+            "signal": "ButtonHoveredOver",
             "to": "/@UrUIRecordsBrowser",
-            "observer": "ButtonClickedObserved"
+            "observer": "ButtonHoveredOverObserved"
         }
     ]
 }

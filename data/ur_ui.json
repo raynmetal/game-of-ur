@@ -489,16 +489,27 @@
         {
             "from": "/viewport_UI/ui_container/ui_panel/dice_roll/@UIButton",
             "signal": "ButtonReleased",
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/dice_roll/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
 
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/next_turn/@UIButton",
+            "signal": "ButtonReleased",
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/next_turn/@UIButton",
-            "signal": "ButtonReleased",
-
+            "signal": "ButtonHoveredOver",
             "to": "/@UrUIView",
-            "observer": "ButtonClickedObserved"
+            "observer": "ButtonHoveredOverObserved"
         },
 
         {
