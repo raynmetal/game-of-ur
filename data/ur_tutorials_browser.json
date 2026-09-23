@@ -358,16 +358,26 @@
         {
             "from": "/viewport_UI/ui_panel/next/@UIButton",
             "signal": "ButtonReleased",
-
+            "to": "/@UrUITutorialsBrowser",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/next/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUITutorialsBrowser",
+            "observer": "ButtonHoveredOverObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/previous/@UIButton",
+            "signal": "ButtonReleased",
             "to": "/@UrUITutorialsBrowser",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_panel/previous/@UIButton",
-            "signal": "ButtonReleased",
-
+            "signal": "ButtonHoveredOver",
             "to": "/@UrUITutorialsBrowser",
-            "observer": "ButtonClickedObserved"
+            "observer": "ButtonHoveredOverObserved"
         }
     ]
 }
