@@ -834,6 +834,12 @@
             "to": "/@UrUINavigation",
             "observer": "ButtonClickedObserved"
         },
+        {
+            "from": "/viewport_UI/ui_panel/return/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUINavigation",
+            "observer": "ButtonHoveredOverObserved"
+        },
 
         {
             "from": "/viewport_UI/ui_panel/next/@UIButton",

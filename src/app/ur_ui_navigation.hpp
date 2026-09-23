@@ -40,6 +40,7 @@ private:
     std::string mSceneManagerPath {};
 
     void onButtonClicked(const std::string& button);
+    void onButtonHoveredOver(const std::string& button);
 
     std::unique_ptr<ToyMaker::SoundChannel> mSoundChannel {};
     std::shared_ptr<ToyMaker::Sound> mSoundButtonHover { nullptr };
@@ -49,6 +50,10 @@ public:
     ToyMaker::SignalObserver<const std::string&> mObserveButtonClicked {
         *this, "ButtonClickedObserved",
         [this](const std::string& button) { this->onButtonClicked(button); }
+    };
+    ToyMaker::SignalObserver<const std::string&> mObserveButtonHoveredOver {
+        *this, "ButtonHoveredOverObserved",
+        [this](const std::string& button) { this->onButtonHoveredOver(button); }
     };
 };
 

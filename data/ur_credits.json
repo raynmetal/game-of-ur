@@ -217,9 +217,14 @@
         {
             "from": "/viewport_UI/ui_panel/return/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUINavigation",
             "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/return/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUINavigation",
+            "observer": "ButtonHoveredOverObserved"
         }
     ]
 }

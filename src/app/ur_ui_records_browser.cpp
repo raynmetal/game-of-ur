@@ -1,3 +1,4 @@
+#include <iostream>
 #include <string>
 
 #include <toymaker/engine/sound/types.hpp>
@@ -29,6 +30,9 @@ void UrUIRecordsBrowser::onActivated() {
     mSoundButtonHover = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Hover_Sound");
 }
 
+void UrUIRecordsBrowser::onButtonHoveredOver(const std::string& button) {
+    std::cout << "Records button hovered over!\n";
+}
 void UrUIRecordsBrowser::onButtonClicked(const std::string& button) {
     if(button == "next") {
         openPage(mPage + 1);

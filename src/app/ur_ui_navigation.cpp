@@ -1,3 +1,4 @@
+#include <iostream>
 
 #include <toymaker/engine/sound/types.hpp>
 #include <toymaker/engine/sound/system.hpp>
@@ -23,6 +24,9 @@ void UrUINavigation::onActivated() {
     mSoundButtonHover = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Hover_Sound");
 }
 
+void UrUINavigation::onButtonHoveredOver(const std::string& button) {
+    std::cout << "Navigation button hovered over!\n";
+}
 void UrUINavigation::onButtonClicked(const std::string& sceneResourceName) {
     ToyMaker::ECSWorld::getSingletonSystem<ToyMaker::SceneSystem>()
         ->getByPath<UrSceneManager&>(mSceneManagerPath + "@" + UrSceneManager::getSimObjectAspectTypeName())

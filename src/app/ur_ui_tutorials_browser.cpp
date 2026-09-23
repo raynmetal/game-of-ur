@@ -63,6 +63,9 @@ void UrUITutorialsBrowser::onActivated() {
     mSoundButtonHover = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Hover_Sound");
 }
 
+void UrUITutorialsBrowser::onButtonHoveredOver(const std::string& button) {
+    std::cout << "tutorial button hovered over!\n";
+}
 void UrUITutorialsBrowser::onButtonClicked(const std::string& button) {
     if(button == "next") {
         openPage(mPage + 1);

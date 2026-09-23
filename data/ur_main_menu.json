@@ -362,10 +362,16 @@
         {
             "from": "/viewport_UI/ui_panel/local_vs/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUINavigation",
             "observer": "ButtonClickedObserved"
         },
+        {
+            "from": "/viewport_UI/ui_panel/local_vs/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUINavigation",
+            "observer": "ButtonHoveredOverObserved"
+        },
+
         {
             "from": "/viewport_UI/ui_panel/cpu_vs/@UIButton",
             "signal": "ButtonReleased",
@@ -374,25 +380,50 @@
             "observer": "ButtonClickedObserved"
         },
         {
+            "from": "/viewport_UI/ui_panel/cpu_vs/@UIButton",
+            "signal": "ButtonHoveredOver",
+
+            "to": "/@UrUINavigation",
+            "observer": "ButtonHoveredOverObserved"
+        },
+
+        {
             "from": "/viewport_UI/ui_panel/credits/@UIButton",
             "signal": "ButtonReleased",
+            "to": "/@UrUINavigation",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_panel/credits/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUINavigation",
+            "observer": "ButtonHoveredOverObserved"
+        },
 
+        {
+            "from": "/viewport_UI/ui_panel/records/@UIButton",
+            "signal": "ButtonReleased",
             "to": "/@UrUINavigation",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_panel/records/@UIButton",
-            "signal": "ButtonReleased",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUINavigation",
+            "observer": "ButtonHoveredOverObserved"
+        },
 
+        {
+            "from": "/viewport_UI/ui_panel/tutorials/@UIButton",
+            "signal": "ButtonReleased",
             "to": "/@UrUINavigation",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_panel/tutorials/@UIButton",
-            "signal": "ButtonReleased",
-
+            "signal": "ButtonHoveredOver",
             "to": "/@UrUINavigation",
-            "observer": "ButtonClickedObserved"
+            "observer": "ButtonHoveredOverObserved"
         }
     ]
 }
