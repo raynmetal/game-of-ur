@@ -16,7 +16,6 @@
 
 #include <glm/gtx/string_cast.hpp>
 
-#include <toymaker/engine/sound/types.hpp>
 #include <toymaker/engine/sim_system.hpp>
 
 
@@ -41,10 +40,6 @@ private:
 
     void onButtonClicked(const std::string& button);
     void onButtonHoveredOver(const std::string& button);
-
-    std::unique_ptr<ToyMaker::SoundChannel> mSoundChannel {};
-    std::shared_ptr<ToyMaker::Sound> mSoundButtonHover { nullptr };
-    std::shared_ptr<ToyMaker::Sound> mSoundButtonClick { nullptr };
 
 public:
     ToyMaker::SignalObserver<const std::string&> mObserveButtonClicked {

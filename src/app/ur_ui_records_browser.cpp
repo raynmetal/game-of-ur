@@ -1,8 +1,6 @@
 #include <iostream>
 #include <string>
 
-#include <toymaker/engine/sound/types.hpp>
-#include <toymaker/engine/sound/system.hpp>
 #include <toymaker/builtins/ui_button.hpp>
 #include <toymaker/builtins/ui_text.hpp>
 
@@ -24,10 +22,6 @@ std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIRecordsBrowser::clone() const
 void UrUIRecordsBrowser::onActivated() {
     refreshRecords();
     openPage(mPage);
-
-    mSoundChannel = getSimObject().getWorld().lock()->getSystem<ToyMaker::SoundSystem>()->createChannel();
-    mSoundButtonClick = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Click_Sound");
-    mSoundButtonHover = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Hover_Sound");
 }
 
 void UrUIRecordsBrowser::onButtonHoveredOver(const std::string& button) {

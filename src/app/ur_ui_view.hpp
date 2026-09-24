@@ -54,10 +54,6 @@ private:
         TRANSITION,
     };
 
-    std::unique_ptr<ToyMaker::SoundChannel> mSoundChannel {};
-    std::shared_ptr<ToyMaker::Sound> mSoundButtonHover { nullptr };
-    std::shared_ptr<ToyMaker::Sound> mSoundButtonClick { nullptr };
-
     std::weak_ptr<ToyMaker::SimObject> mGameOfUrController {};
     std::string mControllerPath {};
     PlayerID mControlledBy {};

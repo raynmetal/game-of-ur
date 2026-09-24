@@ -1,8 +1,5 @@
 #include <iostream>
 
-#include <toymaker/engine/sound/types.hpp>
-#include <toymaker/engine/sound/system.hpp>
-
 #include "ur_scene_manager.hpp"
 #include "ur_ui_navigation.hpp"
 
@@ -19,9 +16,6 @@ std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUINavigation::clone() const {
 }
 
 void UrUINavigation::onActivated() {
-    mSoundChannel = getSimObject().getWorld().lock()->getSystem<ToyMaker::SoundSystem>()->createChannel();
-    mSoundButtonClick = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Click_Sound");
-    mSoundButtonHover = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Hover_Sound");
 }
 
 void UrUINavigation::onButtonHoveredOver(const std::string& button) {

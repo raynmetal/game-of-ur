@@ -2,8 +2,6 @@
 #include <fstream>
 #include <string>
 
-#include <toymaker/engine/sound/types.hpp>
-#include <toymaker/engine/sound/system.hpp>
 #include <toymaker/builtins/ui_button.hpp>
 #include <toymaker/builtins/ui_text.hpp>
 #include <toymaker/builtins/ui_image.hpp>
@@ -57,10 +55,6 @@ void UrUITutorialsBrowser::loadTutorials() {
 void UrUITutorialsBrowser::onActivated() {
     loadTutorials();
     openPage(0);
-
-    mSoundChannel = getSimObject().getWorld().lock()->getSystem<ToyMaker::SoundSystem>()->createChannel();
-    mSoundButtonClick = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Click_Sound");
-    mSoundButtonHover = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Hover_Sound");
 }
 
 void UrUITutorialsBrowser::onButtonHoveredOver(const std::string& button) {

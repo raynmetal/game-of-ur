@@ -15,7 +15,6 @@
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/string_cast.hpp>
 
-#include <toymaker/engine/sound/types.hpp>
 #include <toymaker/engine/sim_system.hpp>
 
 #include "ur_records.hpp"
@@ -44,10 +43,6 @@ private:
     Mode mMode { Mode::BROWSE };
     uint32_t mPage {0};
     std::vector<GameRecord> mFetchedRecords {};
-
-    std::unique_ptr<ToyMaker::SoundChannel> mSoundChannel {};
-    std::shared_ptr<ToyMaker::Sound> mSoundButtonHover { nullptr };
-    std::shared_ptr<ToyMaker::Sound> mSoundButtonClick { nullptr };
 
     void refreshRecords();
     void onButtonClicked(const std::string& button);

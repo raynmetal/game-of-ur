@@ -14,7 +14,6 @@ std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrSoundPlayer::clone() const {
     return sounds;
 }
 
-
 void UrSoundPlayer::onActivated() {
     mSounds[UrSoundFX::MUSIC] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Background_Music_Sound");
     mSounds[UrSoundFX::BUTTON_CLICK] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Click_Sound");
@@ -26,5 +25,10 @@ void UrSoundPlayer::onActivated() {
     mChannelMusic = getSimObject().getWorld().lock()->getSystem<ToyMaker::SoundSystem>()->createChannel();
     mChannelEffects = getSimObject().getWorld().lock()->getSystem<ToyMaker::SoundSystem>()->createChannel();
 
+    mChannelMusic->setSound(*mSounds[UrSoundFX::MUSIC]);
+    mChannelMusic->setLoopCount(-1);
+    mChannelMusic->play();
+    assert(mChannelMusic->isPlaying() && "Could not start background music playback");
     std::cout << "Ur Sound: sounds loaded successfully!\n";
 }
+
