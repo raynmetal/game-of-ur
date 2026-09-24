@@ -17,7 +17,7 @@
 #include <toymaker/engine/sound/types.hpp>
 #include <toymaker/engine/sim_system.hpp>
 
-enum UrSoundFX: uint8_t {
+enum class UrSoundFX: uint8_t {
     MUSIC,
     BUTTON_HOVER,
     BUTTON_CLICK,
@@ -39,12 +39,14 @@ public:
     inline static std::string getSimObjectAspectTypeName() { return "UrSoundPlayer"; }
     static std::shared_ptr<BaseSimObjectAspect> create(const nlohmann::json& jsonAspectProperties);
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
+    void playEffect(UrSoundFX effect, uint8_t priority=0);
 
 private:
-    std::array<std::shared_ptr<ToyMaker::Sound>, UrSoundFX::TOTAL> mSounds {};
+    std::array<std::shared_ptr<ToyMaker::Sound>, static_cast<uint8_t>(UrSoundFX::TOTAL)> mSounds {};
 
     std::unique_ptr<ToyMaker::SoundChannel> mChannelMusic { nullptr };
     std::unique_ptr<ToyMaker::SoundChannel> mChannelEffects { nullptr };
+    uint8_t mEffectPriority { 0 };
 
     void onActivated() override;
 };

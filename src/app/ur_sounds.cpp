@@ -15,20 +15,37 @@ std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrSoundPlayer::clone() const {
 }
 
 void UrSoundPlayer::onActivated() {
-    mSounds[UrSoundFX::MUSIC] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Background_Music_Sound");
-    mSounds[UrSoundFX::BUTTON_CLICK] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Click_Sound");
-    mSounds[UrSoundFX::BUTTON_HOVER] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Hover_Sound");
-    mSounds[UrSoundFX::DICE_ROLL] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Dice_Roll_Sound");
-    mSounds[UrSoundFX::PIECE_MOVE] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Piece_Drag_Sound");
-    mSounds[UrSoundFX::PIECE_LAUNCH] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Piece_Launch_Sound");
+    mSounds[static_cast<uint8_t>(UrSoundFX::MUSIC)] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Background_Music_Sound");
+    mSounds[static_cast<uint8_t>(UrSoundFX::BUTTON_CLICK)] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Click_Sound");
+    mSounds[static_cast<uint8_t>(UrSoundFX::BUTTON_HOVER)] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Button_Hover_Sound");
+    mSounds[static_cast<uint8_t>(UrSoundFX::DICE_ROLL)] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Dice_Roll_Sound");
+    mSounds[static_cast<uint8_t>(UrSoundFX::PIECE_MOVE)] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Piece_Drag_Sound");
+    mSounds[static_cast<uint8_t>(UrSoundFX::PIECE_LAUNCH)] = ToyMaker::ResourceDatabase::GetRegisteredResource<ToyMaker::Sound>("Piece_Launch_Sound");
 
     mChannelMusic = getSimObject().getWorld().lock()->getSystem<ToyMaker::SoundSystem>()->createChannel();
     mChannelEffects = getSimObject().getWorld().lock()->getSystem<ToyMaker::SoundSystem>()->createChannel();
 
-    mChannelMusic->setSound(*mSounds[UrSoundFX::MUSIC]);
+    mChannelEffects->setLoopCount(0);
+    mChannelMusic->setSound(*mSounds[static_cast<uint8_t>(UrSoundFX::MUSIC)]);
     mChannelMusic->setLoopCount(-1);
     mChannelMusic->play();
     assert(mChannelMusic->isPlaying() && "Could not start background music playback");
+
     std::cout << "Ur Sound: sounds loaded successfully!\n";
+}
+
+void UrSoundPlayer::playEffect(UrSoundFX effect, uint8_t priority) {
+    assert(effect != UrSoundFX::TOTAL && effect != UrSoundFX::MUSIC && "Invalid effect requested");
+
+    // guard: avoid interrupting if another effect is currently playing with
+    // a higher priority
+    if(priority < mEffectPriority && mChannelEffects->isPlaying()) {
+        return;
+    }
+
+    mChannelEffects->stop(0);
+    mChannelEffects->setSound(*mSounds[static_cast<uint8_t>(effect)]);
+    mEffectPriority = priority;
+    mChannelEffects->play();
 }
 

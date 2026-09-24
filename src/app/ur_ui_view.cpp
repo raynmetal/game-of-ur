@@ -8,6 +8,7 @@
 
 #include "game_of_ur_data/model.hpp"
 
+#include "ur_sounds.hpp"
 #include "ur_ui_view.hpp"
 #include "ur_controller.hpp"
 
@@ -48,6 +49,12 @@ const GameOfUrModel& UrUIView::getModel() const {
 void UrUIView::onButtonClicked(const std::string& button) {
     if(mMode == Mode::TRANSITION) return;
     const UrUIView::Buttons enumButton { kButtonEnumMap.at(button) };
+    auto& soundPlayer {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
+            ->getByPath<UrSoundPlayer&>("/ur_sounds/@UrSoundPlayer")
+    };
+    soundPlayer.playEffect(UrSoundFX::BUTTON_CLICK, 1);
     std::cout << "UrUIView: ";
     switch(enumButton) {
         case SWALLOW:
@@ -72,6 +79,12 @@ void UrUIView::onButtonClicked(const std::string& button) {
 void UrUIView::onButtonHoveredOver(const std::string& button) {
     if(mMode == Mode::TRANSITION) return;
     const UrUIView::Buttons enumButton { kButtonEnumMap.at(button) };
+    auto& soundPlayer {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
+            ->getByPath<UrSoundPlayer&>("/ur_sounds/@UrSoundPlayer")
+    };
+    soundPlayer.playEffect(UrSoundFX::BUTTON_HOVER);
     switch(enumButton) {
         case SWALLOW:
         case STORMBIRD:
@@ -198,6 +211,13 @@ void UrUIView::onPlayerUpdated(PlayerData player) {
 
 void UrUIView::onDiceUpdated(DiceData dice) {
     std::cout << "UrUIView: on dice updated\n";
+
+    auto& soundPlayer {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
+            ->getByPath<UrSoundPlayer&>("/ur_sounds/@UrSoundPlayer")
+    };
+    soundPlayer.playEffect(UrSoundFX::DICE_ROLL, 2);
 
     updateText(
         "/viewport_UI/ui_container/ui_panel/primary_roll/@UIText",
@@ -350,7 +370,7 @@ void UrUIView::reactivateControls() {
     // enable the dice button if a die can be rolled
     ToyMaker::UIButton& diceButton { getSimObject().getByPath<ToyMaker::UIButton&>("/viewport_UI/ui_container/ui_panel/dice_roll/@UIButton") };
     if(
-        phase.mGamePhase != GamePhase::END 
+        phase.mGamePhase != GamePhase::END
         && phase.mTurnPhase != TurnPhase::END
         && phase.mTurn == mControlledBy
         && dice.mState != Dice::State::SECONDARY_ROLLED
