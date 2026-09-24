@@ -36,6 +36,7 @@ void UrSoundPlayer::onActivated() {
 
 void UrSoundPlayer::playEffect(UrSoundFX effect, uint8_t priority) {
     assert(effect != UrSoundFX::TOTAL && effect != UrSoundFX::MUSIC && "Invalid effect requested");
+    assert(mChannelMusic->isPlaying() && "Music should always be playing");
 
     // guard: avoid interrupting if another effect is currently playing with
     // a higher priority
