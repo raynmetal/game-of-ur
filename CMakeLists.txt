@@ -31,6 +31,7 @@ target_sources(
         src/app/ur_ui_tutorials_browser.cpp
         src/app/ur_ui_version.cpp
         src/app/ur_ui_view.cpp
+        src/app/ur_sounds.cpp
 
     PRIVATE
     FILE_SET HEADERS
@@ -63,6 +64,7 @@ target_sources(
         src/app/ur_ui_tutorials_browser.hpp
         src/app/ur_ui_version.hpp
         src/app/ur_ui_view.hpp
+        src/app/ur_sounds.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/src/app/version.h
 )
 
