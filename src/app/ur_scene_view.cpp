@@ -2,6 +2,7 @@
 
 #include <toymaker/engine/core/resource_database.hpp>
 
+#include "ur_sounds.hpp"
 #include "game_of_ur_data/serialize.hpp"
 #include "ur_controller.hpp"
 #include "ur_scene_view.hpp"
@@ -172,7 +173,7 @@ void UrSceneView::onBoardClicked(glm::u8vec2 boardLocation) {
             default: assert(false && "We should never get here"); break;
         }
     }
-    std::cout << "\ttype: " << ((houseData.mType == House::Type::REGULAR)? "regular": "rosette") << "\n";   
+    std::cout << "\ttype: " << ((houseData.mType == House::Type::REGULAR)? "regular": "rosette") << "\n";
 
     if(getModel().getCurrentPhase().mGamePhase != GamePhase::PLAY) {
         return;
@@ -227,6 +228,12 @@ void UrSceneView::onBoardHovered(glm::u8vec2 boardLocation) {
     // switch focus to moves possible with piece at current location
     clearLights();
     mFocusedGridCell = boardLocation;
+    auto& soundPlayer {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
+            ->getByPath<UrSoundPlayer&>("/ur_sounds/@UrSoundPlayer")
+    };
+    soundPlayer.playEffect(UrSoundFX::BUTTON_HOVER);
 
     // no move possible, so nothing highlighted
     if(!(moveData.mFlags&MoveResultData::IS_POSSIBLE)) {
@@ -314,13 +321,20 @@ void UrSceneView::onMoveMade(const MoveResultData& moveResultData) {
     clearLights();
     mFocusedGridCell = kGridUnfocused;
 
+    auto& soundPlayer {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
+            ->getByPath<UrSoundPlayer&>("/ur_sounds/@UrSoundPlayer")
+    };
+    soundPlayer.playEffect(UrSoundFX::PIECE_MOVE, 2);
+
     const PieceIdentity& displacedPieceIdentity { moveResultData.mDisplacedPiece.mIdentity };
     const PieceIdentity& movedPieceIdentity { moveResultData.mMovedPiece.mIdentity };
     uint32_t animationOffset { 0 };
 
     if(displacedPieceIdentity.mOwner != RoleID::NA) {
         // Schedule animation for this piece getting knocked off the board
-        ToyMaker::Placement displacedPiecePlacement { 
+        ToyMaker::Placement displacedPiecePlacement {
             mPieceNodeMap.at(displacedPieceIdentity)->getComponent<ToyMaker::Placement>()
         };
         mAnimationKeys.push(

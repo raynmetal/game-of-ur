@@ -46,8 +46,8 @@ private:
 
     void refreshRecords();
     void onButtonClicked(const std::string& button);
+    void onButtonHoveredOver(const std::string& button);
     void onActivated() override;
-    
     bool hasPage(uint32_t page) const;
     void openPage(uint32_t page);
 
@@ -72,6 +72,10 @@ public:
     ToyMaker::SignalObserver<const std::string&> mObserveButtonClicked {
         *this, "ButtonClickedObserved",
         [this](const std::string& button) { this->onButtonClicked(button); }
+    };
+    ToyMaker::SignalObserver<const std::string&> mObserveButtonHoveredOver {
+        *this, "ButtonHoveredOverObserved",
+        [this](const std::string& button) { this->onButtonHoveredOver(button); }
     };
 };
 

@@ -17,9 +17,9 @@ std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUIVersion::clone() const {
 
 void UrUIVersion::onActivated() {
     getAspect<ToyMaker::UIText>().updateText(
-        "Game Of Ur v" 
+        "Game Of Ur v"
         + std::to_string(Game_Of_Ur_VERSION_MAJOR) 
-        + "." 
+        + "."
         + std::to_string(Game_Of_Ur_VERSION_MINOR)
         + "."
         + std::to_string(Game_Of_Ur_VERSION_PATCH)

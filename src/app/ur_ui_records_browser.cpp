@@ -1,9 +1,10 @@
+#include <iostream>
 #include <string>
 
 #include <toymaker/builtins/ui_button.hpp>
 #include <toymaker/builtins/ui_text.hpp>
 
-#include "ur_scene_manager.hpp"
+#include "ur_sounds.hpp"
 #include "ur_records.hpp"
 #include "ur_ui_records_browser.hpp"
 
@@ -23,7 +24,23 @@ void UrUIRecordsBrowser::onActivated() {
     openPage(mPage);
 }
 
+void UrUIRecordsBrowser::onButtonHoveredOver(const std::string& button) {
+    std::cout << "Records button hovered over!\n";
+    auto& soundPlayer {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
+            ->getByPath<UrSoundPlayer&>("/ur_sounds/@UrSoundPlayer")
+    };
+    soundPlayer.playEffect(UrSoundFX::BUTTON_HOVER);
+}
 void UrUIRecordsBrowser::onButtonClicked(const std::string& button) {
+    auto& soundPlayer {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
+            ->getByPath<UrSoundPlayer&>("/ur_sounds/@UrSoundPlayer")
+    };
+    soundPlayer.playEffect(UrSoundFX::BUTTON_CLICK, 1);
+
     if(button == "next") {
         openPage(mPage + 1);
         return;
@@ -32,7 +49,7 @@ void UrUIRecordsBrowser::onButtonClicked(const std::string& button) {
     if(button == "previous") {
         openPage(mPage - 1);
         return;
-    } 
+    }
 
     openDetailedRecord(std::stoi(button));
 }

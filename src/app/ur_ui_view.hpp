@@ -13,7 +13,7 @@
 #define ZOAPPURUIVIEW_H
 
 #include <toymaker/engine/sim_system.hpp>
-
+#include <toymaker/engine/sound/types.hpp>
 #include <toymaker/builtins/ui_text.hpp>
 
 #include "game_of_ur_data/model.hpp"

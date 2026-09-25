@@ -5,8 +5,14 @@
         {
             "name": "ui_root",
             "aspects": [
-                {"type": "UrUIView", "controller_path": "/scene_root/game/"},
-                {"type": "UrUINavigation", "scene_manager_path": "/scene_root/"}
+                { "type": "UrUIView", "controller_path": "/scene_root/game/" },
+                { "type": "UrUINavigation", "scene_manager_path": "/scene_root/" },
+                {
+                    "type": "UrUIVolumeControl",
+                    "volume_up": "/viewport_UI/ui_container/volume_up/",
+                    "volume_down": "/viewport_UI/ui_container/volume_down/",
+                    "volume": "/viewport_UI/ui_container/volume/"
+                }
             ],
             "components": [
                 {
@@ -447,6 +453,104 @@
         },
 
         {
+            "name": "volume",
+            "parent": "/viewport_UI/ui_container/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -673.0, -380.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "vol",
+                    "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                    "scale": 1,
+                    "anchor": [0.5, 1],
+                    "reference_coordinate": [0.5, 1],
+                    "offsets": [0, -15, 1],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+
+        {
+            "name": "UI_Button",
+            "parent": "/viewport_UI/ui_container/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "volume_up",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 0.0, -200.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "+",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 1.0],
+                        "reference_coordinate": [0.5, 1.0],
+                        "offsets": [70, -5, 1],
+                        "value": "+volume",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+
+        {
+            "name": "UI_Button",
+            "parent": "/viewport_UI/ui_container/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "volume_down",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 0.0, -200.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "-",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [1.0, 1.0],
+                        "reference_coordinate": [0.5, 1.0],
+                        "offsets": [-70, -5, 1],
+                        "value": "-volume",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+
+        {
             "name": "UI_Button",
             "parent": "/viewport_UI/ui_container/ui_panel/",
             "type": "Scene",
@@ -489,50 +593,56 @@
         {
             "from": "/viewport_UI/ui_container/ui_panel/dice_roll/@UIButton",
             "signal": "ButtonReleased",
+            "to": "/@UrUIView",
+            "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/dice_roll/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUIView",
+            "observer": "ButtonHoveredOverObserved"
+        },
 
+        {
+            "from": "/viewport_UI/ui_container/ui_panel/next_turn/@UIButton",
+            "signal": "ButtonReleased",
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/next_turn/@UIButton",
-            "signal": "ButtonReleased",
-
+            "signal": "ButtonHoveredOver",
             "to": "/@UrUIView",
-            "observer": "ButtonClickedObserved"
+            "observer": "ButtonHoveredOverObserved"
         },
 
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_swallow/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_storm_bird/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_raven/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_rooster/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_eagle/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
@@ -540,35 +650,30 @@
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_swallow/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_storm_bird/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_raven/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_rooster/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_a/buttons/launch_eagle/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
@@ -576,35 +681,30 @@
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_swallow/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_storm_bird/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_raven/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_rooster/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_eagle/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUIView",
             "observer": "ButtonClickedObserved"
         },
@@ -612,35 +712,30 @@
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_swallow/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_storm_bird/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_raven/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_rooster/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
         {
             "from": "/viewport_UI/ui_container/ui_panel/player_panel_b/buttons/launch_eagle/@UIButton",
             "signal": "ButtonHoveredOver",
-
             "to": "/@UrUIView",
             "observer": "ButtonHoveredOverObserved"
         },
@@ -648,9 +743,14 @@
         {
             "from": "/viewport_UI/ui_container/return/@UIButton",
             "signal": "ButtonReleased",
-
             "to": "/@UrUINavigation",
             "observer": "ButtonClickedObserved"
+        },
+        {
+            "from": "/viewport_UI/ui_container/return/@UIButton",
+            "signal": "ButtonHoveredOver",
+            "to": "/@UrUINavigation",
+            "observer": "ButtonHoveredOverObserved"
         }
     ]
 }

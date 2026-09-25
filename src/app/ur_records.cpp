@@ -2,6 +2,8 @@
 #include <filesystem>
 #include <fstream>
 
+#include <toymaker/engine/application.hpp>
+
 #include <nlohmann/json.hpp>
 
 #include "ur_records.hpp"
@@ -66,10 +68,12 @@ void UrRecords::submitRecord(const GameRecord& gameRecord) {
 }
 
 void UrRecords::onActivated() {
-    if(!std::filesystem::exists(mRecordsPath)) { return; }
+    const std::string dataPath { ToyMaker::Application::getProjectDataPath() };
+    const std::string recordsPath { dataPath + "/" + mRecordsPath };
+    if(!std::filesystem::exists(recordsPath)) { return; }
 
     std::ifstream jsonFileStream;
-    jsonFileStream.open(mRecordsPath);
+    jsonFileStream.open(recordsPath);
     nlohmann::json recordsJSON = nlohmann::json::parse(jsonFileStream);
     jsonFileStream.close();
 
@@ -85,8 +89,10 @@ void UrRecords::onActivated() {
 }
 
 void UrRecords::onDeactivated() {
+    const std::string dataPath { ToyMaker::Application::getProjectDataPath() };
+    const std::string recordsPath { dataPath + "/" + mRecordsPath };
     std::ofstream jsonFileStream;
-    jsonFileStream.open(mRecordsPath);
+    jsonFileStream.open(recordsPath);
     const nlohmann::json recordsJson = mLoadedRecords;
     const std::string recordsSerialized { recordsJson.dump() };
     jsonFileStream.write(recordsSerialized.c_str(), recordsSerialized.size());

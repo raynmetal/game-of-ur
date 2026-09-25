@@ -7,7 +7,7 @@
 #include <toymaker/builtins/ui_image.hpp>
 #include <toymaker/engine/application.hpp>
 
-#include "ur_scene_manager.hpp"
+#include "ur_sounds.hpp"
 #include "ur_ui_tutorials_browser.hpp"
 
 std::shared_ptr<ToyMaker::BaseSimObjectAspect> UrUITutorialsBrowser::create(const nlohmann::json& jsonAspectProperties) {
@@ -58,7 +58,22 @@ void UrUITutorialsBrowser::onActivated() {
     openPage(0);
 }
 
+void UrUITutorialsBrowser::onButtonHoveredOver(const std::string& button) {
+    auto& soundPlayer {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
+            ->getByPath<UrSoundPlayer&>("/ur_sounds/@UrSoundPlayer")
+    };
+    soundPlayer.playEffect(UrSoundFX::BUTTON_HOVER);
+}
 void UrUITutorialsBrowser::onButtonClicked(const std::string& button) {
+    auto& soundPlayer {
+        getSimObject().getWorld().lock()
+            ->getSingletonSystem<ToyMaker::SceneSystem>()
+            ->getByPath<UrSoundPlayer&>("/ur_sounds/@UrSoundPlayer")
+    };
+    soundPlayer.playEffect(UrSoundFX::BUTTON_CLICK, 1);
+
     if(button == "next") {
         openPage(mPage + 1);
         return;
@@ -67,7 +82,8 @@ void UrUITutorialsBrowser::onButtonClicked(const std::string& button) {
     if(button == "previous") {
         openPage(mPage - 1);
         return;
-    } 
+    }
+
 
     assert(false && "There shouldn't be any other buttons present on the page");
 }
