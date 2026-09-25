@@ -84,7 +84,7 @@ Finally, [clone this repository,](https://github.com/raynmetal/game-of-ur) or do
 - [x] Stylized 3D graphics
 - [x] Offline multiplayer
 - [x] AI opponent
-- [ ] Music and sound effects
+- [x] Music and sound effects
 - ~~Tutorialization~~ (I'm very very tired)
 - [x] Playable on Windows
 - ~~Playable on Android~~ (Maybe some day)
