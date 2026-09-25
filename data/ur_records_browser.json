@@ -9,7 +9,13 @@
                     "type": "UrUINavigation",
                     "scene_manager_path": "/scene_root/"
                 }, 
-                { "type": "UrUIRecordsBrowser" }
+                { "type": "UrUIRecordsBrowser" },
+                {
+                    "type": "UrUIVolumeControl",
+                    "volume_up": "/viewport_UI/ui_panel/volume_up/",
+                    "volume_down": "/viewport_UI/ui_panel/volume_down/",
+                    "volume": "/viewport_UI/ui_panel/volume/"
+                }
             ],
             "components": [
                 {
@@ -423,6 +429,102 @@
                         "reference_coordinate": [0, 1],
                         "offsets": [15, -15, 1],
                         "value": "Game_Of_Ur_Main_Menu",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+
+        {
+            "name": "volume",
+            "parent": "/viewport_UI/ui_panel/",
+            "type": "SimObject",
+            "components": [
+                {
+                    "type": "Placement",
+                    "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                    "position": [ -673.0, -380.0, 0.0, 1.0 ],
+                    "scale": [ 1.0, 1.0, 1.0 ]
+                }
+            ],
+            "aspects": [
+                {
+                    "type": "UIText",
+                    "text": "vol",
+                    "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                    "scale": 1,
+                    "anchor": [0.5, 1],
+                    "reference_coordinate": [0.5, 1],
+                    "offsets": [0, -15, 1],
+                    "color": [255, 255, 255, 255]
+                }
+            ]
+        },
+        {
+            "name": "UI_Button",
+            "parent": "/viewport_UI/ui_panel/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "volume_up",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 0.0, -200.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "+",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [0.0, 1.0],
+                        "reference_coordinate": [0.5, 1.0],
+                        "offsets": [70, -5, 1],
+                        "value": "+volume",
+                        "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
+                        "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
+                        "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",
+                        "panel_pressed": "UI_BUTTON_DEFAULT_PRESSED_PANEL",
+                        "has_highlight": false
+                    }
+                ]
+            }
+        },
+        {
+            "name": "UI_Button",
+            "parent": "/viewport_UI/ui_panel/",
+            "type": "Scene",
+            "copy": true,
+            "overrides":  {
+                "name": "volume_down",
+                "components": [
+                    {
+                        "type": "Placement",
+                        "orientation": [ 1.0,  0.0, 0.0, 0.0 ],
+                        "position": [ 0.0, -200.0, 0.0, 1.0 ],
+                        "scale": [ 1.0, 1.0, 1.0 ]
+                    }
+                ],
+                "aspects": [
+                    {
+                        "type": "UIButton",
+                        "text": "-",
+                        "font_resource_name": "UI_BUTTON_DEFAULT_TEXT_FONT",
+                        "color": [255, 255, 255, 255],
+                        "scale": 1.0,
+                        "anchor": [1.0, 1.0],
+                        "reference_coordinate": [0.5, 1.0],
+                        "offsets": [-70, -5, 1],
+                        "value": "-volume",
                         "panel_active": "UI_BUTTON_DEFAULT_ACTIVE_PANEL",
                         "panel_inactive": "UI_BUTTON_DEFAULT_INACTIVE_PANEL",
                         "panel_hover": "UI_BUTTON_DEFAULT_HOVER_PANEL",

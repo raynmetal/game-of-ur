@@ -10,6 +10,7 @@ target_sources(
     Game_Of_Ur
     # Ur application sources
     PRIVATE
+        # model
         src/app/game_of_ur_data/board.cpp
         src/app/game_of_ur_data/dice.cpp
         src/app/game_of_ur_data/house.cpp
@@ -18,6 +19,7 @@ target_sources(
         src/app/game_of_ur_data/player.cpp
         src/app/game_of_ur_data/serialize.cpp
 
+        # view/control
         src/app/board_locations.cpp
         src/app/ur_controller.cpp
         src/app/ur_look_at_board.cpp
@@ -26,18 +28,19 @@ target_sources(
         src/app/ur_records.cpp
         src/app/ur_scene_manager.cpp
         src/app/ur_scene_view.cpp
-        src/app/ur_ui_navigation.cpp
+        src/app/ur_sounds.cpp
+        src/app/ur_ui_volume_control.cpp
         src/app/ur_ui_records_browser.cpp
         src/app/ur_ui_tutorials_browser.cpp
+        src/app/ur_ui_navigation.cpp
         src/app/ur_ui_version.cpp
         src/app/ur_ui_view.cpp
-        src/app/ur_sounds.cpp
 
     PRIVATE
     FILE_SET HEADERS
     BASE_DIRS src/app ${CMAKE_CURRENT_BINARY_DIR}/src/app
     FILES
-        # Data Model Headers
+        # model
         src/app/game_of_ur_data/board.hpp
         src/app/game_of_ur_data/dice.hpp
         src/app/game_of_ur_data/house.hpp
@@ -50,13 +53,14 @@ target_sources(
         src/app/game_of_ur_data/player.hpp
         src/app/game_of_ur_data/role_id.hpp
 
-        # Engine Interface Headers
+        # view/control
         src/app/board_locations.hpp
         src/app/ur_controller.hpp
         src/app/ur_look_at_board.hpp
         src/app/ur_player_cpu_random.hpp
         src/app/ur_player_local.hpp
         src/app/ur_records.hpp
+        src/app/ur_sounds.hpp
         src/app/ur_scene_manager.hpp
         src/app/ur_scene_view.hpp
         src/app/ur_ui_navigation.hpp
@@ -64,7 +68,7 @@ target_sources(
         src/app/ur_ui_tutorials_browser.hpp
         src/app/ur_ui_version.hpp
         src/app/ur_ui_view.hpp
-        src/app/ur_sounds.hpp
+        src/app/ur_ui_volume_control.hpp
         ${CMAKE_CURRENT_BINARY_DIR}/src/app/version.h
 )
 

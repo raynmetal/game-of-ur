@@ -41,12 +41,18 @@ public:
     std::shared_ptr<BaseSimObjectAspect> clone() const override;
     void playEffect(UrSoundFX effect, uint8_t priority=0);
 
+    inline uint8_t getVolume() const { return mVolume; };
+
+    void decrementVolume5();
+    void incrementVolume5();
+
 private:
     std::array<std::shared_ptr<ToyMaker::Sound>, static_cast<uint8_t>(UrSoundFX::TOTAL)> mSounds {};
 
     std::unique_ptr<ToyMaker::SoundChannel> mChannelMusic { nullptr };
     std::unique_ptr<ToyMaker::SoundChannel> mChannelEffects { nullptr };
     uint8_t mEffectPriority { 0 };
+    uint8_t mVolume { 100 };
 
     void onActivated() override;
 };

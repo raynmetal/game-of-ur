@@ -50,3 +50,26 @@ void UrSoundPlayer::playEffect(UrSoundFX effect, uint8_t priority) {
     mChannelEffects->play();
 }
 
+void UrSoundPlayer::incrementVolume5() {
+    if(mVolume >= 100) {
+        return;
+    }
+
+    mVolume = glm::min(mVolume + 5, 100);
+    const float volume { mVolume / 100.f };
+
+    mChannelMusic->setGain(volume);
+    mChannelEffects->setGain(volume);
+}
+
+void UrSoundPlayer::decrementVolume5() {
+    if(mVolume <= 0) {
+        return;
+    }
+
+    mVolume = glm::max(static_cast<int>(mVolume) - 5, 0);
+    const float volume { mVolume / 100.f };
+
+    mChannelMusic->setGain(volume);
+    mChannelEffects->setGain(volume);
+}
