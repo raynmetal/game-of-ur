@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(Game_Of_Ur VERSION 0.4.1)
+project(game-of-ur VERSION 0.4.1)
 
-add_executable(Game_Of_Ur WIN32)
+add_executable(game-of-ur WIN32)
 
 configure_file(src/app/version.h.in ${CMAKE_CURRENT_BINARY_DIR}/src/app/version.h)
 
 target_sources(
-    Game_Of_Ur
+    game-of-ur
     # Ur application sources
     PRIVATE
         # model
@@ -72,12 +72,9 @@ target_sources(
         ${CMAKE_CURRENT_BINARY_DIR}/src/app/version.h
 )
 
-find_package(ToyMaker 0.5.3 REQUIRED)
+find_package(ToyMaker 0.5.5 REQUIRED)
 
-toymaker_configure_executable(Game_Of_Ur)
+toymaker_configure_executable(game-of-ur)
 set(CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt)
-set(CPACK_PACKAGE_VERSION_MAJOR "${Game_Of_Ur_VERSION_MAJOR}")
-set(CPACK_PACKAGE_VERSION_MINOR "${Game_Of_Ur_VERSION_MINOR}")
-set(CPACK_GENERATOR "ZIP")
-set(CPACK_SOURCE_GENERATOR "ZIP")
+set(CPACK_RESOURCE_FILE_README ${CMAKE_CURRENT_SOURCE_DIR}/README.md)
 include(CPack)
