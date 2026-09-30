@@ -32,44 +32,53 @@ Note that at the moment the project is only available on Windows.  I have not ye
 
 ### On Arch Linux
 
+Download the latest Arch build of the game from [here.](https://github.com/raynmetal/game-of-ur/releases/tag/v0.4.1)
+
 [Game of Ur](https://www.github.com/raynmetal/game-of-ur) depends on the installation of the
 [ToyMaker engine.](https://www.github.com/raynmetal/toymaker)  Accordingly, these instructions build and
 install ToyMaker, then install Game of Ur, on Arch Linux.  The installation process here is identical
 to the one for [installing AUR packages.](https://wiki.archlinux.org/title/Arch_User_Repository)
 
-1. Move into the toymaker package directory:
+1. Decompress the archive, enter the extracted directory.
+
+```bash
+tar -xvf game-of-ur-0.5.5-x86_64-arch-install.tar.gz
+cd game-of-ur-0.5.5-x86_64-arch-install
+```
+
+2. Move into the toymaker package directory:
 
 ```bash
 cd toymaker-0.5.5-x86_64
 ```
 
-2. Run `makepkg` to build the toymaker package.  On success, this should produce a file
+3. Run `makepkg` to build the toymaker package.  On success, this should produce a file
 named `toymaker-0.5.5-1-x86_64.pkg.tar.zst`.
 
 ```bash
 makepkg
 ```
 
-3. Use `pacman` to install the newly built binaries to their proper install locations.
+4. Use `pacman` to install the newly built binaries to their proper install locations.
 
 ```bash
 pacman -U toymaker-0.5.5-1-x86_64.pkg.tar.zst
 ```
 
-4. Now enter the `game-of-ur` package directory.
+5. Now enter the `game-of-ur` package directory.
 
 ```bash
 cd ../game-of-ur-0.4.1-x86_64
 ```
 
-5. As before, run `makepkg` to build the game-of-ur package.  On success, this should produce a file
+6. As before, run `makepkg` to build the game-of-ur package.  On success, this should produce a file
 named `game-of-ur-0.4.1-1-x86_64.pkg.tar.zst`.
 
 ```bash
 makepkg
 ```
 
-6. Use `pacman` to install the package.
+7. Use `pacman` to install the package.
 
 ```bash
 pacman -U game-of-ur-0.4.1-1-x86_64.pkg.tar.zst
