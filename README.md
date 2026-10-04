@@ -32,24 +32,26 @@ I decided against making an original game because I wanted to focus on the techn
 
 > [!CAUTION]
 >
-> This game requires packages that are only available on the ["sid"/unstable]()
+> This game requires packages that are only available on the ["sid"/unstable](https://www.debian.org/releases/sid/)
 > distribution of Debian.  Instructions for installing those packages go beyond the
-> scope of this document.
+> scope of this document, and are not advised for inexperienced Debian users.
 >
 > Until those packages make it to one of the mainstream Debian distributions, it would
-> be preferrable to build Game of Ur and its dependencies from source.  Instructions for
-> the former can be found under section "Building from source."
+> be preferable to build Game of Ur and its dependencies from source.  Instructions for
+> that can be found under section "Building from source."
 
 1. Follow the instructions [here](https://www.github.com/raynmetal/toymaker#on-debian-linux)
 to install the ToyMaker package, which Game of Ur depends on.
 
-2. Unpack the latest Debian build of the game (ending in `.deb`).
+2. Download the latest Debian build of the game (ending in `.deb`) from [here.](https://github.com/raynmetal/game-of-ur/releases/tag/v0.4.2)
+
+3. Install the game using `apt`.
 
 ```bash
 sudo apt install ./game-of-ur_0.4.2_amd64.deb
 ```
 
-3. Run the game.
+4. Run the game.
 
 ```bash
 game-of-ur
@@ -62,20 +64,20 @@ The installation process here is identical to the one for [installing AUR packag
 1. Follow the instructions [here](https://github.com/raynmetal/toymaker#on-arch-linux) to install the ToyMaker package, which
 Game of Ur depends on.
 
-2. Unpack the latest Arch build of the game, [downloaded from here.](https://github.com/raynmetal/game-of-ur/releases/tag/v0.4.1)
+2. Unpack the latest Arch build of the game, [downloaded from here.](https://github.com/raynmetal/game-of-ur/releases/tag/v0.4.2)
 
 ```bash
-tar -xvf game-of-ur-0.4.1-x86_64-arch.tar.gz
+tar -xvf game-of-ur-0.4.2-x86_64-arch.tar.gz
 ```
 
 3. Now enter the `game-of-ur` package directory.
 
 ```bash
-cd ../game-of-ur-0.4.1-x86_64-arch
+cd ../game-of-ur-0.4.2-x86_64-arch
 ```
 
 4. Run `makepkg` to build the game-of-ur package.  On success, this should produce a file
-named `game-of-ur-0.4.1-1-x86_64.pkg.tar.zst`.
+named `game-of-ur-0.4.2-1-x86_64.pkg.tar.zst`.
 
 ```bash
 makepkg
@@ -84,7 +86,7 @@ makepkg
 5. Use `pacman` to install the package.
 
 ```bash
-pacman -U game-of-ur-0.4.1-1-x86_64.pkg.tar.zst
+pacman -U game-of-ur-0.4.2-1-x86_64.pkg.tar.zst
 ```
 
 6. Run the game.
@@ -169,7 +171,7 @@ This program makes extensive use of the following libraries:
 - [GLM](https://github.com/g-truc/glm)
 - [Assimp](https://github.com/assimp/assimp)
 
-Along with the following sounds, courtesy [freesound.org](freesound.org):
+Along with the following sounds, courtesy [freesound.org](https://www.freesound.org):
 
 - Melancholic piano music.mp3 by ZHRØ | License: Creative Commons 0
 - box_drag.wav by X3msnake | License: Creative Commons 0
