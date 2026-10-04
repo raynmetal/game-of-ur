@@ -1,6 +1,6 @@
 # Maintainer: Zoheb Shujauddin <zoheb2424@gmail.com>
 pkgname=game-of-ur
-pkgver=0.4.1
+pkgver=0.4.2
 pkgrel=1
 epoch=
 pkgdesc="A 3D adaptation of an ancient, competitive board game."

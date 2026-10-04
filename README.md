@@ -28,68 +28,78 @@ I decided against making an original game because I wanted to focus on the techn
 
 ## Installation
 
-Note that at the moment the project is only available on Windows.  I have not yet attempted to run or build it on any other platform.
+### On Debian (Linux)
 
-### On Arch Linux
+> [!CAUTION]
+>
+> This game requires packages that are only available on the ["sid"/unstable]()
+> distribution of Debian.  Instructions for installing those packages go beyond the
+> scope of this document.
+>
+> Until those packages make it to one of the mainstream Debian distributions, it would
+> be preferrable to build Game of Ur and its dependencies from source.  Instructions for
+> the former can be found under section "Building from source."
 
-Download the latest Arch build of the game from [here.](https://github.com/raynmetal/game-of-ur/releases/tag/v0.4.1)
+1. Follow the instructions [here](https://www.github.com/raynmetal/toymaker#on-debian-linux)
+to install the ToyMaker package, which Game of Ur depends on.
 
-[Game of Ur](https://www.github.com/raynmetal/game-of-ur) depends on the installation of the
-[ToyMaker engine.](https://www.github.com/raynmetal/toymaker)  Accordingly, these instructions build and
-install ToyMaker, then install Game of Ur, on Arch Linux.  The installation process here is identical
-to the one for [installing AUR packages.](https://wiki.archlinux.org/title/Arch_User_Repository)
-
-1. Decompress the archive, enter the extracted directory.
-
-```bash
-tar -xvf game-of-ur-0.5.5-x86_64-arch-install.tar.gz
-cd game-of-ur-0.5.5-x86_64-arch-install
-```
-
-2. Move into the toymaker package directory:
+2. Unpack the latest Debian build of the game (ending in `.deb`).
 
 ```bash
-cd toymaker-0.5.5-x86_64
+sudo apt install ./game-of-ur_0.4.2_amd64.deb
 ```
 
-3. Run `makepkg` to build the toymaker package.  On success, this should produce a file
-named `toymaker-0.5.5-1-x86_64.pkg.tar.zst`.
+3. Run the game.
 
 ```bash
-makepkg
+game-of-ur
 ```
 
-4. Use `pacman` to install the newly built binaries to their proper install locations.
+### On Arch (Linux)
+
+The installation process here is identical to the one for [installing AUR packages.](https://wiki.archlinux.org/title/Arch_User_Repository)
+
+1. Follow the instructions [here](https://github.com/raynmetal/toymaker#on-arch-linux) to install the ToyMaker package, which
+Game of Ur depends on.
+
+2. Unpack the latest Arch build of the game, [downloaded from here.](https://github.com/raynmetal/game-of-ur/releases/tag/v0.4.1)
 
 ```bash
-pacman -U toymaker-0.5.5-1-x86_64.pkg.tar.zst
+tar -xvf game-of-ur-0.4.1-x86_64-arch.tar.gz
 ```
 
-5. Now enter the `game-of-ur` package directory.
+3. Now enter the `game-of-ur` package directory.
 
 ```bash
-cd ../game-of-ur-0.4.1-x86_64
+cd ../game-of-ur-0.4.1-x86_64-arch
 ```
 
-6. As before, run `makepkg` to build the game-of-ur package.  On success, this should produce a file
+4. Run `makepkg` to build the game-of-ur package.  On success, this should produce a file
 named `game-of-ur-0.4.1-1-x86_64.pkg.tar.zst`.
 
 ```bash
 makepkg
 ```
 
-7. Use `pacman` to install the package.
+5. Use `pacman` to install the package.
 
 ```bash
 pacman -U game-of-ur-0.4.1-1-x86_64.pkg.tar.zst
 ```
 
-### Building from source
+6. Run the game.
 
-#### Requirements
+```bash
+game-of-ur
+```
 
-> [!NOTE]
-> This application has not been tested with anything other than the Windows MinGW package available via MSYS2's package manager.
+### ~On Windows~
+
+WIP.
+
+## Building from source
+
+### Requirements
 
 This project uses [CMake](https://cmake.org/) for its build system, so make sure to have that installed.
 
@@ -117,7 +127,7 @@ If you'd like to generate and tinker with the documentation generated for the pr
 
 Finally, [clone this repository,](https://github.com/raynmetal/game-of-ur) or download its snapshot.
 
-#### Compiling
+### Compiling
 
 1. Enter the root directory of the project (the same one where README.md and LICENSE.txt are found).
 
@@ -135,6 +145,7 @@ Finally, [clone this repository,](https://github.com/raynmetal/game-of-ur) or do
 - [x] Music and sound effects
 - ~~Tutorialization~~ (I'm very very tired)
 - [x] Playable on Windows
+- [x] Playable on Linux (Arch, Debian)
 - ~~Playable on Android~~ (Maybe some day)
 - [ ] Itch.io release
 - ~~Play Store release~~ (Maybe a day long after the other days)

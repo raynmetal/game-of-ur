@@ -1,0 +1,3 @@
+shlibs:Depends=libassimp6 (>= 6.0.5+ds), libc6 (>= 2.43), libgcc-s1 (>= 3.0), libglew2.3 (>= 2.3.1+dfsg2), libopengl0, libsdl3-0 (>= 3.2.0), libsdl3-image0 (>= 3.2.0), libsdl3-mixer0 (>= 3.2.0), libsdl3-ttf0 (>= 3.2.0), libstdc++6 (>= 14)
+misc:Depends=
+misc:Pre-Depends=
