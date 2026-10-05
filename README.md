@@ -8,7 +8,7 @@ This is a computer adaptation of [Game of Ur](https://en.wikipedia.org/wiki/Roya
 on top of the [ToyMaker game engine.](https://github.com/raynmetal/toymaker)
 
 Game of Ur is a competitive, two-player board game. The player who moves all 5 of their pieces to the end of the course first, wins the game.  The variant
-implemented in this adaptation is based on a paper by Irving Finkel.  See the [game design document](docs/game_design_doc.md) for more information.
+implemented in this adaptation is based on a paper by Irving Finkel.  See the [game design document](https://raynmetal.github.io/game-of-ur/md_docs_2systems_2game-of-ur_201__design__doc.html) for more information.
 
 ![Game of Ur being played.](data/textures/tutorial/game_in_progress.png "A picture of Game of Ur being played.")
 
@@ -95,9 +95,10 @@ pacman -U game-of-ur-0.4.2-1-x86_64.pkg.tar.zst
 game-of-ur
 ```
 
-### ~On Windows~
+### On Windows
 
-WIP.
+Simply download the Windows ZIP file from the [latest release.](https://github.com/raynmetal/game-of-ur/releases/tag/v0.4.2)  Extract
+the games files to a location of your choice, then double click on the `game-of-ur.exe` file in the extracted folder.
 
 ## Building from source
 
